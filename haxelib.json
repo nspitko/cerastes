@@ -1,0 +1,14 @@
+{
+	"name": "cerastes",
+	"url" : "https://github.com/nspitko/cerastes/",
+	"license": "none",
+	"tags": [],
+	"description": "Comfyengine.",
+	"version": "0.0.1",
+	"classPath": "src/",
+	"releasenote": "Forever in development",
+	"contributors": ["nspitko"],
+	"dependencies": {
+	  "heaps": ""
+	}
+  }

@@ -163,13 +163,17 @@ class CallbackGenerator
 
 				var fnAddListener: Function = {
 					expr: macro {
+						if( $i{"_listeners_" + field.name}.exists( owner ) )
+							return false;
+
 						$i{"_listeners_" + field.name}.set( owner, fn );
+						return true;
 					},
 					args: [
 						{ name:'owner', type: macro: cerastes.macros.Callbacks.ClassKey },
 						{ name:'fn', type: callbackType }
 					],
-					ret: macro: Void
+					ret: macro: Bool
 				};
 
 				append.push({

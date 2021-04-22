@@ -1,9 +1,9 @@
 package cerastes;
 
+import cerastes.macros.Callbacks.ClassKey;
 import cerastes.ui.Console.GlobalConsole;
 import hxd.fmt.fbx.BaseLibrary.TmpObject;
 import haxe.Constraints;
-
 
 class Scene
 {
@@ -12,6 +12,8 @@ class Scene
     public var engine(default,null) : h3d.Engine;
 	public var s3d(default,null) : h3d.scene.Scene;
 	public var s2d(default,null) : h2d.Scene;
+
+    var trackedCallbacks = new Array<(ClassKey -> Bool)>();
 
     public function new( a : Main )
     {
@@ -27,6 +29,12 @@ class Scene
     public function preload()
     {
 
+    }
+
+    function trackCallback( success: Bool, unregisterFunction: ( ClassKey -> Bool ) )
+    {
+        if( success )
+            trackedCallbacks.push( unregisterFunction );
     }
 
     /**
@@ -68,6 +76,11 @@ class Scene
      */
     public function exit()
     {
+        for( cb in trackedCallbacks )
+            cb( this );
+
+
+
         app.sevents.removeScene(this.s3d);
         app.sevents.removeScene(this.s2d);
     }

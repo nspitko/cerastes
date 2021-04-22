@@ -359,17 +359,16 @@ class ButaiNodeManager
 				}
 
 			case other:
-				var field = Reflect.field(ButaiNodeManager, 'on${node.type}' );
+				var field = Reflect.field(this, 'on${node.type}' );
 				if( field == null )
 				{
-					if(  other != "db.LabelNode" && other != "db.ContainerEntranceNode" )
-						Utils.error("Unknown node type: " + other);
+					Utils.error("Unknown node type: " + other);
 
 					nextAll(node);
 					return;
 				}
 
-				var handled = Reflect.callMethod(ButaiNodeManager, field, []);
+				var handled = Reflect.callMethod(this, field, [node]);
 				if( !handled )
 					nextAll(node);
 		}

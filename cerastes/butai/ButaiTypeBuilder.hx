@@ -17,7 +17,8 @@ using haxe.macro.Tools;
  */
 
 
-abstract Id(String) {
+abstract Id(String)
+{
 	inline function new(key) this = key;
 
 	public function get<T>() : Null<T>

@@ -1,6 +1,8 @@
 package cerastes;
 
 
+import cerastes.butai.Debug;
+import haxe.Json;
 #if hl
 import sys.io.FileOutput;
 import sys.io.File;
@@ -9,6 +11,19 @@ import sys.io.File;
 #if client
 import cerastes.ui.Console.GlobalConsole;
 #end
+
+@:enum
+abstract Spew(Int) {
+	var ALWAYS = 0;
+	var ERROR = 1;
+	var WARNING = 2;
+	var ASSERT = 3;
+	var INFO = 4;
+	var DEBUG = 5;
+	var SPAM = 6;
+	var NEVER = 7;
+}
+
 class Utils
 {
 	public static var BREAK_ON_ASSERT = true;
@@ -52,6 +67,19 @@ class Utils
 		if( !condition )
 		{
 			writeLog('Assertion failed: ${pos.fileName}:${pos.lineNumber}: ${msg} ', pos);
+
+			#if ( butai && hl )
+			var json = Json.stringify({
+				line: pos.lineNumber,
+				text: msg,
+				"function": pos.methodName,
+				file: pos.fileName,
+				time: hxd.Timer.elapsedTime,
+				level: Spew.ASSERT
+			});
+			Debug.debugWrite("log",json);
+			#end
+
 			#if hl
 			if( WRITE_LOG )
 				logFile.flush();
@@ -71,6 +99,17 @@ class Utils
 		#if hl
 		if( WRITE_LOG )
 			logFile.flush();
+		#end
+		#if ( butai && hl )
+		var json = Json.stringify({
+			line: pos.lineNumber,
+			text: msg,
+			"function": pos.methodName,
+			file: pos.fileName,
+			time: hxd.Timer.elapsedTime,
+			level: Spew.WARNING
+		});
+		Debug.debugWrite("log",json);
 		#end
 		if( BREAK_ON_WARNING )
 		{
@@ -92,6 +131,17 @@ class Utils
 		if( WRITE_LOG )
 			logFile.flush();
 		#end
+		#if ( butai && hl )
+		var json = Json.stringify({
+			line: pos.lineNumber,
+			text: msg,
+			"function": pos.methodName,
+			file: pos.fileName,
+			time: hxd.Timer.elapsedTime,
+			level: Spew.ERROR
+		});
+		Debug.debugWrite("log",json);
+		#end
 		if( BREAK_ON_ERROR )
 		{
 			#if hl
@@ -110,6 +160,17 @@ class Utils
 			startTime = haxe.Timer.stamp();
 
 		//[${ Math.round( haxe.Timer.stamp() - startTime ) }]
+		#if ( butai && hl )
+		var json = Json.stringify({
+			line: pos.lineNumber,
+			text: msg,
+			"function": pos.methodName,
+			file: pos.fileName,
+			time: hxd.Timer.elapsedTime,
+			level: Spew.INFO
+		});
+		Debug.debugWrite("log",json);
+		#end
 
 		writeLog('INFO: ${msg} ', pos);
 	}
@@ -123,7 +184,8 @@ class Utils
 		#end
 		#if client
 		#if debug
-		GlobalConsole.instance.console.log(msg, 0xFFFFFF);
+		if( GlobalConsole.instance != null &&  GlobalConsole.instance.console != null )
+			GlobalConsole.instance.console.log(msg, 0xFFFFFF);
 		#end
 		#end
 	}

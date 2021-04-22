@@ -76,10 +76,10 @@ class ButaiCallbackGenerator
 
 			fields.push({
 				name: 'on${node.type}',
-				access: [Access.APrivate, Access.AStatic],
+				access: [Access.APrivate],
 				kind: FieldType.FFun(fnCallback),
 				pos: Context.currentPos(),
-				meta: [{name: ":callbackStatic", pos: pos}]
+				meta: [{name: ":callback", pos: pos}]
 			});
 		}
 

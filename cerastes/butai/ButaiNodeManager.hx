@@ -1,9 +1,7 @@
 package cerastes.butai;
 
 import haxe.Json;
-#if hl
-import sys.net.Socket;
-#end
+
 import game.GameState;
 import cerastes.ui.Console.GlobalConsole;
 import cerastes.butai.ButaiTypeBuilder.ButaiNode;
@@ -11,49 +9,49 @@ import cerastes.butai.ButaiDialogController;
 import db.Butai;
 import db.Data;
 
-typedef DebugMessage = {
-	var m: String;
-	var v: String;
-}
+import cerastes.butai.Debug;
+
 
 @:build(cerastes.macros.Callbacks.ButaiCallbackGenerator.build("res/nodes.bdef"))
 @:build(cerastes.macros.Callbacks.CallbackGenerator.build())
 class ButaiNodeManager
 {
-	static  inline var prefix = "db.";
-	private  static var currentNode : ButaiNode;
-	private  static var lastDialogueNode : ButaiNode;
+	static inline var prefix = "db.";
+	private var currentNode : ButaiNode;
+	private var lastDialogueNode : ButaiNode;
 
-	private static var parser = new hscript.Parser();
-	private static var interp = new hscript.Interp();
+	private var parser = new hscript.Parser();
+	private var interp = new hscript.Interp();
 
-	private static var conditions = new Array< db.Butai.ConditionNode >();
+	private var conditions = new Array< db.Butai.ConditionNode >();
 
-	private static var stack = new Array< ButaiNode >();
+	private var stack = new Array< ButaiNode >();
 
-	private static var paused = true;
+	private var paused = true;
 
-	private static var scanOnly = false;
+	private var scanOnly = false;
 
-	public static var lastCG = "";
+	public var lastCG = "";
 
-	#if hl
-	public static var debugSocket : Socket;
-	#end
 
-	public static var seenNodes : Array<String>;
+	public var seenNodes : Array<String>;
 
-	public static function setup( node : ButaiNode )
+	public function new(node : ButaiNode)
+	{
+		setup(node);
+	}
+
+	public function setup( node : ButaiNode )
 	{
 		if( node == null )
 		{
-			Utils.error("Setup calle with invalid node; File didn't load?");
+			Utils.error("Setup called with invalid node; File didn't load?");
 			return;
 		}
 
 		trace(node);
 
-		registerWithDebugServer();
+
 		reset();
 
 		interp.variables.set("GameState", GameState );
@@ -68,7 +66,7 @@ class ButaiNodeManager
 
 		interp.variables.set("set", GameState.set );
 		interp.variables.set("get", GameState.get );
-		interp.variables.set("seenNode", ButaiSupport.seenNode );
+		interp.variables.set("seenNode", seenNode );
 
 		if( ButaiDialogController.instance == null )
 			ButaiDialogController.instance = new ButaiDialogController();
@@ -81,67 +79,27 @@ class ButaiNodeManager
 
 		currentNode = node;
 		stack = [];
+
+		Debug.registerOnDebugMsg( this, onDebugJump );
 	}
 
-	public static function registerWithDebugServer()
+	public function onDebugJump( cmd: DebugMessage, ?handled )
 	{
-		#if hl
-		try
-		{
-			debugSocket = new Socket();
-			debugSocket.connect(new sys.net.Host("localhost"),5121);
-			debugSocket.output.writeString(Json.stringify({ 'm':"Connect" })+ "\n");
-			debugSocket.setBlocking(false);
-			Utils.notice("Connected to debug server");
-		}
-		catch(e : Dynamic)
-		{
-			Utils.info("Unable to connect to debug server.");
-			debugSocket = null;
-		}
-		#end
-
+		jump( cmd.v );
+		return false;
 	}
 
-	public static function debugUpdate(m: String, value: String)
-	{
-		#if hl
-		if(debugSocket  != null )
-		{
-			var msg : DebugMessage = {
-				m: m,
-				v: value
-			}
-			try {
-				debugSocket.output.writeString(Json.stringify(msg) + "\n");
-			}
-			catch(e: Dynamic)
-			{
-				Utils.warning("Lost connection to debug server");
-				try{
-					debugSocket.close();
-					registerWithDebugServer();
-				}
-				catch(e: Dynamic)
-				{
-					Utils.warning("Unable to reconnect.");
-				}
 
-			}
-		}
-		#end
-	}
-
-	public static function registerVariable(name: String, variable: Dynamic)
+	public function registerVariable(name: String, variable: Dynamic)
 	{
 		interp.variables.set(name, variable );
 	}
-	public static function unregisterVariable( name: String )
+	public function unregisterVariable( name: String )
 	{
 		interp.variables.remove( name );
 	}
 
-	public static function reset()
+	public function reset()
 	{
 		seenNodes = new Array<String>();
 		currentNode = null;
@@ -151,17 +109,17 @@ class ButaiNodeManager
 	}
 
 
-	public static function resume()
+	public function resume()
 	{
 		paused = false;
 	}
 
-	public static function pause()
+	public function pause()
 	{
 		paused = true;
 	}
 
-	public static function jump( node: String )
+	public function jump( node: String )
 	{
 		var target = db.Butai.lookup( node );
 		if( target == null )
@@ -172,7 +130,7 @@ class ButaiNodeManager
 		next( db.Butai.lookup( node ) );
 	}
 
-	private static function getInputs( node : ButaiNode, ?pin: String ) : Array< ButaiNode >
+	private function getInputs( node : ButaiNode, ?pin: String ) : Array< ButaiNode >
 	{
 		var out = new Array<ButaiNode>();
 		for( input in node.inputs )
@@ -185,7 +143,7 @@ class ButaiNodeManager
 		return out;
 	}
 
-	public static function getOutputs( node : ButaiNode, ?pin: String ) : Array< ButaiNode >
+	public function getOutputs( node : ButaiNode, ?pin: String ) : Array< ButaiNode >
 	{
 		var out = new Array<ButaiNode>();
 		for( output in node.outputs )
@@ -198,7 +156,7 @@ class ButaiNodeManager
 		return out;
 	}
 
-	static function nextAll( node )
+	function nextAll( node )
 	{
 		var outputs = getOutputs( node );
 		for( out in outputs )
@@ -207,7 +165,7 @@ class ButaiNodeManager
 
 	// Processes the currentNode and sets the next one.
 	// We have to set next node while processing due to condition blocks.
-	public static function next( node : ButaiNode )
+	public function next( node : ButaiNode )
 	{
 		if( paused )
 		{
@@ -221,9 +179,7 @@ class ButaiNodeManager
 			return;
 		}
 
-		debugUpdate('cn',cast node.id);
-
-
+		Debug.debugUpdate('cn',cast node.id);
 
 		switch( Type.getClassName(Type.getClass(node )) )
 		{
@@ -234,9 +190,6 @@ class ButaiNodeManager
 
 				if( !onSceneNode(cast node) )
 					nextAll( node );
-
-
-
 
 			case "db.MusicNode":
 
@@ -305,9 +258,6 @@ class ButaiNodeManager
 					var idx = Std.random( validOutputs.length );
 					next( validOutputs[idx] );
 				}
-
-
-
 
 			// Here comes the fun: We don't support Articy's bullshit scripting language
 			// but we DO support haxe, and boy howdy if the syntax ain't the same
@@ -412,7 +362,9 @@ class ButaiNodeManager
 				var field = Reflect.field(ButaiNodeManager, 'on${node.type}' );
 				if( field == null )
 				{
-					Utils.error("Unknown node type: " + other);
+					if(  other != "db.LabelNode" && other != "db.ContainerEntranceNode" )
+						Utils.error("Unknown node type: " + other);
+
 					nextAll(node);
 					return;
 				}
@@ -424,49 +376,14 @@ class ButaiNodeManager
 
 	}
 
-	public static function jumpWithReturn( target: String )
+	public function jumpWithReturn( target: String )
 	{
 		stack.unshift( db.Butai.lookup(target) );
 	}
 
-	public static function debugReadSocket()
-	{
-		#if hl
-		try
-		{
-			return debugSocket.input.readLine();
-		}
-		catch( e: Dynamic )
-		{
-			return "";
-		}
-		#end
-	}
 
-	public static function checkDebugSocket()
-	{
-		#if hl
-		if( debugSocket != null )
-			{
-				var data = debugReadSocket();
-				if( data.length > 0 )
-				{
-					var cmd : DebugMessage = Json.parse(data);
-					switch( cmd.m )
-					{
-						case "j":
-							ButaiDialogController.instance.forceHide();
-							jump(cmd.v);
-							return;
-						default:
-							Utils.warning('Unhandled debug command: ${cmd.m}: ${cmd.v}');
-					}
-				}
-			}
-		#end
-	}
 
-	public static function notifyReload()
+	public function notifyReload()
 	{
 		Utils.writeLog("Node file reloaded from disk.");
 		if( currentNode != null && ButaiDialogController.instance.busy )
@@ -477,12 +394,8 @@ class ButaiNodeManager
 		}
 	}
 
-	public static function tick( delta: Float )
+	public function tick( delta: Float )
 	{
-		if( ButaiDialogController.instance != null )
-			ButaiDialogController.instance.tick( delta );
-		checkDebugSocket();
-
 
 		if( paused )
 			return;
@@ -533,7 +446,7 @@ class ButaiNodeManager
 		}
 	}
 
-	public static function enableCondition( id: String )
+	public function enableCondition( id: String )
 	{
 		var condition = db.Butai.lookup( id );
 		if( condition == null )
@@ -547,7 +460,7 @@ class ButaiNodeManager
 
 	}
 
-	public static function disableCondition( id: String )
+	public function disableCondition( id: String )
 	{
 		for( condition in conditions )
 		{
@@ -558,6 +471,11 @@ class ButaiNodeManager
 			}
 		}
 
+	}
+
+	public function seenNode( nodeid: String )
+	{
+		return seenNodes.indexOf(nodeid) != -1 ? true : false;
 	}
 }
 
@@ -573,10 +491,5 @@ class ButaiSupport
 		#if client
 		Main.currentScene.switchToNewScene( className );
 		#end
-	}
-
-	public static function seenNode( nodeid: String )
-	{
-		return ButaiNodeManager.seenNodes.indexOf(nodeid) != -1 ? true : false;
 	}
 }

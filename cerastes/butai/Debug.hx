@@ -20,6 +20,8 @@ class Debug
 	public static var debugSocket : Socket;
 	#end
 
+	public static var connected = false;
+
 	public static function init()
 	{
 		registerWithDebugServer();
@@ -29,19 +31,21 @@ class Debug
 	public static function registerWithDebugServer()
 	{
 		#if hl
-		//try
+		try
 		{
 			debugSocket = new Socket();
+			debugSocket.setBlocking(false);
 			debugSocket.connect(new sys.net.Host("localhost"),5121);
 			debugSocket.output.writeString(Json.stringify({ 'm':"Connect" })+ "\n");
-			debugSocket.setBlocking(false);
+
 			Utils.notice("Connected to debug server");
+			connected = true;
 		}
-		/*catch(e : Dynamic)
+		catch(e : Dynamic)
 		{
 			Utils.info('Unable to connect to debug server: ${e}');
 			debugSocket = null;
-		}*/
+		}
 		#end
 
 	}
@@ -49,7 +53,7 @@ class Debug
 	public static function debugUpdate(m: String, value: String, ?p: String = "Main")
 	{
 		#if hl
-		if(debugSocket  != null )
+		if( connected && debugSocket != null )
 		{
 			var msg : DebugMessage = {
 				m: m,
@@ -61,6 +65,7 @@ class Debug
 			}
 			catch(e: Dynamic)
 			{
+				connected = false;
 				Utils.warning("Lost connection to debug server");
 				try{
 					debugSocket.close();
@@ -102,7 +107,7 @@ class Debug
 	static function checkDebugSocket()
 	{
 		#if hl
-		if( debugSocket != null )
+		if( connected && debugSocket != null )
 		{
 			var data = debugReadSocket();
 			if( data.length > 0 )

@@ -130,6 +130,17 @@ class ButaiNodeManager
 		next( db.Butai.lookup( node ) );
 	}
 
+	public function tryJump( node: String )
+	{
+		var target = db.Butai.lookup( node );
+		if( target == null )
+		{
+			return false ;
+		}
+		next( db.Butai.lookup( node ) );
+		return true;
+	}
+
 	private function getInputs( node : ButaiNode, ?pin: String ) : Array< ButaiNode >
 	{
 		var out = new Array<ButaiNode>();
@@ -156,7 +167,7 @@ class ButaiNodeManager
 		return out;
 	}
 
-	function nextAll( node )
+	public function nextAll( node )
 	{
 		var outputs = getOutputs( node );
 		for( out in outputs )

@@ -15,7 +15,7 @@ class EntityManager
 {
 	public static var instance(default, null):EntityManager = new EntityManager();
 
-	public var entities = new Array<BaseEntity>();
+	public var entities = new Array<Entity>();
 
 	static var lastId = 0;
 
@@ -44,7 +44,7 @@ class EntityManager
 		}
 	}
 
-	public function register( t : BaseEntity )
+	public function register( t : Entity )
 	{
 		entities.push(t);
 	}

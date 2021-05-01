@@ -8,11 +8,7 @@ import haxe.Json;
 using haxe.macro.Tools;
 #end
 
-#if hl
 typedef ClassKey = {};
-#else
-@:coreType abstract ClassKey from Class<Dynamic> to {} {}
-#end
 
 // Generates callback hooks for Butai classes; only makes sense when using Callbackgenerator
 class ButaiCallbackGenerator

@@ -101,6 +101,14 @@ class Scene
 
     }
 
+    /**
+     * Called when the app has been resized
+     */
+    public function resized()
+    {
+
+    }
+
     public function switchToScene( other:Scene )
     {
         // @todo Move preload into another function, allow current scene to spin until target is ready

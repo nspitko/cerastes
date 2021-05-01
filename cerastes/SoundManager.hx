@@ -11,7 +11,9 @@ class SoundManager
 	private static var channels = new Map<String,Channel>();
 
 	private static var music : Channel;
-	public static var musicVolume( default, set ): Float = 1.;
+	public  static var defaultMusicVolume: Float = 0.7;
+	public static var musicVolume( default, set ): Float = defaultMusicVolume;
+
 	public static var soundVolume: Float = 1.;
 
 	public static var currentMusicFile = "";

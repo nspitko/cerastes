@@ -1,6 +1,8 @@
 package cerastes.macros;
 
+#if butai
 import cerastes.butai.ButaiTypeBuilder.ButaiNodeFile;
+#end
 import haxe.macro.Context;
 import haxe.macro.Expr;
 import haxe.Json;
@@ -9,7 +11,7 @@ using haxe.macro.Tools;
 #end
 
 typedef ClassKey = {};
-
+#if butai
 // Generates callback hooks for Butai classes; only makes sense when using Callbackgenerator
 class ButaiCallbackGenerator
 {
@@ -85,7 +87,7 @@ class ButaiCallbackGenerator
 	#end
 
 }
-
+#end
 
 class CallbackGenerator
 {

@@ -1,11 +1,12 @@
 
 package cerastes.tools;
 
+import haxe.macro.Expr;
+
 class ImguiTool
 {
 	public function update( delta: Float ) {}
 	public function render( e: h3d.Engine)	{}
-
 }
 
 class ImguiToolManager
@@ -38,4 +39,5 @@ class ImguiToolManager
 		for( t in tools )
 			t.render( e );
 	}
+
 }

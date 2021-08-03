@@ -117,7 +117,7 @@ class CUIResource extends Resource
 				var o = cast(obj, h2d.Text);
 				o.text = props["text"];
 				if( props.exists("text_align") )
-					o.textAlign = EnumTools.createByIndex(h2d.Align, props["text_align"] );
+					o.textAlign = EnumTools.createByIndex(h2d.Text.Align, props["text_align"] );
 				if( props.exists("max_width") )
 					o.maxWidth = props["max_width"];
 
@@ -125,10 +125,10 @@ class CUIResource extends Resource
 				var o = cast(obj, h2d.Bitmap);
 				o.tile = hxd.Res.loader.load( props["tile"] ).toTile();
 
-				if( props.exists["width"] && props["width"] > 0)
+				if( props.exists("width") && props["width"] > 0)
 					o.width = props["width"];
 
-				if( props.exists["height"] && props["height"] > 0)
+				if( props.exists("height") && props["height"] > 0)
 					o.height = props["height"];
 
 			case "h2d.Drawable":
@@ -139,13 +139,13 @@ class CUIResource extends Resource
 			case "h2d.Flow":
 				var o = cast(obj, h2d.Flow);
 				if( props.exists("layout") )
-					o.layout = EnumTools.createByIndex( h2d.Flow.FlowLayout, props["layout"] )
+					o.layout = EnumTools.createByIndex( h2d.Flow.FlowLayout, props["layout"] );
 
 				if( props.exists("vertical_align") )
-					o.verticalAlign = EnumTools.createByIndex( h2d.Flow.FlowAlign, props["vertical_align"] )
+					o.verticalAlign = EnumTools.createByIndex( h2d.Flow.FlowAlign, props["vertical_align"] );
 
 				if( props.exists("horizontal_align") )
-					o.horizontalAlign = EnumTools.createByIndex( h2d.Flow.FlowAlign, props["horizontal_align"] )
+					o.horizontalAlign = EnumTools.createByIndex( h2d.Flow.FlowAlign, props["horizontal_align"] );
 
 
 			default:

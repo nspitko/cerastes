@@ -1,6 +1,9 @@
 package cerastes;
 
 
+#if hlsdl
+import sdl.Sdl;
+#end
 import cerastes.butai.Debug;
 import haxe.Json;
 #if hl
@@ -232,6 +235,26 @@ class Utils
 			arr[i] = arr[b];
 			arr[b] = a;
 		}
+	}
+
+	public static function getDPIScaleFactor()
+	{
+
+		var scale: Float = 1;
+		#if hlsdl
+		if( Sdl.getScreenHeight() > 1200 )
+		{
+			scale = 1.25;
+
+
+			if(Sdl.getScreenHeight() >= 2160 )
+				scale = 1.5;
+
+		}
+		#end
+
+		return scale;
+
 	}
 
 

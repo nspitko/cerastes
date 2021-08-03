@@ -1,5 +1,7 @@
 package cerastes.fmt;
 
+import haxe.EnumTools;
+import h3d.Vector;
 import haxe.io.BytesBuffer;
 import haxe.io.Bytes;
 import h2d.Bitmap;
@@ -65,6 +67,11 @@ class CUIResource extends Resource
 		{
 			case "h2d.Object":
 				obj = new h2d.Object();
+			case "h2d.Flow":
+				obj = new h2d.Flow();
+				var flow : h2d.Flow = cast obj;
+				flow.verticalAlign = Bottom;
+				flow.horizontalAlign = Left;
 			case "h2d.Text":
 				var fe = hxd.Res.loader.load( props.get("font") );
 				var res = new BitmapFont( fe.entry );
@@ -87,7 +94,6 @@ class CUIResource extends Resource
 		var s =  Type.getSuperClass( Type.getClass( obj ) );
 		while( s != null )
 		{
-			trace(Type.getClassName(s));
 			setProperties( obj, Type.getClassName(s), entry );
 
 			s = Type.getSuperClass( s );
@@ -106,9 +112,42 @@ class CUIResource extends Resource
 				obj.x = props["x"];
 				obj.y = props["y"];
 
+
 			case "h2d.Text":
 				var o = cast(obj, h2d.Text);
 				o.text = props["text"];
+				if( props.exists("text_align") )
+					o.textAlign = EnumTools.createByIndex(h2d.Align, props["text_align"] );
+				if( props.exists("max_width") )
+					o.maxWidth = props["max_width"];
+
+			case "h2d.Bitmap":
+				var o = cast(obj, h2d.Bitmap);
+				o.tile = hxd.Res.loader.load( props["tile"] ).toTile();
+
+				if( props.exists["width"] && props["width"] > 0)
+					o.width = props["width"];
+
+				if( props.exists["height"] && props["height"] > 0)
+					o.height = props["height"];
+
+			case "h2d.Drawable":
+				var o = cast(obj, h2d.Drawable);
+				if( props.exists("color"))
+					o.color.setColor(props["color"]);
+
+			case "h2d.Flow":
+				var o = cast(obj, h2d.Flow);
+				if( props.exists("layout") )
+					o.layout = EnumTools.createByIndex( h2d.Flow.FlowLayout, props["layout"] )
+
+				if( props.exists("vertical_align") )
+					o.verticalAlign = EnumTools.createByIndex( h2d.Flow.FlowAlign, props["vertical_align"] )
+
+				if( props.exists("horizontal_align") )
+					o.horizontalAlign = EnumTools.createByIndex( h2d.Flow.FlowAlign, props["horizontal_align"] )
+
+
 			default:
 
 

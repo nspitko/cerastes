@@ -38,6 +38,13 @@ class UIEditor extends ImguiTool
 
 	var scaleFactor = Utils.getDPIScaleFactor();
 
+	var dockspaceId: ImGuiID = -1;
+	var dockspaceIdLeft: ImGuiID;
+	var dockspaceIdRight: ImGuiID;
+	var dockspaceIdCenter: ImGuiID;
+
+	var dockCond = ImGuiCond.Once;
+
 	public function new()
 	{
 		var size = haxe.macro.Compiler.getDefine("windowSize");
@@ -69,6 +76,7 @@ class UIEditor extends ImguiTool
 			// do nothing
 		}
 
+
 	}
 
 	function updateScene()
@@ -79,7 +87,9 @@ class UIEditor extends ImguiTool
 
 	function inspectorColumn()
 	{
-		ImGui.beginChild("uie_inspector",{x: 200 * scaleFactor, y: viewportHeight}, false, ImGuiWindowFlags.AlwaysAutoResize );
+		//ImGui.beginChild("uie_inspector",{x: 200 * scaleFactor, y: viewportHeight}, false, ImGuiWindowFlags.AlwaysAutoResize );
+		ImGui.setNextWindowDockId( dockspaceIdLeft, dockCond );
+		ImGui.begin("Inspector");
 
 
 		// Buttons
@@ -90,7 +100,7 @@ class UIEditor extends ImguiTool
 
 		if( ImGui.beginPopup("uie_additem") )
 		{
-			var types = ["h2d.Object", "h2d.Text", "h2d.Bitmap", "h2d.Flow"];
+			var types = ["h2d.Object", "h2d.Text", "h2d.Bitmap", "h2d.Flow", "h2d.Mask"];
 
 			for( t in types )
 			{
@@ -128,14 +138,15 @@ class UIEditor extends ImguiTool
 
 
 
-		ImGui.endChild();
-
-
+		//ImGui.endChild();
+		ImGui.end();
 	}
 
 	function editorColumn()
 	{
-		ImGui.beginChild("uie_editor",{x: 300 * scaleFactor, y: viewportHeight}, false, ImGuiWindowFlags.AlwaysAutoResize);
+		//ImGui.beginChild("uie_editor",{x: 300 * scaleFactor, y: viewportHeight}, false, ImGuiWindowFlags.AlwaysAutoResize);
+		ImGui.setNextWindowDockId( dockspaceIdRight, dockCond );
+		ImGui.begin("Editor");
 
 		if( selectedInspectorTree == null )
 		{
@@ -146,32 +157,41 @@ class UIEditor extends ImguiTool
 			populateEditor();
 		}
 
-		ImGui.endChild();
+		//ImGui.endChild();
+		ImGui.end();
 	}
 
 	function menuBar()
 	{
-		if( ImGui.beginMainMenuBar() )
+		if( ImGui.beginMenuBar() )
+		{
+			if( ImGui.beginMenu("File", true) )
 			{
-				if( ImGui.beginMenu("File", true) )
+				if (ImGui.menuItem("Open", "Ctrl+O"))
 				{
-					if (ImGui.menuItem("Open", "Ctrl+O"))
-					{
-						//ImguiToolManager.showTool("Perf");
-					}
-					if (ImGui.menuItem("Save", "Ctrl+S"))
-					{
-						//ImguiToolManager.showTool("UIEditor");
-					}
-					if (ImGui.menuItem("Save As..."))
-					{
-						//ImguiToolManager.showTool("UIEditor");
-					}
-
-					ImGui.endMenu();
+					//ImguiToolManager.showTool("Perf");
 				}
-				ImGui.endMainMenuBar();
+				if (ImGui.menuItem("Save", "Ctrl+S"))
+				{
+					//ImguiToolManager.showTool("UIEditor");
+				}
+				if (ImGui.menuItem("Save As..."))
+				{
+					//ImguiToolManager.showTool("UIEditor");
+				}
+
+				ImGui.endMenu();
 			}
+			if( ImGui.beginMenu("View", true) )
+			{
+				if (ImGui.menuItem("Reset docking"))
+				{
+					dockCond = ImGuiCond.Always;
+				}
+				ImGui.endMenu();
+			}
+			ImGui.endMenuBar();
+		}
 	}
 
 	override public function update( delta: Float )
@@ -181,24 +201,64 @@ class UIEditor extends ImguiTool
 		//
 		//ImGui.end();
 
-		ImGui.begin("\uf108 UI Editor", null, ImGuiWindowFlags.AlwaysAutoResize );
+		ImGui.setNextWindowSize({x: viewportWidth + 800, y: viewportHeight + 120}, ImGuiCond.Once);
+		ImGui.begin("\uf108 UI Editor", null, ImGuiWindowFlags.NoDocking | ImGuiWindowFlags.MenuBar );
 
 		menuBar();
 
-		inspectorColumn();
+		dockSpace();
 
-		ImGui.sameLine();
-
-		// Preview
-		ImGui.image(sceneRTId, { x: viewportWidth, y: viewportHeight } );
-
-		ImGui.sameLine();
-
-		editorColumn();
+		ImGui.dockSpace( dockspaceId, null );
 
 		ImGui.end();
 
+		inspectorColumn();
+
+		//ImGui.sameLine();
+
+		// Preview
+		ImGui.setNextWindowDockId( dockspaceIdCenter, dockCond );
+		ImGui.begin("Preview");
+		ImGui.image(sceneRTId, { x: viewportWidth, y: viewportHeight } );
+		ImGui.end();
+
+		//ImGui.sameLine();
+
+		editorColumn();
+
+		//ImGui.end();
+
 		// Editor window
+
+		dockCond = ImGuiCond.Once;
+	}
+
+	function dockSpace()
+	{
+		if( dockspaceId == -1 || ImGui.dockBuilderGetNode( dockspaceId ) == null || dockCond == Always )
+		{
+			var str = "UIEditorDockspace";
+
+			dockspaceId = ImGui.getID(str);
+			dockspaceIdLeft = ImGui.getID(str+"Left");
+			dockspaceIdRight = ImGui.getID(str+"Right");
+			dockspaceIdCenter = ImGui.getID(str+"Center");
+
+			// Clear any existing layout
+			var flags: ImGuiDockNodeFlags = ImGuiDockNodeFlags.NoDockingInCentralNode | ImGuiDockNodeFlags.NoDockingSplitMe;
+
+			ImGui.dockBuilderRemoveNode( dockspaceId );
+			ImGui.dockBuilderAddNode( dockspaceId, flags );
+
+			var idOut: hl.Ref<ImGuiID> = dockspaceId;
+
+			dockspaceIdLeft = ImGui.dockBuilderSplitNode(idOut.get(), ImGuiDir.Left, 0.20, null, idOut);
+			dockspaceIdRight = ImGui.dockBuilderSplitNode(idOut.get(), ImGuiDir.Right, 0.3, null, idOut);
+			dockspaceIdCenter = idOut.get();
+
+
+			ImGui.dockBuilderFinish(dockspaceId);
+		}
 	}
 
 
@@ -535,6 +595,18 @@ class UIEditor extends ImguiTool
 					def.props["horizontal_align"] = EnumValueTools.getIndex(align);
 				}
 
+			case "h2d.Mask":
+				var t : h2d.Mask = cast obj;
+
+				if( IG.wref( ImGui.inputInt("Width",_,1,10), t.width ) )
+					def.props["width"] = t.width;
+
+				if( IG.wref( ImGui.inputInt("Height",_,1,10), t.height ) )
+					def.props["height"] = t.height;
+
+				t.scrollX = t.scrollY = 0;
+
+
 
 
 		}
@@ -557,6 +629,7 @@ class UIEditor extends ImguiTool
 			case "h2d.Text": return "\uf031";
 			case "h2d.Bitmap": return "\uf03e";
 			case "h2d.Flow": return "\uf0db";
+			case "h2d.Mask": return "\uf125";
 			default: return "";
 		}
 	}
@@ -580,6 +653,9 @@ class UIEditor extends ImguiTool
 				def.props["font"] = "fnt/kodenmanhou16.fnt";
 			case "h2d.Bitmap":
 				def.props["tile"] = "spr/placeholder.png";
+			case "h2d.Mask":
+				def.props["width"] = 100;
+				def.props["height"] = 100;
 		}
 
 		parent.children.push(def);

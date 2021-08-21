@@ -82,6 +82,9 @@ class CUIResource extends Resource
 				var tile = hxd.Res.loader.load( props.get("tile") ).toTile();
 				obj = new Bitmap( tile );
 
+			case "h2d.Mask":
+				obj = new h2d.Mask(props.get("width"),props.get("height"));
+
 			default:
 				Utils.error('CUI: Cannot create unknown type ${entry.type}; ignoring!!');
 
@@ -146,6 +149,9 @@ class CUIResource extends Resource
 
 				if( props.exists("horizontal_align") )
 					o.horizontalAlign = EnumTools.createByIndex( h2d.Flow.FlowAlign, props["horizontal_align"] );
+
+			case "h2d.Mask":
+				
 
 
 			default:

@@ -98,10 +98,11 @@ class ImGuiTools {
 	public static var vec:ImVec4Impl = new ImVec4Impl();
 	public static var vec2:ImVec4Impl = new ImVec4Impl();
 	public static var textures:Map<h3d.mat.Texture, Int> = [];
+	/*
 	public static function image(tile:Tile, ?tint:Int, ?borderColor:Int) @:privateAccess {
 		var tex = tile.getTexture();
 		var id = textures[tex];
-		if (id == null) textures[tex] = id = imgui.ImGuiDrawable.ImGuiDrawableBuffers.instance.registerTexture(tex);
+		if (id == null) textures[tex] = id = tex;
 		point.set(tile.width, tile.height);
 		point2.set(tile.u, tile.v);
 		point3.set(tile.u2, tile.v2);
@@ -114,7 +115,7 @@ class ImGuiTools {
 	public static function imageButton(tile:Tile, framePadding:Int = -1, ?bg:Int, ?tint:Int) @:privateAccess {
 		var tex = tile.getTexture();
 		var id = textures[tex];
-		if (id == null) textures[tex] = id = imgui.ImGuiDrawable.ImGuiDrawableBuffers.instance.registerTexture(tex);
+		if (id == null) textures[tex] = id = tex;
 		point.set(tile.width, tile.height);
 		point2.set(tile.u, tile.v);
 		point3.set(tile.u2, tile.v2);
@@ -123,7 +124,7 @@ class ImGuiTools {
 		if (tint != null) vec2.setColor(tint);
 		else vec2.set(1,1,1,1);
 		return ImGui.imageButton(id, point, point2, point3, framePadding, vec, vec2);
-	}
+	}*/
 
 	public static function inputDouble(label : String, v : Float, step : Float = 0.0, step_fast : Float = 0.0, format : String = "%.6f", flags : ImGuiInputTextFlags = 0):Float {
 		ImGui.inputDouble(label, v, step, step_fast, format, flags);

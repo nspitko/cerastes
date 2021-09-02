@@ -1,5 +1,7 @@
 package cerastes.tools;
 
+import h2d.Text;
+import h2d.Font;
 import cerastes.tools.ImguiTools.IG;
 import cerastes.tools.ImguiTools.ImVec2Impl;
 import imgui.ImGuiDrawable.ImGuiDrawableBuffers;
@@ -16,7 +18,6 @@ typedef AssetBrowserPreviewItem = {
 	var file: String;
 	var texture: Texture;
 	var scene: h2d.Scene;
-	var textureID: Int;
 	var dirty: Bool;
 	var alwaysUpdate: Bool;
 	var loaded: Bool;
@@ -46,13 +47,14 @@ class AssetBrowser  extends  ImguiTool
 		"Others" => true,
 	];
 
+	public static var needsReload = false;
+
 	public function new()
 	{
 		previewWidth = cast Math.floor( previewWidth * scaleFactor );
 		previewHeight = cast Math.floor( previewHeight * scaleFactor );
 
 		placeholder = hxd.Res.tools.uncertainty.toTexture();
-		placeholderID = ImGuiDrawableBuffers.instance.registerTexture( placeholder );
 
 		loadAssets("res");
 	}
@@ -67,7 +69,6 @@ class AssetBrowser  extends  ImguiTool
 			file: file,
 			texture: null,
 			scene: null,
-			textureID: -1,
 			dirty: false,
 			loaded: false,
 			alwaysUpdate: false,
@@ -101,7 +102,6 @@ class AssetBrowser  extends  ImguiTool
 				p.scene = null;
 			}
 
-			p.textureID = ImGuiDrawableBuffers.instance.registerTexture( p.texture );
 
 		}
 	}
@@ -117,9 +117,18 @@ class AssetBrowser  extends  ImguiTool
 				asset.dirty = false;
 
 			case "fnt":
-				var bmp = new Bitmap( hxd.Res.tools.font.toTile(), asset.scene );
-				bmp.width = previewWidth;
-				bmp.height = previewHeight;
+				var any = hxd.Res.load( asset.file );
+
+				var font = hxd.fmt.bfnt.Reader.parse( any.entry.getBytes(), function(name){
+					return hxd.Res.load( '${any.entry.directory}/${name}'  ).toTile();
+				});
+
+
+				var t = new Text(font, asset.scene );
+				t.maxWidth = previewWidth - 8;
+				t.x = 4;
+				t.y = 4;
+				t.text = "The quick brown fox jumps over the lazy dog";
 
 			case "bdef":
 				var bmp = new Bitmap( hxd.Res.tools.config.toTile(), asset.scene );
@@ -135,7 +144,6 @@ class AssetBrowser  extends  ImguiTool
 				var bmp = new Bitmap( hxd.Res.tools.cui.toTile(), asset.scene );
 				bmp.width = previewWidth;
 				bmp.height = previewHeight;
-
 
 			default:
 				var bmp = new Bitmap( hxd.Res.tools.hexagonal_nut.toTile(), asset.scene );
@@ -163,6 +171,12 @@ class AssetBrowser  extends  ImguiTool
 		//ImGui.begin("Preview");
 		//
 		//ImGui.end();
+
+		if( needsReload )
+		{
+			needsReload = false;
+			loadAssets("res");
+		}
 
 		ImGui.begin("\uf07c Asset browser", null, ImGuiWindowFlags.AlwaysAutoResize);
 
@@ -251,7 +265,7 @@ class AssetBrowser  extends  ImguiTool
 			if( !filterTypes[getItemType( preview )] )
 				continue;
 
-			var t = preview.textureID != -1 ? preview.textureID : placeholderID;
+			var t = preview.texture != null ? preview.texture : placeholder;
 
 			if( ImGui.imageButton( t, {x: previewWidth, y: previewHeight}, null, 2 ) )
 			{
@@ -304,10 +318,12 @@ class AssetBrowser  extends  ImguiTool
 				ImGui.textColored(typeColor,"Font atlas");
 			case "cui":
 				ImGui.textColored(typeColor,"UI File");
+			case "cml":
+				ImGui.textColored(typeColor,"Cannon package");
 			case "png" | "bmp" | "gif" | "jpg":
 				ImGui.textColored(typeColor,"Texture");
 				ImGui.separator();
-				ImGui.image(asset.textureID, {x: asset.texture.width, y: asset.texture.height});
+				ImGui.image(asset.texture, {x: Math.min( asset.texture.width, 512 * scaleFactor), y: Math.min(asset.texture.height, 512 * scaleFactor) });
 			default:
 
 		}
@@ -325,7 +341,7 @@ class AssetBrowser  extends  ImguiTool
 			case "cui": "UI Files";
 			case "png" | "bmp" | "gif" | "jpg": "Images";
 			case "bdef": "Butai";
-			default: "Other";
+			default: "Others";
 
 		}
 

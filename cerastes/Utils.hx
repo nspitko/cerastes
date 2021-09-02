@@ -35,7 +35,7 @@ class Utils
 	public static var WRITE_LOG = false;
 
 	public static var LOG_LEVEL = 0;
-	public static var SHOW_BULLET_AABBS = true;
+	public static var SHOW_BULLET_AABBS = false;
 
 	#if hl
 	public static var logFile : FileOutput = null;

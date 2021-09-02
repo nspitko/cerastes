@@ -61,7 +61,6 @@ class UIEditor extends ImguiTool
 		preview.scaleMode = Stretch(viewportWidth,viewportHeight);
 
 		sceneRT = new Texture(viewportWidth,viewportHeight, [Target] );
-		sceneRTId = ImGuiDrawableBuffers.instance.registerTexture( sceneRT );
 
 		// TEMP: Populate with some crap
 		fileName = "ui/test.cui";
@@ -219,7 +218,7 @@ class UIEditor extends ImguiTool
 		// Preview
 		ImGui.setNextWindowDockId( dockspaceIdCenter, dockCond );
 		ImGui.begin("Preview");
-		ImGui.image(sceneRTId, { x: viewportWidth, y: viewportHeight } );
+		ImGui.image(sceneRT, { x: viewportWidth, y: viewportHeight } );
 		ImGui.end();
 
 		//ImGui.sameLine();

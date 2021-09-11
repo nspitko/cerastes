@@ -1,6 +1,7 @@
 
 package cerastes.tools;
 
+import cerastes.tools.ImguiTool.ImguiToolManager;
 import haxe.EnumTools;
 import haxe.io.Bytes;
 import hxd.BytesBuffer;
@@ -43,7 +44,7 @@ class UIEditor extends ImguiTool
 	var dockspaceIdRight: ImGuiID;
 	var dockspaceIdCenter: ImGuiID;
 
-	var dockCond = ImGuiCond.Once;
+	var dockCond = ImGuiCond.Appearing;
 
 	public function new()
 	{
@@ -62,20 +63,21 @@ class UIEditor extends ImguiTool
 
 		sceneRT = new Texture(viewportWidth,viewportHeight, [Target] );
 
-		// TEMP: Populate with some crap
-		fileName = "ui/test.cui";
+	}
+
+	public function openFile( f: String )
+	{
+		fileName = f;
 
 		try
 		{
-			var res = new cerastes.fmt.CUIResource( hxd.Res.loader.load("ui/test.cui").entry );
+			var res = new cerastes.fmt.CUIResource( hxd.Res.loader.load(fileName).entry );
 			rootDef = res.getData().root;
 			updateScene();
 		} catch(e)
 		{
 			// do nothing
 		}
-
-
 	}
 
 	function updateScene()
@@ -195,10 +197,8 @@ class UIEditor extends ImguiTool
 
 	override public function update( delta: Float )
 	{
-		// UI preview pane
-		//ImGui.begin("Preview");
-		//
-		//ImGui.end();
+		var isOpen = true;
+		var isOpenRef = hl.Ref.make(isOpen);
 
 		ImGui.setNextWindowSize({x: viewportWidth + 800, y: viewportHeight + 120}, ImGuiCond.Once);
 		ImGui.begin("\uf108 UI Editor", null, ImGuiWindowFlags.NoDocking | ImGuiWindowFlags.MenuBar );
@@ -229,7 +229,12 @@ class UIEditor extends ImguiTool
 
 		// Editor window
 
-		dockCond = ImGuiCond.Once;
+		dockCond = ImGuiCond.Appearing;
+
+		if( !isOpenRef.get() )
+		{
+			ImguiToolManager.closeTool( this );
+		}
 	}
 
 	function dockSpace()

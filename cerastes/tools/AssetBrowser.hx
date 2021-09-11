@@ -1,5 +1,6 @@
 package cerastes.tools;
 
+import cerastes.tools.ImguiTool.ImguiToolManager;
 import h2d.Text;
 import h2d.Font;
 import cerastes.tools.ImguiTools.IG;
@@ -30,6 +31,9 @@ class AssetBrowser  extends  ImguiTool
 	var previewWidth = 64;
 	var previewHeight = 64;
 
+	var viewportWidth: Int;
+	var viewportHeight: Int;
+
 	var placeholder: Texture;
 	var placeholderID: Int;
 
@@ -51,6 +55,16 @@ class AssetBrowser  extends  ImguiTool
 
 	public function new()
 	{
+		var size = haxe.macro.Compiler.getDefine("windowSize");
+		viewportWidth = 640;
+		viewportHeight = 360;
+		if( size != null )
+		{
+			var p = size.split("x");
+			viewportWidth = Std.parseInt(p[0]);
+			viewportHeight = Std.parseInt(p[1]);
+		}
+
 		previewWidth = cast Math.floor( previewWidth * scaleFactor );
 		previewHeight = cast Math.floor( previewHeight * scaleFactor );
 
@@ -135,15 +149,17 @@ class AssetBrowser  extends  ImguiTool
 				bmp.width = previewWidth;
 				bmp.height = previewHeight;
 
-			case "bnode":
-				var bmp = new Bitmap( hxd.Res.tools.checkbox_tree.toTile(), asset.scene );
-				bmp.width = previewWidth;
-				bmp.height = previewHeight;
-
 			case "cui":
-				var bmp = new Bitmap( hxd.Res.tools.cui.toTile(), asset.scene );
-				bmp.width = previewWidth;
-				bmp.height = previewHeight;
+				var res = new cerastes.fmt.CUIResource( hxd.Res.loader.load(asset.file).entry );
+
+				var obj = res.toObject();
+
+				var scale = previewWidth / viewportWidth;
+				obj.scale( scale );
+
+				asset.scene.addChild( obj );
+
+
 
 			default:
 				var bmp = new Bitmap( hxd.Res.tools.hexagonal_nut.toTile(), asset.scene );
@@ -250,6 +266,20 @@ class AssetBrowser  extends  ImguiTool
 		}
 	}
 
+	function openAssetEditor( asset: AssetBrowserPreviewItem )
+	{
+		var ext = Path.extension( asset.file );
+		switch( ext )
+		{
+			case "cml":
+				var t: BulletEditor = cast ImguiToolManager.showTool("BulletEditor");
+				t.openFile( asset.file );
+			case "cui":
+				var t: UIEditor = cast ImguiToolManager.showTool("UIEditor");
+				t.openFile( asset.file );
+		}
+	}
+
 	function populateAssets()
 	{
 
@@ -279,7 +309,14 @@ class AssetBrowser  extends  ImguiTool
 			if( ImGui.isItemHovered() )
 			{
 				onItemHover(preview);
+				if( ImGui.isMouseDoubleClicked( ImGuiMouseButton.Left ) )
+				{
+					trace('Asset open: ${preview.file}');
+					openAssetEditor( preview );
+				}
 			}
+
+
 
 			if( ImGui.beginDragDropSource() )
 			{

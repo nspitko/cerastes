@@ -1,6 +1,7 @@
 
 package cerastes.tools;
 
+import cerastes.tools.ImguiTool.ImguiToolManager;
 import hl.UI;
 import haxe.Json;
 import cerastes.tools.ImguiTools.IG;
@@ -32,21 +33,27 @@ class BulletEditor extends ImguiTool
 	var dockspaceIdRight: ImGuiID;
 	var dockspaceIdCenter: ImGuiID;
 
-	var dockCond = ImGuiCond.Once;
+	var dockCond = ImGuiCond.Appearing;
 
 	var fileName = "";
 
 	var data: CannonFile;
-	var fiberName = "test";
+	var fiberName: String = null;
 
 	var fiberClickedName = "test";
 	var modalTextValue = "";
+
+	static var globalIndex = 0;
+	var index = 0;
 
 	public function new()
 	{
 		var size = haxe.macro.Compiler.getDefine("windowSize");
 		viewportWidth = 640;
 		viewportHeight = 360;
+
+		index = globalIndex++;
+
 		if( size != null )
 		{
 			var p = size.split("x");
@@ -60,9 +67,16 @@ class BulletEditor extends ImguiTool
 		sceneRT = new Texture(viewportWidth,viewportHeight, [Target] );
 
 		// TEMP: Populate with some crap
-		fileName = "data/bullets.cml";
+		fileName = "";
 
 		updateScene();
+	}
+
+	public function openFile( f: String )
+	{
+		fileName = f;
+		updateScene();
+
 	}
 
 	override public function render( e: h3d.Engine)
@@ -83,13 +97,17 @@ class BulletEditor extends ImguiTool
 		BulletManager.initialize(preview, fileName);
 
 
-		try
+		if( fiberName != null )
 		{
-		var seed = BulletManager.createSeed(fiberName, viewportWidth / 2, viewportHeight / 2);
-		}
-		catch( e)
-		{
-			trace(e);
+
+			try
+			{
+			var seed = BulletManager.createSeed(fiberName, viewportWidth / 2, viewportHeight / 2);
+			}
+			catch( e)
+			{
+				trace(e);
+			}
 		}
 		//var obj : CannonBullet = cast seed.get_object();
 		//obj.debug
@@ -99,8 +117,11 @@ class BulletEditor extends ImguiTool
 
 	override public function update( delta: Float )
 	{
+		var isOpen = true;
+		var isOpenRef = hl.Ref.make(isOpen);
+
 		ImGui.setNextWindowSize({x: viewportWidth + 800, y: viewportHeight + 120}, ImGuiCond.Once);
-		ImGui.begin('\uf185 Bullet Editor (${fileName})', null, ImGuiWindowFlags.NoDocking | ImGuiWindowFlags.MenuBar );
+		ImGui.begin('\uf185 Bullet Editor (${fileName})###${windowID()}', isOpenRef, ImGuiWindowFlags.NoDocking | ImGuiWindowFlags.MenuBar );
 
 		menuBar();
 
@@ -112,7 +133,7 @@ class BulletEditor extends ImguiTool
 
 		// Preview
 		ImGui.setNextWindowDockId( dockspaceIdCenter, dockCond );
-		ImGui.begin("Preview");
+		ImGui.begin('Preview###${windowID()}_preview');
 		ImGui.image(sceneRT, { x: viewportWidth, y: viewportHeight } );
 		ImGui.end();
 
@@ -120,7 +141,12 @@ class BulletEditor extends ImguiTool
 		editorWindow();
 		fiberList();
 
-		dockCond = ImGuiCond.Once;
+		dockCond = ImGuiCond.Appearing;
+
+		if( !isOpenRef.get() )
+		{
+			ImguiToolManager.closeTool( this );
+		}
 	}
 
 	function menuBar()
@@ -133,7 +159,7 @@ class BulletEditor extends ImguiTool
 				{
 					//ImguiToolManager.showTool("Perf");
 				}
-				if (ImGui.menuItem("Save", "Ctrl+S"))
+				if (fileName != "" && ImGui.menuItem("Save", "Ctrl+S"))
 				{
 					var f : CannonFile = [];
 					for( k => v in @:privateAccess BulletManager.patternList )
@@ -186,13 +212,21 @@ class BulletEditor extends ImguiTool
 	function editorWindow()
 	{
 		ImGui.setNextWindowDockId( dockspaceIdLeft, dockCond );
-		ImGui.begin("Script");
-		var newFiber = IG.textInputMultiline( "Fiber", @:privateAccess BulletManager.patternList[fiberName], {x:300,y:200}  );
-		if( newFiber != null )
+		ImGui.begin('Script###${windowID()}_script' );
+
+		if( fiberName != null )
 		{
-			trace(newFiber);
-			@:privateAccess BulletManager.patternList[fiberName] = newFiber;
-			updateScene();
+			var newFiber = IG.textInputMultiline( "Fiber", @:privateAccess BulletManager.patternList[fiberName], {x:300,y:200}  );
+			if( newFiber != null )
+			{
+				trace(newFiber);
+				@:privateAccess BulletManager.patternList[fiberName] = newFiber;
+				updateScene();
+			}
+		}
+		else
+		{
+			ImGui.text("No fiber selected.");
 		}
 		ImGui.end();
 	}
@@ -201,7 +235,7 @@ class BulletEditor extends ImguiTool
 	function fiberList()
 	{
 		ImGui.setNextWindowDockId( dockspaceIdLeft, dockCond );
-		ImGui.begin("Fibers");
+		ImGui.begin('Fibers###${windowID()}_fiberlist');
 		ImGui.beginChild("FiberList",{x:300,y:400},false );
 		for( k => v in @:privateAccess BulletManager.patternList )
 		{
@@ -259,10 +293,8 @@ class BulletEditor extends ImguiTool
 		//ImGui.openPopup('${windowID()}_rc_rename');
 
 
-		if( ImGui.beginPopupModal('${windowID()}_rc_rename', closeRef, ImGuiWindowFlags.AlwaysAutoResize) )
+		if( ImGui.beginPopupModal('New fiber name###${windowID()}_rc_rename', closeRef, ImGuiWindowFlags.AlwaysAutoResize) )
 		{
-			ImGui.text("New fiber name");
-			ImGui.separator();
 			var r = IG.textInput("New name", fiberClickedName);
 			if( r != null )
 				modalTextValue = r;
@@ -285,9 +317,9 @@ class BulletEditor extends ImguiTool
 			ImGui.endPopup();
 		}
 
-		if( ImGui.beginPopupModal('${windowID()}_rc_delete', closeRef, ImGuiWindowFlags.AlwaysAutoResize) )
+		if( ImGui.beginPopupModal('Really delete ${fiberClickedName}?###${windowID()}_rc_delete', closeRef, ImGuiWindowFlags.AlwaysAutoResize) )
 		{
-			ImGui.text('Really delete ${fiberClickedName}?');
+			ImGui.text("This can't be undone since I'm too lazy to add proper undo support.");
 			ImGui.separator();
 
 			if( ImGui.button("Ok") )
@@ -307,13 +339,8 @@ class BulletEditor extends ImguiTool
 			ImGui.endPopup();
 		}
 
-		if( ImGui.beginPopupModal('${windowID()}_rc_add', closeRef, ImGuiWindowFlags.AlwaysAutoResize) )
+		if( ImGui.beginPopupModal('New Fiber###${windowID()}_rc_add', closeRef, ImGuiWindowFlags.AlwaysAutoResize) )
 		{
-			ImGui.text("New fiber");
-			ImGui.separator();
-			var i=1;
-
-
 
 			var r = IG.textInput("ID", fiberClickedName);
 			if( r != null )
@@ -346,7 +373,7 @@ class BulletEditor extends ImguiTool
 
 	inline function windowID()
 	{
-		return fileName + "UIEditorDockspace";
+		return 'bmle${index}';
 	}
 
 	function dockSpace()
@@ -354,11 +381,14 @@ class BulletEditor extends ImguiTool
 		if( dockspaceId == -1 || ImGui.dockBuilderGetNode( dockspaceId ) == null || dockCond == Always )
 		{
 			var str = windowID();
+			trace(str);
 
 			dockspaceId = ImGui.getID(str);
 			dockspaceIdLeft = ImGui.getID(str+"Left");
 			dockspaceIdRight = ImGui.getID(str+"Right");
 			dockspaceIdCenter = ImGui.getID(str+"Center");
+
+			trace(dockspaceIdLeft);
 
 			// Clear any existing layout
 			var flags: ImGuiDockNodeFlags = ImGuiDockNodeFlags.NoDockingInCentralNode | ImGuiDockNodeFlags.NoDockingSplitMe;

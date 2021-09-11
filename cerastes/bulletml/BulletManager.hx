@@ -40,6 +40,11 @@ class BulletManager
 
 
 
+	/**
+	 * Initializes the bullet manager
+	 * @param pObject
+	 * @param file - Empty string indicates no file to load (used for tools)
+	 */
 	public static function initialize(pObject: Object, ?file: String = "data/bullets.cml")
 	{
 		if( cmlRoot == null )
@@ -75,7 +80,7 @@ class BulletManager
 			false
 		);
 
-		if( patternList == null )
+		if( patternList == null && file != "" )
 			loadFromDisk( file );
 
 

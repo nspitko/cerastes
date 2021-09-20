@@ -151,7 +151,7 @@ class CUIResource extends Resource
 					o.horizontalAlign = EnumTools.createByIndex( h2d.Flow.FlowAlign, props["horizontal_align"] );
 
 			case "h2d.Mask":
-				
+
 
 
 			default:
@@ -174,6 +174,88 @@ class CUIResource extends Resource
 		// @todo We should peek the config to find out where res is; don't just assume
 		sys.io.File.saveBytes('res/${file}',bytes);
 		#end
+	}
+
+	public static function writeObject( def: CUIElementDef, obj: Object, file: String )
+	{
+
+		updateDefs([def], obj );
+
+		var cui: CUIFile = {
+			version: version,
+			root: def
+		};
+
+		var s = new hxbit.Serializer();
+		var bytes = s.serialize(cui);
+
+		#if hl
+		sys.io.File.saveBytes('res/${file}',bytes);
+		#end
+	}
+
+	static function updateDefs( defs: Array<CUIElementDef>, root: Object )
+	{
+		for( def in defs )
+		{
+			var obj: Object = root.getObjectByName(def.name);
+			var type = Type.getClass( obj );
+			do
+			{
+				getProps(obj, def.props, Type.getClassName(type) );
+				type = cast Type.getSuperClass( type );
+			}
+			while( type != null );
+
+			updateDefs(def.children, root);
+		}
+
+	}
+
+	static function getProps( obj: Object, props: Map<String,Dynamic>, type: String )
+	{
+		switch( type )
+		{
+			case "h2d.Object":
+				props["x"] = obj.x;
+				props["y"] = obj.y;
+
+			case "h2d.Text":
+				var o = cast(obj, h2d.Text);
+				props["text"] = o.text;
+				props["text_align"] = EnumValueTools.getIndex(o.textAlign);
+				props["max_width"] = o.maxWidth;
+
+			case "h2d.Bitmap":
+				var o = cast(obj, h2d.Bitmap);
+				props["tile"] = o.tile.getTexture().name;
+
+				if( o.width > 0 ) props["width"] = o.width;
+				if( o.height > 0 ) props["height"] = o.height;
+
+			case "h2d.Drawable":
+				var o = cast(obj, h2d.Drawable);
+				props["color"] = o.color.toColor();
+
+			case "h2d.Flow":
+				var o = cast(obj, h2d.Flow);
+
+				props["layout"] = EnumValueTools.getIndex(o.layout);
+				props["vertical_align"] = EnumValueTools.getIndex(o.verticalAlign);
+				props["horizontal_align"] = EnumValueTools.getIndex(o.horizontalAlign);
+
+			case "h2d.Mask":
+				var o = cast(obj, h2d.Mask);
+
+				props["width"] = o.width;
+				props["height"] = o.height;
+
+
+			default:
+
+
+		}
+
 	}
 
 	public function getData() : CUIFile

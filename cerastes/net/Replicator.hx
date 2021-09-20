@@ -5,6 +5,7 @@ import haxe.macro.Context.*;
 using haxe.macro.Tools;
 #end
 
+@:native("ReplicatorProxy")
 class Replicator
 {
 	public static function create( id: Int ) : Replicated

@@ -1,5 +1,6 @@
 package cerastes.net;
 
+import haxe.macro.Compiler;
 import haxe.macro.Type.TConstant;
 import haxe.macro.Type.ClassField;
 import hscript.Async.AsyncInterp;
@@ -1128,6 +1129,7 @@ class ReplicatorBuilder
 		#if client
 		Context.onAfterTyping(function (moduleTypes)
 		{
+			Compiler.exclude("Replicator");
 			var replicatedClasses = [];
 
 			var caseMap = new Map<Int, Expr>();
@@ -1140,16 +1142,6 @@ class ReplicatorBuilder
 					{
 
 						var classType : haxe.macro.Type.ClassType = clType.get();
-						if( classType.module == "cerastes.net.Replicator" )
-						{
-							// Tell the compiler to skip building this class
-							classType.exclude();
-							// Pretend we're a native extern and point to a proxy class we're about to create....
-							classType.meta.add( ":native",
-                                            [ macro 'cerastes.net.ReplicatorProxy'  ],
-                                            ( macro null ).pos );
-						}
-
 						// All replicated classes must have replication IDs, which are mapped
 						// into a generated switch which handles client replication instantiation
 						if( classType.meta.has("clsid") )

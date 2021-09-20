@@ -1,5 +1,6 @@
 package cerastes.net;
 
+import cerastes.Entity.BaseEntity;
 #if server
 import server.ClientManager;
 import server.ClientBehavior;
@@ -94,8 +95,9 @@ class RPC
 			// @todo
 
 			var found = false;
-			for( e in EntityManager.instance.entities )
+			for( ae in EntityManager.instance.entities )
 			{
+				var e : BaseEntity = cast ae;
 				if( e._repl_netid == targetId )
 				{
 					found = true;

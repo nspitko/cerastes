@@ -1,4 +1,5 @@
 package cerastes.bulletml;
+import cerastes.fmt.SpriteResource;
 #if cannonml
 import hxd.res.Loader;
 import h2d.Tile;
@@ -42,19 +43,21 @@ class CannonBullet extends CMLObject implements Collidable
     // Collidable
     public var aabb : Bounds = new Bounds();
 	public var bitmap : Bitmap;
+	public var sprite : Sprite;
     public var bitmapContainer: Object;
 	public var position = new Point(0,0);
-	public var active = true; // Is collision active?
+	public var active = false; // Is collision active?
 
     public var debug : Graphics;
 
     public var padding = 6;
 
-
     static private function _new() : CannonBullet
     {
         if( _freeList.length > 0 )
+        {
             return _freeList.pop();
+        }
 
         return new CannonBullet( container );
     }
@@ -77,6 +80,7 @@ class CannonBullet extends CMLObject implements Collidable
 
         active=true;
 
+
         //CollisionManager.instance.register(this);
         //trace("Construct");
         super();
@@ -84,9 +88,16 @@ class CannonBullet extends CMLObject implements Collidable
 
     public function setTile( tile: Tile )
     {
+        if( sprite != null )
+        {
+            sprite.visible = false;
+        }
+
         bitmapContainer.visible = true;
+        bitmapContainer.setScale(1);
         if( bitmap != null  )
         {
+            bitmap.visible = true;
             if( bitmap.tile == tile)
                 return;
 
@@ -105,30 +116,86 @@ class CannonBullet extends CMLObject implements Collidable
         bitmap.y = -aabb.height/2 - padding/2;
     }
 
+    public function setSprite( name: String )
+    {
+        bitmapContainer.visible = true;
+        bitmapContainer.setScale(1);
+        if( bitmap != null  )
+        {
+            bitmap.visible = false;
+        }
+
+        if( sprite != null  )
+        {
+            sprite.currentFrame = 0;
+            sprite.visible = true;
+            if( sprite.spriteDef.name == name)
+                return;
+
+            sprite.remove();
+        }
+
+        sprite = BulletManager.spritePack.getSprite( name, bitmapContainer );
+
+        if( sprite == null )
+            return;
+
+
+        sprite.getSize(aabb);
+
+        updateBounds();
+    }
+
+    function updateBounds()
+    {
+        var aabb: Bounds;
+        if( sprite.visible )
+        {
+
+            aabb = sprite.getBounds();
+            aabb.width -= padding;
+            aabb.height -= padding;
+
+        }
+        else if( bitmap.visible )
+        {
+            aabb = Bounds.fromValues(0,0,bitmap.width,bitmap.height);
+            aabb.width -= padding;
+            aabb.height -= padding;
+
+            // @todo fix padding.
+            //bitmap.x = -aabb.width/2 - padding/2;
+            //bitmap.y = -aabb.height/2 - padding/2;
+        }
+
+
+
+    }
+
     public function setScale( scale: Float )
     {
-        assert( bitmap != null, "Trying to set scale on null bitmap???");
-
-        bitmap.setScale( scale );
+        bitmapContainer.setScale(scale);
+        updateBounds();
     }
 
 
     override public function onNewObject(args:Array<Dynamic>) : CMLObject {
         var ret = _new();
         ret.active = true;
+
+        if( ret.bitmapContainer.parent != null )
+            ret.bitmapContainer.parent.addChildAt(ret.bitmapContainer,0);
+
         return ret;
     }
     override public function onFireObject(args:Array<Dynamic>) : CMLObject {
         var ret = _new();
-        if( args.length == 1 )
-        {
-            //ret.setTile( hxd.Res.spr.atlas.getAnim("spr_bullet")[cast args[0] - 1 ]);
-            //trace('spr_bullet_'+ Std.string( args[0] ));
-            ret.active = true;
-            return ret;
-        }
         ret.active = true;
-		return ret;
+
+        if( ret.bitmapContainer.parent != null)
+            ret.bitmapContainer.parent.addChildAt(ret.bitmapContainer,0);
+
+        return ret;
 	}
     override public function onDestroy()
     {

@@ -1,6 +1,9 @@
 
 package cerastes.tools;
 
+import h2d.col.Point;
+import h2d.Graphics;
+import hl.UI;
 import cerastes.tools.ImguiTool.ImguiToolManager;
 import haxe.EnumTools;
 import haxe.io.Bytes;
@@ -20,6 +23,11 @@ import imgui.ImGuiDrawable.ImGuiDrawableBuffers;
 import imgui.ImGui;
 import cerastes.tools.ImguiTools.IG;
 
+typedef ObjectWidthDimensions = {
+	var width: Float;
+	var height: Float;
+}
+
 @:keep
 class UIEditor extends ImguiTool
 {
@@ -27,6 +35,7 @@ class UIEditor extends ImguiTool
 	var viewportHeight: Int;
 
 	var preview: h2d.Scene;
+	var previewRoot: Object;
 	var sceneRT: Texture;
 	var sceneRTId: Int;
 
@@ -46,6 +55,13 @@ class UIEditor extends ImguiTool
 
 	var dockCond = ImGuiCond.Appearing;
 
+	var selectedItemBorder: Graphics;
+	var cursor: Graphics;
+
+	var mouseScenePos: ImVec2;
+	var mouseDragDuration: Float = -1;
+	var mouseDragStartPos: ImVec2;
+
 	public function new()
 	{
 		var size = haxe.macro.Compiler.getDefine("windowSize");
@@ -62,6 +78,11 @@ class UIEditor extends ImguiTool
 		preview.scaleMode = Stretch(viewportWidth,viewportHeight);
 
 		sceneRT = new Texture(viewportWidth,viewportHeight, [Target] );
+
+		selectedItemBorder = new h2d.Graphics();
+		cursor = new h2d.Graphics();
+
+
 
 	}
 
@@ -83,7 +104,12 @@ class UIEditor extends ImguiTool
 	function updateScene()
 	{
 		preview.removeChildren();
-		cerastes.fmt.CUIResource.recursiveCreateObjects(rootDef, preview);
+		previewRoot = new Object(preview);
+		cerastes.fmt.CUIResource.recursiveCreateObjects(rootDef, previewRoot);
+		//selectedItemBorder = new Graphics();
+		preview.addChild(selectedItemBorder);
+		preview.addChild(cursor);
+
 	}
 
 	function inspectorColumn()
@@ -168,17 +194,31 @@ class UIEditor extends ImguiTool
 		{
 			if( ImGui.beginMenu("File", true) )
 			{
-				if (ImGui.menuItem("Open", "Ctrl+O"))
-				{
-					//ImguiToolManager.showTool("Perf");
-				}
 				if (ImGui.menuItem("Save", "Ctrl+S"))
 				{
-					//ImguiToolManager.showTool("UIEditor");
+					CUIResource.writeObject(rootDef,preview,fileName);
 				}
 				if (ImGui.menuItem("Save As..."))
 				{
-					//ImguiToolManager.showTool("UIEditor");
+					var newFile = UI.saveFile({
+						title:"Save As...",
+						filters:[
+						{name:"Cerastes UI files", exts:["cui"]}
+						]
+					});
+					if( newFile != null )
+					{
+						var idx = newFile.indexOf("res");
+						if( idx != -1 )
+						{
+							var localPath = newFile.substr(idx);
+							fileName = localPath;
+						}
+
+						CUIResource.write(rootDef,fileName);
+
+						cerastes.tools.AssetBrowser.needsReload = true;
+					}
 				}
 
 				ImGui.endMenu();
@@ -201,7 +241,7 @@ class UIEditor extends ImguiTool
 		var isOpenRef = hl.Ref.make(isOpen);
 
 		ImGui.setNextWindowSize({x: viewportWidth + 800, y: viewportHeight + 120}, ImGuiCond.Once);
-		ImGui.begin("\uf108 UI Editor", null, ImGuiWindowFlags.NoDocking | ImGuiWindowFlags.MenuBar );
+		ImGui.begin("\uf108 UI Editor", isOpenRef, ImGuiWindowFlags.NoDocking | ImGuiWindowFlags.MenuBar );
 
 		menuBar();
 
@@ -217,8 +257,14 @@ class UIEditor extends ImguiTool
 
 		// Preview
 		ImGui.setNextWindowDockId( dockspaceIdCenter, dockCond );
-		ImGui.begin("Preview");
+		ImGui.begin("Preview", null, ImGuiWindowFlags.NoMove);
+
+		var startPos: ImVec2 = ImGui.getCursorScreenPos();
+		var mousePos: ImVec2 = ImGui.getMousePos();
+		mouseScenePos = {x: mousePos.x - startPos.x, y: mousePos.y - startPos.y };
+
 		ImGui.image(sceneRT, { x: viewportWidth, y: viewportHeight } );
+
 		ImGui.end();
 
 		//ImGui.sameLine();
@@ -235,6 +281,103 @@ class UIEditor extends ImguiTool
 		{
 			ImguiToolManager.closeTool( this );
 		}
+
+		processSceneMouse( delta );
+
+		// Selected Border stuff
+		selectedItemBorder.clear();
+		if( selectedInspectorTree != null )
+		{
+			var o = preview.getObjectByName( selectedInspectorTree.name );
+			var type = Type.getClassName( Type.getClass( o ) );
+
+			var bounds = o.getBounds();
+
+			if( bounds.getSize().x > 0 || bounds.getSize().y > 0 )
+			{
+				selectedItemBorder.lineStyle(4,0x6666ff);
+				selectedItemBorder.drawRect(bounds.xMin, bounds.yMin, bounds.width, bounds.height);
+			}
+
+		}
+	}
+
+	function processSceneMouse( delta: Float )
+	{
+		if( ImGui.isMouseClicked(ImGuiMouseButton.Left) && previewRoot != null )
+		{
+			var matches = previewRoot.findAll(function(o: Object){
+				var bounds = o.getBounds();
+				return bounds.contains( new Point(mouseScenePos.x, mouseScenePos.y) ) ? o : null;
+			});
+
+			// return the highest match
+
+			if( matches.length > 0 )
+			{
+				var target = matches[matches.length-1];
+				while( target.name == null && target.parent != null )
+					target = target.parent;
+
+				var def = getElementDefByName( target.name, rootDef );
+				if( def != null )
+					selectedInspectorTree = def;
+
+
+			}
+		}
+
+		// Drag
+		if( selectedInspectorTree != null )
+		{
+			var o = preview.getObjectByName( selectedInspectorTree.name );
+			var bounds = o.getBounds();
+
+			if( ImGui.isMouseDown( ImGuiMouseButton.Left ) )
+			{
+				if( mouseDragDuration == 0 )
+				{
+					// Make sure we're STARTING on bounds, we can leave it while we drag
+					if( bounds.contains( new Point( mouseScenePos.x, mouseScenePos.y ) ) )
+					{
+						mouseDragStartPos = mouseScenePos;
+						mouseDragDuration = delta;
+					}
+				}
+				else
+				{
+					mouseDragDuration += delta;
+				}
+			}
+			else
+			{
+				mouseDragDuration = 0;
+			}
+
+			if( mouseDragDuration > 0.1 && selectedInspectorTree != null )
+			{
+
+				o.x += mouseScenePos.x - mouseDragStartPos.x;
+				o.y += mouseScenePos.y - mouseDragStartPos.y;
+
+				mouseDragStartPos = mouseScenePos;
+			}
+		}
+	}
+
+	function getElementDefByName( name: String, def: CUIElementDef ) : CUIElementDef
+	{
+		if( def.name == name )
+			return def;
+
+		for( c in def.children )
+		{
+			var def = getElementDefByName(name, c );
+			if( def != null )
+				return def;
+		}
+
+		return null;
 	}
 
 	function dockSpace()
@@ -475,17 +618,14 @@ class UIEditor extends ImguiTool
 	//
 	// Field related functions
 	//
-
 	function populateEditorFields(obj: Object, def: CUIElementDef, type: String )
 	{
 		switch( type )
 		{
 			case "h2d.Object":
 				ImGui.separator();
-				if( IG.wref( ImGui.inputDouble("X",_,1,10,"%.2f"), obj.x ) )
-					def.props["x"] = obj.x;
-				if( IG.wref( ImGui.inputDouble("Y",_,1,10,"%.2f"), obj.y ) )
-					def.props["y"] = obj.y;
+				IG.wref( ImGui.inputDouble("X",_,1,10,"%.2f"), obj.x );
+				IG.wref( ImGui.inputDouble("Y",_,1,10,"%.2f"), obj.y );
 
 			case "h2d.Drawable":
 				var t : h2d.Drawable = cast obj;
@@ -502,7 +642,7 @@ class UIEditor extends ImguiTool
 				if( IG.wref( ImGui.colorPicker4( "Color", _, flags), color ) )
 				{
 					t.color.set(color[0], color[1], color[2], color[3] );
-					def.props["color"] = t.color.toColor();
+
 				}
 
 			case "h2d.Text":
@@ -513,14 +653,14 @@ class UIEditor extends ImguiTool
 				if( val != null )
 				{
 					t.text = val;
-					def.props["text"] = t.text;
+
 				}
 
 				var out = IG.combo("Text Align", t.textAlign, h2d.Text.Align );
 				if( out != null )
 				{
 					t.textAlign = out;
-					def.props["text_align"] = EnumValueTools.getIndex(out);
+
 				}
 
 				var maxWidth: Float = t.maxWidth > 0 ? t.maxWidth : 0;
@@ -530,7 +670,7 @@ class UIEditor extends ImguiTool
 						t.maxWidth = maxWidth
 					else
 						t.maxWidth = null;
-					def.props["max_width"] = maxWidth;
+
 				}
 
 
@@ -539,7 +679,6 @@ class UIEditor extends ImguiTool
 				var newTile = IG.textInput( "Tile", def.props["tile"] );
 				if( newTile != null && hxd.Res.loader.exists( newTile ) )
 				{
-					def.props["tile"] = newTile;
 					b.tile = hxd.Res.loader.load( newTile ).toTile();
 				}
 
@@ -548,7 +687,6 @@ class UIEditor extends ImguiTool
 					var payload = ImGui.acceptDragDropPayloadString("asset_name");
 					if( payload != null && hxd.Res.loader.exists( payload ) )
 					{
-						def.props["tile"] = payload;
 						b.tile = hxd.Res.loader.load( payload ).toTile();
 					}
 					ImGui.endDragDropTarget();
@@ -561,7 +699,6 @@ class UIEditor extends ImguiTool
 						b.width = width
 					else
 						b.width = null;
-					def.props["width"] = width;
 				}
 
 				var height: Float = b.height > 0 ? b.height : 0;
@@ -571,7 +708,6 @@ class UIEditor extends ImguiTool
 						b.height = height
 					else
 						b.height = null;
-					def.props["height"] = height;
 				}
 
 			case "h2d.Flow":
@@ -582,7 +718,7 @@ class UIEditor extends ImguiTool
 				if( layout != null )
 				{
 					t.layout = layout;
-					def.props["layout"] = EnumValueTools.getIndex(layout);
+
 				}
 
 
@@ -590,25 +726,20 @@ class UIEditor extends ImguiTool
 				if( align != null )
 				{
 					t.verticalAlign = align;
-					def.props["vertical_align"] = EnumValueTools.getIndex(align);
+
 				}
 				align = IG.combo("Horizontal Align", t.horizontalAlign, h2d.Flow.FlowAlign );
 				if( align != null )
 				{
 					t.horizontalAlign = align;
-					def.props["horizontal_align"] = EnumValueTools.getIndex(align);
 				}
 
 			case "h2d.Mask":
 				var t : h2d.Mask = cast obj;
 
-				if( IG.wref( ImGui.inputInt("Width",_,1,10), t.width ) )
-					def.props["width"] = t.width;
+				IG.wref( ImGui.inputInt("Width",_,1,10), t.width );
+				IG.wref( ImGui.inputInt("Height",_,1,10), t.height );
 
-				if( IG.wref( ImGui.inputInt("Height",_,1,10), t.height ) )
-					def.props["height"] = t.height;
-
-				t.scrollX = t.scrollY = 0;
 
 
 

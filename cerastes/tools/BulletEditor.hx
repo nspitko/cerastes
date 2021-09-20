@@ -1,6 +1,8 @@
 
 package cerastes.tools;
 
+import org.si.cml.CMLObject;
+import org.si.cml.CMLFiber;
 import cerastes.tools.ImguiTool.ImguiToolManager;
 import hl.UI;
 import haxe.Json;
@@ -45,6 +47,8 @@ class BulletEditor extends ImguiTool
 
 	static var globalIndex = 0;
 	var index = 0;
+
+	var seed: CMLFiber;
 
 	public function new()
 	{
@@ -91,27 +95,29 @@ class BulletEditor extends ImguiTool
 
 	function updateScene()
 	{
-		//preview.removeChildren();
-		BulletManager.destroy();
-
+		preview.removeChildren();
 		BulletManager.initialize(preview, fileName);
 
+	}
+
+	function updateSeed()
+	{
 
 		if( fiberName != null )
 		{
+			BulletManager.destroy();
 
 			try
 			{
-			var seed = BulletManager.createSeed(fiberName, viewportWidth / 2, viewportHeight / 2);
+			seed = BulletManager.createSeed(fiberName, viewportWidth / 2, viewportHeight / 2);
+			var b : CannonBullet = cast seed.object;
+
 			}
 			catch( e)
 			{
 				trace(e);
 			}
 		}
-		//var obj : CannonBullet = cast seed.get_object();
-		//obj.debug
-
 	}
 
 
@@ -219,9 +225,8 @@ class BulletEditor extends ImguiTool
 			var newFiber = IG.textInputMultiline( "Fiber", @:privateAccess BulletManager.patternList[fiberName], {x:300,y:200}  );
 			if( newFiber != null )
 			{
-				trace(newFiber);
 				@:privateAccess BulletManager.patternList[fiberName] = newFiber;
-				updateScene();
+				updateSeed();
 			}
 		}
 		else
@@ -256,7 +261,7 @@ class BulletEditor extends ImguiTool
 			if( ImGui.isItemClicked(ImGuiMouseButton.Left) )
 			{
 				fiberName = k;
-				updateScene();
+				updateSeed();
 			}
 
 			if( ImGui.beginPopup('${k}_rc') )
@@ -381,14 +386,11 @@ class BulletEditor extends ImguiTool
 		if( dockspaceId == -1 || ImGui.dockBuilderGetNode( dockspaceId ) == null || dockCond == Always )
 		{
 			var str = windowID();
-			trace(str);
 
 			dockspaceId = ImGui.getID(str);
 			dockspaceIdLeft = ImGui.getID(str+"Left");
 			dockspaceIdRight = ImGui.getID(str+"Right");
 			dockspaceIdCenter = ImGui.getID(str+"Center");
-
-			trace(dockspaceIdLeft);
 
 			// Clear any existing layout
 			var flags: ImGuiDockNodeFlags = ImGuiDockNodeFlags.NoDockingInCentralNode | ImGuiDockNodeFlags.NoDockingSplitMe;

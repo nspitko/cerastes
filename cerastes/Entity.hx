@@ -1,7 +1,7 @@
 package cerastes;
 
 #if network
-import game.objects.NetworkEntity;
+import cerastes.net.Replicated;
 #end
 import cerastes.Utils.*;
 

@@ -275,4 +275,9 @@ class Utils
 		return null;
 	}
 	#end
+
+	public static function beginPerfContext(context: String)
+	{
+		
+	}
 }

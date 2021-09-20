@@ -1,5 +1,7 @@
 package cerastes.bulletml;
 
+import org.si.cml.core.CMLState;
+import cerastes.fmt.SpriteResource;
 import h2d.Tile;
 import haxe.Json;
 #if cannonml
@@ -38,6 +40,8 @@ class BulletManager
 
 	private static var cmlRoot : CMLObject;
 
+	public static var spritePack: SpriteResource;
+
 
 
 	/**
@@ -63,7 +67,7 @@ class BulletManager
 
 		CMLParser.userCommand("tex",
 			function(fiber: CMLFiber, args: Array<Dynamic>){
-				var o : CannonBullet = cast fiber.get_object();
+				var o : CannonBullet = cast fiber.object;
 				//o.setTile(hxd.Res.spr.atlas.getAnim("spr_bullet")[cast args[0] - 1 ] );
 				o.setTile( t );
 
@@ -71,9 +75,17 @@ class BulletManager
 			1,
 			false
 		);
+		CMLParser.userCommand("spr",
+			function(fiber: CMLFiber, args: Array<Dynamic>){
+				var o : CannonBullet = cast fiber.object;
+				o.setSprite( "" + args[0] );
+			},
+			1,
+			false
+		);
 		CMLParser.userCommand("sca",
 			function(fiber: CMLFiber, args: Array<Dynamic>) {
-				var o : CannonBullet = cast fiber.get_object();
+				var o : CannonBullet = cast fiber.object;
 				o.setScale(cast args[0] );
 			},
 			1,
@@ -86,8 +98,11 @@ class BulletManager
 
 		parent = pObject;
 
+		CMLObject.destroyAll(9);
+
 		seed = new CannonBullet(parent);
 		seed.create(0, 0);
+		seed.active = false;
 	}
 
 	static function loadFromDisk(file: String)
@@ -113,7 +128,9 @@ class BulletManager
 	public static function destroy()
 	{
 		CMLObject.destroyAll(9);
-        //CMLFiber._destroyAll();
+		seed = new CannonBullet(parent);
+		seed.create(0, 0);
+		seed.active = false;
 		//cmlRoot = null;
 
 	}

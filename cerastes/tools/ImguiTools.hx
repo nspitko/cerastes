@@ -98,33 +98,31 @@ class ImGuiTools {
 	public static var vec:ImVec4Impl = new ImVec4Impl();
 	public static var vec2:ImVec4Impl = new ImVec4Impl();
 	public static var textures:Map<h3d.mat.Texture, Int> = [];
-	/*
-	public static function image(tile:Tile, ?tint:Int, ?borderColor:Int) @:privateAccess {
+
+	public static function image(tile:Tile, ?scale: ImVec2, ?tint:Int, ?borderColor:Int) @:privateAccess {
 		var tex = tile.getTexture();
-		var id = textures[tex];
-		if (id == null) textures[tex] = id = tex;
-		point.set(tile.width, tile.height);
+		if( scale != null ) point.set(tile.width * scale.x, tile.height * scale.y);
+		else point.set(tile.width, tile.height);
 		point2.set(tile.u, tile.v);
 		point3.set(tile.u2, tile.v2);
 		if (tint != null) vec.setColor(tint);
 		else vec.set(1,1,1,1);
 		if (borderColor != null) vec2.setColor(borderColor);
 		else vec2.set(1,1,1,1);
-		return ImGui.image(id, point, point2, point3, vec, vec2);
+		return ImGui.image(tex, point, point2, point3, vec, vec2);
 	}
-	public static function imageButton(tile:Tile, framePadding:Int = -1, ?bg:Int, ?tint:Int) @:privateAccess {
+
+	public static function imageButton(tile:Tile, ?size: ImVec2, framePadding:Int = -1, ?bg:Int, ?tint:Int) @:privateAccess {
 		var tex = tile.getTexture();
-		var id = textures[tex];
-		if (id == null) textures[tex] = id = tex;
-		point.set(tile.width, tile.height);
+		point.set(size.x, size.y);
 		point2.set(tile.u, tile.v);
 		point3.set(tile.u2, tile.v2);
 		if (bg != null) vec.setColor(bg);
 		else vec.set(0,0,0,0);
 		if (tint != null) vec2.setColor(tint);
 		else vec2.set(1,1,1,1);
-		return ImGui.imageButton(id, point, point2, point3, framePadding, vec, vec2);
-	}*/
+		return ImGui.imageButton(tex, point, point2, point3, framePadding, vec, vec2);
+	}
 
 	public static function inputDouble(label : String, v : Float, step : Float = 0.0, step_fast : Float = 0.0, format : String = "%.6f", flags : ImGuiInputTextFlags = 0):Float {
 		ImGui.inputDouble(label, v, step, step_fast, format, flags);

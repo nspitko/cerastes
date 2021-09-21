@@ -11,12 +11,18 @@ import cerastes.fmt.SpriteResource;
 class SpriteCache
 {
 	public var spriteDef: CSDDefinition;
-	public var frameCache: Map<String,haxe.ds.Vector<Tile>> = [];
+	public var frameCache: Map<String,haxe.ds.Vector<Tile>>;
 
 	public function new( def: CSDDefinition )
 	{
 		spriteDef = def;
 
+		build();
+	}
+
+	function build()
+	{
+		frameCache = [];
 		for( a in spriteDef.animations )
 			loadAnimation(a);
 	}
@@ -25,11 +31,10 @@ class SpriteCache
 	// Loads animation frames into cache.
 	function loadAnimation( animation: CSDAnimation )
 	{
-
 		if( animation.atlas != null )
 		{
 			var tiles = new haxe.ds.Vector<h2d.Tile>( animation.frames.length );
-			var atlas = hxd.Res.load( animation.atlas ).to(Atlas);
+			var atlas = hxd.Res.loader.loadCache( animation.atlas, Atlas );
 			for( i in 0 ... animation.frames.length )
 			{
 				tiles[i] = atlas.get( animation.frames[i].tile );
@@ -61,6 +66,11 @@ class Sprite extends h2d.Drawable
 
 	// Current animation being played. Indexes into frame list
 	var sequence: CSDAnimation;
+	public var currentAnimation(get, never): String;
+	function get_currentAnimation()
+	{
+		return sequence.name;
+	}
 
 	// Currently running animation
 	var frames: haxe.ds.Vector<Tile> = null;
@@ -182,7 +192,7 @@ class Sprite extends h2d.Drawable
 		if (!pause)
 			frameTime += speed * ctx.elapsedTime;
 
-		if( frameTime > frameInfo.duration )
+	if( frameTime > frameInfo.duration )
 		{
 			frameTime -= frameInfo.duration;
 			currentFrame++;

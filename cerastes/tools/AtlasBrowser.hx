@@ -113,6 +113,7 @@ class AtlasBrowser  extends  ImguiTool
 
 			for( i in 0... tiles.length )
 			{
+				ImGui.pushID('btn_${name}');
 
 				var tile = tiles[i];
 
@@ -120,6 +121,7 @@ class AtlasBrowser  extends  ImguiTool
 
 
 				if( IG.imageButton( tile.t, {x: desiredW, y: previewHeight}, -1, 2 ) )
+				//if( ImGui.imageButton( tile.t.getTexture(), {x: desiredW, y: previewHeight}, null, 2 ) )
 				{
 					trace('Asset select: ${name}');
 				}
@@ -137,12 +139,9 @@ class AtlasBrowser  extends  ImguiTool
 
 				if( ImGui.beginDragDropSource() )
 				{
-					ImGui.setDragDropPayloadString("tile_name",name);
-					ImGui.setDragDropPayloadString("atlas",fileName);
+					ImGui.setDragDropPayloadString("atlas_tile",'$fileName|$name');
 
-					ImGui.beginTooltip();
-					IG.image( tile.t );
-					ImGui.endTooltip();
+					onItemHover(name, tile.t);
 
 					ImGui.endDragDropSource();
 				}
@@ -151,6 +150,8 @@ class AtlasBrowser  extends  ImguiTool
 				var nextButtonX2 = itemRectMax.x + style.ItemSpacing.x + previewWidth;
 				if( nextButtonX2 < windowRight )
 					ImGui.sameLine();
+
+				ImGui.popID();
 			}
 
 

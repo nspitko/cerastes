@@ -1,6 +1,7 @@
 
 package cerastes.tools;
 
+import hxd.res.Atlas;
 import cerastes.Sprite.SpriteCache;
 import hxd.Key;
 import cerastes.fmt.SpriteResource;
@@ -22,6 +23,13 @@ import imgui.ImGui;
 import cerastes.bulletml.BulletManager;
 import cerastes.bulletml.CannonBullet;
 
+
+enum SpriteInspectorMode {
+	NONE;
+	ANIMATION;
+	FRAME;
+}
+
 @:keep
 class SpriteEditor extends ImguiTool
 {
@@ -35,6 +43,7 @@ class SpriteEditor extends ImguiTool
 
 	var dockspaceId: ImGuiID = -1;
 	var dockspaceIdLeft: ImGuiID;
+	var dockspaceIdRight: ImGuiID;
 	var dockspaceIdBottom: ImGuiID;
 	var dockspaceIdCenter: ImGuiID;
 
@@ -42,16 +51,19 @@ class SpriteEditor extends ImguiTool
 
 	var seed: CMLFiber;
 
-	var resource: SpriteResource;
-
-	var selectedSprite: CSDDefinition;
-	var selectedAnimation: Int = -1;
+	var spriteDef: CSDDefinition;
+	var selectedAnimation: CSDAnimation;
+	var selectedFrame: CSDFrame;
+	var inspectorMode: SpriteInspectorMode = NONE;
 
 	var cache: SpriteCache;
 	var sprite: Sprite;
 
 	var scaleFactor = Utils.getDPIScaleFactor();
 	var spriteScale: Int = 8;
+
+	var fileName = "";
+
 
 	public function new()
 	{
@@ -75,9 +87,32 @@ class SpriteEditor extends ImguiTool
 
 		sceneRT = new Texture(viewportWidth,viewportHeight, [Target] );
 
-		resource = hxd.Res.load( "data/sprites.csd" ).to( SpriteResource );
 
 		updateScene();
+
+		// Testing
+		openFile("spr/test.csd");
+
+
+	}
+
+
+	public function openFile(f: String )
+	{
+		fileName = f;
+
+		var res = hxd.Res.load( f ).to(SpriteResource);
+		spriteDef = res.getData(false).sprite;
+		sprite = res.toSprite( preview );
+
+		// Build a custom cache for this sprite instance
+		cache = new SpriteCache( spriteDef );
+		@:privateAccess sprite.cache = cache;
+
+		selectedAnimation = spriteDef.animations.length > 0 ? spriteDef.animations[0] : null;
+		sprite.play(selectedAnimation.name);
+
+		updateSprite();
 	}
 
 
@@ -93,18 +128,36 @@ class SpriteEditor extends ImguiTool
 
 	function updateScene()
 	{
+		if( sprite == null )
+			return;
 
+		if( sprite.currentAnimation != selectedAnimation.name )
+		{
+			sprite.play( selectedAnimation.name );
+		}
 	}
 
-	function updateSelectedSprite()
+	function selectAnimation( newAnimation: CSDAnimation )
 	{
-		preview.removeChildren();
+		selectedAnimation = newAnimation;
+		selectedFrame = null;
+		inspectorMode = ANIMATION;
+	}
 
-		selectedAnimation = 0;
+	function selectFrame( newFrame: CSDFrame )
+	{
+		selectedFrame = newFrame;
+		inspectorMode = FRAME;
+	}
 
-		// Use our own local cache, since we'll be fiddling with things a lot
-		cache = new SpriteCache( selectedSprite );
-		sprite = new Sprite(cache, preview);
+	function rebuildCache()
+	{
+		@:privateAccess cache.build();
+		sprite.play( selectedAnimation != null ? selectedAnimation.name : spriteDef.animations[0].name );
+	}
+
+	function updateSprite()
+	{
 
 		var bounds = sprite.getBounds();
 
@@ -167,6 +220,9 @@ class SpriteEditor extends ImguiTool
 		listWindow();
 		animationWindow();
 		tileWindow();
+		inspectorWindow();
+
+		updateScene();
 
 
 		dockCond = ImGuiCond.Appearing;
@@ -215,46 +271,56 @@ class SpriteEditor extends ImguiTool
 	function listWindow()
 	{
 		ImGui.setNextWindowDockId( dockspaceIdLeft, dockCond );
-		ImGui.begin('Sprites');
+		ImGui.begin('Animations');
 
-		ImGui.beginChild("SpriteList",{x:300,y:400},false );
-		for( spriteDef in resource.getData().sprites )
+		ImGui.beginChild("AnimationsList",null,false, ImGuiWindowFlags.AlwaysAutoResize );
+
+		if( spriteDef != null )
 		{
-			var flags = ImGuiTreeNodeFlags.Leaf;
-			if( spriteDef == selectedSprite )
-				flags |= ImGuiTreeNodeFlags.Selected;
-			var isOpen = ImGui.treeNodeEx( spriteDef.name, flags );
-
-			if( isOpen )
-				ImGui.treePop();
-
-
-			if( ImGui.isItemClicked(ImGuiMouseButton.Right) )
+			for( i  in 0 ... spriteDef.animations.length )
 			{
-				selectedSprite = spriteDef;
-				ImGui.openPopup('${spriteDef.name}_rc');
-			}
-			if( ImGui.isItemClicked(ImGuiMouseButton.Left) )
-			{
-				selectedSprite = spriteDef;
-				updateSelectedSprite();
-			}
+				var animation = spriteDef.animations[i];
 
-			if( ImGui.beginPopup('${spriteDef.name}_rc') )
-			{
-				if( ImGui.menuItem("Rename") )
+				var flags = ImGuiTreeNodeFlags.Leaf;
+				if( animation == selectedAnimation )
+					flags |= ImGuiTreeNodeFlags.Selected;
+				var isOpen = ImGui.treeNodeEx( animation.name, flags );
+
+				if( isOpen )
+					ImGui.treePop();
+
+
+				if( ImGui.isItemClicked(ImGuiMouseButton.Right) )
 				{
-					ImGui.openPopup('${windowID()}_rc_rename');
+					selectAnimation( animation );
+					ImGui.openPopup('${spriteDef.name}_rc');
 				}
-				if( ImGui.menuItem("Delete") )
+				if( ImGui.isItemClicked(ImGuiMouseButton.Left) )
 				{
-					ImGui.openPopup('${windowID()}_rc_delete');
+					selectAnimation( animation );
+					//updateSelectedSprite();
 				}
-				ImGui.endPopup();
+
+				if( ImGui.beginPopup('${spriteDef.name}_rc') )
+				{
+					if( ImGui.menuItem("Rename") )
+					{
+						ImGui.openPopup('${windowID()}_rc_rename');
+					}
+					if( ImGui.menuItem("Make Default") )
+					{
+						// @todo
+					}
+					if( ImGui.menuItem("Delete") )
+					{
+						ImGui.openPopup('${windowID()}_rc_delete');
+					}
+					ImGui.endPopup();
+				}
+
+
+
 			}
-
-
-
 		}
 		ImGui.endChild();
 
@@ -267,33 +333,97 @@ class SpriteEditor extends ImguiTool
 		ImGui.begin('Frames');
 
 		var itemHeight = 140 * scaleFactor;
-		ImGui.beginChild("frame_list", {x: 700 * scaleFactor, y: itemHeight});
+		ImGui.beginChild("frame_list", null, true, ImGuiWindowFlags.AlwaysAutoResize);
+
+
 
 		var desiredW = 100 * scaleFactor;
 
-		if( selectedSprite != null && selectedAnimation < selectedSprite.animations.length )
+		if( spriteDef != null && selectedAnimation != null )
 		{
-			var anim = selectedSprite.animations[selectedAnimation];
-			var tileCache = cache.frameCache[ anim.name ];
+			var tileCache = cache.frameCache[ selectedAnimation.name ];
 
-			trace(anim.frames.length);
-
-
-
-			for( i in 0 ... anim.frames.length )
+			for( i in 0 ... selectedAnimation.frames.length )
 			{
+				if( i >= selectedAnimation.frames.length ) break; // Loop variable cannot be modified :thonk:
+
 				var tile = tileCache[i];
-				var frame = anim.frames[i];
+				var frame = selectedAnimation.frames[i];
 
 				var scale = Math.floor( desiredW / tile.width  );
+				var selected = selectedFrame == frame;
+
+
+				if( selected )
+				{
+					var col= ImGui.getStyleColorVec4( ImGuiCol.ButtonActive );
+					ImGui.pushStyleColor2(ImGuiCol.ChildBg, col );
+				}
 
 				ImGui.beginChild('frame_${frame.tile}_${i}',{ x: desiredW, y: itemHeight});
+
 
 				IG.image( tile, {x: scale, y: scale} );
 				ImGui.text( frame.tile );
 				ImGui.text( '${frame.duration * 100}ms' );
 
 				ImGui.endChild();
+
+				// Drag drop frame insertion
+				if( ImGui.beginDragDropTarget( ) )
+				{
+					var payload = ImGui.acceptDragDropPayloadString("atlas_tile");
+					if( payload != null )
+					{
+						var bits = payload.split('|');
+						Utils.assert(bits.length == 2, "Weird drag drop payload...");
+
+						if( bits.length >= 2 && bits[0] == selectedAnimation.atlas )
+						{
+							var tileToInsert = bits[1];
+							var mousePos: ImVec2 = cast ImGui.getMousePos();
+							var cursorPos: ImVec2 = cast ImGui.getCursorScreenPos();
+							if( mousePos.x - desiredW / 2 < cursorPos.x )
+							{
+								insertFrame(tileToInsert, i, frame.duration);
+							}
+							else
+							{
+								insertFrame(tileToInsert, i + 1, frame.duration);
+							}
+						}
+					}
+					ImGui.endDragDropTarget();
+				}
+
+				// Selection
+				if( ImGui.isItemClicked(ImGuiMouseButton.Left ) )
+				{
+					selectFrame( frame );
+				}
+
+				// Context menu handler
+				if( ImGui.isItemClicked(ImGuiMouseButton.Right) )
+				{
+					selectFrame( frame );
+					ImGui.openPopup('frame_${i}_context');
+				}
+
+				// Context menu
+				if( ImGui.beginPopup('frame_${i}_context') )
+				{
+					if( ImGui.menuItem("Delete") )
+					{
+						selectedAnimation.frames.splice(i,1);
+						rebuildCache();
+					}
+					ImGui.endPopup();
+				}
+
+				if( selected )
+					ImGui.popStyleColor();
+
+
 				ImGui.sameLine();
 
 			}
@@ -304,14 +434,83 @@ class SpriteEditor extends ImguiTool
 		ImGui.end();
 	}
 
+	function insertFrame(tile: String, position: Int, duration: Float )
+	{
+		selectedAnimation.frames.insert(position,{
+			tile: tile,
+			duration: duration,
+			offsetY: 0,
+			offsetX: 0
+		});
+
+		rebuildCache();
+	}
+
 	function animationWindow()
 	{
 		ImGui.setNextWindowDockId( dockspaceIdBottom, dockCond );
 		ImGui.begin('Playback');
 
 		ImGui.end();
+	}
+
+	function inspectorWindow()
+	{
+		ImGui.setNextWindowDockId( dockspaceIdRight, dockCond );
+		ImGui.begin('Inspector');
+
+		switch( inspectorMode )
+		{
+			case ANIMATION:
+				var newAtlas = IG.textInput( "Atlas", selectedAnimation.atlas );
+				if( newAtlas != null && hxd.Res.loader.exists( newAtlas ) )
+				{
+					selectedAnimation.atlas = newAtlas;
+					rebuildCache();
+				}
 
 
+			case FRAME:
+				var newTile = IG.textInput( "Tile", selectedFrame.tile );
+				if( newTile != null )
+				{
+					var atlas = hxd.Res.load( selectedAnimation.atlas ).to(Atlas);
+					if( atlas.get( newTile ) != null )
+					{
+						selectedFrame.tile = newTile;
+						rebuildCache();
+					}
+				}
+
+				if( ImGui.beginDragDropTarget() )
+				{
+					var payload = ImGui.acceptDragDropPayloadString("atlas_tile");
+					if( payload != null )
+					{
+						var bits = payload.split('|');
+						Utils.assert(bits.length == 2, "Weird drag drop payload...");
+
+						if( bits.length >= 2 && bits[0] == selectedAnimation.atlas )
+						{
+							trace(payload);
+							selectedFrame.tile = bits[1];
+							rebuildCache();
+						}
+					}
+					ImGui.endDragDropTarget();
+				}
+
+				IG.wref( IG.inputDouble("Duration (ms)", _, 0.01, 0.1, "%.3f"), selectedFrame.duration );
+				IG.wref( IG.inputDouble("Offset X", _, 1, 10, "%.2f"),  selectedFrame.offsetX);
+				IG.wref( IG.inputDouble("Offset Y", _, 1, 10, "%.2f"), selectedFrame.offsetY);
+
+
+
+			case NONE:
+
+		}
+
+		ImGui.end();
 	}
 
 	inline function windowID()
@@ -337,8 +536,9 @@ class SpriteEditor extends ImguiTool
 
 			var idOut: hl.Ref<ImGuiID> = dockspaceId;
 
-			dockspaceIdLeft = ImGui.dockBuilderSplitNode(idOut.get(), ImGuiDir.Left, 0.30, null, idOut);
 			dockspaceIdBottom = ImGui.dockBuilderSplitNode(idOut.get(), ImGuiDir.Down, 0.40, null, idOut);
+			dockspaceIdLeft = ImGui.dockBuilderSplitNode(idOut.get(), ImGuiDir.Left, 0.30, null, idOut);
+			dockspaceIdRight = ImGui.dockBuilderSplitNode(idOut.get(), ImGuiDir.Right, 0.30, null, idOut);
 			dockspaceIdCenter = idOut.get();
 
 

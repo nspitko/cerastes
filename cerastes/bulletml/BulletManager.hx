@@ -40,9 +40,6 @@ class BulletManager
 
 	private static var cmlRoot : CMLObject;
 
-	public static var spritePack: SpriteResource;
-
-
 
 	/**
 	 * Initializes the bullet manager

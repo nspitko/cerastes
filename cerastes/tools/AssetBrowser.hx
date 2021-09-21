@@ -1,5 +1,6 @@
 package cerastes.tools;
 
+import cerastes.fmt.SpriteResource;
 import hxd.res.Atlas;
 import cerastes.tools.ImguiTool.ImguiToolManager;
 import h2d.Text;
@@ -43,12 +44,13 @@ class AssetBrowser  extends  ImguiTool
 	var scaleFactor = Utils.getDPIScaleFactor();
 
 	var filterTypes = [
-		"Images" => true,
-		"Models" => true,
+		"Sprite" => true,
+		"Image" => true,
+		//"Model" => true,
 		"Particles" => true,
 		"Fonts" => true,
 		"Butai" => true,
-		"UI Files" => true,
+		"UI File" => true,
 		"Texture Atlas" => true,
 		"Others" => true,
 	];
@@ -161,6 +163,19 @@ class AssetBrowser  extends  ImguiTool
 
 				asset.scene.addChild( obj );
 
+			case "csd":
+
+				asset.alwaysUpdate = true;
+
+				var res = hxd.Res.load( asset.file ).to( SpriteResource );
+				var obj = res.toSprite( asset.scene );
+				var bounds = obj.getBounds();
+
+
+				var scale = previewWidth / bounds.width;
+				obj.scale( scale );
+
+
 			case "atlas":
 				var atlas = hxd.Res.load( asset.file ).to( Atlas );
 
@@ -191,6 +206,7 @@ class AssetBrowser  extends  ImguiTool
 				bmp.width = previewWidth;
 				bmp.height = previewHeight;
 
+
 		}
 	}
 
@@ -219,8 +235,6 @@ class AssetBrowser  extends  ImguiTool
 
 		ImGui.setNextWindowSize({x: 700 * scaleFactor, y: 400 * scaleFactor}, ImGuiCond.Once);
 		ImGui.begin("\uf07c Asset browser", isOpenRef);
-
-		ImGui.beginChild("assetbrowser_assets",null, false, ImGuiWindowFlags.AlwaysAutoResize);
 
 		var text = IG.textInput("",filterText,"Filter");
 		if( text != null )
@@ -252,6 +266,8 @@ class AssetBrowser  extends  ImguiTool
 
 			ImGui.endPopup();
 		}
+
+		ImGui.beginChild("assetbrowser_assets",null, false, ImGuiWindowFlags.AlwaysAutoResize);
 
 		//ImGui.combo( "" )
 
@@ -305,6 +321,9 @@ class AssetBrowser  extends  ImguiTool
 				t.openFile( asset.file );
 			case "cui":
 				var t: UIEditor = cast ImguiToolManager.showTool("UIEditor");
+				t.openFile( asset.file );
+			case "csd":
+				var t: SpriteEditor = cast ImguiToolManager.showTool("SpriteEditor");
 				t.openFile( asset.file );
 			case "atlas":
 				var t: AtlasBrowser = cast ImguiToolManager.showTool("AtlasBrowser");
@@ -391,6 +410,8 @@ class AssetBrowser  extends  ImguiTool
 				ImGui.textColored(typeColor,"Cannon package");
 			case "atlas":
 				ImGui.textColored(typeColor,"Texture atlas");
+			case "csd":
+				ImGui.textColored(typeColor,"Sprite");
 			case "png" | "bmp" | "gif" | "jpg":
 				ImGui.textColored(typeColor,"Texture");
 				ImGui.separator();
@@ -409,9 +430,10 @@ class AssetBrowser  extends  ImguiTool
 		return switch(ext)
 		{
 			case "fnt": "Fonts";
-			case "cui": "UI Files";
+			case "cui": "UI File";
 			case "png" | "bmp" | "gif" | "jpg": "Images";
 			case "bdef": "Butai";
+			case "csd": "Sprite";
 			case "atlas": "Texture Atlas";
 			default: "Others";
 

@@ -135,7 +135,7 @@ class CannonBullet extends CMLObject implements Collidable
             sprite.remove();
         }
 
-        sprite = BulletManager.spritePack.getSprite( name, bitmapContainer );
+        sprite = hxd.Res.loader.loadCache( 'spr/$name.csd', SpriteResource ).toSprite( bitmapContainer );
 
         if( sprite == null )
             return;

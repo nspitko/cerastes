@@ -83,7 +83,7 @@ typedef CSDDefinition = {
 
 typedef CSDFile = {
 	var version: Int;
-	var sprites: Array<CSDDefinition>;
+	var sprite: CSDDefinition;
 }
 
 class SpriteResource extends Resource
@@ -93,38 +93,24 @@ class SpriteResource extends Resource
 	static var minVersion = 1;
 	static var version = 1;
 
-	var caches: Map<String, SpriteCache> = [];
+	var cache: SpriteCache = null;
 
-	public function getSprite( name: String, ?parent: Object )
+	public function toSprite( ?parent: Object )
 	{
 		var data = getData();
 
-		if( caches.exists( name ) )
-			return new cerastes.Sprite(caches.get(name),parent);
+		if( cache == null )
+			cache = new SpriteCache( data.sprite );
 
-		for( s in data.sprites )
-		{
-			if( s.name == name )
-			{
-				var c = new SpriteCache(s);
-				caches.set( s.name, c );
-				return new cerastes.Sprite(c,parent);
-
-			}
-		}
-
-
-
-		//Utils.assert( false, 'Tried to load unknown sprite ${name}' );
-		return null;
+		return new cerastes.Sprite(cache,parent);
 	}
 
 
-	public static function write( sprites: Array<CSDDefinition>, file: String = "data/sprites.csd" )
+	public static function write( sprite: CSDDefinition, file: String )
 	{
 		var csd: CSDFile = {
 			version: version,
-			sprites: sprites
+			sprite: sprite
 		};
 
 		//var s = new hxbit.Serializer();
@@ -140,19 +126,21 @@ class SpriteResource extends Resource
 	}
 
 
-	public function getData() : CSDFile
+	public function getData( ?cache: Bool = true ) : CSDFile
 	{
-		if (data != null) return data;
+		if (data != null && cache) return data;
 
 		//var u = new hxbit.Serializer();
 		//data = u.unserialize(entry.getBytes(), CSDFile);
 		//data = cast Json.parse( "cerastes.fmt.SpriteResource.CSDFile", entry.getText()  );
-		data = Json.parse( entry.getText()  );
+		var d  = Json.parse( entry.getText()  );
+		if( cache )
+			data = d;
 
-		Utils.assert( data.version <= version, "Warning: Sprite file generated with newer version than this parser supports" );
-		Utils.assert( data.version >= minVersion, "Warning: Sprite file version newer than parser understands; parsing will probably fail!" );
+		Utils.assert( d.version <= version, "Warning: Sprite file generated with newer version than this parser supports" );
+		Utils.assert( d.version >= minVersion, "Warning: Sprite file version newer than parser understands; parsing will probably fail!" );
 
 
-		return data;
+		return d;
 	}
 }

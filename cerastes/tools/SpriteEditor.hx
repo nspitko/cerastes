@@ -1,6 +1,7 @@
 
 package cerastes.tools;
 
+import h2d.Graphics;
 import hxd.res.Atlas;
 import cerastes.Sprite.SpriteCache;
 import hxd.Key;
@@ -28,6 +29,7 @@ enum SpriteInspectorMode {
 	NONE;
 	ANIMATION;
 	FRAME;
+	ATTACHMENT;
 }
 
 @:keep
@@ -54,6 +56,7 @@ class SpriteEditor extends ImguiTool
 	var spriteDef: CSDDefinition;
 	var selectedAnimation: CSDAnimation;
 	var selectedFrame: CSDFrame;
+	var selectedAttachment: CSDAttachment;
 	var inspectorMode: SpriteInspectorMode = NONE;
 
 	var cache: SpriteCache;
@@ -63,6 +66,11 @@ class SpriteEditor extends ImguiTool
 	var spriteScale: Int = 8;
 
 	var fileName = "";
+
+	var tmpInput = "";
+
+	// visual stuff
+	var attachmentPreview: Graphics;
 
 
 	public function new()
@@ -87,11 +95,28 @@ class SpriteEditor extends ImguiTool
 
 		sceneRT = new Texture(viewportWidth,viewportHeight, [Target] );
 
+		// minimial non-null sprite def
+		spriteDef = {
+			name:"undefined",
+			animations: [
+				{
+					name:"idle",
+					atlas: "",
+					frames: [],
+					tags: [],
+					sounds: [],
+					attachmentOverrides: []
+				}
+			],
+			attachments: []
+		}
 
 		updateScene();
 
 		// Testing
 		openFile("spr/test.csd");
+
+		attachmentPreview = new Graphics(sprite);
 
 
 	}
@@ -135,6 +160,25 @@ class SpriteEditor extends ImguiTool
 		{
 			sprite.play( selectedAnimation.name );
 		}
+
+		if( sprite.parent == null && selectedAnimation.frames.length > 0 )
+		{
+			preview.addChild(sprite);
+			updateSprite();
+		}
+
+		attachmentPreview.clear();
+		if( selectedAttachment != null && inspectorMode == ATTACHMENT )
+		{
+			attachmentPreview.lineStyle(1, 0xFF0000 );
+			attachmentPreview.drawCircle( selectedAttachment.position.x, selectedAttachment.position.y, 5 );
+			attachmentPreview.lineStyle(1, 0x0000FF );
+			attachmentPreview.moveTo( selectedAttachment.position.x, selectedAttachment.position.y );
+			var endX = selectedAttachment.position.x + Math.cos( selectedAttachment.rotation ) * 10;
+			var endY = selectedAttachment.position.y + Math.sin( selectedAttachment.rotation ) * 10;
+			attachmentPreview.lineTo(endX,endY);
+		}
+
 	}
 
 	function selectAnimation( newAnimation: CSDAnimation )
@@ -142,6 +186,9 @@ class SpriteEditor extends ImguiTool
 		selectedAnimation = newAnimation;
 		selectedFrame = null;
 		inspectorMode = ANIMATION;
+
+		if( selectedAnimation.frames.length == 0 )
+			preview.removeChild(sprite);
 	}
 
 	function selectFrame( newFrame: CSDFrame )
@@ -150,11 +197,21 @@ class SpriteEditor extends ImguiTool
 		inspectorMode = FRAME;
 	}
 
+	function selectAttachment( newAttachment: CSDAttachment )
+	{
+		selectedAttachment = newAttachment;
+		inspectorMode = ATTACHMENT;
+	}
+
 	function rebuildCache()
 	{
 		@:privateAccess cache.build();
-		sprite.play( selectedAnimation != null ? selectedAnimation.name : spriteDef.animations[0].name );
+		if( selectedAnimation != null )
+			sprite.play( selectedAnimation.name );
+		else if( spriteDef.animations.length > 0 )
+			sprite.play( spriteDef.animations[0].name );
 	}
+
 
 	function updateSprite()
 	{
@@ -163,12 +220,12 @@ class SpriteEditor extends ImguiTool
 
 		//preview.width = bounds.width;
 		//preview.height = bounds.height;
-		preview.scaleMode = Stretch(cast bounds.width,cast bounds.height);
+		//preview.scaleMode = Stretch(cast bounds.width,cast bounds.height);
 
-		sceneRT.resize(cast bounds.width, cast bounds.height);
+		//sceneRT.resize(cast bounds.width, cast bounds.height);
 
-		//s.x = 0;// Math.floor( preview.width / 2 - bounds.width / 2 );
-		//s.y = 0;//Math.floor( preview.height / 2 - bounds.height / 2 );
+		sprite.x =  Math.floor( preview.width / 2 - bounds.width / 2 );
+		sprite.y = Math.floor( preview.height / 2 - bounds.height / 2 );
 	}
 
 	override public function update( delta: Float )
@@ -189,7 +246,7 @@ class SpriteEditor extends ImguiTool
 
 		// Preview
 		ImGui.setNextWindowDockId( dockspaceIdCenter, dockCond );
-		ImGui.begin('Preview###${windowID()}_preview');
+		ImGui.begin('Preview###${windowID()}_preview', null, ImGuiWindowFlags.NoScrollWithMouse | ImGuiWindowFlags.NoScrollbar);
 		var windowSize: ImVec2 = cast ImGui.getWindowSize();
 		ImGui.setCursorPos({x: ( windowSize.x - (preview.width * spriteScale) ) * 0.5, y: ( windowSize.y - (preview.height * spriteScale) ) * 0.5} );
 		ImGui.image(sceneRT, { x: preview.width * spriteScale, y: preview.height * spriteScale } );
@@ -271,58 +328,227 @@ class SpriteEditor extends ImguiTool
 	function listWindow()
 	{
 		ImGui.setNextWindowDockId( dockspaceIdLeft, dockCond );
-		ImGui.begin('Animations');
+		ImGui.begin('Outline');
 
-		ImGui.beginChild("AnimationsList",null,false, ImGuiWindowFlags.AlwaysAutoResize );
+		ImGui.text("Animations");
+		//ImGui.beginChild("AnimationsList",null, true );
 
-		if( spriteDef != null )
+
+		for( i  in 0 ... spriteDef.animations.length )
 		{
-			for( i  in 0 ... spriteDef.animations.length )
+			var animation = spriteDef.animations[i];
+
+			ImGui.pushID('animlist_${animation.name}');
+
+			var flags = ImGuiTreeNodeFlags.Leaf;
+			if( animation == selectedAnimation )
+				flags |= ImGuiTreeNodeFlags.Selected;
+			var isOpen = ImGui.treeNodeEx( animation.name, flags );
+
+			if( isOpen )
+				ImGui.treePop();
+
+
+			if( ImGui.isItemClicked(ImGuiMouseButton.Right) )
 			{
-				var animation = spriteDef.animations[i];
-
-				var flags = ImGuiTreeNodeFlags.Leaf;
-				if( animation == selectedAnimation )
-					flags |= ImGuiTreeNodeFlags.Selected;
-				var isOpen = ImGui.treeNodeEx( animation.name, flags );
-
-				if( isOpen )
-					ImGui.treePop();
-
-
-				if( ImGui.isItemClicked(ImGuiMouseButton.Right) )
-				{
-					selectAnimation( animation );
-					ImGui.openPopup('${spriteDef.name}_rc');
-				}
-				if( ImGui.isItemClicked(ImGuiMouseButton.Left) )
-				{
-					selectAnimation( animation );
-					//updateSelectedSprite();
-				}
-
-				if( ImGui.beginPopup('${spriteDef.name}_rc') )
-				{
-					if( ImGui.menuItem("Rename") )
-					{
-						ImGui.openPopup('${windowID()}_rc_rename');
-					}
-					if( ImGui.menuItem("Make Default") )
-					{
-						// @todo
-					}
-					if( ImGui.menuItem("Delete") )
-					{
-						ImGui.openPopup('${windowID()}_rc_delete');
-					}
-					ImGui.endPopup();
-				}
-
-
-
+				selectAnimation( animation );
+				ImGui.openPopup('context');
 			}
+			if( ImGui.isItemClicked(ImGuiMouseButton.Left) )
+			{
+				selectAnimation( animation );
+				//updateSelectedSprite();
+			}
+
+			if( ImGui.beginPopup('context') )
+			{
+				if( ImGui.menuItem("Rename") )
+				{
+					ImGui.openPopup('animation_rename');
+				}
+				if( ImGui.menuItem("Make Default") )
+				{
+					// @todo
+				}
+				if( ImGui.menuItem("Delete") )
+				{
+					ImGui.openPopup('animation_delete');
+				}
+				ImGui.endPopup();
+			}
+
+			ImGui.popID();
+
 		}
-		ImGui.endChild();
+
+		//ImGui.endChild();
+		if( ImGui.button("Add Animation") )
+		{
+			tmpInput = "";
+			ImGui.openPopup("Add Animation");
+		}
+
+		ImGui.separator();
+
+		ImGui.text("Attachments");
+		//ImGui.beginChild("AttachmentsList",null, true);
+
+
+		for( i  in 0 ... spriteDef.attachments.length )
+		{
+
+			var attachment = spriteDef.attachments[i];
+			ImGui.pushID('atlist_${attachment.name}');
+
+			var flags = ImGuiTreeNodeFlags.Leaf;
+			if( attachment == selectedAttachment )
+				flags |= ImGuiTreeNodeFlags.Selected;
+			var isOpen = ImGui.treeNodeEx( attachment.name, flags );
+
+			if( isOpen )
+				ImGui.treePop();
+
+
+			if( ImGui.isItemClicked(ImGuiMouseButton.Right) )
+			{
+				selectAttachment( attachment );
+				ImGui.openPopup('context');
+			}
+			if( ImGui.isItemClicked(ImGuiMouseButton.Left) )
+			{
+				selectAttachment( attachment );
+			}
+
+			if( ImGui.beginPopup('context') )
+			{
+				if( ImGui.menuItem("Rename") )
+				{
+					ImGui.openPopup('attachment_rename');
+				}
+				if( ImGui.menuItem("Delete") )
+				{
+					ImGui.openPopup('attachment_delete');
+				}
+				ImGui.endPopup();
+			}
+
+			ImGui.popID();
+
+
+
+		}
+		//ImGui.endChild();
+		if( ImGui.button("Add Attachment") )
+		{
+			ImGui.openPopup("Add Attachment");
+		}
+
+		var isOpen = true;
+		var closeRef = hl.Ref.make(isOpen);
+
+		if( ImGui.beginPopupModal("Add Animation", closeRef) )
+		{
+			var r = IG.textInput("Name", tmpInput);
+			if( r != null )
+				tmpInput = r;
+
+			if( ImGui.button("Add") )
+			{
+				var baseAnim = spriteDef != null && spriteDef.animations.length > 0 ? spriteDef.animations[0] : null;
+				var a: CSDAnimation = {
+					name: tmpInput,
+					atlas: baseAnim != null ? baseAnim.atlas : "",
+					frames: [],
+					tags: [],
+					sounds: [],
+					attachmentOverrides: [],
+
+				}
+				spriteDef.animations.push(a);
+				ImGui.closeCurrentPopup();
+			}
+
+			ImGui.sameLine();
+
+			if( ImGui.button("Cancel") )
+			{
+				ImGui.closeCurrentPopup();
+			}
+
+
+			ImGui.endPopup();
+		}
+
+		if( ImGui.beginPopupModal('Really delete ${selectedAnimation.name}?###animation_delete', closeRef) )
+		{
+			ImGui.text("This can't be undone since I'm too lazy to add proper undo support.");
+			ImGui.separator();
+
+			if( spriteDef.animations.length == 1 )
+			{
+				ImGui.text("Can't delete the last animation in a sprite. All sprites must have at least 1 animation, even if it's only a single frame");
+			}
+			else
+			{
+
+				if( ImGui.button("Ok") )
+				{
+					var idx = 0;
+					for( i in 0 ... spriteDef.animations.length )
+					{
+						if( spriteDef.animations[i] == selectedAnimation )
+						{
+							idx = i; break;
+						}
+					}
+					selectedAnimation = null;
+					spriteDef.animations.splice(idx, 1);
+					rebuildCache();
+					ImGui.closeCurrentPopup();
+				}
+
+				ImGui.sameLine();
+
+				if( ImGui.button("Cancel") )
+				{
+					ImGui.closeCurrentPopup();
+				}
+			}
+
+
+			ImGui.endPopup();
+		}
+
+		if( ImGui.beginPopupModal("Add Attachment", closeRef) )
+		{
+			var r = IG.textInput("Name", tmpInput);
+			if( r != null )
+				tmpInput = r;
+
+			if( ImGui.button("Add") )
+			{
+				var a: CSDAttachment = {
+					name: tmpInput,
+					position: {x: 0, y: 0},
+					rotation: 0,
+
+				}
+				spriteDef.attachments.push(a);
+				ImGui.closeCurrentPopup();
+			}
+
+			ImGui.sameLine();
+
+			if( ImGui.button("Cancel") )
+			{
+				ImGui.closeCurrentPopup();
+			}
+
+
+			ImGui.endPopup();
+		}
+
+
 
 		ImGui.end();
 	}
@@ -338,6 +564,7 @@ class SpriteEditor extends ImguiTool
 
 
 		var desiredW = 100 * scaleFactor;
+		var handledDrop = false;
 
 		if( spriteDef != null && selectedAnimation != null )
 		{
@@ -383,6 +610,7 @@ class SpriteEditor extends ImguiTool
 							var tileToInsert = bits[1];
 							var mousePos: ImVec2 = cast ImGui.getMousePos();
 							var cursorPos: ImVec2 = cast ImGui.getCursorScreenPos();
+							handledDrop = true;
 							if( mousePos.x - desiredW / 2 < cursorPos.x )
 							{
 								insertFrame(tileToInsert, i, frame.duration);
@@ -431,6 +659,26 @@ class SpriteEditor extends ImguiTool
 
 		ImGui.endChild();
 
+		if( !handledDrop && ImGui.beginDragDropTarget( ) )
+		{
+			var payload = ImGui.acceptDragDropPayloadString("atlas_tile");
+			if( payload != null )
+			{
+				var bits = payload.split('|');
+				Utils.assert(bits.length == 2, "Weird drag drop payload...");
+
+				if( selectedAnimation.atlas == "" )
+					selectedAnimation.atlas = bits[0];
+
+				if( bits.length >= 2 && bits[0] == selectedAnimation.atlas )
+				{
+					var tileToInsert = bits[1];
+					insertFrame(tileToInsert, selectedAnimation.frames.length, 0.33);
+				}
+			}
+			ImGui.endDragDropTarget();
+		}
+
 		ImGui.end();
 	}
 
@@ -462,6 +710,8 @@ class SpriteEditor extends ImguiTool
 		switch( inspectorMode )
 		{
 			case ANIMATION:
+				ImGui.text("Animation settings");
+				ImGui.separator();
 				var newAtlas = IG.textInput( "Atlas", selectedAnimation.atlas );
 				if( newAtlas != null && hxd.Res.loader.exists( newAtlas ) )
 				{
@@ -471,6 +721,8 @@ class SpriteEditor extends ImguiTool
 
 
 			case FRAME:
+				ImGui.text("Frame settings");
+				ImGui.separator();
 				var newTile = IG.textInput( "Tile", selectedFrame.tile );
 				if( newTile != null )
 				{
@@ -492,7 +744,6 @@ class SpriteEditor extends ImguiTool
 
 						if( bits.length >= 2 && bits[0] == selectedAnimation.atlas )
 						{
-							trace(payload);
 							selectedFrame.tile = bits[1];
 							rebuildCache();
 						}
@@ -503,6 +754,22 @@ class SpriteEditor extends ImguiTool
 				IG.wref( IG.inputDouble("Duration (ms)", _, 0.01, 0.1, "%.3f"), selectedFrame.duration );
 				IG.wref( IG.inputDouble("Offset X", _, 1, 10, "%.2f"),  selectedFrame.offsetX);
 				IG.wref( IG.inputDouble("Offset Y", _, 1, 10, "%.2f"), selectedFrame.offsetY);
+
+
+			case ATTACHMENT:
+				ImGui.text("Attachment settings");
+				ImGui.separator();
+				IG.posInput("Offset", selectedAttachment.position, "%.2f");
+				var single: Single = selectedAttachment.rotation;
+				if( IG.wref( ImGui.sliderAngle("Rotation", _), single ) )
+					selectedAttachment.rotation = single;
+
+				if( ImGui.isItemHovered() )
+				{
+					ImGui.beginTooltip();
+					ImGui.text("Ctrl+click to manually set");
+					ImGui.endTooltip();
+				}
 
 
 

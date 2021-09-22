@@ -192,7 +192,7 @@ class Sprite extends h2d.Drawable
 		if (!pause)
 			frameTime += speed * ctx.elapsedTime;
 
-	if( frameTime > frameInfo.duration )
+		if( frameTime > frameInfo.duration )
 		{
 			frameTime -= frameInfo.duration;
 			currentFrame++;

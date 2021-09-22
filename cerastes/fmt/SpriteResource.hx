@@ -33,7 +33,7 @@ typedef CSDPoint = {
 typedef CSDAttachment = {
 	var name: String;
 	var position: CSDPoint;
-	var angle: CSDPoint; // 0,0 if none
+	var rotation: Float; // in Radians. Because heaps uses radians internally and I don't have to justify myself to youuuuuuuuuuuuuuuu
 }
 
 typedef CSDAttachmentOverride = {

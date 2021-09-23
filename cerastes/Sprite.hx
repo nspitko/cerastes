@@ -1,11 +1,15 @@
 package cerastes;
 
+import game.GameState.CollisionGroup;
+import quadtree.types.Collider;
 import h2d.RenderContext;
 import h2d.Tile;
 import hxd.res.Atlas;
 import h2d.Bitmap;
 import h2d.Object;
 import cerastes.fmt.SpriteResource;
+import cerastes.collision.Colliders;
+
 
 // SpriteCache is shared between sprites with the same name.
 class SpriteCache
@@ -59,10 +63,15 @@ class SpriteCache
 	}
 }
 
-class Sprite extends h2d.Drawable
+class Sprite extends h2d.Drawable implements CollisionObject
 {
 
 	var cache: SpriteCache;
+
+	public var colliders(default, null): haxe.ds.Vector<Collider>;
+
+	public var collisionMask: CollisionMask = 1;
+	public var collisionType: CollisionGroup = 0;
 
 	// Current animation being played. Indexes into frame list
 	var sequence: CSDAnimation;
@@ -141,6 +150,32 @@ class Sprite extends h2d.Drawable
 
 		super(parent);
 
+		buildColliders();
+
+	}
+
+	function buildColliders()
+	{
+		colliders = new haxe.ds.Vector( spriteDef.colliders.length );
+		for( i in 0 ... spriteDef.colliders.length)
+		{
+			var c = spriteDef.colliders[i];
+			switch( c.type )
+			{
+				case ColliderType.Box:
+					colliders[i] = new Box(this, c.size.x, c.size.y);
+				case ColliderType.Circle:
+				colliders[i] = new Circle(this, c.size.x);
+				default:
+					Utils.error("Unhandled collision type");
+
+			}
+		}
+	}
+
+	public dynamic function onCollision( other: CollisionObject )
+	{
+		trace("unbound collision");
 	}
 
 

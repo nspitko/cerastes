@@ -23,9 +23,39 @@ abstract SpriteAttachmentTween(Int) from Int to Int
 	var Linear = 1;		// Linear tweening
 }
 
+@:enum
+abstract ColliderType(Int) from Int to Int
+{
+	var Invalid = 0;		// ???
+	var Box = 1;			// An axis aligned bounding box. Fastest. Bestest.
+	var Circle = 2;			// radius expressed as size.x
+	var Point = 3;			// A single point. Points can't collide with eachother, but can collide with aabbs/circles
+	var Polygon = 4; 		// Unsupported currently.
+
+	public function toString() : String
+	{
+		return switch( this )
+		{
+			case Invalid: "Invalid";
+			case Box: "Box";
+			case Circle: "Circle";
+			case Point: "Point";
+			case Polygon: "Polygon";
+			default: "Unknown";
+		}
+	}
+}
+
 typedef CSDPoint = {
 	var x: Float;
 	var y: Float;
+}
+
+// Colliders. Sprites can have multiple colliders, and animations may change them.
+typedef CSDCollider = {
+	var type: ColliderType;
+	var position: CSDPoint;
+	var size: CSDPoint;
 }
 
 // Attachments must be specified on frame 0, and can additionally be
@@ -79,6 +109,7 @@ typedef CSDDefinition = {
 	var name: String;
 	var animations: Array<CSDAnimation>;
 	var attachments: Array<CSDAttachment>;
+	var colliders: Array<CSDCollider>;
 }
 
 typedef CSDFile = {

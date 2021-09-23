@@ -30,6 +30,7 @@ enum SpriteInspectorMode {
 	ANIMATION;
 	FRAME;
 	ATTACHMENT;
+	COLLIDER;
 }
 
 @:keep
@@ -57,6 +58,8 @@ class SpriteEditor extends ImguiTool
 	var selectedAnimation: CSDAnimation;
 	var selectedFrame: CSDFrame;
 	var selectedAttachment: CSDAttachment;
+	var selectedCollider: CSDCollider;
+
 	var inspectorMode: SpriteInspectorMode = NONE;
 
 	var cache: SpriteCache;
@@ -71,6 +74,7 @@ class SpriteEditor extends ImguiTool
 
 	// visual stuff
 	var attachmentPreview: Graphics;
+	var colliderPreview: Graphics;
 
 
 	public function new()
@@ -108,7 +112,8 @@ class SpriteEditor extends ImguiTool
 					attachmentOverrides: []
 				}
 			],
-			attachments: []
+			attachments: [],
+			colliders: [],
 		}
 
 		updateScene();
@@ -117,6 +122,7 @@ class SpriteEditor extends ImguiTool
 		openFile("spr/test.csd");
 
 		attachmentPreview = new Graphics(sprite);
+		colliderPreview = new Graphics(sprite);
 
 
 	}
@@ -179,6 +185,22 @@ class SpriteEditor extends ImguiTool
 			attachmentPreview.lineTo(endX,endY);
 		}
 
+		colliderPreview.clear();
+		if( selectedCollider != null && inspectorMode == COLLIDER )
+		{
+			colliderPreview.lineStyle(1,0x00FF00);
+			switch( selectedCollider.type )
+			{
+				case Box:
+					colliderPreview.drawRect( selectedCollider.position.x,selectedCollider.position.y,selectedCollider.size.x,selectedCollider.size.y );
+				case Circle:
+					colliderPreview.drawCircle(selectedCollider.position.x, selectedCollider.position.y, selectedCollider.size.x);
+				default:
+			}
+		}
+
+
+
 	}
 
 	function selectAnimation( newAnimation: CSDAnimation )
@@ -201,6 +223,12 @@ class SpriteEditor extends ImguiTool
 	{
 		selectedAttachment = newAttachment;
 		inspectorMode = ATTACHMENT;
+	}
+
+	function selectCollider( newCollder: CSDCollider )
+	{
+		selectedCollider = newCollder;
+		inspectorMode = COLLIDER;
 	}
 
 	function rebuildCache()
@@ -327,8 +355,22 @@ class SpriteEditor extends ImguiTool
 
 	function listWindow()
 	{
+
+		var isOpen = true;
+		var closeRef = hl.Ref.make(isOpen);
+
+		// Yeah, these kinda suck. My hand has been forced. https://github.com/ocornut/imgui/issues/331
+		var showAnimationDeletePopup = false;
+		var showAttachmentDeletePopup = false;
+		var showColliderDeletePopup = false;
+
 		ImGui.setNextWindowDockId( dockspaceIdLeft, dockCond );
 		ImGui.begin('Outline');
+
+
+		// ============================================================================
+		// Animations
+		// ============================================================================
 
 		ImGui.text("Animations");
 		//ImGui.beginChild("AnimationsList",null, true );
@@ -372,10 +414,12 @@ class SpriteEditor extends ImguiTool
 				}
 				if( ImGui.menuItem("Delete") )
 				{
-					ImGui.openPopup('animation_delete');
+					showAnimationDeletePopup = true;
 				}
 				ImGui.endPopup();
 			}
+
+
 
 			ImGui.popID();
 
@@ -388,7 +432,92 @@ class SpriteEditor extends ImguiTool
 			ImGui.openPopup("Add Animation");
 		}
 
+		if( showAnimationDeletePopup )
+		{
+			ImGui.openPopup("###animation_delete");
+		}
+
+		if( ImGui.beginPopupModal("Add Animation", null, ImGuiWindowFlags.AlwaysAutoResize ) )
+		{
+			var r = IG.textInput("Name", tmpInput);
+			if( r != null )
+				tmpInput = r;
+
+			if( ImGui.button("Add") )
+			{
+				var baseAnim = spriteDef != null && spriteDef.animations.length > 0 ? spriteDef.animations[0] : null;
+				var a: CSDAnimation = {
+					name: tmpInput,
+					atlas: baseAnim != null ? baseAnim.atlas : "",
+					frames: [],
+					tags: [],
+					sounds: [],
+					attachmentOverrides: [],
+
+				}
+				spriteDef.animations.push(a);
+				ImGui.closeCurrentPopup();
+			}
+
+			ImGui.sameLine();
+
+			if( ImGui.button("Cancel") )
+			{
+				ImGui.closeCurrentPopup();
+			}
+
+
+			ImGui.endPopup();
+		}
+
+		if( ImGui.beginPopupModal('Really delete ${selectedAnimation != null ? selectedAnimation.name : "NULL"}###animation_delete', null, ImGuiWindowFlags.AlwaysAutoResize ) )
+		{
+			ImGui.text("This can't be undone since I'm too lazy to add proper undo support.");
+			ImGui.separator();
+
+			if( spriteDef.animations.length == 1 )
+			{
+				ImGui.text("Can't delete the last animation in a sprite. All sprites must have at least 1 animation, even if it's only a single frame");
+			}
+			else
+			{
+
+				if( ImGui.button("Ok") )
+				{
+					var idx = 0;
+					for( i in 0 ... spriteDef.animations.length )
+					{
+						if( spriteDef.animations[i] == selectedAnimation )
+						{
+							idx = i; break;
+						}
+					}
+					inspectorMode = NONE;
+					selectedAnimation = null;
+					spriteDef.animations.splice(idx, 1);
+					rebuildCache();
+					ImGui.closeCurrentPopup();
+				}
+
+				ImGui.sameLine();
+
+
+			}
+			if( ImGui.button("Cancel") )
+			{
+				ImGui.closeCurrentPopup();
+			}
+
+
+			ImGui.endPopup();
+		}
+
+
 		ImGui.separator();
+
+		// ============================================================================
+		// Attachments
+		// ============================================================================
 
 		ImGui.text("Attachments");
 		//ImGui.beginChild("AttachmentsList",null, true);
@@ -427,7 +556,7 @@ class SpriteEditor extends ImguiTool
 				}
 				if( ImGui.menuItem("Delete") )
 				{
-					ImGui.openPopup('attachment_delete');
+					showAttachmentDeletePopup = true;
 				}
 				ImGui.endPopup();
 			}
@@ -443,83 +572,14 @@ class SpriteEditor extends ImguiTool
 			ImGui.openPopup("Add Attachment");
 		}
 
-		var isOpen = true;
-		var closeRef = hl.Ref.make(isOpen);
 
-		if( ImGui.beginPopupModal("Add Animation", closeRef) )
+		if( showAttachmentDeletePopup )
 		{
-			var r = IG.textInput("Name", tmpInput);
-			if( r != null )
-				tmpInput = r;
-
-			if( ImGui.button("Add") )
-			{
-				var baseAnim = spriteDef != null && spriteDef.animations.length > 0 ? spriteDef.animations[0] : null;
-				var a: CSDAnimation = {
-					name: tmpInput,
-					atlas: baseAnim != null ? baseAnim.atlas : "",
-					frames: [],
-					tags: [],
-					sounds: [],
-					attachmentOverrides: [],
-
-				}
-				spriteDef.animations.push(a);
-				ImGui.closeCurrentPopup();
-			}
-
-			ImGui.sameLine();
-
-			if( ImGui.button("Cancel") )
-			{
-				ImGui.closeCurrentPopup();
-			}
-
-
-			ImGui.endPopup();
+			ImGui.openPopup("###attachment_delete");
 		}
 
-		if( ImGui.beginPopupModal('Really delete ${selectedAnimation.name}?###animation_delete', closeRef) )
-		{
-			ImGui.text("This can't be undone since I'm too lazy to add proper undo support.");
-			ImGui.separator();
 
-			if( spriteDef.animations.length == 1 )
-			{
-				ImGui.text("Can't delete the last animation in a sprite. All sprites must have at least 1 animation, even if it's only a single frame");
-			}
-			else
-			{
-
-				if( ImGui.button("Ok") )
-				{
-					var idx = 0;
-					for( i in 0 ... spriteDef.animations.length )
-					{
-						if( spriteDef.animations[i] == selectedAnimation )
-						{
-							idx = i; break;
-						}
-					}
-					selectedAnimation = null;
-					spriteDef.animations.splice(idx, 1);
-					rebuildCache();
-					ImGui.closeCurrentPopup();
-				}
-
-				ImGui.sameLine();
-
-				if( ImGui.button("Cancel") )
-				{
-					ImGui.closeCurrentPopup();
-				}
-			}
-
-
-			ImGui.endPopup();
-		}
-
-		if( ImGui.beginPopupModal("Add Attachment", closeRef) )
+		if( ImGui.beginPopupModal("Add Attachment", null, ImGuiWindowFlags.AlwaysAutoResize ) )
 		{
 			var r = IG.textInput("Name", tmpInput);
 			if( r != null )
@@ -548,10 +608,151 @@ class SpriteEditor extends ImguiTool
 			ImGui.endPopup();
 		}
 
+		if( ImGui.beginPopupModal('Really delete ${selectedAttachment != null ? selectedAttachment.name : "NULL"}?###attachment_delete', closeRef) )
+		{
+			ImGui.text("This can't be undone since I'm too lazy to add proper undo support.");
+			ImGui.separator();
+
+
+
+			if( ImGui.button("Ok") )
+			{
+				var idx = 0;
+				for( i in 0 ... spriteDef.attachments.length )
+				{
+					if( spriteDef.attachments[i] == selectedAttachment )
+					{
+						idx = i; break;
+					}
+				}
+				inspectorMode = NONE;
+				selectedAttachment = null;
+				spriteDef.attachments.splice(idx, 1);
+				//rebuildCache();
+				ImGui.closeCurrentPopup();
+			}
+
+			ImGui.sameLine();
+
+			if( ImGui.button("Cancel") )
+			{
+				ImGui.closeCurrentPopup();
+			}
+
+
+
+			ImGui.endPopup();
+		}
+
+
+		ImGui.separator();
+
+		// ============================================================================
+		// Colliders
+		// ============================================================================
+
+		ImGui.text("Colliders");
+
+		for( i  in 0 ... spriteDef.colliders.length )
+		{
+
+			var collider = spriteDef.colliders[i];
+			ImGui.pushID('collist_${i}');
+
+
+
+			var name = '${collider.type.toString()} (${collider.position.x}, ${collider.position.y})';
+
+			var flags = ImGuiTreeNodeFlags.Leaf;
+			if( collider == selectedCollider )
+				flags |= ImGuiTreeNodeFlags.Selected;
+			var isOpen = ImGui.treeNodeEx( name, flags );
+
+			if( isOpen )
+				ImGui.treePop();
+
+
+			if( ImGui.isItemClicked(ImGuiMouseButton.Right) )
+			{
+				selectCollider( collider );
+				ImGui.openPopup('context');
+			}
+			if( ImGui.isItemClicked(ImGuiMouseButton.Left) )
+			{
+				selectCollider( collider );
+			}
+
+			if( ImGui.beginPopup('context') )
+			{
+				if( ImGui.menuItem("Delete") )
+				{
+					showColliderDeletePopup = true;
+				}
+				ImGui.endPopup();
+			}
+
+			ImGui.popID();
+		}
+		//ImGui.endChild();
+		if( ImGui.button("Add Collider") )
+		{
+			var a: CSDCollider = {
+				type: Box,
+				position: {x: 0, y: 0},
+				size: {x: 10, y: 10},
+
+			}
+			spriteDef.colliders.push(a);
+		}
+
+
+		if( showColliderDeletePopup )
+		{
+			ImGui.openPopup("###collider_delete");
+		}
+
+		if( ImGui.beginPopupModal('Really delete this collider??###collider_delete', closeRef) )
+		{
+			ImGui.text("This can't be undone since I'm too lazy to add proper undo support.");
+			ImGui.separator();
+
+
+
+			if( ImGui.button("Ok") )
+			{
+				var idx = 0;
+				for( i in 0 ... spriteDef.colliders.length )
+				{
+					if( spriteDef.colliders[i] == selectedCollider )
+					{
+						idx = i; break;
+					}
+				}
+				inspectorMode = NONE;
+				selectedCollider = null;
+				spriteDef.colliders.splice(idx, 1);
+				//rebuildCache();
+				ImGui.closeCurrentPopup();
+			}
+
+			ImGui.sameLine();
+
+			if( ImGui.button("Cancel") )
+			{
+				ImGui.closeCurrentPopup();
+			}
+
+			ImGui.endPopup();
+		}
+
+
 
 
 		ImGui.end();
+
+
 	}
+
 
 	function tileWindow()
 	{
@@ -771,6 +972,27 @@ class SpriteEditor extends ImguiTool
 					ImGui.endTooltip();
 				}
 
+			case COLLIDER:
+				ImGui.text("Collider settings");
+				ImGui.separator();
+				/*
+				var options = new hl.NativeArray<String>(2);
+				options[0] = "Box";
+				options[1] = "Circle";
+				IG.wref( ImGui.combo("Type", _, options), selectedCollider.type);
+				*/
+				if( ImGui.beginCombo("Type", selectedCollider.type.toString() ) )
+				{
+					if( ImGui.selectable("Box", 	selectedCollider.type == Box) )		selectedCollider.type = Box;
+					if( ImGui.selectable("Circle", 	selectedCollider.type == Circle) )	selectedCollider.type = Circle;
+
+					ImGui.endCombo();
+				}
+
+
+
+				IG.posInput("Offset", selectedCollider.position, "%.2f");
+				IG.posInput("Size", selectedCollider.size, "%.2f");
 
 
 			case NONE:

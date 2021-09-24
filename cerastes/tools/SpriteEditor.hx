@@ -1,6 +1,8 @@
 
 package cerastes.tools;
 
+#if hlimgui
+
 import h2d.Graphics;
 import hxd.res.Atlas;
 import cerastes.Sprite.SpriteCache;
@@ -12,7 +14,6 @@ import cerastes.tools.ImguiTool.ImguiToolManager;
 import hl.UI;
 import haxe.Json;
 import cerastes.tools.ImguiTools.IG;
-#if cannonml
 import h3d.mat.Texture;
 import hxd.res.Loader;
 import hxd.App;
@@ -191,7 +192,7 @@ class SpriteEditor extends ImguiTool
 			colliderPreview.lineStyle(1,0x00FF00);
 			switch( selectedCollider.type )
 			{
-				case Box:
+				case AABB:
 					colliderPreview.drawRect( selectedCollider.position.x,selectedCollider.position.y,selectedCollider.size.x,selectedCollider.size.y );
 				case Circle:
 					colliderPreview.drawCircle(selectedCollider.position.x, selectedCollider.position.y, selectedCollider.size.x);
@@ -697,7 +698,7 @@ class SpriteEditor extends ImguiTool
 		if( ImGui.button("Add Collider") )
 		{
 			var a: CSDCollider = {
-				type: Box,
+				type: AABB,
 				position: {x: 0, y: 0},
 				size: {x: 10, y: 10},
 
@@ -983,7 +984,7 @@ class SpriteEditor extends ImguiTool
 				*/
 				if( ImGui.beginCombo("Type", selectedCollider.type.toString() ) )
 				{
-					if( ImGui.selectable("Box", 	selectedCollider.type == Box) )		selectedCollider.type = Box;
+					if( ImGui.selectable("AABB", 	selectedCollider.type == AABB) )	selectedCollider.type = AABB;
 					if( ImGui.selectable("Circle", 	selectedCollider.type == Circle) )	selectedCollider.type = Circle;
 
 					ImGui.endCombo();

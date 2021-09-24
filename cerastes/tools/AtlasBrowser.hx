@@ -1,5 +1,7 @@
 package cerastes.tools;
 
+#if hlimgui
+
 import h2d.Tile;
 import hxd.res.Atlas;
 import cerastes.tools.ImguiTool.ImguiToolManager;
@@ -174,3 +176,5 @@ class AtlasBrowser  extends  ImguiTool
 
 
 }
+
+#end

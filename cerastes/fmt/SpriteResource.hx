@@ -1,5 +1,6 @@
 package cerastes.fmt;
 
+import cerastes.collision.Collision.ColliderType;
 import cerastes.Sprite.SpriteCache;
 import h2d.col.Point;
 import haxe.EnumTools;
@@ -21,29 +22,6 @@ abstract SpriteAttachmentTween(Int) from Int to Int
 {
 	var None = 0;		// Do not tween attachments
 	var Linear = 1;		// Linear tweening
-}
-
-@:enum
-abstract ColliderType(Int) from Int to Int
-{
-	var Invalid = 0;		// ???
-	var Box = 1;			// An axis aligned bounding box. Fastest. Bestest.
-	var Circle = 2;			// radius expressed as size.x
-	var Point = 3;			// A single point. Points can't collide with eachother, but can collide with aabbs/circles
-	var Polygon = 4; 		// Unsupported currently.
-
-	public function toString() : String
-	{
-		return switch( this )
-		{
-			case Invalid: "Invalid";
-			case Box: "Box";
-			case Circle: "Circle";
-			case Point: "Point";
-			case Polygon: "Polygon";
-			default: "Unknown";
-		}
-	}
 }
 
 typedef CSDPoint = {

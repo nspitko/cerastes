@@ -1,13 +1,14 @@
 
 package cerastes.tools;
 
+#if ( hlimgui && cannonml )
+
 import org.si.cml.CMLObject;
 import org.si.cml.CMLFiber;
 import cerastes.tools.ImguiTool.ImguiToolManager;
 import hl.UI;
 import haxe.Json;
 import cerastes.tools.ImguiTools.IG;
-#if cannonml
 import h3d.mat.Texture;
 import hxd.res.Loader;
 import hxd.App;

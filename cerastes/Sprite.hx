@@ -1,7 +1,9 @@
 package cerastes;
 
+import cerastes.collision.Collision.CAABB;
+import cerastes.collision.Collision.ColliderType;
+import cerastes.collision.Collision.CollisionMask;
 import game.GameState.CollisionGroup;
-import quadtree.types.Collider;
 import h2d.RenderContext;
 import h2d.Tile;
 import hxd.res.Atlas;
@@ -10,6 +12,29 @@ import h2d.Object;
 import cerastes.fmt.SpriteResource;
 import cerastes.collision.Colliders;
 
+/**
+ * Sprites altomatically self-register with SpriteManager
+ *
+ * ticking, collision, and high levle updates are all handled here
+**/
+class SpriteManager
+{
+	var sprites: List<Sprite>;
+
+
+	public function new()
+	{
+		sprites = new List<Sprite>();
+	}
+
+	public function tick(delta: Float)
+	{
+		for(s in sprites)
+		{
+			s.tick( delta );
+		}
+	}
+}
 
 // SpriteCache is shared between sprites with the same name.
 class SpriteCache
@@ -70,8 +95,14 @@ class Sprite extends h2d.Drawable implements CollisionObject
 
 	public var colliders(default, null): haxe.ds.Vector<Collider>;
 
-	public var collisionMask: CollisionMask = 1;
+	public var collisionMask: CollisionMask = 0;
 	public var collisionType: CollisionGroup = 0;
+
+	public var collisionBounds(get, null) : CAABB;
+	function get_collisionBounds()
+	{
+		return collisionBounds;
+	}
 
 	// Current animation being played. Indexes into frame list
 	var sequence: CSDAnimation;
@@ -162,18 +193,64 @@ class Sprite extends h2d.Drawable implements CollisionObject
 			var c = spriteDef.colliders[i];
 			switch( c.type )
 			{
-				case ColliderType.Box:
-					colliders[i] = new Box(this, c.size.x, c.size.y);
+				case ColliderType.AABB:
+					colliders[i] = new AABB({
+						min: { x: c.position.x, y: c.position.y	},
+						max: { x: c.size.x, y: c.size.y	},
+					 });
 				case ColliderType.Circle:
-				colliders[i] = new Circle(this, c.size.x);
+					colliders[i] = new Circle({
+						p: { x: c.position.x, y: c.position.y},
+						r: c.size.x
+					});
+				case ColliderType.Point:
+					colliders[i] = new Point({ x: c.position.x, y: c.position.y});
 				default:
-					Utils.error("Unhandled collision type");
+					Utils.error("Unsupported collision type");
 
 			}
 		}
+
+		// Update collision bounds
+		collisionBounds = {
+			min: {x: 0, y: 0},
+			max: {x: 0, y: 0},
+		};
+
+		for( c in colliders )
+		{
+			switch( c.colliderType )
+			{
+				case AABB:
+					var aabb: AABB = cast c;
+					collisionBounds.min.x = Math.min( collisionBounds.min.x, aabb.min_x );
+					collisionBounds.min.y = Math.min( collisionBounds.min.y, aabb.min_y );
+					collisionBounds.max.x = Math.max( collisionBounds.max.x, aabb.max_x );
+					collisionBounds.max.y = Math.max( collisionBounds.max.y, aabb.max_y );
+
+				case Circle:
+					var circle: Circle = cast c;
+					collisionBounds.min.x = Math.min( collisionBounds.min.x, circle.p_x - circle.r );
+					collisionBounds.min.y = Math.min( collisionBounds.min.y, circle.p_y - circle.r );
+					collisionBounds.max.x = Math.max( collisionBounds.max.x, circle.p_x + circle.r );
+					collisionBounds.max.y = Math.max( collisionBounds.max.y, circle.p_y + circle.r );
+
+				case Point:
+					var point: Point = cast c;
+					collisionBounds.min.x = Math.min( collisionBounds.min.x, point.x );
+					collisionBounds.min.y = Math.min( collisionBounds.min.y, point.y );
+					collisionBounds.max.x = Math.max( collisionBounds.max.x, point.x );
+					collisionBounds.max.y = Math.max( collisionBounds.max.y, point.y );
+
+				default:
+					Utils.error("Unsupported collision type");
+
+			}
+		}
+
 	}
 
-	public dynamic function onCollision( other: CollisionObject )
+	public function handleCollision( other: CollisionObject )
 	{
 		trace("unbound collision");
 	}
@@ -252,10 +329,16 @@ class Sprite extends h2d.Drawable implements CollisionObject
 		return frames[ currentFrame ];
 	}
 
-	override function draw( ctx : RenderContext ) {
+	override function draw( ctx : RenderContext )
+	{
 		var t = getFrame();
 
 		emitTile(ctx,t);
+
+	}
+
+	public function tick( delta: Float )
+	{
 
 	}
 

@@ -1,6 +1,8 @@
 
 package cerastes.tools;
 
+#if hlimgui
+
 import hl.Gc;
 import hxd.App;
 import hxd.System;
@@ -36,3 +38,5 @@ class ParticleEditor extends ImguiTool
 		ImGui.end();
 	}
 }
+
+#end

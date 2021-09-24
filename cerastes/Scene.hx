@@ -47,7 +47,18 @@ class Scene
         GlobalConsole.instance.currentScene = this;
 
         s2d.defaultSmooth = false;
-		s2d.scaleMode = ScaleMode.LetterBox(1280, 720,false,Center,Center);
+
+        var size = haxe.macro.Compiler.getDefine("windowSize");
+		var viewportWidth = 640;
+		var viewportHeight = 360;
+		if( size != null )
+		{
+			var p = size.split("x");
+			viewportWidth = Std.parseInt(p[0]);
+			viewportHeight = Std.parseInt(p[1]);
+		}
+
+		s2d.scaleMode = ScaleMode.LetterBox(viewportWidth, viewportHeight,false,Center,Center);
 
     }
 

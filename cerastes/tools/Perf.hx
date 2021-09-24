@@ -1,6 +1,7 @@
 
 package cerastes.tools;
 
+#if hlimgui
 import hl.Gc;
 import hxd.App;
 import hxd.System;
@@ -55,3 +56,5 @@ class Perf extends ImguiTool
 		ImGui.end();
 	}
 }
+
+#end

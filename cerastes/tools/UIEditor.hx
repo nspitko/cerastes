@@ -1,6 +1,8 @@
 
 package cerastes.tools;
 
+#if hlimgui
+
 import h2d.col.Point;
 import h2d.Graphics;
 import hl.UI;
@@ -798,3 +800,5 @@ class UIEditor extends ImguiTool
 		updateScene();
 	}
 }
+
+#end

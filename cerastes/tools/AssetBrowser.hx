@@ -1,5 +1,7 @@
 package cerastes.tools;
 
+#if hlimgui
+
 import cerastes.fmt.SpriteResource;
 import hxd.res.Atlas;
 import cerastes.tools.ImguiTool.ImguiToolManager;
@@ -189,7 +191,6 @@ class AssetBrowser  extends  ImguiTool
 					b.y = 10 * scaleFactor * count;
 
 					var scale = ( previewWidth / tiles[0].t.width  ) * 0.7;
-					trace(scale);
 					b.scale(scale);
 
 					count++;
@@ -463,3 +464,4 @@ class AssetBrowser  extends  ImguiTool
 	}
 
 }
+#end

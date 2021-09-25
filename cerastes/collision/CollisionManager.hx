@@ -4,6 +4,7 @@ import game.GameState.CollisionGroup;
 import cerastes.collision.Collision.ColliderType;
 import haxe.ds.Vector;
 import cerastes.collision.Colliders.CollisionObject;
+import cerastes.macros.Metrics;
 
 /**
  * Broad phase spatial collision manager
@@ -38,6 +39,8 @@ class CollisionManager
 
 	public function tick( delta: Float )
 	{
+		Metrics.begin();
+
 		// Array of collisions we've handled.
 		var hashes = new Array<{a: CollisionObject, b: CollisionObject }>();
 
@@ -115,5 +118,7 @@ class CollisionManager
 				}
 			}
 		}
+
+		Metrics.end();
 	}
 }

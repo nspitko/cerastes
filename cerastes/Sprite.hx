@@ -88,6 +88,9 @@ class SpriteCache
 	}
 }
 
+@:keep
+@:keepSub
+@:autoBuild(cerastes.macros.SpriteData.build())
 class Sprite extends h2d.Drawable implements CollisionObject
 {
 

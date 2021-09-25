@@ -1,6 +1,10 @@
 
 package cerastes.tools;
 
+#if hlimgui
+
+import imgui.ImGui.ImFont;
+import cerastes.macros.Metrics;
 import haxe.rtti.Meta;
 import haxe.macro.Expr;
 
@@ -15,6 +19,9 @@ class ImguiTool
 class ImguiToolManager
 {
 	static var tools = new Array<ImguiTool>();
+
+	public static var defaultFont: ImFont;
+	public static var headingFont: ImFont;
 
 	public static function showTool( cls: String )
 	{
@@ -46,14 +53,20 @@ class ImguiToolManager
 
 	public static function update( delta: Float )
 	{
+		Metrics.begin();
 		for( t in tools )
 			t.update( delta );
+		Metrics.end();
 	}
 
 	public static function render( e: h3d.Engine )
 	{
+		Metrics.begin();
 		for( t in tools )
 			t.render( e );
+		Metrics.end();
 	}
 
 }
+
+#end

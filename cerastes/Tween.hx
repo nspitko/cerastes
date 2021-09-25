@@ -1,5 +1,7 @@
 package cerastes;
 
+import cerastes.macros.Metrics;
+
 class TweenManager
 {
 	public static var instance(default, null):TweenManager = new TweenManager();
@@ -10,6 +12,7 @@ class TweenManager
 
 	public function tick( delta: Float )
 	{
+		Metrics.begin();
 		var i = tweens.length;
 		while( i-- > 0 )
 		{
@@ -22,6 +25,7 @@ class TweenManager
 			tweens[i].tick( delta );
 
 		}
+		Metrics.end();
 	}
 
 	public function register( t : Tween )

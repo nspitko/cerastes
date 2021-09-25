@@ -1,5 +1,6 @@
 package cerastes.bulletml;
 
+import cerastes.macros.Metrics;
 import org.si.cml.core.CMLState;
 import cerastes.fmt.SpriteResource;
 import h2d.Tile;
@@ -134,6 +135,7 @@ class BulletManager
 
 	public static function tick( delta:Float )
     {
+		Metrics.begin();
 		if( target != null )
 		{
 			cmlTarget.x = target.x;
@@ -141,7 +143,7 @@ class BulletManager
 		}
 
 		CMLObject.frameUpdate();
-
+		Metrics.end();
     }
 }
 

@@ -68,6 +68,8 @@ class Scene
      */
     public function tick( delta:Float )
     {
+        s2d.setElapsedTime(delta);
+        s3d.setElapsedTime(delta);
         s2d.checkResize();
     }
 

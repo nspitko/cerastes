@@ -1,5 +1,7 @@
 package cerastes;
 
+import cerastes.macros.Metrics;
+
 class TimerManager
 {
 	public static var instance(default, null):TimerManager = new TimerManager();
@@ -10,6 +12,7 @@ class TimerManager
 
 	public function tick( delta: Float )
 	{
+		Metrics.begin();
 		var i = tweens.length;
 		while( i-- > 0 )
 		{
@@ -17,6 +20,7 @@ class TimerManager
 			if( tweens[i].finished )
 				tweens.splice(i,1);
 		}
+		Metrics.end();
 	}
 
 	public function register( t : Timer )

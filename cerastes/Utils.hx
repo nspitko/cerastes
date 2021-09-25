@@ -251,7 +251,20 @@ class Utils
 				scale = 1.5;
 
 		}
+		#elseif hldx
+		if( dx.Window.getScreenHeight() > 1200 )
+		{
+			scale = 1.25;
+
+
+			if(dx.Window.getScreenHeight() >= 2160 )
+				scale = 1.5;
+
+		}
 		#end
+
+
+
 
 		return scale;
 
@@ -278,6 +291,6 @@ class Utils
 
 	public static function beginPerfContext(context: String)
 	{
-		
+
 	}
 }

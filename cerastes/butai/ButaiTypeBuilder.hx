@@ -92,7 +92,7 @@ typedef ButaiSaveFile = {
 }
 
 /* ======================================== */
-
+@:keepSub
 class ButaiNode
 {
 	public var id: Id;
@@ -225,7 +225,6 @@ class ButaiTypeBuilder
 				pack : curMod,
 				kind : ckind,
 				fields : fields,
-				meta: [{name:":keep", pos: pos}],
 			});
 
 

@@ -1,4 +1,5 @@
 package cerastes;
+import cerastes.macros.Metrics;
 import hxd.Key;
 import hxd.Pad;
 
@@ -66,8 +67,7 @@ class InputManager
 
 	public static function tick( delta: Float )
 	{
-
-
+		Metrics.begin();
 
 		if( Key.isPressed( Key.UP ) )
 			notifyListeners(UP, PRESSED );
@@ -127,6 +127,8 @@ class InputManager
 				notifyListeners(START, PRESSED );
 
 		}
+
+		Metrics.end();
 
 
 

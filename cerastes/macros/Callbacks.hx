@@ -77,7 +77,7 @@ class ButaiCallbackGenerator
 				access: [Access.APrivate],
 				kind: FieldType.FFun(fnCallback),
 				pos: Context.currentPos(),
-				meta: [{name: ":callback", pos: pos}]
+				meta: [{name: ":callback", pos: pos}, {name: ":keep", pos: pos}]
 			});
 		}
 

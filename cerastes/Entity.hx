@@ -1,5 +1,6 @@
 package cerastes;
 
+import cerastes.macros.Metrics;
 #if network
 import cerastes.net.Replicated;
 #end
@@ -25,7 +26,7 @@ class EntityManager
 
 	public function tick( delta: Float )
 	{
-
+		Metrics.begin();
 		var i = entities.length;
 		while( i-- > 0 )
 		{
@@ -42,6 +43,7 @@ class EntityManager
 			var f = scheduledFunctions.shift();
 			f.func();
 		}
+		Metrics.end();
 	}
 
 	public function register( t : Entity )

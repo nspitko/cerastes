@@ -1,6 +1,7 @@
 
 package cerastes.tools;
 
+import cerastes.macros.Metrics;
 #if hlimgui
 
 import h2d.Graphics;
@@ -259,6 +260,7 @@ class SpriteEditor extends ImguiTool
 
 	override public function update( delta: Float )
 	{
+		Metrics.begin();
 		var isOpen = true;
 		var isOpenRef = hl.Ref.make(isOpen);
 
@@ -317,6 +319,7 @@ class SpriteEditor extends ImguiTool
 		{
 			ImguiToolManager.closeTool( this );
 		}
+		Metrics.end();
 	}
 
 	function menuBar()

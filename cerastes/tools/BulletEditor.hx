@@ -1,6 +1,7 @@
 
 package cerastes.tools;
 
+import cerastes.macros.Metrics;
 #if ( hlimgui && cannonml )
 
 import org.si.cml.CMLObject;
@@ -124,6 +125,7 @@ class BulletEditor extends ImguiTool
 
 	override public function update( delta: Float )
 	{
+		Metrics.begin();
 		var isOpen = true;
 		var isOpenRef = hl.Ref.make(isOpen);
 
@@ -154,6 +156,7 @@ class BulletEditor extends ImguiTool
 		{
 			ImguiToolManager.closeTool( this );
 		}
+		Metrics.end();
 	}
 
 	function menuBar()

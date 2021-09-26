@@ -1,6 +1,8 @@
 
 package cerastes.tools;
 
+import hl.Ref;
+import cerastes.macros.SpriteData;
 import cerastes.macros.Metrics;
 #if hlimgui
 
@@ -354,7 +356,67 @@ class SpriteEditor extends ImguiTool
 		ImGui.setNextWindowDockId( dockspaceIdLeft, dockCond );
 		ImGui.begin('Settings');
 
+		var classList : Map<String,Array<SpriteDataItem>> = cerastes.SpriteMeta.getClassList();
+
+		if( ImGui.beginCombo("Class", trimCls( spriteDef.type ) ) )
+		{
+			if( ImGui.selectable("None", spriteDef.type == null ) )	spriteDef.type = null;
+
+			if( classList != null )
+			{
+				for(k => v in classList )
+				{
+					//trace(k);
+					if( ImGui.selectable(trimCls( k ),	k == spriteDef.type ) )	spriteDef.type = k;
+				}
+			}
+
+			ImGui.endCombo();
+		}
+
+		if( spriteDef.type != null && classList.exists( spriteDef.type ) )
+		{
+			ImGui.separator();
+			var props = classList.get( spriteDef.type );
+
+			for( p in props )
+			{
+				switch( p.type )
+				{
+					case "Int":
+						var r = 0;
+						ImGui.inputInt( p.label, p.defaultValue );
+						if( p.tooltip != null && ImGui.isItemHovered() )
+						{
+							ImGui.beginTooltip();
+							ImGui.text(p.tooltip);
+							ImGui.endTooltip();
+						}
+					case "Float":
+						var f: Single = 0.;
+						var ref = Ref.make(p.defaultValue);
+						ImGui.inputFloat( p.label, ref );
+						if( p.tooltip != null && ImGui.isItemHovered() )
+						{
+							ImGui.beginTooltip();
+							ImGui.text(p.tooltip);
+							ImGui.endTooltip();
+						}
+					default:
+						ImGui.text( p.label );
+				}
+			}
+		}
+
+
 		ImGui.end();
+	}
+
+	inline function trimCls(string: String )
+	{
+		if( string == null ) return "None";
+		if( StringTools.startsWith( string, "game.objects." ) ) return string.substr(13);
+		return string;
 	}
 
 	function listWindow()

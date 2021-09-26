@@ -85,6 +85,7 @@ typedef CSDAnimation = {
 typedef CSDDefinition = {
 
 	var name: String;
+	var ?type: String; // Underlying type for spritedata stuff. Can be empty
 	var animations: Array<CSDAnimation>;
 	var attachments: Array<CSDAttachment>;
 	var colliders: Array<CSDCollider>;

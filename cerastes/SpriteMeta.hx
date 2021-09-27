@@ -4,4 +4,5 @@ package cerastes;
 class SpriteMeta
 {
 	extern public static function getClassList() : Map<String, Array<cerastes.macros.SpriteData.SpriteDataItem>>;
+	extern public static function create( cache: cerastes.Sprite.SpriteCache, ?parent: h2d.Object ) : Sprite;
 }

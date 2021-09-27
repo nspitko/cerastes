@@ -118,6 +118,7 @@ class SpriteEditor extends ImguiTool
 			],
 			attachments: [],
 			colliders: [],
+			typeData: [],
 		}
 
 		updateScene();
@@ -366,7 +367,6 @@ class SpriteEditor extends ImguiTool
 			{
 				for(k => v in classList )
 				{
-					//trace(k);
 					if( ImGui.selectable(trimCls( k ),	k == spriteDef.type ) )	spriteDef.type = k;
 				}
 			}

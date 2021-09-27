@@ -1,5 +1,7 @@
 package cerastes.macros;
 
+import haxe.macro.Printer;
+import haxe.macro.ComplexTypeTools;
 import haxe.macro.Type.ClassField;
 import haxe.macro.TypeTools;
 import haxe.macro.ExprTools;
@@ -40,12 +42,31 @@ class SpriteData
 	#if macro
 
 	static var built = false;
+	static var once = false;
 
 	macro public static function build():Array<Field>
 	{
 		var fields = Context.getBuildFields();
 		if( fields != null )
-			fields = fields.concat( addDataField(fields) );
+			fields = fields.concat( createSpriteDataClass(fields) );
+
+		if( !once )
+		{
+			once = true;
+			var pack = ["game","meta","sprites"];//Context.getLocalModule().split('.');
+			var classFields: Array<haxe.macro.Expr.Field> = [];
+
+			var definition:TypeDefinition = {
+				fields: [],
+				kind: TDClass(),
+				name: "SpriteData",
+				pack: pack,
+				pos: Context.currentPos(),
+				meta: [{name:":keep", pos: Context.currentPos()}, {name:":structInit", pos: Context.currentPos()}],
+			};
+
+			Context.defineType( definition );
+		}
 
 		Context.onAfterTyping(function(moduleTypes)
 		{
@@ -53,6 +74,8 @@ class SpriteData
 
 			var replicatedClasses = [];
 			var dataMap: Map<String, Array<SpriteDataItem>> = [];
+			var caseMap = new Map<String, Expr>();
+
 			for( moduleType in moduleTypes )
 			{
 				switch( moduleType )
@@ -86,13 +109,31 @@ class SpriteData
 
 
 							// Build a new case for this replicated class
-							var path = classType.module.split(".");
-							var cls = path.pop();
-							var typePath : TypePath = {
-								pack: path,
-								name: cls
+
+
+							var clsTypePath : TypePath = {
+								pack: classType.pack,
+								name: classType.name
 							};
-							//caseMap.set(clsid,macro { c = new $typePath(); } );
+							var clsString = '${classType.pack.join(".")}.${classType.name}';
+							// :AyameDespair:
+							var module = classType.module.split('.');
+							if( module[module.length-1] != classType.name )
+							{
+								clsTypePath.sub = classType.name;
+								clsTypePath.name = module[module.length-1];
+								clsString = '${classType.module}.${classType.name}';
+							}
+
+							var dataTypePath : TypePath = {
+								pack: ["game","meta","sprites"],
+								name: classType.name + "Data"
+							}
+							//var complex = TypeTools.toComplexType( classType.kind. );
+							var dataTypeComplex = '${dataTypePath.pack.join('.')}.${dataTypePath.name}'.toComplex();
+							caseMap.set(clsString ,macro {
+								c = new $clsTypePath( cache, parent );
+							} );
 
 						}
 					}
@@ -129,9 +170,53 @@ class SpriteData
 
 			built = true;
 
+			// Switch cases -> exprs
+			var caseExprs: Array<Case> = [];
+			for( id => c in caseMap )
+			{
+				var val = macro $v{id};
+				caseExprs.push({
+					values: [ val ],
+					expr: c
+				});
+			}
 
+			// Switch exprs -> expr
+			var switchExpr = {
+				expr: ESwitch(
+					{
+						expr: EParenthesis( macro $i{"clsType"} ),
+						pos: pos
+					},
+					caseExprs, // cases
+					null // edef
+				),
+				pos: pos
+			};
 
 			var classFields: Array<haxe.macro.Expr.Field> = [];
+
+			classFields.push((macro class {
+
+					public static function create( cache: cerastes.Sprite.SpriteCache, ?parent: h2d.Object ) : Sprite {
+						var c: Sprite = null;
+						var clsType = cache.spriteDef.type;
+
+						${switchExpr};
+
+						// If no other handler, just make it a generic sprite
+						if( c == null )
+							c = new Sprite(cache, parent);
+
+						return c;
+					}
+
+				}).fields[0]
+			);
+
+			//var p = new Printer();
+			//trace( p.printField(classFields[0]) );
+
 
 
 			classFields.push({
@@ -192,6 +277,181 @@ class SpriteData
 		}
 	}
 
+	/**
+	 * Type builder for sprite data object
+	 * @param fields
+	 * @return Array<Field>
+	 */
+	static function createSpriteDataClass( fields: Array<Field> ) : Array<Field>
+	{
+		var append: Array<Field> = [];
+		var pos = Context.currentPos();
+
+		var cls = Context.getLocalClass();
+		cls.get().meta.add(":sd.tag",[macro 1], pos);
+
+		var dataFields: Array<SpriteDataExpr> = [];
+
+		addFieldsForClass(fields, dataFields );
+
+		var parent = cls;
+
+		while(parent.get().superClass != null )
+		{
+			parent = parent.get().superClass.t;
+			addFieldsForParentClass(parent.get().fields.get(), dataFields);
+		}
+
+		// Step 1: Define a custom type
+
+		var spriteDataName = Context.getLocalClass().get().name + "Data";
+		var pack = ["game","meta","sprites"];//Context.getLocalModule().split('.');
+		var fqDataName = pack.join(".") + "." + spriteDataName;
+
+		//var parentClass =
+		var parentDataClass = cls.get().superClass.t.get();
+		var parentDataTypePath : TypePath = {
+			pack: pack,
+			name: parentDataClass.name + "Data"
+		};
+
+		var classFields: Array<haxe.macro.Expr.Field> = [];
+		var kvReaders = [];
+		var kvWriters = [];
+
+
+		for( f in dataFields )
+		{
+			classFields.push({
+				name : f.name,
+				pos : pos,
+				kind : FVar( f.type, f.defaultValue ),
+				access : [APublic],
+			});
+
+			var n = f.name;
+
+			// Deal with packers
+			switch( f.type.toString() )
+			{
+				case "Int":
+					kvReaders.push( macro {
+						if( kv.key == $v{n})
+							this.$n = cast kv.value;
+					});
+					kvWriters.push( macro {
+						kv.push({key: $v{n}, value: this.$n });
+					});
+			}
+
+		}
+
+		classFields.push({
+			name:"loadKV",
+			pos: pos,
+			kind: FFun({
+				expr: macro {
+					if( keyValues == null ) return;
+					for( kv in keyValues )
+					{
+						$b{kvReaders}
+					}
+				},
+				ret: null,
+				args: [{name: "keyValues", type:macro: Array<cerastes.fmt.SpriteResource.CSDKV> }]
+			}),
+			access: [APublic],
+		});
+
+		classFields.push({
+			name:"toKV",
+			pos: pos,
+			kind: FFun({
+				expr: macro {
+					var kv: Array<cerastes.fmt.SpriteResource.CSDKV> = [];
+					$b{kvWriters}
+					return kv;
+				},
+				ret: macro: Array<cerastes.fmt.SpriteResource.CSDKV>,
+				args: []
+			}),
+			access: [APublic],
+		});
+
+		var definition:TypeDefinition = {
+            fields: classFields,
+            kind: TDClass(/*parentDataTypePath*/),
+            name: spriteDataName,
+            pack: pack,
+            pos: pos,
+			meta: [{name:":keep", pos: pos}, {name:":structInit", pos: pos}],
+        };
+
+		var spriteDataTypePath : TypePath = {
+			name: definition.name,
+			pack: definition.pack
+		}
+
+		Context.defineType( definition );
+
+		// Step 2: Create an init function for it
+
+		var dataType = fqDataName.toComplex();
+		var spriteDataVarName = 'spriteData${Context.getLocalClass().get().name}';
+
+
+		var setters = [];
+		//hasParent = true; // Hack?
+
+		for( f in dataFields )
+		{
+			var n = f.name;
+			setters.push( macro {
+				this.$n = $i{spriteDataVarName}.$n;
+			});
+		}
+
+
+		var initFunc: Function = {
+			expr: macro {
+				if( $i{spriteDataVarName} == null )
+				{
+					$i{spriteDataVarName} = {};
+					$i{spriteDataVarName}.loadKV(cache.spriteDef.typeData);
+				}
+
+				$b{setters}
+
+			},
+			ret: null, // ret = return type
+			args: []
+		};
+
+		append.push({
+			name: "loadSpriteData",
+			access: [Access.APublic, Access.AOverride],
+			kind: FieldType.FFun(initFunc),
+			pos: Context.currentPos(),
+			meta: [{ name:":noCompletion", pos: Context.currentPos() }],
+		});
+
+		append.push({
+			name: spriteDataVarName,
+			access: [Access.AStatic, Access.APrivate],
+			kind: FieldType.FVar(dataType),
+			pos: pos,
+			meta: [{ name:":noCompletion", pos: Context.currentPos() }],
+		});
+
+		// finally, populate our compile time list
+		//classList.set( Context.getLocalModule(), dataFields);
+
+		//Context.registerModuleDependency( Context.getLocalModule(), "asdf" );
+
+		return append;
+	}
+
+
 	static function addFieldsForClass( fields: Array<Field>, dataFields: Array<SpriteDataExpr>  )
 	{
 		var i = fields.length;
@@ -213,7 +473,7 @@ class SpriteData
 							dataFields.push( {type: t, defaultValue: m.params[0]  , name: field.name, label:field.name, tooltip:"FFF" } );
 
 						default:
-							throw "Only variables and props can be marked as callbacks!";
+							throw "Only variables and props can be marked for spritedata!";
 					}
 				}
 			}
@@ -238,122 +498,12 @@ class SpriteData
 						dataFields.push( {type: field.type.toComplexType(), defaultValue: m.params[0]  , name: field.name, label:field.name, tooltip:"FFF" } );
 
 					default:
-						throw "Only variables and props can be marked as callbacks!";
+						throw "Only variables and props can be marked for spritedata!";
 				}
 			}
 		}
 	}
 
-	static function addDataField( fields: Array<Field> ) : Array<Field>
-	{
-		var append: Array<Field> = [];
-		var pos = Context.currentPos();
-
-		var cls = Context.getLocalClass();
-		cls.get().meta.add(":sd.tag",[macro 1], pos);
-
-		var dataFields: Array<SpriteDataExpr> = [];
-
-		addFieldsForClass(fields, dataFields );
-		//addFieldsForClass( cls.get().fields.get(), dataFields );
-
-		var hasParent = false;
-
-		if( cls.get().superClass != null  )
-		{
-			var sc = cls.get().superClass.t.get();
-			if( sc.meta.has(":sd.tag") )
-				hasParent = true;
-		}
-
-		while( cls.get().superClass != null )
-		{
-			cls = cls.get().superClass.t;
-			addFieldsForParentClass( cls.get().fields.get(), dataFields );
-		}
-
-
-
-
-		// Step 1: Define a custom type
-
-		var spriteDataName = Context.getLocalClass().get().name + "Data";
-		var pack = ["game","meta","sprites"];//Context.getLocalModule().split('.');
-		var fqDataName = pack.join(".") + "." + spriteDataName;
-
-		var classFields: Array<haxe.macro.Expr.Field> = [];
-
-		for( f in dataFields )
-		{
-			classFields.push({
-				name : f.name,
-				pos : pos,
-				kind : FVar( f.type, f.defaultValue ),
-				access : [APublic],
-			});
-
-		}
-
-
-		var definition:TypeDefinition = {
-            fields: classFields,
-            kind: TDClass(),
-            name: spriteDataName,
-            pack: pack,
-            pos: pos,
-			meta: [{name:":keep", pos: pos}, {name:":structInit", pos: pos}],
-        };
-/*
-		var definition:TypeDefinition = {
-            fields: classFields,
-            kind: TDStructure,
-            name: spriteDataName,
-            pack: pack,
-            pos: pos,
-			meta: [{name:":keep", pos: pos}, {name:":noCompletion", pos: pos}],
-        };
-*/
-		Context.defineType( definition );
-
-
-		// Step 2: Create an init function for it
-		var setters = [];
-
-		for( f in dataFields )
-		{
-			var n = f.name;
-			setters.push( macro {
-				this.$n = obj.$n;
-			});
-		}
-
-		var type = fqDataName.toComplex();
-
-		var initFunc: Function = {
-			expr: macro {
-				trace(dyn);
-				var obj = cast(dyn, $type);
-				$b{setters}
-			},
-			ret: null, // ret = return type
-			args: [{name:"dyn", type: macro: Dynamic }]
-		};
-
-		append.push({
-			name: "setSpriteData",
-			access: hasParent ? [Access.APublic, Access.AOverride] : [Access.APublic],
-			kind: FieldType.FFun(initFunc),
-			pos: Context.currentPos(),
-			meta: [{ name:":noCompletion", pos: Context.currentPos() }],
-		});
-
-		// finally, populate our compile time list
-		//classList.set( Context.getLocalModule(), dataFields);
-
-		//Context.registerModuleDependency( Context.getLocalModule(), "asdf" );
-
-		return append;
-	}
 
 	#end
 

@@ -185,6 +185,12 @@ class Sprite extends h2d.Drawable implements CollisionObject
 		super(parent);
 
 		buildColliders();
+		loadSpriteData();
+
+	}
+
+	function loadSpriteData()
+	{
 
 	}
 

@@ -82,10 +82,16 @@ typedef CSDAnimation = {
 	var attachmentOverrides: Array<CSDAttachmentOverride>;
 }
 
+typedef CSDKV = {
+	var key: String;
+	var value: Dynamic;
+}
+
 typedef CSDDefinition = {
 
 	var name: String;
 	var ?type: String; // Underlying type for spritedata stuff. Can be empty
+	var typeData: Array<CSDKV>; // KV of the packed struct
 	var animations: Array<CSDAnimation>;
 	var attachments: Array<CSDAttachment>;
 	var colliders: Array<CSDCollider>;
@@ -111,6 +117,8 @@ class SpriteResource extends Resource
 
 		if( cache == null )
 			cache = new SpriteCache( data.sprite );
+
+		return SpriteMeta.create( cache, parent );
 
 		return new cerastes.Sprite(cache,parent);
 	}

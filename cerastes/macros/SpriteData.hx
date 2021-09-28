@@ -411,7 +411,6 @@ class SpriteData
 			});
 		}
 
-
 		var initFunc: Function = {
 			expr: macro {
 				if( $i{spriteDataVarName} == null )
@@ -427,12 +426,29 @@ class SpriteData
 			args: []
 		};
 
+
+		var getKVFunc: Function = {
+			expr: macro {
+				return  $i{spriteDataVarName}.toKV();
+			},
+			ret: null, // ret = return type
+			args: []
+		};
+
 		append.push({
 			name: "loadSpriteData",
-			access: [Access.APublic, Access.AOverride],
+			access: [Access.AOverride],
 			kind: FieldType.FFun(initFunc),
 			pos: Context.currentPos(),
 			meta: [{ name:":noCompletion", pos: Context.currentPos() }],
+		});
+
+		append.push({
+			name: "getKV",
+			access: [Access.APublic, Access.AOverride],
+			kind: FieldType.FFun(getKVFunc),
+			pos: Context.currentPos(),
+			//meta: [{ name:":noCompletion", pos: Context.currentPos() }],
 		});
 
 		append.push({

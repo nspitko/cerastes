@@ -101,6 +101,8 @@ class Sprite extends h2d.Drawable implements CollisionObject
 	public var collisionMask: CollisionMask = 0;
 	public var collisionType: CollisionGroup = 0;
 
+	var attachments: Map<String, Object> = [];
+
 	public var collisionBounds(get, null) : CAABB;
 	function get_collisionBounds()
 	{
@@ -123,34 +125,45 @@ class Sprite extends h2d.Drawable implements CollisionObject
 	function set_currentFrame(v: Int)
 	{
 		currentFrame = v;
-		frameTime = 0;
 		return v;
 	}
 
 	// How long have we spent on this frame?
 	var frameTime: Float = 0;
+	// How long have we spent on this animation cycle?
+	var animTime: Float = 0;
+	// Used to determine what state we've yet to apply
+	var animTimeLast: Float = 0;
 
 	// How fast should we play animations?
 	public var speed : Float = 1;
 
 	public var frameInfo(get, never): CSDFrame;
 
-	public inline function get_frameInfo()
+	function get_frameInfo()
 	{
 		return sequence.frames[currentFrame];
 	}
 
 	public var spriteDef(get, never): CSDDefinition;
-	public inline function get_spriteDef()
+	function get_spriteDef()
 	{
 		return cache.spriteDef;
 	}
 
 	public var frameCache(get, never): Map<String,haxe.ds.Vector<Tile>>;
-	public inline function get_frameCache()
+	function get_frameCache()
 	{
 		return cache.frameCache;
 	}
+
+	public function getAttachment( name: String ) : Null<Object>
+	{
+		Utils.assert(attachments.exists(name), 'Tried looking up unknown attachment ${name}!' );
+		return attachments.get(name);
+	}
+
+
 
 	// Imported from h2d.Anim
 
@@ -186,12 +199,68 @@ class Sprite extends h2d.Drawable implements CollisionObject
 
 		buildColliders();
 		loadSpriteData();
+		loadAttachments();
 
 	}
 
 	function loadSpriteData()
 	{
 
+	}
+
+	/**
+	 * Loads all our attachments for this sprite, based on spriteDef.
+	 *
+	 * Sprites may be explicitly specified, else empty objects will be created so they can be
+	 * manipulated using a common interface and filled out with contents later as needed.
+	 */
+	function loadAttachments()
+	{
+		for( a in spriteDef.attachments )
+		{
+			var attachment: Object = null;
+			if( a.attachmentSprite != null )
+			{
+				attachment = hxd.Res.loader.loadCache( a.attachmentSprite, SpriteResource ).toSprite(this);
+			}
+			else
+			{
+				attachment = new h2d.Object(this);
+			}
+
+			attachment.x = a.position.x;
+			attachment.y = a.position.y;
+			attachment.rotation = a.rotation;
+
+			attachments.set(a.name, attachment);
+		}
+	}
+
+	function updateAnimationState()
+	{
+		for( a in sequence.attachmentOverrides )
+		{
+			if( a.start > animTimeLast && a.start <= animTime )
+			{
+				var localAttachment = attachments.get( a.name );
+
+				if( a.positionTween == None )
+				{
+					localAttachment.x = a.position.x;
+					localAttachment.y = a.position.y;
+				}
+				else
+				{
+					trace("STUB: tweened attachments");
+					//new Tween( a.tweenDuration )
+				}
+
+
+				localAttachment.rotation = a.rotation;
+			}
+		}
+
+		animTimeLast = animTime;
 	}
 
 	function buildColliders()
@@ -282,9 +351,9 @@ class Sprite extends h2d.Drawable implements CollisionObject
 
 		frames = frameCache[ sequence.name ];
 		currentFrame = atFrame;
+		frameTime = 0;
 		pause = false;
 	}
-
 
 	// Imported from h2d.Anim
 
@@ -311,7 +380,10 @@ class Sprite extends h2d.Drawable implements CollisionObject
 		super.sync(ctx);
 		var prev = currentFrame;
 		if (!pause)
+		{
 			frameTime += speed * ctx.elapsedTime;
+			animTime += speed * ctx.elapsedTime;
+		}
 
 		if( frameTime > frameInfo.duration )
 		{
@@ -319,9 +391,17 @@ class Sprite extends h2d.Drawable implements CollisionObject
 			currentFrame++;
 		}
 
+		updateAnimationState();
+
+
 		if( currentFrame < frames.length )
 			return;
-		if( loop ) {
+
+		// Fallthrough: We're done with this cycle.
+		animTime = 0;
+
+		if( loop )
+		{
 			if( frames.length == 0 )
 				currentFrame = 0;
 			else
@@ -331,6 +411,8 @@ class Sprite extends h2d.Drawable implements CollisionObject
 			currentFrame = frames.length;
 			if( currentFrame != prev ) onAnimEnd();
 		}
+
+
 	}
 
 	inline function getFrame()
@@ -344,6 +426,12 @@ class Sprite extends h2d.Drawable implements CollisionObject
 
 		emitTile(ctx,t);
 
+	}
+
+	@:noCompletion
+	public function getKV() : Array<CSDKV>
+	{
+		return null;
 	}
 
 	public function tick( delta: Float )

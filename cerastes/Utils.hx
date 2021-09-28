@@ -1,6 +1,9 @@
 package cerastes;
 
 
+import hxd.fmt.pak.FileSystem;
+import dx.Driver.ResourceBind;
+import haxe.io.Path;
 #if hlsdl
 import sdl.Sdl;
 #end
@@ -289,8 +292,43 @@ class Utils
 	}
 	#end
 
-	public static function beginPerfContext(context: String)
+	public static function toLocalFile( file: String )
 	{
+		var resDir : String = haxe.macro.Compiler.getDefine("resourcesPath");
+		if( resDir == null ) resDir = "res";
+		var idx =  file.indexOf(resDir);
+		if( idx == -1 ) return null;
 
+		return file.substring(idx + resDir.length + 1 );
+	}
+
+	public static function fixWritePath(path: String, ?enforceExtension: String = null )
+	{
+		#if sys
+		// Don't fixup abs paths
+		if( !Path.isAbsolute(path) )
+		{
+			var resDir = haxe.macro.Compiler.getDefine("resourcesPath");
+			if( resDir == null ) resDir = "res";
+
+
+			// Add res path if it's missing
+			var resPos = path.indexOf(resDir);
+			if( resPos == -1 )
+			{
+				path = Path.join([resDir,path]);
+			}
+		}
+		if( enforceExtension != null && Path.extension(path) != enforceExtension )
+		{
+			path = Path.withExtension( Path.withoutExtension( path ), enforceExtension );
+		}
+
+		return sys.FileSystem.fullPath( path );
+
+		#else
+		Utils.warning("Trying to fix write path on non-sys target???");
+		return path;
+		#end
 	}
 }

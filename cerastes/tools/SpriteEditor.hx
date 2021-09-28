@@ -1,6 +1,7 @@
 
 package cerastes.tools;
 
+import hl.NativeArray;
 import hl.Ref;
 import cerastes.macros.SpriteData;
 import cerastes.macros.Metrics;
@@ -71,6 +72,10 @@ class SpriteEditor extends ImguiTool
 
 	var scaleFactor = Utils.getDPIScaleFactor();
 	var spriteScale: Int = 8;
+
+
+	/// Timeline
+	var timelineZoom: Float = 1;
 
 	var fileName = "";
 
@@ -261,14 +266,18 @@ class SpriteEditor extends ImguiTool
 		sprite.y = Math.floor( preview.height / 2 - bounds.height / 2 );
 	}
 
+
+
 	override public function update( delta: Float )
 	{
 		Metrics.begin();
+
+		ImGui.pushID(windowID());
 		var isOpen = true;
 		var isOpenRef = hl.Ref.make(isOpen);
 
 		ImGui.setNextWindowSize({x: viewportWidth * 2.3, y: viewportHeight * 2.4}, ImGuiCond.Once);
-		ImGui.begin('\uf6be Sprite Editor', isOpenRef, ImGuiWindowFlags.NoDocking | ImGuiWindowFlags.MenuBar );
+		ImGui.begin('\uf6be Sprite Editor (${fileName})###mainwindow', isOpenRef, ImGuiWindowFlags.NoDocking | ImGuiWindowFlags.MenuBar );
 
 		menuBar();
 
@@ -280,10 +289,15 @@ class SpriteEditor extends ImguiTool
 
 		// Preview
 		ImGui.setNextWindowDockId( dockspaceIdCenter, dockCond );
-		ImGui.begin('Preview###${windowID()}_preview', null, ImGuiWindowFlags.NoScrollWithMouse | ImGuiWindowFlags.NoScrollbar);
+		ImGui.begin('Preview', null, ImGuiWindowFlags.NoScrollWithMouse | ImGuiWindowFlags.NoScrollbar);
 		var windowSize: ImVec2 = cast ImGui.getWindowSize();
 		ImGui.setCursorPos({x: ( windowSize.x - (preview.width * spriteScale) ) * 0.5, y: ( windowSize.y - (preview.height * spriteScale) ) * 0.5} );
+
 		ImGui.image(sceneRT, { x: preview.width * spriteScale, y: preview.height * spriteScale } );
+
+
+
+
 
 		if( ImGui.isWindowHovered() )
 		{
@@ -322,6 +336,7 @@ class SpriteEditor extends ImguiTool
 		{
 			ImguiToolManager.closeTool( this );
 		}
+		ImGui.popID();
 		Metrics.end();
 	}
 
@@ -331,10 +346,24 @@ class SpriteEditor extends ImguiTool
 		{
 			if( ImGui.beginMenu("File", true) )
 			{
-
 				if ( ImGui.menuItem("Save", "Ctrl+S"))
 				{
-					// @TODO
+					SpriteResource.write( spriteDef, fileName );
+				}
+				if ( ImGui.menuItem("Save As...", ""))
+				{
+					var newFile = UI.saveFile({
+						title:"Save As...",
+						filters:[
+						{name:"Sprites", exts:["csd"]}
+						]
+					});
+					if( newFile != null )
+					{
+						fileName = Utils.toLocalFile( newFile );
+						SpriteResource.write( spriteDef, newFile );
+						cerastes.tools.AssetBrowser.needsReload = true;
+					}
 				}
 
 				ImGui.endMenu();
@@ -350,6 +379,8 @@ class SpriteEditor extends ImguiTool
 			ImGui.endMenuBar();
 		}
 	}
+
+
 
 
 	function settingsWindow()
@@ -381,35 +412,71 @@ class SpriteEditor extends ImguiTool
 
 			for( p in props )
 			{
+				var kv = getKV( p.name );
+				if( kv == null )
+				{
+					trace(p.defaultValue);
+					kv = {
+						key: p.name,
+						value: p.defaultValue
+					};
+					cache.spriteDef.typeData.push(kv);
+				}
+
+
 				switch( p.type )
 				{
 					case "Int":
-						var r = 0;
-						ImGui.inputInt( p.label, p.defaultValue );
-						if( p.tooltip != null && ImGui.isItemHovered() )
+						var staticVal: Int = cast(kv.value, Int);
+						var ref = hl.Ref.make( staticVal );
+						if( ImGui.inputInt( p.label, ref ) )
 						{
-							ImGui.beginTooltip();
-							ImGui.text(p.tooltip);
-							ImGui.endTooltip();
+							kv.value = ref.get();
+							rebuildCache();
 						}
 					case "Float":
-						var f: Single = 0.;
-						var ref = Ref.make(p.defaultValue);
-						ImGui.inputFloat( p.label, ref );
-						if( p.tooltip != null && ImGui.isItemHovered() )
+						var staticVal: Single = cast(kv.value, Single);
+						var ref = hl.Ref.make( staticVal );
+						if( ImGui.inputFloat( p.label, ref ) )
 						{
-							ImGui.beginTooltip();
-							ImGui.text(p.tooltip);
-							ImGui.endTooltip();
+							kv.value = ref.get();
+							rebuildCache();
 						}
 					default:
-						ImGui.text( p.label );
+						ImGui.text( '${p.label} (${p.type}) UNSUPPORTED' );
+				}
+
+				if( p.tooltip != null && ImGui.isItemHovered() )
+				{
+					ImGui.beginTooltip();
+					ImGui.text(p.tooltip);
+					ImGui.endTooltip();
 				}
 			}
+
+
 		}
 
 
 		ImGui.end();
+	}
+
+	function getKV(name: String ) : CSDKV
+	{
+		if( cache.spriteDef.typeData == null )
+		{
+			// Fixup
+			cache.spriteDef.typeData = [];
+			return null;
+		}
+
+		for( kv in cache.spriteDef.typeData)
+		{
+			if( kv.key == name )
+				return kv;
+		}
+
+		return null;
 	}
 
 	inline function trimCls(string: String )
@@ -657,7 +724,7 @@ class SpriteEditor extends ImguiTool
 					name: tmpInput,
 					position: {x: 0, y: 0},
 					rotation: 0,
-
+					attachmentSprite: null,
 				}
 				spriteDef.attachments.push(a);
 				ImGui.closeCurrentPopup();
@@ -963,11 +1030,186 @@ class SpriteEditor extends ImguiTool
 
 	function animationWindow()
 	{
+
 		ImGui.setNextWindowDockId( dockspaceIdBottom, dockCond );
-		ImGui.begin('Playback');
+		ImGui.begin('Timeline');
+
+
+		selectedAnimation = spriteDef.animations[0];
+		if( selectedAnimation == null )
+		{
+
+			ImGui.end();
+			return;
+		}
+		var rect: ImVec2 = ImGui.getWindowContentRegionMax();
+
+		ImGui.beginChild("timeline", null, true, ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.HorizontalScrollbar);
+
+		if( ImGui.isWindowHovered() )
+		{
+			// Should use imgui events here for consistency but GetIO isn't exposed to hl sooo...
+			if (Key.isPressed(Key.MOUSE_WHEEL_DOWN))
+			{
+				timelineZoom -= 0.2;
+				if( timelineZoom < 1 )
+					timelineZoom = 1;
+			}
+			if (Key.isPressed(Key.MOUSE_WHEEL_UP))
+			{
+				timelineZoom+= 0.2;
+				if( timelineZoom > 100 )
+					timelineZoom = 100;
+			}
+
+
+		}
+
+
+
+		var sequenceLength: Float = 0;
+		for( frame in selectedAnimation.frames )
+			sequenceLength += frame.duration;
+
+
+		//var p: ImVec2 = ImGui.getCursorPos();
+		ImGui.setCursorPos({x:0,y:0});
+		var lp: ImVec2 = ImGui.getCursorScreenPos();
+		var tScale = timelineZoom * ( rect.x / sequenceLength );
+		var padding: ImVec2 = {x: 5, y: 5};
+
+		ImGui.dummy({x: rect.x * timelineZoom + padding.x * 2, y:100 + padding.y * 2});
+
+
+		var drawList = ImGui.getWindowDrawList();
+		//
+		//drawList.addRect( lp, { x: lp.x + rect.x, y: lp.y + rect.y }, 0xFFFFFFFF );
+		var scrollX = ImGui.getScrollX();
+		var maxX = ImGui.getWindowContentRegionWidth();
+
+		//drawList.addRect( { x: lp.x + scrollX, y: lp.y }, { x: lp.x + scrollX + maxX - 50, y: lp.y + rect.y - 50 }, 0xFFFFFFFF );
+
+
+			// Draw timeline labels
+			var tickFreq = 150;
+			var tickHeight = 150;
+			for( tickx in 0 ... Math.floor( ( rect.x / tickFreq )  * timelineZoom ) )
+			{
+				var x = tickx * tickFreq; // pixel value
+				var ms = ( x / tScale );
+				drawList.addLine( {x: x + lp.x, y: lp.y}, {x: x+lp.x, y: lp.y + tickHeight }, 0xFF333333  );
+
+				ImGui.setCursorPos({x:x , y:tickHeight});
+				ImGui.text('${Math.floor( ms * 1000 ) }ms');
+			}
+
+
+		// Draw each frame
+		var frameTime = 0.;
+		var frameY = 5 + padding.y;
+		var frameHeight = 20 * scaleFactor;
+		var c: ImVec4 = { x: 0.7, y: 0.5, z: 0.1, w: 1.0 };
+		var ci = IG.imVec4ToColor( c );
+
+		for( f in selectedAnimation.frames )
+		{
+			var startPos = frameTime * tScale;
+			var endPos = (frameTime + f.duration) * tScale;
+			var width = endPos - startPos;
+			drawBarWithText( padding.x + startPos, frameY, padding.x +  lp.x, lp.y, width, frameHeight, f.tile, c  );
+
+
+			//drawList.addLine({x: lp.x + framePos, y: lp.y + 30 }, {x: lp.x + framePos, y: lp.y + 80}, 0xFFFF0000, 5);
+			frameTime += f.duration;
+		}
+
+		// Now do tags
+		var c: ImVec4 = { x: 0.4, y: 0.7, z: 0.2, w: 1.0 };
+		var ci = IG.imVec4ToColor( c );
+		frameY += frameHeight + 5;
+
+		for( t in selectedAnimation.tags )
+		{
+			var startPos = t.start * tScale;
+			var endPos = ( t.start + t.duration )  * tScale;
+			var width = endPos - startPos;
+			if( t.duration == 0 )
+				drawEventWithText( drawList, padding.x + startPos, frameY, padding.x + lp.x, lp.y, frameHeight, 4, t.name, ci  );
+			else
+				drawBarWithText( padding.x + startPos, frameY, padding.x +  lp.x, lp.y, width, frameHeight, t.name, c  );
+		}
+
+		//Sounds
+		var c: ImVec4 = { x: 0.3, y: 0.1, z: 0.7, w: 1.0 };
+		var ci = IG.imVec4ToColor( c );
+		frameY += frameHeight + 5;
+
+		for( s in selectedAnimation.sounds )
+		{
+			var startPos = s.start * tScale;
+			var endPos = ( s.start + s.duration )  * tScale;
+			var width = endPos - startPos;
+			if( s.duration == 0 )
+				drawEventWithText( drawList, padding.x + startPos, frameY, padding.x + lp.x, lp.y, frameHeight, 4, s.name, ci  );
+			else
+				drawBarWithText( padding.x + startPos, frameY, padding.x +  lp.x, lp.y, width, frameHeight, s.name, c  );
+		}
+
+		// Attachment Overrides
+		var c: ImVec4 = { x: 0.16, y: 0.7, z: 0.7, w: 1.0 };
+		var ci = IG.imVec4ToColor( c );
+		frameY += frameHeight + 5;
+
+		for( a in selectedAnimation.attachmentOverrides )
+		{
+			var startPos = a.start * tScale;
+			var endPos = ( a.start + a.duration )  * tScale;
+			var width = endPos - startPos;
+			drawBarWithText( padding.x + startPos, frameY, padding.x +  lp.x, lp.y, width, frameHeight, a.name, c  );
+		}
+
+		frameY += frameHeight + 5;
+
+
+
+
+
+
+
+
+		ImGui.endChild();
 
 		ImGui.end();
 	}
+
+	function drawBarWithText( x: Float, y: Float, gx: Float, gy: Float, width: Float, height: Float, text: String, c: ImVec4 )
+	{
+		var texture = h3d.mat.Texture.fromColor(0xFFFFFF,1.);
+
+		var bc: ImVec4 = {
+			x: Math.min( c.x + 0.2, 1 ),
+			y: Math.min( c.y + 0.2, 1 ),
+			z: Math.min( c.z + 0.2, 1 ),
+			w: 1.0,
+		};
+
+		ImGui.setCursorPos({x: x, y: y } );
+		ImGui.image(texture,{ x: width, y: height },null, null, c, bc );
+		ImGui.setCursorPos({x: x + 4, y: y + 4 } );
+		ImGui.pushClipRect({x: gx + x, y: gy + y }, { x: gx + x + width, y: gy + y + height }, true);
+		ImGui.text(text);
+		ImGui.popClipRect();
+	}
+
+	function drawEventWithText( drawList: ImDrawList, x: Float, y: Float, gx: Float, gy: Float, height: Float, thickness: Float, text: String, c: Int )
+	{
+
+		drawList.addLine({ x: gx+x, y: gy+y }, { x: gx+x, y: gy+y + height }, c, thickness );
+		ImGui.setCursorPos({x: x + 4 + thickness, y: y + 4 } );
+		ImGui.text(text);
+	}
+
+
 
 	function inspectorWindow()
 	{
@@ -1070,7 +1312,7 @@ class SpriteEditor extends ImguiTool
 
 	inline function windowID()
 	{
-		return 'spre';
+		return 'spre${fileName}';
 	}
 
 	function dockSpace()

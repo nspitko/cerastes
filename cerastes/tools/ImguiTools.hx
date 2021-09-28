@@ -112,6 +112,15 @@ class ImGuiTools {
 		return ImGui.image(tex, point, point2, point3, vec, vec2);
 	}
 
+	public static function imVec4ToColor( v: ImVec4 )
+	{
+		return 	( Math.floor( 255. * v.x ) << 16 ) |
+				( Math.floor( 255. * v.y ) <<  8 ) |
+				( Math.floor( 255. * v.z ) ) |
+				( Math.floor( 255. * v.w ) << 25);
+
+	}
+
 	public static function imageButton(tile:Tile, ?size: ImVec2, framePadding:Int = -1, ?bg:Int, ?tint:Int) @:privateAccess {
 		var tex = tile.getTexture();
 		point.set(size.x, size.y);

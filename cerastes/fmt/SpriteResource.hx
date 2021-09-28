@@ -42,14 +42,18 @@ typedef CSDAttachment = {
 	var name: String;
 	var position: CSDPoint;
 	var rotation: Float; // in Radians. Because heaps uses radians internally and I don't have to justify myself to youuuuuuuuuuuuuuuu
+	var attachmentSprite: String; // If set, loads a sprite into this attachment position. This is useful for multi-component sprites
 }
 
 typedef CSDAttachmentOverride = {
 	var name: String;
 	var position: CSDPoint;
-	var angle: CSDPoint; // 0,0 if none
+	var rotation: Float; // radians.jpg
 	var positionTween: SpriteAttachmentTween; // tween to use from existing value to the one specified here
-	var angleTween: SpriteAttachmentTween;
+	var rotationTween: SpriteAttachmentTween;
+	var start: Float;		// The most recent non-expired override always wins.
+	var duration: Float;	// If 0 then forever
+	var tweenDuration: Float;	// How long to tween. if 0 then use duration. if duration is also  0 then don't tween regardless
 }
 
 
@@ -64,13 +68,13 @@ typedef CSDFrame = {
 typedef CSDTag = {
 	var name: String;
 	var start: Float;
-	var end: Float; 			// Can be 0 for no length when used like an event
+	var duration: Float; 			// Can be 0 for no length when used like an event
 }
 
 typedef CSDSound = {
 	var name: String;
 	var start: Float;
-	var end: Float; 			// Optional for looping sounds.
+	var duration: Float; 			// Optional for looping sounds.
 }
 
 typedef CSDAnimation = {
@@ -137,9 +141,8 @@ class SpriteResource extends Resource
 		//var txt = Json.print( "CSDFile", csd);
 		var txt = Json.stringify( csd, null, "\t" );
 
-
 		#if hl
-		sys.io.File.saveContent('res/${file}',txt);
+		sys.io.File.saveContent( Utils.fixWritePath(file, "csd"),txt);
 		#end
 	}
 

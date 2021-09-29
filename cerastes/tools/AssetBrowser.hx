@@ -172,11 +172,20 @@ class AssetBrowser  extends  ImguiTool
 
 				var res = hxd.Res.load( asset.file ).to( SpriteResource );
 				var obj = res.toSprite( asset.scene );
+				obj.mute = true;
+
 				var bounds = obj.getBounds();
 
-
-				var scale = previewWidth / bounds.width;
+				var scale = previewWidth / Math.max(bounds.width, bounds.height);
 				obj.scale( scale );
+
+				bounds = obj.getBounds();
+				var center = bounds.getCenter();
+
+				obj.x = previewWidth / 2 - center.x;
+				obj.y = previewHeight / 2 - center.y;
+
+
 
 
 			case "atlas":

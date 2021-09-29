@@ -36,7 +36,18 @@ enum SpriteInspectorMode {
 	FRAME;
 	ATTACHMENT;
 	COLLIDER;
+	ATTACHMENTOVERRIDE;
+	SOUND;
+	TAG;
 }
+
+@:structInit
+class BarReservation
+{
+	public var min: Float;
+	public var max: Float;
+}
+
 
 @:keep
 class SpriteEditor extends ImguiTool
@@ -65,25 +76,32 @@ class SpriteEditor extends ImguiTool
 	var selectedAttachment: CSDAttachment;
 	var selectedCollider: CSDCollider;
 
+	var selectedAttachmentOverride: CSDAttachmentOverride;
+	var selectedSound: CSDSound;
+	var selectedTag: CSDTag;
+
+
 	var inspectorMode: SpriteInspectorMode = NONE;
 
 	var cache: SpriteCache;
 	var sprite: Sprite;
 
 	var scaleFactor = Utils.getDPIScaleFactor();
-	var spriteScale: Int = 8;
+	var spriteScale: Int = 4;
+
+	/// preview
+	var drawAttachments = false;
+	var drawColliders = false;
+	var playAudio = false;
 
 
 	/// Timeline
 	var timelineZoom: Float = 1;
-
 	var fileName = "";
-
 	var tmpInput = "";
 
 	// visual stuff
-	var attachmentPreview: Graphics;
-	var colliderPreview: Graphics;
+	var graphics: Graphics;
 
 
 	public function new()
@@ -131,8 +149,7 @@ class SpriteEditor extends ImguiTool
 		// Testing
 		openFile("spr/test.csd");
 
-		attachmentPreview = new Graphics(sprite);
-		colliderPreview = new Graphics(sprite);
+		graphics = new Graphics(sprite);
 
 
 	}
@@ -142,18 +159,13 @@ class SpriteEditor extends ImguiTool
 	{
 		fileName = f;
 
-		var res = hxd.Res.load( f ).to(SpriteResource);
+		var res = hxd.Res.load( fileName ).to(SpriteResource);
 		spriteDef = res.getData(false).sprite;
-		sprite = res.toSprite( preview );
-
-		// Build a custom cache for this sprite instance
 		cache = new SpriteCache( spriteDef );
-		@:privateAccess sprite.cache = cache;
+		@:privateAccess cache.build();
 
-		selectedAnimation = spriteDef.animations.length > 0 ? spriteDef.animations[0] : null;
-		sprite.play(selectedAnimation.name);
+		rebuildSprite();
 
-		updateSprite();
 	}
 
 
@@ -172,7 +184,7 @@ class SpriteEditor extends ImguiTool
 		if( sprite == null )
 			return;
 
-		if( sprite.currentAnimation != selectedAnimation.name )
+		if( selectedAnimation != null && sprite.currentAnimation != selectedAnimation.name )
 		{
 			sprite.play( selectedAnimation.name );
 		}
@@ -183,34 +195,40 @@ class SpriteEditor extends ImguiTool
 			updateSprite();
 		}
 
-		attachmentPreview.clear();
-		if( selectedAttachment != null && inspectorMode == ATTACHMENT )
+		graphics.clear();
+		for( a in spriteDef.attachments )
 		{
-			attachmentPreview.lineStyle(1, 0xFF0000 );
-			attachmentPreview.drawCircle( selectedAttachment.position.x, selectedAttachment.position.y, 5 );
-			attachmentPreview.lineStyle(1, 0x0000FF );
-			attachmentPreview.moveTo( selectedAttachment.position.x, selectedAttachment.position.y );
-			var endX = selectedAttachment.position.x + Math.cos( selectedAttachment.rotation ) * 10;
-			var endY = selectedAttachment.position.y + Math.sin( selectedAttachment.rotation ) * 10;
-			attachmentPreview.lineTo(endX,endY);
-		}
-
-		colliderPreview.clear();
-		if( selectedCollider != null && inspectorMode == COLLIDER )
-		{
-			colliderPreview.lineStyle(1,0x00FF00);
-			switch( selectedCollider.type )
+			if( ( a == selectedAttachment && inspectorMode == ATTACHMENT ) || drawAttachments )
 			{
-				case AABB:
-					colliderPreview.drawRect( selectedCollider.position.x,selectedCollider.position.y,selectedCollider.size.x,selectedCollider.size.y );
-				case Circle:
-					colliderPreview.drawCircle(selectedCollider.position.x, selectedCollider.position.y, selectedCollider.size.x);
-				default:
+				var color = a == selectedAttachment && inspectorMode == ATTACHMENT ? 0x33AA33 : 0x3333AA;
+				var colorRot = a == selectedAttachment && inspectorMode == ATTACHMENT ? 0x99FF99 : 0x6666FF;
+				var spriteAttachment = sprite.getAttachment( a.name );
+				graphics.lineStyle(1, color );
+				graphics.drawCircle( spriteAttachment.x, spriteAttachment.y, 5 );
+				graphics.lineStyle(1, colorRot );
+				graphics.moveTo( spriteAttachment.x, spriteAttachment.y );
+				var endX = spriteAttachment.x + Math.cos( spriteAttachment.rotation ) * 10;
+				var endY = spriteAttachment.y + Math.sin( spriteAttachment.rotation ) * 10;
+				graphics.lineTo(endX,endY);
 			}
 		}
 
-
-
+		for( c in spriteDef.colliders )
+		{
+			if( ( selectedCollider != null && inspectorMode == COLLIDER ) || drawColliders )
+			{
+				var color = c == selectedCollider && inspectorMode == COLLIDER ? 0xAAAA44 : 0xAA44AA;
+				graphics.lineStyle(1,color);
+				switch( c.type )
+				{
+					case AABB:
+						graphics.drawRect( c.position.x,c.position.y,c.size.x,c.size.y );
+					case Circle:
+						graphics.drawCircle(c.position.x, c.position.y, c.size.x);
+					default:
+				}
+			}
+		}
 	}
 
 	function selectAnimation( newAnimation: CSDAnimation )
@@ -220,7 +238,7 @@ class SpriteEditor extends ImguiTool
 		inspectorMode = ANIMATION;
 
 		if( selectedAnimation.frames.length == 0 )
-			preview.removeChild(sprite);
+			sprite.remove();
 	}
 
 	function selectFrame( newFrame: CSDFrame )
@@ -241,6 +259,24 @@ class SpriteEditor extends ImguiTool
 		inspectorMode = COLLIDER;
 	}
 
+	function selectAttachmentOverride( newAttachmentOverride: CSDAttachmentOverride )
+	{
+		selectedAttachmentOverride = newAttachmentOverride;
+		inspectorMode = ATTACHMENTOVERRIDE;
+	}
+
+	function selectSound( newSound: CSDSound )
+	{
+		selectedSound = newSound;
+		inspectorMode = SOUND;
+	}
+
+	function selectTag( newTag: CSDTag )
+	{
+		selectedTag = newTag;
+		inspectorMode = TAG;
+	}
+
 	function rebuildCache()
 	{
 		@:privateAccess cache.build();
@@ -250,11 +286,29 @@ class SpriteEditor extends ImguiTool
 			sprite.play( spriteDef.animations[0].name );
 	}
 
+	// More aggressive than rebuildCache()
+	function rebuildSprite()
+	{
+		if( sprite != null )
+			sprite.remove();
+
+		var res = hxd.Res.load( fileName ).to(SpriteResource);
+		sprite = res.toSprite( preview, cache );
+		sprite.mute = !playAudio;
+		// Build a custom cache for this sprite instance
+
+
+		updateSprite();
+
+		graphics = new Graphics(sprite);
+	}
+
 
 	function updateSprite()
 	{
 
 		var bounds = sprite.getBounds();
+		var center = bounds.getCenter();
 
 		//preview.width = bounds.width;
 		//preview.height = bounds.height;
@@ -262,8 +316,8 @@ class SpriteEditor extends ImguiTool
 
 		//sceneRT.resize(cast bounds.width, cast bounds.height);
 
-		sprite.x =  Math.floor( preview.width / 2 - bounds.width / 2 );
-		sprite.y = Math.floor( preview.height / 2 - bounds.height / 2 );
+		sprite.x =  Math.floor( preview.width / 2 - center.x );
+		sprite.y = Math.floor( preview.height / 2 - center.y );
 	}
 
 
@@ -290,14 +344,18 @@ class SpriteEditor extends ImguiTool
 		// Preview
 		ImGui.setNextWindowDockId( dockspaceIdCenter, dockCond );
 		ImGui.begin('Preview', null, ImGuiWindowFlags.NoScrollWithMouse | ImGuiWindowFlags.NoScrollbar);
+
+		IG.wref( ImGui.checkbox( "Draw colliders", _ ), drawColliders );
+		ImGui.sameLine();
+		IG.wref( ImGui.checkbox( "Draw Attachments", _ ), drawAttachments );
+		ImGui.sameLine();
+		IG.wref( ImGui.checkbox( "Play Audio", _ ), playAudio );
+		sprite.mute = !playAudio;
+
 		var windowSize: ImVec2 = cast ImGui.getWindowSize();
 		ImGui.setCursorPos({x: ( windowSize.x - (preview.width * spriteScale) ) * 0.5, y: ( windowSize.y - (preview.height * spriteScale) ) * 0.5} );
 
 		ImGui.image(sceneRT, { x: preview.width * spriteScale, y: preview.height * spriteScale } );
-
-
-
-
 
 		if( ImGui.isWindowHovered() )
 		{
@@ -532,7 +590,6 @@ class SpriteEditor extends ImguiTool
 			if( ImGui.isItemClicked(ImGuiMouseButton.Left) )
 			{
 				selectAnimation( animation );
-				//updateSelectedSprite();
 			}
 
 			if( ImGui.beginPopup('context') )
@@ -727,6 +784,7 @@ class SpriteEditor extends ImguiTool
 					attachmentSprite: null,
 				}
 				spriteDef.attachments.push(a);
+				rebuildSprite();
 				ImGui.closeCurrentPopup();
 			}
 
@@ -761,7 +819,7 @@ class SpriteEditor extends ImguiTool
 				inspectorMode = NONE;
 				selectedAttachment = null;
 				spriteDef.attachments.splice(idx, 1);
-				//rebuildCache();
+				rebuildSprite();
 				ImGui.closeCurrentPopup();
 			}
 
@@ -836,6 +894,7 @@ class SpriteEditor extends ImguiTool
 
 			}
 			spriteDef.colliders.push(a);
+			rebuildSprite();
 		}
 
 
@@ -864,7 +923,7 @@ class SpriteEditor extends ImguiTool
 				inspectorMode = NONE;
 				selectedCollider = null;
 				spriteDef.colliders.splice(idx, 1);
-				//rebuildCache();
+				rebuildSprite();
 				ImGui.closeCurrentPopup();
 			}
 
@@ -1028,14 +1087,54 @@ class SpriteEditor extends ImguiTool
 		rebuildCache();
 	}
 
+
+	var barReservations: Map<Int, Array<BarReservation>>;
+	function tryReserve( res: BarReservation, depth: Int )
+	{
+		if( !barReservations.exists(depth) ) barReservations[depth] = [];
+		for( r in barReservations[depth] )
+		{
+			// I swear there's a less dumb way to write this but my brain no worky
+			if( res.max <= r.min || res.min >= r.max  )
+				continue;
+
+			return false;
+		}
+
+		barReservations[depth].push(res);
+
+		return true;
+	}
+
+	// ============================================================================
+	// Timeline
+	// ============================================================================
+	var lastFrameHeight: Float = 100;
 	function animationWindow()
 	{
 
 		ImGui.setNextWindowDockId( dockspaceIdBottom, dockCond );
 		ImGui.begin('Timeline');
 
+		if( !sprite.pause )
+		{
+			if( ImGui.button("\uf04c") )
+				sprite.pause = true;
+		}
+		else
+		{
+			if( ImGui.button("\uf04b") )
+				sprite.pause = false;
+		}
 
-		selectedAnimation = spriteDef.animations[0];
+		ImGui.sameLine();
+		if( ImGui.button( "\uf127 Add Attachment Override" ) ) { snapModal(); ImGui.openPopup("Add Attachment Override"); }
+		ImGui.sameLine();
+		if( ImGui.button( "\uf028 Add Sound Cue" ) ) { snapModal(); ImGui.openPopup("Add Sound Cue"); }
+		ImGui.sameLine();
+		if( ImGui.button( "\uf02b Add Tag" ) ) { snapModal(); ImGui.openPopup("Add Tag"); }
+
+		//selectedAnimation = spriteDef.animations[0];
 		if( selectedAnimation == null )
 		{
 
@@ -1044,7 +1143,7 @@ class SpriteEditor extends ImguiTool
 		}
 		var rect: ImVec2 = ImGui.getWindowContentRegionMax();
 
-		ImGui.beginChild("timeline", null, true, ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.HorizontalScrollbar);
+		ImGui.beginChild("timeline", null, true, ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.HorizontalScrollbar | ImGuiWindowFlags.NoMove);
 
 		if( ImGui.isWindowHovered() )
 		{
@@ -1085,23 +1184,28 @@ class SpriteEditor extends ImguiTool
 		//
 		//drawList.addRect( lp, { x: lp.x + rect.x, y: lp.y + rect.y }, 0xFFFFFFFF );
 		var scrollX = ImGui.getScrollX();
-		var maxX = ImGui.getWindowContentRegionWidth();
+		var contentRect : ImVec2 = ImGui.getWindowContentRegionMax();
+		var maxX = contentRect.x;
+		var maxY = contentRect.y - 60;
 
 		//drawList.addRect( { x: lp.x + scrollX, y: lp.y }, { x: lp.x + scrollX + maxX - 50, y: lp.y + rect.y - 50 }, 0xFFFFFFFF );
 
 
-			// Draw timeline labels
-			var tickFreq = 150;
-			var tickHeight = 150;
-			for( tickx in 0 ... Math.floor( ( rect.x / tickFreq )  * timelineZoom ) )
-			{
-				var x = tickx * tickFreq; // pixel value
-				var ms = ( x / tScale );
-				drawList.addLine( {x: x + lp.x, y: lp.y}, {x: x+lp.x, y: lp.y + tickHeight }, 0xFF333333  );
+		// Draw timeline labels
+		var tickFreq = 150;
+		var tickHeight = lastFrameHeight;
+		for( tickx in 0 ... Math.floor( ( rect.x / tickFreq )  * timelineZoom ) )
+		{
 
-				ImGui.setCursorPos({x:x , y:tickHeight});
-				ImGui.text('${Math.floor( ms * 1000 ) }ms');
-			}
+			var x = tickx * tickFreq; // pixel value
+			var ms = ( x / tScale );
+			drawList.addLine( {x: x + lp.x, y: lp.y}, {x: x+lp.x, y: lp.y + tickHeight }, 0xFF333333  );
+
+			ImGui.setCursorPos({x:x , y:tickHeight});
+			ImGui.text('${Math.floor( ms * 1000 ) }ms');
+		}
+
+		var rows = 0;
 
 
 		// Draw each frame
@@ -1111,78 +1215,317 @@ class SpriteEditor extends ImguiTool
 		var c: ImVec4 = { x: 0.7, y: 0.5, z: 0.1, w: 1.0 };
 		var ci = IG.imVec4ToColor( c );
 
+		rows = 0;
+		barReservations = [];
+
+
 		for( f in selectedAnimation.frames )
 		{
+			var row = 0;
+			while( !tryReserve({min: frameTime, max: frameTime + f.duration }, row ) ) row++;
 			var startPos = frameTime * tScale;
 			var endPos = (frameTime + f.duration) * tScale;
 			var width = endPos - startPos;
-			drawBarWithText( padding.x + startPos, frameY, padding.x +  lp.x, lp.y, width, frameHeight, f.tile, c  );
-
+			var sel = function(){ selectFrame(f); }
+			var rc = function(){ selectFrame(f); ImGui.openPopup("frame_rc"); }
+			drawBarWithText( padding.x + startPos, frameY + frameHeight * row, padding.x +  lp.x, lp.y, width, frameHeight, f.tile, c, sel, rc );
 
 			//drawList.addLine({x: lp.x + framePos, y: lp.y + 30 }, {x: lp.x + framePos, y: lp.y + 80}, 0xFFFF0000, 5);
 			frameTime += f.duration;
+			if( row > rows ) rows = row;
 		}
 
 		// Now do tags
 		var c: ImVec4 = { x: 0.4, y: 0.7, z: 0.2, w: 1.0 };
 		var ci = IG.imVec4ToColor( c );
-		frameY += frameHeight + 5;
+		frameY += frameHeight + ( frameHeight * rows ) + 5;
+		barReservations = [];
+		rows = 0;
 
 		for( t in selectedAnimation.tags )
 		{
+			var row = 0;
+			while( !tryReserve({min: t.start, max: t.start + t.duration }, row ) ) row++;
+			var localY = frameY + frameHeight * row;
 			var startPos = t.start * tScale;
 			var endPos = ( t.start + t.duration )  * tScale;
 			var width = endPos - startPos;
+			var sel = function(){ selectTag(t); }
+			var rc = function(){ selectTag(t); ImGui.openPopup("tag_rc"); }
 			if( t.duration == 0 )
-				drawEventWithText( drawList, padding.x + startPos, frameY, padding.x + lp.x, lp.y, frameHeight, 4, t.name, ci  );
+				drawEventWithText( drawList, padding.x + startPos, localY, padding.x + lp.x, lp.y, frameHeight, 4, t.name, ci, sel, rc  );
 			else
-				drawBarWithText( padding.x + startPos, frameY, padding.x +  lp.x, lp.y, width, frameHeight, t.name, c  );
+				drawBarWithText( padding.x + startPos, localY, padding.x +  lp.x, lp.y, width, frameHeight, t.name, c, sel, rc  );
+
+			if( row > rows ) rows = row;
 		}
 
 		//Sounds
 		var c: ImVec4 = { x: 0.3, y: 0.1, z: 0.7, w: 1.0 };
 		var ci = IG.imVec4ToColor( c );
-		frameY += frameHeight + 5;
+		frameY += frameHeight + ( frameHeight * rows ) + 5;
+		barReservations = [];
+		rows = 0;
 
 		for( s in selectedAnimation.sounds )
 		{
+			var row = 0;
+			while( !tryReserve({min: s.start, max: s.start + s.duration }, row ) ) row++;
 			var startPos = s.start * tScale;
 			var endPos = ( s.start + s.duration )  * tScale;
 			var width = endPos - startPos;
+			var sel = function(){ selectSound(s); }
+			var rc = function(){ selectSound(s); ImGui.openPopup("sound_rc"); }
 			if( s.duration == 0 )
-				drawEventWithText( drawList, padding.x + startPos, frameY, padding.x + lp.x, lp.y, frameHeight, 4, s.name, ci  );
+				drawEventWithText( drawList, padding.x + startPos, frameY, padding.x + lp.x, lp.y, frameHeight, 4, s.name, ci, sel, rc );
 			else
-				drawBarWithText( padding.x + startPos, frameY, padding.x +  lp.x, lp.y, width, frameHeight, s.name, c  );
+				drawBarWithText( padding.x + startPos, frameY + row * frameHeight, padding.x +  lp.x, lp.y, width, frameHeight, s.name, c, sel, rc );
+
+			if( row > rows ) rows = row;
 		}
 
 		// Attachment Overrides
 		var c: ImVec4 = { x: 0.16, y: 0.7, z: 0.7, w: 1.0 };
 		var ci = IG.imVec4ToColor( c );
-		frameY += frameHeight + 5;
+		var ctv: ImVec4 = { x: 0.16, y: 0.7, z: 0.7, w: 1.0 };
+		var ct = IG.imVec4ToColor( ctv );
+		frameY += frameHeight + ( frameHeight * rows ) + 5;
+		barReservations = [];
+		rows = 0;
 
 		for( a in selectedAnimation.attachmentOverrides )
 		{
+			var row = 0;
+			while( !tryReserve({min: a.start, max: a.start + a.duration }, row ) ) row++;
 			var startPos = a.start * tScale;
 			var endPos = ( a.start + a.duration )  * tScale;
 			var width = endPos - startPos;
-			drawBarWithText( padding.x + startPos, frameY, padding.x +  lp.x, lp.y, width, frameHeight, a.name, c  );
+			var sel = function(){ selectAttachmentOverride(a); }
+			var rc = function(){ selectAttachmentOverride(a); ImGui.openPopup("attachment_override_rc"); }
+			drawBarWithText( padding.x + startPos, frameY + row * frameHeight, padding.x +  lp.x, lp.y, width, frameHeight, a.name, c, sel, rc );
+
+			// Tween duration, if set:
+			if( a.tweenDuration > 0 )
+			{
+				var offX = ( a.tweenDuration * tScale ) + padding.x + startPos;
+				// End line
+				drawList.addLine( { x: lp.x + offX, y: lp.y + frameY  + row * frameHeight }, { x: lp.x + offX, y: lp.y + frameY + frameHeight + 2  + row * frameHeight }, ci,3.5 );
+				// Tween state
+				drawList.addLine( { x: lp.x, y: lp.y + frameY + frameHeight + 2  + row * frameHeight }, { x: lp.x + offX, y: lp.y + frameY  + row * frameHeight }, ci,3.5 );
+
+
+			}
+			if( row > rows ) rows = row;
 		}
 
-		frameY += frameHeight + 5;
+		frameY += frameHeight + ( frameHeight * rows ) + 5;
 
+		lastFrameHeight = frameY;
 
+		// Draw the scrubber
+		var currentTime = @:privateAccess sprite.animTime;
+		var posX = currentTime * tScale;
 
+		drawList.addLine({ x: lp.x + posX, y: lp.y }, { x: lp.x + posX, y: lp.y + lastFrameHeight  }, 0xFFFFFFFF, 2.5 );
 
-
-
-
+		addTimelinePopups();
 
 		ImGui.endChild();
+
+		addTimelineModals();
+
+		if( ImGui.isMouseDown( ImGuiMouseButton.Left ) )
+		{
+			var mouse: ImVec2 = ImGui.getMousePos();
+			if( mouse.x > lp.x && mouse.x < rect.x + lp.x && mouse.y > lp.y && mouse.y < rect.y + lp.y )
+			{
+				var localMouse: ImVec2 = { x: mouse.x - lp.x, y: mouse.y - lp.y };
+				var frameTime = localMouse.x / tScale;
+				sprite.setAnimTime( frameTime );
+			}
+		}
 
 		ImGui.end();
 	}
 
-	function drawBarWithText( x: Float, y: Float, gx: Float, gy: Float, width: Float, height: Float, text: String, c: ImVec4 )
+
+
+	function snapModal(  )
+	{
+		var animStart: Float = @:privateAccess sprite.animTime;
+		var snappedStart: Float = 0;
+		var snappedDuration: Float = 0;
+		var dist: Float = animStart;
+
+
+		var t: Float = 0;
+		for( f in selectedAnimation.frames )
+		{
+			var lDist = Math.abs( t - animStart );
+			if( lDist < dist )
+			{
+				dist = lDist;
+				snappedStart = t;
+				snappedDuration = f.duration;
+			}
+
+			t+=f.duration;
+		}
+
+		modalStart = snappedStart;
+		modalDuration = snappedDuration;
+		modalName = "";
+	}
+
+	var modalStart: Float = 0;
+	var modalDuration: Float = 0;
+	var modalName: String = "";
+
+	function addTimelineModals()
+	{
+
+
+		// Modals
+		if( ImGui.beginPopupModal("Add Sound Cue", null, ImGuiWindowFlags.AlwaysAutoResize ) )
+		{
+
+			IG.wref( ImGui.inputDouble("Start", _ ), modalStart );
+			IG.wref( ImGui.inputDouble("Duration", _ ), modalDuration );
+			var n =  IG.textInput("Sound", modalName );
+			if( n != null )
+				modalName = n;
+
+			if( ImGui.button("Ok") )
+			{
+				selectedAnimation.sounds.push({
+					name: modalName,
+					start: modalStart,
+					duration: modalDuration,
+				});
+				selectSound( selectedAnimation.sounds[ selectedAnimation.sounds.length -1 ] );
+				rebuildCache();
+				ImGui.closeCurrentPopup();
+			}
+			ImGui.sameLine();
+			if( ImGui.button("Cancel") )
+			{
+				ImGui.closeCurrentPopup();
+			}
+
+			ImGui.endPopup();
+		}
+
+		if( ImGui.beginPopupModal("Add Tag", null, ImGuiWindowFlags.AlwaysAutoResize ) )
+		{
+
+			IG.wref( ImGui.inputDouble("Start", _ ), modalStart );
+			IG.wref( ImGui.inputDouble("Duration", _ ), modalDuration );
+			var n =  IG.textInput("Tag", modalName );
+			if( n != null )
+				modalName = n;
+
+			if( ImGui.button("Ok") )
+			{
+				selectedAnimation.tags.push({
+					name: modalName,
+					start: modalStart,
+					duration: modalDuration,
+				});
+				selectTag( selectedAnimation.tags[ selectedAnimation.tags.length -1 ] );
+				rebuildCache();
+				ImGui.closeCurrentPopup();
+			}
+			ImGui.sameLine();
+			if( ImGui.button("Cancel") )
+			{
+				ImGui.closeCurrentPopup();
+			}
+
+			ImGui.endPopup();
+		}
+
+		if( ImGui.beginPopupModal("Add Attachment Override", null, ImGuiWindowFlags.AlwaysAutoResize ) )
+		{
+
+			IG.wref( ImGui.inputDouble("Start", _ ), modalStart );
+			IG.wref( ImGui.inputDouble("Duration", _ ), modalDuration );
+			var n =  IG.textInput("Attachment", modalName );
+			if( n != null )
+				modalName = n;
+
+			if( ImGui.button("Ok") )
+			{
+				selectedAnimation.attachmentOverrides.push({
+					name: modalName,
+					start: modalStart,
+					duration: modalDuration,
+					position: {x: 0, y: 0},
+					rotation: 0,
+					positionTween: None,
+					rotationTween: None,
+					tweenDuration: 0
+				});
+				selectAttachmentOverride( selectedAnimation.attachmentOverrides[ selectedAnimation.attachmentOverrides.length -1 ] );
+				rebuildSprite();
+				ImGui.closeCurrentPopup();
+			}
+			ImGui.sameLine();
+			if( ImGui.button("Cancel") )
+			{
+				ImGui.closeCurrentPopup();
+			}
+
+			ImGui.endPopup();
+		}
+	}
+
+	function addTimelinePopups()
+	{
+		// Context
+		if( ImGui.beginPopup("frame_rc") )
+			{
+				if( ImGui.menuItem("Remove") )
+				{
+					selectedAnimation.frames.remove(selectedFrame);
+					selectedFrame = null;
+					inspectorMode = NONE;
+					rebuildCache();
+				}
+				ImGui.endPopup();
+			}
+			if( ImGui.beginPopup("sound_rc") )
+			{
+				if( ImGui.menuItem("Remove") )
+				{
+					selectedAnimation.sounds.remove(selectedSound);
+					selectedSound = null;
+					inspectorMode = NONE;
+				}
+				ImGui.endPopup();
+			}
+			if( ImGui.beginPopup("tag_rc") )
+			{
+				if( ImGui.menuItem("Remove") )
+				{
+					selectedAnimation.tags.remove(selectedTag);
+					selectedTag = null;
+					inspectorMode = NONE;
+				}
+				ImGui.endPopup();
+			}
+			if( ImGui.beginPopup("attachment_override_rc") )
+			{
+				if( ImGui.menuItem("Remove") )
+				{
+					selectedAnimation.attachmentOverrides.remove(selectedAttachmentOverride);
+					selectedAttachmentOverride = null;
+					inspectorMode = NONE;
+				}
+				ImGui.endPopup();
+			}
+	}
+
+	function drawBarWithText( x: Float, y: Float, gx: Float, gy: Float, width: Float, height: Float, text: String, c: ImVec4, ?onSelect: Void->Void, ?onContext: Void->Void )
 	{
 		var texture = h3d.mat.Texture.fromColor(0xFFFFFF,1.);
 
@@ -1195,16 +1538,23 @@ class SpriteEditor extends ImguiTool
 
 		ImGui.setCursorPos({x: x, y: y } );
 		ImGui.image(texture,{ x: width, y: height },null, null, c, bc );
+		if( ImGui.isItemClicked(ImGuiMouseButton.Left) && onSelect != null )	onSelect();
+		if( ImGui.isItemClicked(ImGuiMouseButton.Right) && onContext != null )	onContext();
 		ImGui.setCursorPos({x: x + 4, y: y + 4 } );
 		ImGui.pushClipRect({x: gx + x, y: gy + y }, { x: gx + x + width, y: gy + y + height }, true);
 		ImGui.text(text);
 		ImGui.popClipRect();
 	}
 
-	function drawEventWithText( drawList: ImDrawList, x: Float, y: Float, gx: Float, gy: Float, height: Float, thickness: Float, text: String, c: Int )
+	function drawEventWithText( drawList: ImDrawList, x: Float, y: Float, gx: Float, gy: Float, height: Float, thickness: Float, text: String, c: Int, ?onSelect: Void->Void, ?onContext: Void->Void )
 	{
-
+		var textSize: ImVec2 = ImGui.calcTextSize(text);
 		drawList.addLine({ x: gx+x, y: gy+y }, { x: gx+x, y: gy+y + height }, c, thickness );
+		ImGui.setCursorPos({x: x, y: y } );
+
+		ImGui.dummy( {x: thickness + textSize.x, y: height  } );
+		if( ImGui.isItemClicked(ImGuiMouseButton.Left) && onSelect != null )	onSelect();
+		if( ImGui.isItemClicked(ImGuiMouseButton.Right) && onContext != null )	onContext();
 		ImGui.setCursorPos({x: x + 4 + thickness, y: y + 4 } );
 		ImGui.text(text);
 	}
@@ -1219,6 +1569,7 @@ class SpriteEditor extends ImguiTool
 		switch( inspectorMode )
 		{
 			case ANIMATION:
+				ImGui.pushID( "animation" );
 				ImGui.text("Animation settings");
 				ImGui.separator();
 				var newAtlas = IG.textInput( "Atlas", selectedAnimation.atlas );
@@ -1228,8 +1579,11 @@ class SpriteEditor extends ImguiTool
 					rebuildCache();
 				}
 
+				ImGui.popID();
+
 
 			case FRAME:
+				ImGui.pushID("frame");
 				ImGui.text("Frame settings");
 				ImGui.separator();
 				var newTile = IG.textInput( "Tile", selectedFrame.tile );
@@ -1259,16 +1613,20 @@ class SpriteEditor extends ImguiTool
 					}
 					ImGui.endDragDropTarget();
 				}
+				IG.wref( ImGui.inputDouble("Duration (ms)", _, 0.01, .1, "%.3f"), selectedFrame.duration);
+				IG.wref( ImGui.inputDouble("Offset X", _, 1, 10, "%.2f"),  selectedFrame.offsetX);
+				IG.wref( ImGui.inputDouble("Offset Y", _, 1, 10, "%.2f"), selectedFrame.offsetY);
 
-				IG.wref( IG.inputDouble("Duration (ms)", _, 0.01, 0.1, "%.3f"), selectedFrame.duration );
-				IG.wref( IG.inputDouble("Offset X", _, 1, 10, "%.2f"),  selectedFrame.offsetX);
-				IG.wref( IG.inputDouble("Offset Y", _, 1, 10, "%.2f"), selectedFrame.offsetY);
-
+				ImGui.popID();
 
 			case ATTACHMENT:
+				ImGui.pushID("attachmnet");
 				ImGui.text("Attachment settings");
 				ImGui.separator();
-				IG.posInput("Offset", selectedAttachment.position, "%.2f");
+				if( IG.posInput("Offset", selectedAttachment.position, "%.2f") )
+				{
+					rebuildSprite();
+				}
 				var single: Single = selectedAttachment.rotation;
 				if( IG.wref( ImGui.sliderAngle("Rotation", _), single ) )
 					selectedAttachment.rotation = single;
@@ -1280,7 +1638,29 @@ class SpriteEditor extends ImguiTool
 					ImGui.endTooltip();
 				}
 
+				var newSprite = IG.textInput( "Sprite", selectedAttachment.attachmentSprite != null ? selectedAttachment.attachmentSprite : "" );
+				if( newSprite != null && ( hxd.Res.loader.exists( newSprite ) || newSprite == "" ) )
+				{
+					if( newSprite == "" ) newSprite = null;
+					selectedAttachment.attachmentSprite = newSprite;
+					rebuildSprite();
+				}
+
+				if( ImGui.beginDragDropTarget() )
+				{
+					var payload = ImGui.acceptDragDropPayloadString("asset_name");
+					if( payload != null && StringTools.endsWith(payload, ".csd") )
+					{
+						selectedAttachment.attachmentSprite = payload;
+						rebuildSprite();
+					}
+					ImGui.endDragDropTarget();
+				}
+
+				ImGui.popID();
+
 			case COLLIDER:
+				ImGui.pushID("collider");
 				ImGui.text("Collider settings");
 				ImGui.separator();
 				/*
@@ -1302,6 +1682,106 @@ class SpriteEditor extends ImguiTool
 				IG.posInput("Offset", selectedCollider.position, "%.2f");
 				IG.posInput("Size", selectedCollider.size, "%.2f");
 
+				ImGui.popID();
+
+			case SOUND:
+				ImGui.pushID("sound");
+
+				ImGui.text("Sound cue settings");
+				ImGui.separator();
+
+
+				IG.wref( ImGui.inputDouble("Start", _), selectedSound.start );
+				IG.wref( ImGui.inputDouble("Duration", _), selectedSound.duration );
+
+				if( ImGui.isItemHovered() )
+				{
+					ImGui.beginTooltip();
+					ImGui.text("Only used for looping sounds.");
+					ImGui.endTooltip();
+				}
+
+				var newSound = IG.textInput( "Sound cue", selectedSound.name != null ? selectedSound.name : "" );
+				if( newSound != null )
+				{
+					if( newSound == "" ) newSound = null;
+					selectedSound.name = newSound;
+				}
+
+				ImGui.popID();
+
+
+			case ATTACHMENTOVERRIDE:
+				ImGui.pushID("attachmentoverride");
+
+				ImGui.text("Attachment Override settings");
+				ImGui.separator();
+
+				IG.wref( ImGui.inputDouble("Start", _), selectedAttachmentOverride.start );
+				IG.wref( ImGui.inputDouble("Duration", _), selectedAttachmentOverride.duration );
+
+				if( IG.posInput("Offset", selectedAttachmentOverride.position, "%.2f") )
+				{
+					rebuildSprite();
+				}
+
+				if( ImGui.beginCombo("Offset Tween", selectedAttachmentOverride.positionTween.toString() ) )
+				{
+					if( ImGui.selectable(SpriteAttachmentTween.None.toString(), selectedAttachmentOverride.positionTween == SpriteAttachmentTween.None ) )
+						selectedAttachmentOverride.positionTween = None;
+
+					if( ImGui.selectable(SpriteAttachmentTween.Linear.toString(), selectedAttachmentOverride.positionTween == SpriteAttachmentTween.Linear ) )
+						selectedAttachmentOverride.positionTween = Linear;
+
+					if( ImGui.selectable(SpriteAttachmentTween.ExpoIn.toString(), selectedAttachmentOverride.positionTween == SpriteAttachmentTween.ExpoIn ) )
+						selectedAttachmentOverride.positionTween = ExpoIn;
+
+					if( ImGui.selectable(SpriteAttachmentTween.ExpoOut.toString(), selectedAttachmentOverride.positionTween == SpriteAttachmentTween.ExpoOut ) )
+						selectedAttachmentOverride.positionTween = ExpoOut;
+
+					if( ImGui.selectable(SpriteAttachmentTween.ExpoInOut.toString(), selectedAttachmentOverride.positionTween == SpriteAttachmentTween.ExpoInOut ) )
+						selectedAttachmentOverride.positionTween = ExpoInOut;
+
+					ImGui.endCombo();
+				}
+
+
+				var single: Single = selectedAttachmentOverride.rotation;
+				if( IG.wref( ImGui.sliderAngle("Rotation", _), single ) )
+					selectedAttachmentOverride.rotation = single;
+
+				if( ImGui.isItemHovered() )
+				{
+					ImGui.beginTooltip();
+					ImGui.text("Ctrl+click to manually set");
+					ImGui.endTooltip();
+				}
+
+				if( ImGui.beginCombo("Rotation Tween", selectedAttachmentOverride.rotationTween.toString() ) )
+				{
+					if( ImGui.selectable(SpriteAttachmentTween.None.toString(), selectedAttachmentOverride.rotationTween == SpriteAttachmentTween.None ) )
+						selectedAttachmentOverride.rotationTween = None;
+
+					if( ImGui.selectable(SpriteAttachmentTween.Linear.toString(), selectedAttachmentOverride.rotationTween == SpriteAttachmentTween.Linear ) )
+						selectedAttachmentOverride.rotationTween = Linear;
+
+					ImGui.endCombo();
+				}
+
+				IG.wref( ImGui.inputDouble("Tween Duration", _), selectedAttachmentOverride.tweenDuration );
+
+				ImGui.popID();
+
+			case TAG:
+				ImGui.pushID("tag");
+
+				ImGui.text("Tag settings");
+				ImGui.separator();
+
+				IG.wref( ImGui.inputDouble("Start", _), selectedTag.start );
+				IG.wref( ImGui.inputDouble("Duration", _), selectedTag.duration );
+
+				ImGui.popID();
 
 			case NONE:
 

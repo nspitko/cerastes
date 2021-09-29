@@ -156,4 +156,17 @@ class Metrics
 		frames++;
 		#end
 	}
+	public static function beginFrame()
+	{
+		#if debug
+		metrics =  {
+			label:"Frame",
+			begin: time(),
+			end: -1,
+			subtasks: [],
+			parent: null
+		};
+		currentItem = metrics;
+		#end
+	}
 }

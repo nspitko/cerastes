@@ -22,6 +22,22 @@ abstract SpriteAttachmentTween(Int) from Int to Int
 {
 	var None = 0;		// Do not tween attachments
 	var Linear = 1;		// Linear tweening
+	var ExpoIn = 2;
+	var ExpoOut = 3;
+	var ExpoInOut = 4;
+
+	public function toString()
+	{
+		return switch( this )
+		{
+			case None: "None";
+			case Linear: "Linear";
+			case ExpoIn: "ExpoIn";
+			case ExpoOut: "ExpoOut";
+			case ExpoInOut: "ExpoInOut";
+			default: "None";
+		}
+	}
 }
 
 typedef CSDPoint = {
@@ -115,14 +131,14 @@ class SpriteResource extends Resource
 
 	var cache: SpriteCache = null;
 
-	public function toSprite( ?parent: Object )
+	public function toSprite( ?parent: Object, ?localCache: SpriteCache = null )
 	{
 		var data = getData();
 
 		if( cache == null )
 			cache = new SpriteCache( data.sprite );
 
-		return SpriteMeta.create( cache, parent );
+		return SpriteMeta.create( localCache != null ? localCache : cache, parent );
 
 		return new cerastes.Sprite(cache,parent);
 	}

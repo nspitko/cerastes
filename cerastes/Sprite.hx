@@ -11,6 +11,9 @@ import h2d.Bitmap;
 import h2d.Object;
 import cerastes.fmt.SpriteResource;
 import cerastes.collision.Colliders;
+using tweenxcore.Tools;
+
+
 
 /**
  * Sprites altomatically self-register with SpriteManager
@@ -100,6 +103,7 @@ class Sprite extends h2d.Drawable implements CollisionObject
 
 	public var collisionMask: CollisionMask = 0;
 	public var collisionType: CollisionGroup = 0;
+	public var mute: Bool = false;
 
 	var attachments: Map<String, Object> = [];
 
@@ -163,7 +167,30 @@ class Sprite extends h2d.Drawable implements CollisionObject
 		return attachments.get(name);
 	}
 
+	// @todo refactor this into a setter for a more consistent, less error prone API
+	public function setAnimTime( newTime: Float )
+	{
+		// First, find the correct frame
+		var ft: Float = 0;
+		for( idx in 0 ... sequence.frames.length )
+		{
+			var f = sequence.frames[idx];
+			if( ft + f.duration > newTime )
+			{
+				currentFrame = idx;
+				frameTime = ( newTime - ft );
+				break;
+			}
 
+			ft += f.duration;
+		}
+
+		animTime = newTime;
+
+
+		updateAnimationState();
+
+	}
 
 	// Imported from h2d.Anim
 
@@ -236,29 +263,132 @@ class Sprite extends h2d.Drawable implements CollisionObject
 		}
 	}
 
+	/**
+	 * Applies transforms that occured between the last two frame ticks
+	 *
+	 * @todo: This doesn't currently support multiple overrides at once.
+	 */
 	function updateAnimationState()
 	{
-		for( a in sequence.attachmentOverrides )
+		for( a in spriteDef.attachments )
 		{
-			if( a.start > animTimeLast && a.start <= animTime )
+			var localAttachment = attachments.get( a.name );
+
+			var localPosX = a.position.x;
+			var localPosY = a.position.y;
+			var localRot = a.rotation;
+
+			// optimize: We could cache off a map here to avoid the extra looping
+			for( o in sequence.attachmentOverrides )
+			{
+				if( o.name != a.name ) continue;
+				if( o.start <= animTime && o.start + o.duration > animTime )
+				{
+					var localAttachment = attachments.get( a.name );
+					if( localAttachment == null ) continue;
+
+					if( o.positionTween == None || animTime > o.start + o.tweenDuration )
+					{
+						localPosX = o.position.x;
+						localPosY = o.position.y;
+					}
+					else
+					{
+						var rate = ( animTime - o.start ) / o.tweenDuration;
+						switch( o.positionTween )
+						{
+							case Linear:
+								localPosX = rate.linear().lerp( localPosX, o.position.x );
+								localPosY = rate.linear().lerp( localPosY, o.position.y );
+							case ExpoIn:
+								localPosX = rate.expoIn().lerp( localPosX, o.position.x );
+								localPosY = rate.expoIn().lerp( localPosY, o.position.y );
+							case ExpoOut:
+								localPosX = rate.expoOut().lerp( localPosX, o.position.x );
+								localPosY = rate.expoOut().lerp( localPosY, o.position.y );
+							case ExpoInOut:
+								localPosX = rate.expoInOut().lerp( localPosX, o.position.x );
+								localPosY = rate.expoInOut().lerp( localPosY, o.position.y );
+							case None:
+						}
+						//new Tween( a.tweenDuration )
+					}
+
+					if( o.rotationTween	== None || animTime > o.start + o.tweenDuration )
+					{
+						localRot = o.rotation;
+					}
+					else
+					{
+						var rate = ( animTime - o.start ) / o.tweenDuration;
+						switch( o.rotationTween )
+						{
+							case Linear:
+								localRot = rate.linear().lerp( localRot, o.rotation );
+							case ExpoIn:
+								localRot = rate.expoIn().lerp( localRot, o.rotation );
+							case ExpoOut:
+								localRot = rate.expoOut().lerp( localRot, o.rotation );
+							case ExpoInOut:
+								localRot = rate.expoInOut().lerp( localRot, o.rotation );
+							case None:
+						}
+					}
+				}
+			}
+			// avoid resync if possible
+			if( localPosX != localAttachment.x || localPosY != localAttachment.y || localRot != localAttachment.rotation )
+			{
+				localAttachment.x = localPosX;
+				localAttachment.y = localPosY;
+				localAttachment.rotation = localRot;
+			}
+		}
+
+		// Edge detect sound events
+		if( !mute )
+		{
+			for( s in sequence.sounds )
+			{
+				if( animTimeLast <= s.start && animTime > s.start )
+				{
+					// @todo fix sound system
+					SoundManager.sfx( s.name );
+				}
+			}
+		}
+
+		/*
+		// We looped, reset state
+		if( animTimeLast > animTime )
+		{
+			animTimeLast = 0;
+			for( a in spriteDef.attachments )
 			{
 				var localAttachment = attachments.get( a.name );
-
-				if( a.positionTween == None )
-				{
-					localAttachment.x = a.position.x;
-					localAttachment.y = a.position.y;
-				}
-				else
-				{
-					trace("STUB: tweened attachments");
-					//new Tween( a.tweenDuration )
-				}
-
-
+				localAttachment.x = a.position.x;
+				localAttachment.y = a.position.y;
 				localAttachment.rotation = a.rotation;
 			}
 		}
+
+		for( a in sequence.attachmentOverrides )
+		{
+			// Starting an override
+			if( a.start >= animTimeLast && a.start < animTime )
+			{
+
+			}
+			else if( a.start + a.duration >= animTimeLast && a.start + a.duration < animTime )
+			{
+				// Override ended, reset.
+				// bugbug this will undo an earlier override this frame
+				var localAttachment = attachments.get( a.name );
+				localAttachment.x = a.position.x;
+				localAttachment.y = a.position.y;
+				localAttachment.rotation = a.rotation;
+			}
+		}*/
 
 		animTimeLast = animTime;
 	}
@@ -378,6 +508,7 @@ class Sprite extends h2d.Drawable implements CollisionObject
 
 	override function sync( ctx : RenderContext ) {
 		super.sync(ctx);
+		if( !visible ) return;
 		var prev = currentFrame;
 		if (!pause)
 		{

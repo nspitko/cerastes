@@ -48,6 +48,21 @@ private class ImVec4Impl {
 	}
 }
 
+@:structInit
+class TimelineItem
+{
+	var label: String;
+	var min: Float;
+	var max: Float;
+}
+
+
+@:structInit class TimelineGroup
+{
+	var label: String;
+	var items: Array<TimelineItem>;
+}
+
 typedef IG = ImGuiTools;
 #end
 
@@ -133,10 +148,6 @@ class ImGuiTools {
 		return ImGui.imageButton(tex, point, point2, point3, framePadding, vec, vec2);
 	}
 
-	public static function inputDouble(label : String, v : Float, step : Float = 0.0, step_fast : Float = 0.0, format : String = "%.6f", flags : ImGuiInputTextFlags = 0):Float {
-		ImGui.inputDouble(label, v, step, step_fast, format, flags);
-		return v;
-	}
 
 	public static var arrSingle4:NativeArray<Single> = new NativeArray(4);
 	public static var arrSingle3:NativeArray<Single> = new NativeArray(3);
@@ -158,9 +169,10 @@ class ImGuiTools {
 		var vv = arrSingle2;
 		vv[0] = target.x;
 		vv[1] = target.y;
-		ImGui.inputFloat2(label, vv, format, flags);
+		var ret = ImGui.inputFloat2(label, vv, format, flags);
 		target.x = vv[0];
 		target.y = vv[1];
+		return ret;
 	}
 
 	public static function posInputObj(label:String, target:h2d.Object, format:String = "%.3f", flags:ImGuiInputTextFlags = 0) {
@@ -323,6 +335,12 @@ class ImGuiTools {
 		style.MouseCursorScale = Math.floor( style.MouseCursorScale * scale );
 
 	}
+
+	public static function renderTimeline( groups: TimelineGroup )
+	{
+
+	}
+
 	#end
 }
 #end

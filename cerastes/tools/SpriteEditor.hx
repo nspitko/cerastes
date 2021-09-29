@@ -444,75 +444,77 @@ class SpriteEditor extends ImguiTool
 	function settingsWindow()
 	{
 		ImGui.setNextWindowDockId( dockspaceIdLeft, dockCond );
-		ImGui.begin('Settings');
-
-		var classList : Map<String,Array<SpriteDataItem>> = cerastes.SpriteMeta.getClassList();
-
-		if( ImGui.beginCombo("Class", trimCls( spriteDef.type ) ) )
+		if( ImGui.begin('Settings') )
 		{
-			if( ImGui.selectable("None", spriteDef.type == null ) )	spriteDef.type = null;
 
-			if( classList != null )
+			var classList : Map<String,Array<SpriteDataItem>> = cerastes.SpriteMeta.getClassList();
+
+			if( ImGui.beginCombo("Class", trimCls( spriteDef.type ) ) )
 			{
-				for(k => v in classList )
+				if( ImGui.selectable("None", spriteDef.type == null ) )	spriteDef.type = null;
+
+				if( classList != null )
 				{
-					if( ImGui.selectable(trimCls( k ),	k == spriteDef.type ) )	spriteDef.type = k;
+					for(k => v in classList )
+					{
+						if( ImGui.selectable(trimCls( k ),	k == spriteDef.type ) )	spriteDef.type = k;
+					}
 				}
+
+				ImGui.endCombo();
 			}
 
-			ImGui.endCombo();
-		}
-
-		if( spriteDef.type != null && classList.exists( spriteDef.type ) )
-		{
-			ImGui.separator();
-			var props = classList.get( spriteDef.type );
-
-			for( p in props )
+			if( spriteDef.type != null && classList.exists( spriteDef.type ) )
 			{
-				var kv = getKV( p.name );
-				if( kv == null )
+				ImGui.separator();
+				var props = classList.get( spriteDef.type );
+
+				for( p in props )
 				{
-					trace(p.defaultValue);
-					kv = {
-						key: p.name,
-						value: p.defaultValue
-					};
-					cache.spriteDef.typeData.push(kv);
+					var kv = getKV( p.name );
+					if( kv == null )
+					{
+						trace(p.defaultValue);
+						kv = {
+							key: p.name,
+							value: p.defaultValue
+						};
+						cache.spriteDef.typeData.push(kv);
+					}
+
+
+					switch( p.type )
+					{
+						case "Int":
+							var staticVal: Int = cast(kv.value, Int);
+							var ref = hl.Ref.make( staticVal );
+							if( ImGui.inputInt( p.label, ref ) )
+							{
+								kv.value = ref.get();
+								rebuildCache();
+							}
+						case "Float":
+							var staticVal: Single = cast(kv.value, Single);
+							var ref = hl.Ref.make( staticVal );
+							if( ImGui.inputFloat( p.label, ref ) )
+							{
+								kv.value = ref.get();
+								rebuildCache();
+							}
+						default:
+							ImGui.text( '${p.label} (${p.type}) UNSUPPORTED' );
+					}
+
+					if( p.tooltip != null && ImGui.isItemHovered() )
+					{
+						ImGui.beginTooltip();
+						ImGui.text(p.tooltip);
+						ImGui.endTooltip();
+					}
 				}
 
 
-				switch( p.type )
-				{
-					case "Int":
-						var staticVal: Int = cast(kv.value, Int);
-						var ref = hl.Ref.make( staticVal );
-						if( ImGui.inputInt( p.label, ref ) )
-						{
-							kv.value = ref.get();
-							rebuildCache();
-						}
-					case "Float":
-						var staticVal: Single = cast(kv.value, Single);
-						var ref = hl.Ref.make( staticVal );
-						if( ImGui.inputFloat( p.label, ref ) )
-						{
-							kv.value = ref.get();
-							rebuildCache();
-						}
-					default:
-						ImGui.text( '${p.label} (${p.type}) UNSUPPORTED' );
-				}
-
-				if( p.tooltip != null && ImGui.isItemHovered() )
-				{
-					ImGui.beginTooltip();
-					ImGui.text(p.tooltip);
-					ImGui.endTooltip();
-				}
 			}
-
-
 		}
 
 
@@ -556,387 +558,388 @@ class SpriteEditor extends ImguiTool
 		var showColliderDeletePopup = false;
 
 		ImGui.setNextWindowDockId( dockspaceIdLeft, dockCond );
-		ImGui.begin('Outline');
-
-
-		// ============================================================================
-		// Animations
-		// ============================================================================
-
-		ImGui.text("Animations");
-		//ImGui.beginChild("AnimationsList",null, true );
-
-
-		for( i  in 0 ... spriteDef.animations.length )
+		if( ImGui.begin('Outline') )
 		{
-			var animation = spriteDef.animations[i];
-
-			ImGui.pushID('animlist_${animation.name}');
-
-			var flags = ImGuiTreeNodeFlags.Leaf;
-			if( animation == selectedAnimation )
-				flags |= ImGuiTreeNodeFlags.Selected;
-			var isOpen = ImGui.treeNodeEx( animation.name, flags );
-
-			if( isOpen )
-				ImGui.treePop();
 
 
-			if( ImGui.isItemClicked(ImGuiMouseButton.Right) )
+			// ============================================================================
+			// Animations
+			// ============================================================================
+
+			ImGui.text("Animations");
+			//ImGui.beginChild("AnimationsList",null, true );
+
+
+			for( i  in 0 ... spriteDef.animations.length )
 			{
-				selectAnimation( animation );
-				ImGui.openPopup('context');
-			}
-			if( ImGui.isItemClicked(ImGuiMouseButton.Left) )
-			{
-				selectAnimation( animation );
-			}
+				var animation = spriteDef.animations[i];
 
-			if( ImGui.beginPopup('context') )
-			{
-				if( ImGui.menuItem("Rename") )
+				ImGui.pushID('animlist_${animation.name}');
+
+				var flags = ImGuiTreeNodeFlags.Leaf;
+				if( animation == selectedAnimation )
+					flags |= ImGuiTreeNodeFlags.Selected;
+				var isOpen = ImGui.treeNodeEx( animation.name, flags );
+
+				if( isOpen )
+					ImGui.treePop();
+
+
+				if( ImGui.isItemClicked(ImGuiMouseButton.Right) )
 				{
-					ImGui.openPopup('animation_rename');
+					selectAnimation( animation );
+					ImGui.openPopup('context');
 				}
-				if( ImGui.menuItem("Make Default") )
+				if( ImGui.isItemClicked(ImGuiMouseButton.Left) )
 				{
-					// @todo
+					selectAnimation( animation );
 				}
-				if( ImGui.menuItem("Delete") )
+
+				if( ImGui.beginPopup('context') )
 				{
-					showAnimationDeletePopup = true;
-				}
-				ImGui.endPopup();
-			}
-
-
-
-			ImGui.popID();
-
-		}
-
-		//ImGui.endChild();
-		if( ImGui.button("Add Animation") )
-		{
-			tmpInput = "";
-			ImGui.openPopup("Add Animation");
-		}
-
-		if( showAnimationDeletePopup )
-		{
-			ImGui.openPopup("###animation_delete");
-		}
-
-		if( ImGui.beginPopupModal("Add Animation", null, ImGuiWindowFlags.AlwaysAutoResize ) )
-		{
-			var r = IG.textInput("Name", tmpInput);
-			if( r != null )
-				tmpInput = r;
-
-			if( ImGui.button("Add") )
-			{
-				var baseAnim = spriteDef != null && spriteDef.animations.length > 0 ? spriteDef.animations[0] : null;
-				var a: CSDAnimation = {
-					name: tmpInput,
-					atlas: baseAnim != null ? baseAnim.atlas : "",
-					frames: [],
-					tags: [],
-					sounds: [],
-					attachmentOverrides: [],
-
-				}
-				spriteDef.animations.push(a);
-				ImGui.closeCurrentPopup();
-			}
-
-			ImGui.sameLine();
-
-			if( ImGui.button("Cancel") )
-			{
-				ImGui.closeCurrentPopup();
-			}
-
-
-			ImGui.endPopup();
-		}
-
-		if( ImGui.beginPopupModal('Really delete ${selectedAnimation != null ? selectedAnimation.name : "NULL"}###animation_delete', null, ImGuiWindowFlags.AlwaysAutoResize ) )
-		{
-			ImGui.text("This can't be undone since I'm too lazy to add proper undo support.");
-			ImGui.separator();
-
-			if( spriteDef.animations.length == 1 )
-			{
-				ImGui.text("Can't delete the last animation in a sprite. All sprites must have at least 1 animation, even if it's only a single frame");
-			}
-			else
-			{
-
-				if( ImGui.button("Ok") )
-				{
-					var idx = 0;
-					for( i in 0 ... spriteDef.animations.length )
+					if( ImGui.menuItem("Rename") )
 					{
-						if( spriteDef.animations[i] == selectedAnimation )
-						{
-							idx = i; break;
-						}
+						ImGui.openPopup('animation_rename');
 					}
-					inspectorMode = NONE;
-					selectedAnimation = null;
-					spriteDef.animations.splice(idx, 1);
-					rebuildCache();
+					if( ImGui.menuItem("Make Default") )
+					{
+						// @todo
+					}
+					if( ImGui.menuItem("Delete") )
+					{
+						showAnimationDeletePopup = true;
+					}
+					ImGui.endPopup();
+				}
+
+
+
+				ImGui.popID();
+
+			}
+
+			//ImGui.endChild();
+			if( ImGui.button("Add Animation") )
+			{
+				tmpInput = "";
+				ImGui.openPopup("Add Animation");
+			}
+
+			if( showAnimationDeletePopup )
+			{
+				ImGui.openPopup("###animation_delete");
+			}
+
+			if( ImGui.beginPopupModal("Add Animation", null, ImGuiWindowFlags.AlwaysAutoResize ) )
+			{
+				var r = IG.textInput("Name", tmpInput);
+				if( r != null )
+					tmpInput = r;
+
+				if( ImGui.button("Add") )
+				{
+					var baseAnim = spriteDef != null && spriteDef.animations.length > 0 ? spriteDef.animations[0] : null;
+					var a: CSDAnimation = {
+						name: tmpInput,
+						atlas: baseAnim != null ? baseAnim.atlas : "",
+						frames: [],
+						tags: [],
+						sounds: [],
+						attachmentOverrides: [],
+
+					}
+					spriteDef.animations.push(a);
 					ImGui.closeCurrentPopup();
 				}
 
 				ImGui.sameLine();
 
-
-			}
-			if( ImGui.button("Cancel") )
-			{
-				ImGui.closeCurrentPopup();
-			}
-
-
-			ImGui.endPopup();
-		}
-
-
-		ImGui.separator();
-
-		// ============================================================================
-		// Attachments
-		// ============================================================================
-
-		ImGui.text("Attachments");
-		//ImGui.beginChild("AttachmentsList",null, true);
-
-
-		for( i  in 0 ... spriteDef.attachments.length )
-		{
-
-			var attachment = spriteDef.attachments[i];
-			ImGui.pushID('atlist_${attachment.name}');
-
-			var flags = ImGuiTreeNodeFlags.Leaf;
-			if( attachment == selectedAttachment )
-				flags |= ImGuiTreeNodeFlags.Selected;
-			var isOpen = ImGui.treeNodeEx( attachment.name, flags );
-
-			if( isOpen )
-				ImGui.treePop();
-
-
-			if( ImGui.isItemClicked(ImGuiMouseButton.Right) )
-			{
-				selectAttachment( attachment );
-				ImGui.openPopup('context');
-			}
-			if( ImGui.isItemClicked(ImGuiMouseButton.Left) )
-			{
-				selectAttachment( attachment );
-			}
-
-			if( ImGui.beginPopup('context') )
-			{
-				if( ImGui.menuItem("Rename") )
+				if( ImGui.button("Cancel") )
 				{
-					ImGui.openPopup('attachment_rename');
+					ImGui.closeCurrentPopup();
 				}
-				if( ImGui.menuItem("Delete") )
-				{
-					showAttachmentDeletePopup = true;
-				}
+
+
 				ImGui.endPopup();
 			}
 
-			ImGui.popID();
-
-
-
-		}
-		//ImGui.endChild();
-		if( ImGui.button("Add Attachment") )
-		{
-			ImGui.openPopup("Add Attachment");
-		}
-
-
-		if( showAttachmentDeletePopup )
-		{
-			ImGui.openPopup("###attachment_delete");
-		}
-
-
-		if( ImGui.beginPopupModal("Add Attachment", null, ImGuiWindowFlags.AlwaysAutoResize ) )
-		{
-			var r = IG.textInput("Name", tmpInput);
-			if( r != null )
-				tmpInput = r;
-
-			if( ImGui.button("Add") )
+			if( ImGui.beginPopupModal('Really delete ${selectedAnimation != null ? selectedAnimation.name : "NULL"}###animation_delete', null, ImGuiWindowFlags.AlwaysAutoResize ) )
 			{
-				var a: CSDAttachment = {
-					name: tmpInput,
+				ImGui.text("This can't be undone since I'm too lazy to add proper undo support.");
+				ImGui.separator();
+
+				if( spriteDef.animations.length == 1 )
+				{
+					ImGui.text("Can't delete the last animation in a sprite. All sprites must have at least 1 animation, even if it's only a single frame");
+				}
+				else
+				{
+
+					if( ImGui.button("Ok") )
+					{
+						var idx = 0;
+						for( i in 0 ... spriteDef.animations.length )
+						{
+							if( spriteDef.animations[i] == selectedAnimation )
+							{
+								idx = i; break;
+							}
+						}
+						inspectorMode = NONE;
+						selectedAnimation = null;
+						spriteDef.animations.splice(idx, 1);
+						rebuildCache();
+						ImGui.closeCurrentPopup();
+					}
+
+					ImGui.sameLine();
+
+
+				}
+				if( ImGui.button("Cancel") )
+				{
+					ImGui.closeCurrentPopup();
+				}
+
+
+				ImGui.endPopup();
+			}
+
+
+			ImGui.separator();
+
+			// ============================================================================
+			// Attachments
+			// ============================================================================
+
+			ImGui.text("Attachments");
+			//ImGui.beginChild("AttachmentsList",null, true);
+
+
+			for( i  in 0 ... spriteDef.attachments.length )
+			{
+
+				var attachment = spriteDef.attachments[i];
+				ImGui.pushID('atlist_${attachment.name}');
+
+				var flags = ImGuiTreeNodeFlags.Leaf;
+				if( attachment == selectedAttachment )
+					flags |= ImGuiTreeNodeFlags.Selected;
+				var isOpen = ImGui.treeNodeEx( attachment.name, flags );
+
+				if( isOpen )
+					ImGui.treePop();
+
+
+				if( ImGui.isItemClicked(ImGuiMouseButton.Right) )
+				{
+					selectAttachment( attachment );
+					ImGui.openPopup('context');
+				}
+				if( ImGui.isItemClicked(ImGuiMouseButton.Left) )
+				{
+					selectAttachment( attachment );
+				}
+
+				if( ImGui.beginPopup('context') )
+				{
+					if( ImGui.menuItem("Rename") )
+					{
+						ImGui.openPopup('attachment_rename');
+					}
+					if( ImGui.menuItem("Delete") )
+					{
+						showAttachmentDeletePopup = true;
+					}
+					ImGui.endPopup();
+				}
+
+				ImGui.popID();
+
+
+
+			}
+			//ImGui.endChild();
+			if( ImGui.button("Add Attachment") )
+			{
+				ImGui.openPopup("Add Attachment");
+			}
+
+
+			if( showAttachmentDeletePopup )
+			{
+				ImGui.openPopup("###attachment_delete");
+			}
+
+
+			if( ImGui.beginPopupModal("Add Attachment", null, ImGuiWindowFlags.AlwaysAutoResize ) )
+			{
+				var r = IG.textInput("Name", tmpInput);
+				if( r != null )
+					tmpInput = r;
+
+				if( ImGui.button("Add") )
+				{
+					var a: CSDAttachment = {
+						name: tmpInput,
+						position: {x: 0, y: 0},
+						rotation: 0,
+						attachmentSprite: null,
+					}
+					spriteDef.attachments.push(a);
+					rebuildSprite();
+					ImGui.closeCurrentPopup();
+				}
+
+				ImGui.sameLine();
+
+				if( ImGui.button("Cancel") )
+				{
+					ImGui.closeCurrentPopup();
+				}
+
+
+				ImGui.endPopup();
+			}
+
+			if( ImGui.beginPopupModal('Really delete ${selectedAttachment != null ? selectedAttachment.name : "NULL"}?###attachment_delete', closeRef) )
+			{
+				ImGui.text("This can't be undone since I'm too lazy to add proper undo support.");
+				ImGui.separator();
+
+
+
+				if( ImGui.button("Ok") )
+				{
+					var idx = 0;
+					for( i in 0 ... spriteDef.attachments.length )
+					{
+						if( spriteDef.attachments[i] == selectedAttachment )
+						{
+							idx = i; break;
+						}
+					}
+					inspectorMode = NONE;
+					selectedAttachment = null;
+					spriteDef.attachments.splice(idx, 1);
+					rebuildSprite();
+					ImGui.closeCurrentPopup();
+				}
+
+				ImGui.sameLine();
+
+				if( ImGui.button("Cancel") )
+				{
+					ImGui.closeCurrentPopup();
+				}
+
+
+
+				ImGui.endPopup();
+			}
+
+
+			ImGui.separator();
+
+			// ============================================================================
+			// Colliders
+			// ============================================================================
+
+			ImGui.text("Colliders");
+
+			for( i  in 0 ... spriteDef.colliders.length )
+			{
+
+				var collider = spriteDef.colliders[i];
+				ImGui.pushID('collist_${i}');
+
+
+
+				var name = '${collider.type.toString()} (${collider.position.x}, ${collider.position.y})';
+
+				var flags = ImGuiTreeNodeFlags.Leaf;
+				if( collider == selectedCollider )
+					flags |= ImGuiTreeNodeFlags.Selected;
+				var isOpen = ImGui.treeNodeEx( name, flags );
+
+				if( isOpen )
+					ImGui.treePop();
+
+
+				if( ImGui.isItemClicked(ImGuiMouseButton.Right) )
+				{
+					selectCollider( collider );
+					ImGui.openPopup('context');
+				}
+				if( ImGui.isItemClicked(ImGuiMouseButton.Left) )
+				{
+					selectCollider( collider );
+				}
+
+				if( ImGui.beginPopup('context') )
+				{
+					if( ImGui.menuItem("Delete") )
+					{
+						showColliderDeletePopup = true;
+					}
+					ImGui.endPopup();
+				}
+
+				ImGui.popID();
+			}
+			//ImGui.endChild();
+			if( ImGui.button("Add Collider") )
+			{
+				var a: CSDCollider = {
+					type: AABB,
 					position: {x: 0, y: 0},
-					rotation: 0,
-					attachmentSprite: null,
+					size: {x: 10, y: 10},
+
 				}
-				spriteDef.attachments.push(a);
+				spriteDef.colliders.push(a);
 				rebuildSprite();
-				ImGui.closeCurrentPopup();
-			}
-
-			ImGui.sameLine();
-
-			if( ImGui.button("Cancel") )
-			{
-				ImGui.closeCurrentPopup();
 			}
 
 
-			ImGui.endPopup();
-		}
-
-		if( ImGui.beginPopupModal('Really delete ${selectedAttachment != null ? selectedAttachment.name : "NULL"}?###attachment_delete', closeRef) )
-		{
-			ImGui.text("This can't be undone since I'm too lazy to add proper undo support.");
-			ImGui.separator();
-
-
-
-			if( ImGui.button("Ok") )
+			if( showColliderDeletePopup )
 			{
-				var idx = 0;
-				for( i in 0 ... spriteDef.attachments.length )
+				ImGui.openPopup("###collider_delete");
+			}
+
+			if( ImGui.beginPopupModal('Really delete this collider??###collider_delete', closeRef) )
+			{
+				ImGui.text("This can't be undone since I'm too lazy to add proper undo support.");
+				ImGui.separator();
+
+
+
+				if( ImGui.button("Ok") )
 				{
-					if( spriteDef.attachments[i] == selectedAttachment )
+					var idx = 0;
+					for( i in 0 ... spriteDef.colliders.length )
 					{
-						idx = i; break;
+						if( spriteDef.colliders[i] == selectedCollider )
+						{
+							idx = i; break;
+						}
 					}
+					inspectorMode = NONE;
+					selectedCollider = null;
+					spriteDef.colliders.splice(idx, 1);
+					rebuildSprite();
+					ImGui.closeCurrentPopup();
 				}
-				inspectorMode = NONE;
-				selectedAttachment = null;
-				spriteDef.attachments.splice(idx, 1);
-				rebuildSprite();
-				ImGui.closeCurrentPopup();
-			}
 
-			ImGui.sameLine();
+				ImGui.sameLine();
 
-			if( ImGui.button("Cancel") )
-			{
-				ImGui.closeCurrentPopup();
-			}
-
-
-
-			ImGui.endPopup();
-		}
-
-
-		ImGui.separator();
-
-		// ============================================================================
-		// Colliders
-		// ============================================================================
-
-		ImGui.text("Colliders");
-
-		for( i  in 0 ... spriteDef.colliders.length )
-		{
-
-			var collider = spriteDef.colliders[i];
-			ImGui.pushID('collist_${i}');
-
-
-
-			var name = '${collider.type.toString()} (${collider.position.x}, ${collider.position.y})';
-
-			var flags = ImGuiTreeNodeFlags.Leaf;
-			if( collider == selectedCollider )
-				flags |= ImGuiTreeNodeFlags.Selected;
-			var isOpen = ImGui.treeNodeEx( name, flags );
-
-			if( isOpen )
-				ImGui.treePop();
-
-
-			if( ImGui.isItemClicked(ImGuiMouseButton.Right) )
-			{
-				selectCollider( collider );
-				ImGui.openPopup('context');
-			}
-			if( ImGui.isItemClicked(ImGuiMouseButton.Left) )
-			{
-				selectCollider( collider );
-			}
-
-			if( ImGui.beginPopup('context') )
-			{
-				if( ImGui.menuItem("Delete") )
+				if( ImGui.button("Cancel") )
 				{
-					showColliderDeletePopup = true;
+					ImGui.closeCurrentPopup();
 				}
+
 				ImGui.endPopup();
 			}
-
-			ImGui.popID();
 		}
-		//ImGui.endChild();
-		if( ImGui.button("Add Collider") )
-		{
-			var a: CSDCollider = {
-				type: AABB,
-				position: {x: 0, y: 0},
-				size: {x: 10, y: 10},
-
-			}
-			spriteDef.colliders.push(a);
-			rebuildSprite();
-		}
-
-
-		if( showColliderDeletePopup )
-		{
-			ImGui.openPopup("###collider_delete");
-		}
-
-		if( ImGui.beginPopupModal('Really delete this collider??###collider_delete', closeRef) )
-		{
-			ImGui.text("This can't be undone since I'm too lazy to add proper undo support.");
-			ImGui.separator();
-
-
-
-			if( ImGui.button("Ok") )
-			{
-				var idx = 0;
-				for( i in 0 ... spriteDef.colliders.length )
-				{
-					if( spriteDef.colliders[i] == selectedCollider )
-					{
-						idx = i; break;
-					}
-				}
-				inspectorMode = NONE;
-				selectedCollider = null;
-				spriteDef.colliders.splice(idx, 1);
-				rebuildSprite();
-				ImGui.closeCurrentPopup();
-			}
-
-			ImGui.sameLine();
-
-			if( ImGui.button("Cancel") )
-			{
-				ImGui.closeCurrentPopup();
-			}
-
-			ImGui.endPopup();
-		}
-
 
 
 
@@ -949,129 +952,136 @@ class SpriteEditor extends ImguiTool
 	function tileWindow()
 	{
 		ImGui.setNextWindowDockId( dockspaceIdBottom, dockCond );
-		ImGui.begin('Frames');
-
-		var itemHeight = 140 * scaleFactor;
-		ImGui.beginChild("frame_list", null, true, ImGuiWindowFlags.AlwaysAutoResize);
-
-
-
-		var desiredW = 100 * scaleFactor;
-		var handledDrop = false;
-
-		if( spriteDef != null && selectedAnimation != null )
+		if( ImGui.begin('Frames') )
 		{
-			var tileCache = cache.frameCache[ selectedAnimation.name ];
 
-			for( i in 0 ... selectedAnimation.frames.length )
+			var itemHeight = 140 * scaleFactor;
+			ImGui.beginChild("frame_list", null, true, ImGuiWindowFlags.AlwaysAutoResize);
+
+
+
+
+
+			var desiredW = 100 * scaleFactor;
+			var handledDrop = false;
+
+			if( spriteDef != null && selectedAnimation != null )
 			{
-				if( i >= selectedAnimation.frames.length ) break; // Loop variable cannot be modified :thonk:
+				var tileCache = cache.frameCache[ selectedAnimation.name ];
 
-				var tile = tileCache[i];
-				var frame = selectedAnimation.frames[i];
-
-				var scale = Math.floor( desiredW / tile.width  );
-				var selected = selectedFrame == frame;
-
-
-				if( selected )
+				for( i in 0 ... selectedAnimation.frames.length )
 				{
-					var col= ImGui.getStyleColorVec4( ImGuiCol.ButtonActive );
-					ImGui.pushStyleColor2(ImGuiCol.ChildBg, col );
-				}
+					if( i >= selectedAnimation.frames.length ) break; // Loop variable cannot be modified :thonk:
 
-				ImGui.beginChild('frame_${frame.tile}_${i}',{ x: desiredW, y: itemHeight});
+					var tile = tileCache[i];
+					if( tile == null ) continue;
+					var frame = selectedAnimation.frames[i];
+
+					var scale = Math.floor( desiredW / tile.width  );
+					var selected = selectedFrame == frame;
 
 
-				IG.image( tile, {x: scale, y: scale} );
-				ImGui.text( frame.tile );
-				ImGui.text( '${frame.duration * 100}ms' );
-
-				ImGui.endChild();
-
-				// Drag drop frame insertion
-				if( ImGui.beginDragDropTarget( ) )
-				{
-					var payload = ImGui.acceptDragDropPayloadString("atlas_tile");
-					if( payload != null )
+					if( selected )
 					{
-						var bits = payload.split('|');
-						Utils.assert(bits.length == 2, "Weird drag drop payload...");
+						var col= ImGui.getStyleColorVec4( ImGuiCol.ButtonActive );
+						ImGui.pushStyleColor2(ImGuiCol.ChildBg, col );
+					}
 
-						if( bits.length >= 2 && bits[0] == selectedAnimation.atlas )
+					ImGui.beginChild('frame_${frame.tile}_${i}',{ x: desiredW, y: itemHeight});
+
+
+					IG.image( tile, {x: scale, y: scale} );
+					ImGui.text( frame.tile );
+					ImGui.text( '${frame.duration * 100}ms' );
+
+					ImGui.endChild();
+
+					// Drag drop frame insertion
+					if( ImGui.beginDragDropTarget( ) )
+					{
+						var payload = ImGui.acceptDragDropPayloadString("atlas_tile");
+						if( payload != null )
 						{
-							var tileToInsert = bits[1];
-							var mousePos: ImVec2 = cast ImGui.getMousePos();
-							var cursorPos: ImVec2 = cast ImGui.getCursorScreenPos();
-							handledDrop = true;
-							if( mousePos.x - desiredW / 2 < cursorPos.x )
+							var bits = payload.split('|');
+							Utils.assert(bits.length == 2, "Weird drag drop payload...");
+
+							if( bits.length >= 2 && bits[0] == selectedAnimation.atlas )
 							{
-								insertFrame(tileToInsert, i, frame.duration);
-							}
-							else
-							{
-								insertFrame(tileToInsert, i + 1, frame.duration);
+								var tileToInsert = bits[1];
+								var mousePos: ImVec2 = cast ImGui.getMousePos();
+								var cursorPos: ImVec2 = cast ImGui.getCursorScreenPos();
+								handledDrop = true;
+								if( mousePos.x - desiredW / 2 < cursorPos.x )
+								{
+									insertFrame(tileToInsert, i, frame.duration);
+								}
+								else
+								{
+									insertFrame(tileToInsert, i + 1, frame.duration);
+								}
 							}
 						}
+						ImGui.endDragDropTarget();
 					}
-					ImGui.endDragDropTarget();
-				}
 
-				// Selection
-				if( ImGui.isItemClicked(ImGuiMouseButton.Left ) )
-				{
-					selectFrame( frame );
-				}
 
-				// Context menu handler
-				if( ImGui.isItemClicked(ImGuiMouseButton.Right) )
-				{
-					selectFrame( frame );
-					ImGui.openPopup('frame_${i}_context');
-				}
-
-				// Context menu
-				if( ImGui.beginPopup('frame_${i}_context') )
-				{
-					if( ImGui.menuItem("Delete") )
+					// Selection
+					if( ImGui.isItemVisible() && ImGui.isItemClicked(ImGuiMouseButton.Left ) )
 					{
-						selectedAnimation.frames.splice(i,1);
-						rebuildCache();
+						selectFrame( frame );
 					}
-					ImGui.endPopup();
+
+					// Context menu handler
+					if( ImGui.isItemClicked(ImGuiMouseButton.Right) )
+					{
+						selectFrame( frame );
+						ImGui.openPopup('frame_${i}_context');
+					}
+
+
+					// Context menu
+					if( ImGui.beginPopup('frame_${i}_context') )
+					{
+						if( ImGui.menuItem("Delete") )
+						{
+							selectedAnimation.frames.splice(i,1);
+							rebuildCache();
+						}
+						ImGui.endPopup();
+					}
+
+					if( selected )
+						ImGui.popStyleColor();
+
+
+					ImGui.sameLine();
+
 				}
-
-				if( selected )
-					ImGui.popStyleColor();
-
-
-				ImGui.sameLine();
-
 			}
-		}
 
-		ImGui.endChild();
+			ImGui.endChild();
 
-		if( !handledDrop && ImGui.beginDragDropTarget( ) )
-		{
-			var payload = ImGui.acceptDragDropPayloadString("atlas_tile");
-			if( payload != null )
+			if( !handledDrop && ImGui.beginDragDropTarget( ) )
 			{
-				var bits = payload.split('|');
-				Utils.assert(bits.length == 2, "Weird drag drop payload...");
-
-				if( selectedAnimation.atlas == "" )
-					selectedAnimation.atlas = bits[0];
-
-				if( bits.length >= 2 && bits[0] == selectedAnimation.atlas )
+				var payload = ImGui.acceptDragDropPayloadString("atlas_tile");
+				if( payload != null )
 				{
-					var tileToInsert = bits[1];
-					insertFrame(tileToInsert, selectedAnimation.frames.length, 0.33);
-				}
-			}
-			ImGui.endDragDropTarget();
-		}
+					var bits = payload.split('|');
+					Utils.assert(bits.length == 2, "Weird drag drop payload...");
 
+					if( selectedAnimation.atlas == "" )
+						selectedAnimation.atlas = bits[0];
+
+					if( bits.length >= 2 && bits[0] == selectedAnimation.atlas )
+					{
+						var tileToInsert = bits[1];
+						insertFrame(tileToInsert, selectedAnimation.frames.length, 0.33);
+					}
+				}
+				ImGui.endDragDropTarget();
+			}
+
+		}
 		ImGui.end();
 	}
 
@@ -1114,234 +1124,236 @@ class SpriteEditor extends ImguiTool
 	{
 
 		ImGui.setNextWindowDockId( dockspaceIdBottom, dockCond );
-		ImGui.begin('Timeline');
-
-		if( !sprite.pause )
-		{
-			if( ImGui.button("\uf04c") )
-				sprite.pause = true;
-		}
-		else
-		{
-			if( ImGui.button("\uf04b") )
-				sprite.pause = false;
-		}
-
-		ImGui.sameLine();
-		if( ImGui.button( "\uf127 Add Attachment Override" ) ) { snapModal(); ImGui.openPopup("Add Attachment Override"); }
-		ImGui.sameLine();
-		if( ImGui.button( "\uf028 Add Sound Cue" ) ) { snapModal(); ImGui.openPopup("Add Sound Cue"); }
-		ImGui.sameLine();
-		if( ImGui.button( "\uf02b Add Tag" ) ) { snapModal(); ImGui.openPopup("Add Tag"); }
-
-		//selectedAnimation = spriteDef.animations[0];
-		if( selectedAnimation == null )
+		if( ImGui.begin('Timeline') )
 		{
 
-			ImGui.end();
-			return;
-		}
-		var rect: ImVec2 = ImGui.getWindowContentRegionMax();
-
-		ImGui.beginChild("timeline", null, true, ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.HorizontalScrollbar | ImGuiWindowFlags.NoMove);
-
-		if( ImGui.isWindowHovered() )
-		{
-			// Should use imgui events here for consistency but GetIO isn't exposed to hl sooo...
-			if (Key.isPressed(Key.MOUSE_WHEEL_DOWN))
+			if( !sprite.pause )
 			{
-				timelineZoom -= 0.2;
-				if( timelineZoom < 1 )
-					timelineZoom = 1;
+				if( ImGui.button("\uf04c") )
+					sprite.pause = true;
 			}
-			if (Key.isPressed(Key.MOUSE_WHEEL_UP))
-			{
-				timelineZoom+= 0.2;
-				if( timelineZoom > 100 )
-					timelineZoom = 100;
-			}
-
-
-		}
-
-
-
-		var sequenceLength: Float = 0;
-		for( frame in selectedAnimation.frames )
-			sequenceLength += frame.duration;
-
-
-		//var p: ImVec2 = ImGui.getCursorPos();
-		ImGui.setCursorPos({x:0,y:0});
-		var lp: ImVec2 = ImGui.getCursorScreenPos();
-		var tScale = timelineZoom * ( rect.x / sequenceLength );
-		var padding: ImVec2 = {x: 5, y: 5};
-
-		ImGui.dummy({x: rect.x * timelineZoom + padding.x * 2, y:100 + padding.y * 2});
-
-
-		var drawList = ImGui.getWindowDrawList();
-		//
-		//drawList.addRect( lp, { x: lp.x + rect.x, y: lp.y + rect.y }, 0xFFFFFFFF );
-		var scrollX = ImGui.getScrollX();
-		var contentRect : ImVec2 = ImGui.getWindowContentRegionMax();
-		var maxX = contentRect.x;
-		var maxY = contentRect.y - 60;
-
-		//drawList.addRect( { x: lp.x + scrollX, y: lp.y }, { x: lp.x + scrollX + maxX - 50, y: lp.y + rect.y - 50 }, 0xFFFFFFFF );
-
-
-		// Draw timeline labels
-		var tickFreq = 150;
-		var tickHeight = lastFrameHeight;
-		for( tickx in 0 ... Math.floor( ( rect.x / tickFreq )  * timelineZoom ) )
-		{
-
-			var x = tickx * tickFreq; // pixel value
-			var ms = ( x / tScale );
-			drawList.addLine( {x: x + lp.x, y: lp.y}, {x: x+lp.x, y: lp.y + tickHeight }, 0xFF333333  );
-
-			ImGui.setCursorPos({x:x , y:tickHeight});
-			ImGui.text('${Math.floor( ms * 1000 ) }ms');
-		}
-
-		var rows = 0;
-
-
-		// Draw each frame
-		var frameTime = 0.;
-		var frameY = 5 + padding.y;
-		var frameHeight = 20 * scaleFactor;
-		var c: ImVec4 = { x: 0.7, y: 0.5, z: 0.1, w: 1.0 };
-		var ci = IG.imVec4ToColor( c );
-
-		rows = 0;
-		barReservations = [];
-
-
-		for( f in selectedAnimation.frames )
-		{
-			var row = 0;
-			while( !tryReserve({min: frameTime, max: frameTime + f.duration }, row ) ) row++;
-			var startPos = frameTime * tScale;
-			var endPos = (frameTime + f.duration) * tScale;
-			var width = endPos - startPos;
-			var sel = function(){ selectFrame(f); }
-			var rc = function(){ selectFrame(f); ImGui.openPopup("frame_rc"); }
-			drawBarWithText( padding.x + startPos, frameY + frameHeight * row, padding.x +  lp.x, lp.y, width, frameHeight, f.tile, c, sel, rc );
-
-			//drawList.addLine({x: lp.x + framePos, y: lp.y + 30 }, {x: lp.x + framePos, y: lp.y + 80}, 0xFFFF0000, 5);
-			frameTime += f.duration;
-			if( row > rows ) rows = row;
-		}
-
-		// Now do tags
-		var c: ImVec4 = { x: 0.4, y: 0.7, z: 0.2, w: 1.0 };
-		var ci = IG.imVec4ToColor( c );
-		frameY += frameHeight + ( frameHeight * rows ) + 5;
-		barReservations = [];
-		rows = 0;
-
-		for( t in selectedAnimation.tags )
-		{
-			var row = 0;
-			while( !tryReserve({min: t.start, max: t.start + t.duration }, row ) ) row++;
-			var localY = frameY + frameHeight * row;
-			var startPos = t.start * tScale;
-			var endPos = ( t.start + t.duration )  * tScale;
-			var width = endPos - startPos;
-			var sel = function(){ selectTag(t); }
-			var rc = function(){ selectTag(t); ImGui.openPopup("tag_rc"); }
-			if( t.duration == 0 )
-				drawEventWithText( drawList, padding.x + startPos, localY, padding.x + lp.x, lp.y, frameHeight, 4, t.name, ci, sel, rc  );
 			else
-				drawBarWithText( padding.x + startPos, localY, padding.x +  lp.x, lp.y, width, frameHeight, t.name, c, sel, rc  );
-
-			if( row > rows ) rows = row;
-		}
-
-		//Sounds
-		var c: ImVec4 = { x: 0.3, y: 0.1, z: 0.7, w: 1.0 };
-		var ci = IG.imVec4ToColor( c );
-		frameY += frameHeight + ( frameHeight * rows ) + 5;
-		barReservations = [];
-		rows = 0;
-
-		for( s in selectedAnimation.sounds )
-		{
-			var row = 0;
-			while( !tryReserve({min: s.start, max: s.start + s.duration }, row ) ) row++;
-			var startPos = s.start * tScale;
-			var endPos = ( s.start + s.duration )  * tScale;
-			var width = endPos - startPos;
-			var sel = function(){ selectSound(s); }
-			var rc = function(){ selectSound(s); ImGui.openPopup("sound_rc"); }
-			if( s.duration == 0 )
-				drawEventWithText( drawList, padding.x + startPos, frameY, padding.x + lp.x, lp.y, frameHeight, 4, s.name, ci, sel, rc );
-			else
-				drawBarWithText( padding.x + startPos, frameY + row * frameHeight, padding.x +  lp.x, lp.y, width, frameHeight, s.name, c, sel, rc );
-
-			if( row > rows ) rows = row;
-		}
-
-		// Attachment Overrides
-		var c: ImVec4 = { x: 0.16, y: 0.7, z: 0.7, w: 1.0 };
-		var ci = IG.imVec4ToColor( c );
-		var ctv: ImVec4 = { x: 0.16, y: 0.7, z: 0.7, w: 1.0 };
-		var ct = IG.imVec4ToColor( ctv );
-		frameY += frameHeight + ( frameHeight * rows ) + 5;
-		barReservations = [];
-		rows = 0;
-
-		for( a in selectedAnimation.attachmentOverrides )
-		{
-			var row = 0;
-			while( !tryReserve({min: a.start, max: a.start + a.duration }, row ) ) row++;
-			var startPos = a.start * tScale;
-			var endPos = ( a.start + a.duration )  * tScale;
-			var width = endPos - startPos;
-			var sel = function(){ selectAttachmentOverride(a); }
-			var rc = function(){ selectAttachmentOverride(a); ImGui.openPopup("attachment_override_rc"); }
-			drawBarWithText( padding.x + startPos, frameY + row * frameHeight, padding.x +  lp.x, lp.y, width, frameHeight, a.name, c, sel, rc );
-
-			// Tween duration, if set:
-			if( a.tweenDuration > 0 )
 			{
-				var offX = ( a.tweenDuration * tScale ) + padding.x + startPos;
-				// End line
-				drawList.addLine( { x: lp.x + offX, y: lp.y + frameY  + row * frameHeight }, { x: lp.x + offX, y: lp.y + frameY + frameHeight + 2  + row * frameHeight }, ci,3.5 );
-				// Tween state
-				drawList.addLine( { x: lp.x, y: lp.y + frameY + frameHeight + 2  + row * frameHeight }, { x: lp.x + offX, y: lp.y + frameY  + row * frameHeight }, ci,3.5 );
+				if( ImGui.button("\uf04b") )
+					sprite.pause = false;
+			}
+
+			ImGui.sameLine();
+			if( ImGui.button( "\uf127 Add Attachment Override" ) ) { snapModal(); ImGui.openPopup("Add Attachment Override"); }
+			ImGui.sameLine();
+			if( ImGui.button( "\uf028 Add Sound Cue" ) ) { snapModal(); ImGui.openPopup("Add Sound Cue"); }
+			ImGui.sameLine();
+			if( ImGui.button( "\uf02b Add Tag" ) ) { snapModal(); ImGui.openPopup("Add Tag"); }
+
+			//selectedAnimation = spriteDef.animations[0];
+			if( selectedAnimation == null )
+			{
+
+				ImGui.end();
+				return;
+			}
+			var rect: ImVec2 = ImGui.getWindowContentRegionMax();
+
+			ImGui.beginChild("timeline", null, true, ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.HorizontalScrollbar | ImGuiWindowFlags.NoMove);
+
+			if( ImGui.isWindowHovered() )
+			{
+				// Should use imgui events here for consistency but GetIO isn't exposed to hl sooo...
+				if (Key.isPressed(Key.MOUSE_WHEEL_DOWN))
+				{
+					timelineZoom -= 0.2;
+					if( timelineZoom < 1 )
+						timelineZoom = 1;
+				}
+				if (Key.isPressed(Key.MOUSE_WHEEL_UP))
+				{
+					timelineZoom+= 0.2;
+					if( timelineZoom > 100 )
+						timelineZoom = 100;
+				}
 
 
 			}
-			if( row > rows ) rows = row;
-		}
 
-		frameY += frameHeight + ( frameHeight * rows ) + 5;
 
-		lastFrameHeight = frameY;
 
-		// Draw the scrubber
-		var currentTime = @:privateAccess sprite.animTime;
-		var posX = currentTime * tScale;
+			var sequenceLength: Float = 0;
+			for( frame in selectedAnimation.frames )
+				sequenceLength += frame.duration;
 
-		drawList.addLine({ x: lp.x + posX, y: lp.y }, { x: lp.x + posX, y: lp.y + lastFrameHeight  }, 0xFFFFFFFF, 2.5 );
 
-		addTimelinePopups();
+			//var p: ImVec2 = ImGui.getCursorPos();
+			ImGui.setCursorPos({x:0,y:0});
+			var lp: ImVec2 = ImGui.getCursorScreenPos();
+			var tScale = timelineZoom * ( rect.x / sequenceLength );
+			var padding: ImVec2 = {x: 5, y: 5};
 
-		ImGui.endChild();
+			ImGui.dummy({x: rect.x * timelineZoom + padding.x * 2, y:100 + padding.y * 2});
 
-		addTimelineModals();
 
-		if( ImGui.isMouseDown( ImGuiMouseButton.Left ) )
-		{
-			var mouse: ImVec2 = ImGui.getMousePos();
-			if( mouse.x > lp.x && mouse.x < rect.x + lp.x && mouse.y > lp.y && mouse.y < rect.y + lp.y )
+			var drawList = ImGui.getWindowDrawList();
+			//
+			//drawList.addRect( lp, { x: lp.x + rect.x, y: lp.y + rect.y }, 0xFFFFFFFF );
+			var scrollX = ImGui.getScrollX();
+			var contentRect : ImVec2 = ImGui.getWindowContentRegionMax();
+			var maxX = contentRect.x;
+			var maxY = contentRect.y - 60;
+
+			//drawList.addRect( { x: lp.x + scrollX, y: lp.y }, { x: lp.x + scrollX + maxX - 50, y: lp.y + rect.y - 50 }, 0xFFFFFFFF );
+
+
+			// Draw timeline labels
+			var tickFreq = 150;
+			var tickHeight = lastFrameHeight;
+			for( tickx in 0 ... Math.floor( ( rect.x / tickFreq )  * timelineZoom ) )
 			{
-				var localMouse: ImVec2 = { x: mouse.x - lp.x, y: mouse.y - lp.y };
-				var frameTime = localMouse.x / tScale;
-				sprite.setAnimTime( frameTime );
+
+				var x = tickx * tickFreq; // pixel value
+				var ms = ( x / tScale );
+				drawList.addLine( {x: x + lp.x, y: lp.y}, {x: x+lp.x, y: lp.y + tickHeight }, 0xFF333333  );
+
+				ImGui.setCursorPos({x:x , y:tickHeight});
+				ImGui.text('${Math.floor( ms * 1000 ) }ms');
+			}
+
+			var rows = 0;
+
+
+			// Draw each frame
+			var frameTime = 0.;
+			var frameY = 5 + padding.y;
+			var frameHeight = 20 * scaleFactor;
+			var c: ImVec4 = { x: 0.7, y: 0.5, z: 0.1, w: 1.0 };
+			var ci = IG.imVec4ToColor( c );
+
+			rows = 0;
+			barReservations = [];
+
+
+			for( f in selectedAnimation.frames )
+			{
+				var row = 0;
+				while( !tryReserve({min: frameTime, max: frameTime + f.duration }, row ) ) row++;
+				var startPos = frameTime * tScale;
+				var endPos = (frameTime + f.duration) * tScale;
+				var width = endPos - startPos;
+				var sel = function(){ selectFrame(f); }
+				var rc = function(){ selectFrame(f); ImGui.openPopup("frame_rc"); }
+				drawBarWithText( padding.x + startPos, frameY + frameHeight * row, padding.x +  lp.x, lp.y, width, frameHeight, f.tile, c, sel, rc );
+
+				//drawList.addLine({x: lp.x + framePos, y: lp.y + 30 }, {x: lp.x + framePos, y: lp.y + 80}, 0xFFFF0000, 5);
+				frameTime += f.duration;
+				if( row > rows ) rows = row;
+			}
+
+			// Now do tags
+			var c: ImVec4 = { x: 0.4, y: 0.7, z: 0.2, w: 1.0 };
+			var ci = IG.imVec4ToColor( c );
+			frameY += frameHeight + ( frameHeight * rows ) + 5;
+			barReservations = [];
+			rows = 0;
+
+			for( t in selectedAnimation.tags )
+			{
+				var row = 0;
+				while( !tryReserve({min: t.start, max: t.start + t.duration }, row ) ) row++;
+				var localY = frameY + frameHeight * row;
+				var startPos = t.start * tScale;
+				var endPos = ( t.start + t.duration )  * tScale;
+				var width = endPos - startPos;
+				var sel = function(){ selectTag(t); }
+				var rc = function(){ selectTag(t); ImGui.openPopup("tag_rc"); }
+				if( t.duration == 0 )
+					drawEventWithText( drawList, padding.x + startPos, localY, padding.x + lp.x, lp.y, frameHeight, 4, t.name, ci, sel, rc  );
+				else
+					drawBarWithText( padding.x + startPos, localY, padding.x +  lp.x, lp.y, width, frameHeight, t.name, c, sel, rc  );
+
+				if( row > rows ) rows = row;
+			}
+
+			//Sounds
+			var c: ImVec4 = { x: 0.3, y: 0.1, z: 0.7, w: 1.0 };
+			var ci = IG.imVec4ToColor( c );
+			frameY += frameHeight + ( frameHeight * rows ) + 5;
+			barReservations = [];
+			rows = 0;
+
+			for( s in selectedAnimation.sounds )
+			{
+				var row = 0;
+				while( !tryReserve({min: s.start, max: s.start + s.duration }, row ) ) row++;
+				var startPos = s.start * tScale;
+				var endPos = ( s.start + s.duration )  * tScale;
+				var width = endPos - startPos;
+				var sel = function(){ selectSound(s); }
+				var rc = function(){ selectSound(s); ImGui.openPopup("sound_rc"); }
+				if( s.duration == 0 )
+					drawEventWithText( drawList, padding.x + startPos, frameY, padding.x + lp.x, lp.y, frameHeight, 4, s.name, ci, sel, rc );
+				else
+					drawBarWithText( padding.x + startPos, frameY + row * frameHeight, padding.x +  lp.x, lp.y, width, frameHeight, s.name, c, sel, rc );
+
+				if( row > rows ) rows = row;
+			}
+
+			// Attachment Overrides
+			var c: ImVec4 = { x: 0.16, y: 0.7, z: 0.7, w: 1.0 };
+			var ci = IG.imVec4ToColor( c );
+			var ctv: ImVec4 = { x: 0.16, y: 0.7, z: 0.7, w: 1.0 };
+			var ct = IG.imVec4ToColor( ctv );
+			frameY += frameHeight + ( frameHeight * rows ) + 5;
+			barReservations = [];
+			rows = 0;
+
+			for( a in selectedAnimation.attachmentOverrides )
+			{
+				var row = 0;
+				while( !tryReserve({min: a.start, max: a.start + a.duration }, row ) ) row++;
+				var startPos = a.start * tScale;
+				var endPos = ( a.start + a.duration )  * tScale;
+				var width = endPos - startPos;
+				var sel = function(){ selectAttachmentOverride(a); }
+				var rc = function(){ selectAttachmentOverride(a); ImGui.openPopup("attachment_override_rc"); }
+				drawBarWithText( padding.x + startPos, frameY + row * frameHeight, padding.x +  lp.x, lp.y, width, frameHeight, a.name, c, sel, rc );
+
+				// Tween duration, if set:
+				if( a.tweenDuration > 0 )
+				{
+					var offX = ( a.tweenDuration * tScale ) + padding.x + startPos;
+					// End line
+					drawList.addLine( { x: lp.x + offX, y: lp.y + frameY  + row * frameHeight }, { x: lp.x + offX, y: lp.y + frameY + frameHeight + 2  + row * frameHeight }, ci,3.5 );
+					// Tween state
+					drawList.addLine( { x: lp.x, y: lp.y + frameY + frameHeight + 2  + row * frameHeight }, { x: lp.x + offX, y: lp.y + frameY  + row * frameHeight }, ci,3.5 );
+
+
+				}
+				if( row > rows ) rows = row;
+			}
+
+			frameY += frameHeight + ( frameHeight * rows ) + 5;
+
+			lastFrameHeight = frameY;
+
+			// Draw the scrubber
+			var currentTime = @:privateAccess sprite.animTime;
+			var posX = currentTime * tScale;
+
+			drawList.addLine({ x: lp.x + posX, y: lp.y }, { x: lp.x + posX, y: lp.y + lastFrameHeight  }, 0xFFFFFFFF, 2.5 );
+
+			addTimelinePopups();
+
+			ImGui.endChild();
+
+			addTimelineModals();
+
+			if( ImGui.isMouseDown( ImGuiMouseButton.Left ) )
+			{
+				var mouse: ImVec2 = ImGui.getMousePos();
+				if( mouse.x > lp.x && mouse.x < rect.x + lp.x && mouse.y > lp.y && mouse.y < rect.y + lp.y )
+				{
+					var localMouse: ImVec2 = { x: mouse.x - lp.x, y: mouse.y - lp.y };
+					var frameTime = localMouse.x / tScale;
+					sprite.setAnimTime( frameTime );
+				}
 			}
 		}
 
@@ -1569,7 +1581,7 @@ class SpriteEditor extends ImguiTool
 		switch( inspectorMode )
 		{
 			case ANIMATION:
-				ImGui.pushID( "animation" );
+				ImGui.pushID( "animation" + selectedAnimation.name );
 				ImGui.text("Animation settings");
 				ImGui.separator();
 				var newAtlas = IG.textInput( "Atlas", selectedAnimation.atlas );
@@ -1583,7 +1595,7 @@ class SpriteEditor extends ImguiTool
 
 
 			case FRAME:
-				ImGui.pushID("frame");
+				ImGui.pushID("frame" + selectedFrame.tile);
 				ImGui.text("Frame settings");
 				ImGui.separator();
 				var newTile = IG.textInput( "Tile", selectedFrame.tile );
@@ -1620,7 +1632,7 @@ class SpriteEditor extends ImguiTool
 				ImGui.popID();
 
 			case ATTACHMENT:
-				ImGui.pushID("attachmnet");
+				ImGui.pushID("attachmnet" + selectedAttachment.name);
 				ImGui.text("Attachment settings");
 				ImGui.separator();
 				if( IG.posInput("Offset", selectedAttachment.position, "%.2f") )
@@ -1685,7 +1697,7 @@ class SpriteEditor extends ImguiTool
 				ImGui.popID();
 
 			case SOUND:
-				ImGui.pushID("sound");
+				ImGui.pushID("sound" + selectedSound.name);
 
 				ImGui.text("Sound cue settings");
 				ImGui.separator();
@@ -1712,7 +1724,7 @@ class SpriteEditor extends ImguiTool
 
 
 			case ATTACHMENTOVERRIDE:
-				ImGui.pushID("attachmentoverride");
+				ImGui.pushID("attachmentoverride" + selectedAttachmentOverride.name);
 
 				ImGui.text("Attachment Override settings");
 				ImGui.separator();
@@ -1765,6 +1777,14 @@ class SpriteEditor extends ImguiTool
 					if( ImGui.selectable(SpriteAttachmentTween.Linear.toString(), selectedAttachmentOverride.rotationTween == SpriteAttachmentTween.Linear ) )
 						selectedAttachmentOverride.rotationTween = Linear;
 
+					if( ImGui.selectable(SpriteAttachmentTween.ExpoIn.toString(), selectedAttachmentOverride.positionTween == SpriteAttachmentTween.ExpoIn ) )
+						selectedAttachmentOverride.rotationTween = ExpoIn;
+
+					if( ImGui.selectable(SpriteAttachmentTween.ExpoOut.toString(), selectedAttachmentOverride.positionTween == SpriteAttachmentTween.ExpoOut ) )
+						selectedAttachmentOverride.rotationTween = ExpoOut;
+
+					if( ImGui.selectable(SpriteAttachmentTween.ExpoInOut.toString(), selectedAttachmentOverride.positionTween == SpriteAttachmentTween.ExpoInOut ) )
+						selectedAttachmentOverride.rotationTween = ExpoInOut;
 					ImGui.endCombo();
 				}
 
@@ -1773,7 +1793,7 @@ class SpriteEditor extends ImguiTool
 				ImGui.popID();
 
 			case TAG:
-				ImGui.pushID("tag");
+				ImGui.pushID("tag" + selectedTag.name);
 
 				ImGui.text("Tag settings");
 				ImGui.separator();

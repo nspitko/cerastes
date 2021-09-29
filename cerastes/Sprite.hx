@@ -530,6 +530,7 @@ class Sprite extends h2d.Drawable implements CollisionObject
 
 		// Fallthrough: We're done with this cycle.
 		animTime = 0;
+		animTimeLast = 0;
 
 		if( loop )
 		{

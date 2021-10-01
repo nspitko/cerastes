@@ -59,6 +59,7 @@ typedef CSDAttachment = {
 	var position: CSDPoint;
 	var rotation: Float; // in Radians. Because heaps uses radians internally and I don't have to justify myself to youuuuuuuuuuuuuuuu
 	var attachmentSprite: String; // If set, loads a sprite into this attachment position. This is useful for multi-component sprites
+	var parent: String; // If set, this attachment is parented to another.
 }
 
 typedef CSDAttachmentOverride = {
@@ -115,6 +116,7 @@ typedef CSDDefinition = {
 	var animations: Array<CSDAnimation>;
 	var attachments: Array<CSDAttachment>;
 	var colliders: Array<CSDCollider>;
+	var origin: CSDPoint;
 }
 
 typedef CSDFile = {

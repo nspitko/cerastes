@@ -165,6 +165,31 @@ class ImGuiTools {
 		return vv[0];
 	}
 
+	public static function getViewportDimensions()
+	{
+		var size = haxe.macro.Compiler.getDefine("windowSize");
+        var scale = haxe.macro.Compiler.getDefine("renderScale");
+        var viewportScale = 1;
+		var viewportWidth = 640;
+		var viewportHeight = 360;
+		if( size != null )
+		{
+			var p = size.split("x");
+			viewportWidth = Std.parseInt(p[0]);
+			viewportHeight = Std.parseInt(p[1]);
+		}
+        if( scale != null ) viewportScale = Std.parseInt(scale);
+
+		return
+		{
+			width: Math.floor( viewportWidth / viewportScale ),
+			height: Math.floor( viewportHeight / viewportScale ),
+			realWidth: viewportWidth,
+			realHeight: viewportHeight,
+			scale: viewportScale
+		}
+	}
+
 	public static function posInput<T:{ x:Float, y:Float }>(label:String, target:T, format:String = "%.3f", flags:ImGuiInputTextFlags = 0) {
 		var vv = arrSingle2;
 		vv[0] = target.x;

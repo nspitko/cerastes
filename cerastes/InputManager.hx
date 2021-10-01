@@ -32,6 +32,7 @@ class InputManager
 {
 	private static var listeners = new Array<InputListener>();
 	private static var pads = new Array< hxd.Pad >();
+	public  static var enabled: Bool = true;
 
 	public static function init()
 	{
@@ -136,6 +137,8 @@ class InputManager
 
 	private static function notifyListeners( button: InputButton, state: InputState )
 	{
+		if( !enabled ) return;
+
 		for( listener in listeners )
 		{
 			if( listener.callback(button,state) )

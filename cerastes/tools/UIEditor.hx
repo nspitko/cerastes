@@ -118,7 +118,7 @@ class UIEditor extends ImguiTool
 	{
 		//ImGui.beginChild("uie_inspector",{x: 200 * scaleFactor, y: viewportHeight}, false, ImGuiWindowFlags.AlwaysAutoResize );
 		ImGui.setNextWindowDockId( dockspaceIdLeft, dockCond );
-		ImGui.begin("Inspector");
+		ImGui.begin('Inspector##${windowID()}');
 
 
 		// Buttons
@@ -129,7 +129,7 @@ class UIEditor extends ImguiTool
 
 		if( ImGui.beginPopup("uie_additem") )
 		{
-			var types = ["h2d.Object", "h2d.Text", "h2d.Bitmap", "h2d.Flow", "h2d.Mask"];
+			var types = ["h2d.Object", "h2d.Text", "h2d.Bitmap", "h2d.Flow", "h2d.Mask", "h2d.Interactive"];
 
 			for( t in types )
 			{
@@ -175,7 +175,7 @@ class UIEditor extends ImguiTool
 	{
 		//ImGui.beginChild("uie_editor",{x: 300 * scaleFactor, y: viewportHeight}, false, ImGuiWindowFlags.AlwaysAutoResize);
 		ImGui.setNextWindowDockId( dockspaceIdRight, dockCond );
-		ImGui.begin("Editor");
+		ImGui.begin('Editor##${windowID()}');
 
 		if( selectedInspectorTree == null )
 		{
@@ -243,7 +243,7 @@ class UIEditor extends ImguiTool
 		var isOpenRef = hl.Ref.make(isOpen);
 
 		ImGui.setNextWindowSize({x: viewportWidth + 800, y: viewportHeight + 120}, ImGuiCond.Once);
-		ImGui.begin("\uf108 UI Editor", isOpenRef, ImGuiWindowFlags.NoDocking | ImGuiWindowFlags.MenuBar );
+		ImGui.begin('\uf108 UI Editor##${windowID()}', isOpenRef, ImGuiWindowFlags.NoDocking | ImGuiWindowFlags.MenuBar );
 
 		menuBar();
 
@@ -259,7 +259,7 @@ class UIEditor extends ImguiTool
 
 		// Preview
 		ImGui.setNextWindowDockId( dockspaceIdCenter, dockCond );
-		ImGui.begin("Preview", null, ImGuiWindowFlags.NoMove);
+		ImGui.begin('Preview##${windowID()}', null, ImGuiWindowFlags.NoMove);
 
 		var startPos: ImVec2 = ImGui.getCursorScreenPos();
 		var mousePos: ImVec2 = ImGui.getMousePos();
@@ -380,6 +380,11 @@ class UIEditor extends ImguiTool
 		}
 
 		return null;
+	}
+
+	inline function windowID()
+	{
+		return 'spre${fileName}';
 	}
 
 	function dockSpace()

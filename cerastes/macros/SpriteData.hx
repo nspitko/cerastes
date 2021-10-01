@@ -104,10 +104,7 @@ class SpriteData
 							}
 							while( cls != null );
 
-
-							dataMap.set( classType.name, clsMeta );
-
-
+							var str = '${ classType.pack}.${classType.name}';
 							// Build a new case for this replicated class
 
 
@@ -134,6 +131,10 @@ class SpriteData
 							caseMap.set(clsString ,macro {
 								c = new $clsTypePath( cache, parent );
 							} );
+
+
+							dataMap.set(clsString, clsMeta );
+
 
 						}
 					}

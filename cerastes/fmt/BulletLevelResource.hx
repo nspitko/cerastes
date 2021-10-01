@@ -16,23 +16,44 @@ import hxd.res.Resource;
 
 import haxe.Json;
 
+enum CBLTriggerType {
+	PauseForClear; // Wait for all enemies to be destroyed before continuring
+	ChangeVelocity; // Change the level velocity
+}
 
 typedef CBLPoint = {
 	var x: Float;
 	var y: Float;
 }
 
-typedef CBLObject = {
+/**
+ * Spawn groups are collections of objects that all spawn at once. These are
+ * useful for controlling coordinated batches of enemimes that need to be timed
+ * against eachother.
+ */
+typedef CBLSpawnGroup = {
+	var spawnPosition: CBLPoint; // Spawn position for this group.
+	var objects: Array<CBLObject>;
+}
 
-	var type: String; // type to load. MUST implement BulletLevelObject
-	var position: CBLPoint;
+typedef CBLTrigger = {
+	var type: CBLTriggerType;
+	var pos: CBLPoint;
+	var data: CBLPoint;
+}
+
+typedef CBLObject = {
+	var type: String;
+	var position: CBLPoint; // Spawn position outside of a group is bounds max towards level velocity, so enemies always spawn off screen
+	var fiber: String; // Optional fiber to run. Must be a CannonEntity
 }
 
 typedef CBLFile = {
 	var version: Int;
 	var objects: Array<CBLObject>;
-	var length: Float;
-	var speed: Float;
+	var spawnGroups: Array<CBLSpawnGroup>;
+	var width: Float;
+	var height: Float;
 }
 
 class BulletLevelResource extends Resource
@@ -62,7 +83,7 @@ class BulletLevelResource extends Resource
 
 
 		#if hl
-		sys.io.File.saveContent('res/${file}',txt);
+		sys.io.File.saveContent(Utils.fixWritePath(file, "cbl"),txt);
 		#end
 	}
 

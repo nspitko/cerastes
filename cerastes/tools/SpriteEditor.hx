@@ -102,20 +102,14 @@ class SpriteEditor extends ImguiTool
 
 	// visual stuff
 	var graphics: Graphics;
+	var drawOrigin: Bool = false;
 
 
 	public function new()
 	{
-		var size = haxe.macro.Compiler.getDefine("windowSize");
-		viewportWidth = 640;
-		viewportHeight = 360;
-
-		if( size != null )
-		{
-			var p = size.split("x");
-			viewportWidth = Std.parseInt(p[0]);
-			viewportHeight = Std.parseInt(p[1]);
-		}
+		var viewportDimensions = IG.getViewportDimensions();
+		viewportWidth = viewportDimensions.width;
+		viewportHeight = viewportDimensions.height;
 
 		// ???? hacky shit. We really want to just dynamically size this for our sprite
 		viewportWidth = cast viewportWidth;
@@ -142,6 +136,7 @@ class SpriteEditor extends ImguiTool
 			attachments: [],
 			colliders: [],
 			typeData: [],
+			origin: {x: 0, y: 0},
 		}
 
 		updateScene();
@@ -203,12 +198,13 @@ class SpriteEditor extends ImguiTool
 				var color = a == selectedAttachment && inspectorMode == ATTACHMENT ? 0x33AA33 : 0x3333AA;
 				var colorRot = a == selectedAttachment && inspectorMode == ATTACHMENT ? 0x99FF99 : 0x6666FF;
 				var spriteAttachment = sprite.getAttachment( a.name );
+				var bounds = spriteAttachment.getBounds( sprite );
 				graphics.lineStyle(1, color );
-				graphics.drawCircle( spriteAttachment.x, spriteAttachment.y, 5 );
+				graphics.drawCircle( bounds.x, bounds.y, 5 );
 				graphics.lineStyle(1, colorRot );
-				graphics.moveTo( spriteAttachment.x, spriteAttachment.y );
-				var endX = spriteAttachment.x + Math.cos( spriteAttachment.rotation ) * 10;
-				var endY = spriteAttachment.y + Math.sin( spriteAttachment.rotation ) * 10;
+				graphics.moveTo( bounds.x, bounds.y );
+				var endX = bounds.x + Math.cos( spriteAttachment.rotation ) * 10;
+				var endY = bounds.y + Math.sin( spriteAttachment.rotation ) * 10;
 				graphics.lineTo(endX,endY);
 			}
 		}
@@ -228,6 +224,17 @@ class SpriteEditor extends ImguiTool
 					default:
 				}
 			}
+		}
+
+		if( drawOrigin )
+		{
+			var color = 0xFF8888;
+			graphics.lineStyle(2,color);
+			graphics.moveTo( spriteDef.origin.x - 5, spriteDef.origin.y );
+			graphics.lineTo( spriteDef.origin.x + 5, spriteDef.origin.y );
+
+			graphics.moveTo( spriteDef.origin.x, spriteDef.origin.y - 5 );
+			graphics.lineTo( spriteDef.origin.x, spriteDef.origin.y + 5 );
 		}
 	}
 
@@ -331,7 +338,7 @@ class SpriteEditor extends ImguiTool
 		var isOpenRef = hl.Ref.make(isOpen);
 
 		ImGui.setNextWindowSize({x: viewportWidth * 2.3, y: viewportHeight * 2.4}, ImGuiCond.Once);
-		ImGui.begin('\uf6be Sprite Editor (${fileName})###mainwindow', isOpenRef, ImGuiWindowFlags.NoDocking | ImGuiWindowFlags.MenuBar );
+		ImGui.begin('\uf6be Sprite Editor (${fileName})##${windowID()}', isOpenRef, ImGuiWindowFlags.NoDocking | ImGuiWindowFlags.MenuBar );
 
 		menuBar();
 
@@ -343,7 +350,7 @@ class SpriteEditor extends ImguiTool
 
 		// Preview
 		ImGui.setNextWindowDockId( dockspaceIdCenter, dockCond );
-		ImGui.begin('Preview', null, ImGuiWindowFlags.NoScrollWithMouse | ImGuiWindowFlags.NoScrollbar);
+		ImGui.begin('Preview##${windowID()}', null, ImGuiWindowFlags.NoScrollWithMouse | ImGuiWindowFlags.NoScrollbar);
 
 		IG.wref( ImGui.checkbox( "Draw colliders", _ ), drawColliders );
 		ImGui.sameLine();
@@ -444,8 +451,17 @@ class SpriteEditor extends ImguiTool
 	function settingsWindow()
 	{
 		ImGui.setNextWindowDockId( dockspaceIdLeft, dockCond );
-		if( ImGui.begin('Settings') )
+		if( ImGui.begin('Settings##${windowID()}') )
 		{
+			// Fixup
+			if( spriteDef.origin == null )
+				spriteDef.origin = {x: 0, y: 0};
+			if( IG.posInput("Origin", spriteDef.origin, "%.2f") )
+			{
+				rebuildSprite();
+			}
+			drawOrigin = ImGui.isItemFocused() || ImGui.isItemActive();
+
 
 			var classList : Map<String,Array<SpriteDataItem>> = cerastes.SpriteMeta.getClassList();
 
@@ -457,6 +473,7 @@ class SpriteEditor extends ImguiTool
 				{
 					for(k => v in classList )
 					{
+						trace('$k -> $v');
 						if( ImGui.selectable(trimCls( k ),	k == spriteDef.type ) )	spriteDef.type = k;
 					}
 				}
@@ -558,7 +575,7 @@ class SpriteEditor extends ImguiTool
 		var showColliderDeletePopup = false;
 
 		ImGui.setNextWindowDockId( dockspaceIdLeft, dockCond );
-		if( ImGui.begin('Outline') )
+		if( ImGui.begin('Outline##${windowID()}') )
 		{
 
 
@@ -785,6 +802,7 @@ class SpriteEditor extends ImguiTool
 						position: {x: 0, y: 0},
 						rotation: 0,
 						attachmentSprite: null,
+						parent: null
 					}
 					spriteDef.attachments.push(a);
 					rebuildSprite();
@@ -952,7 +970,7 @@ class SpriteEditor extends ImguiTool
 	function tileWindow()
 	{
 		ImGui.setNextWindowDockId( dockspaceIdBottom, dockCond );
-		if( ImGui.begin('Frames') )
+		if( ImGui.begin('Frames##${windowID()}') )
 		{
 
 			var itemHeight = 140 * scaleFactor;
@@ -1124,7 +1142,7 @@ class SpriteEditor extends ImguiTool
 	{
 
 		ImGui.setNextWindowDockId( dockspaceIdBottom, dockCond );
-		if( ImGui.begin('Timeline') )
+		if( ImGui.begin('Timeline##${windowID()}') )
 		{
 
 			if( !sprite.pause )
@@ -1576,7 +1594,7 @@ class SpriteEditor extends ImguiTool
 	function inspectorWindow()
 	{
 		ImGui.setNextWindowDockId( dockspaceIdRight, dockCond );
-		ImGui.begin('Inspector');
+		ImGui.begin('Inspector##${windowID()}');
 
 		switch( inspectorMode )
 		{
@@ -1667,6 +1685,29 @@ class SpriteEditor extends ImguiTool
 						rebuildSprite();
 					}
 					ImGui.endDragDropTarget();
+				}
+
+				// parenting
+				if( ImGui.beginCombo("Parent", selectedAttachment.parent != null ? selectedAttachment.parent : "None" ) )
+				{
+					if( ImGui.selectable("None", selectedAttachment.parent == null) )
+					{
+						selectedAttachment.parent = null;
+						rebuildSprite();
+					}
+
+					for( a in spriteDef.attachments )
+					{
+						if( ImGui.selectable(a.name, a.name == selectedAttachment.parent) )
+						{
+							selectedAttachment.parent = a.name;
+							rebuildSprite();
+						}
+					}
+
+
+
+					ImGui.endCombo();
 				}
 
 				ImGui.popID();

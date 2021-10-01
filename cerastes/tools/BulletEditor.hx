@@ -1,6 +1,7 @@
 
 package cerastes.tools;
 
+import hxd.Key;
 import cerastes.macros.Metrics;
 #if ( hlimgui && cannonml )
 
@@ -51,21 +52,23 @@ class BulletEditor extends ImguiTool
 	var index = 0;
 
 	var seed: CMLFiber;
+	var bullet: CannonBullet;
+
+	var fireRate: Float = 1;
+	var fireTimer: Float = 0;
+
+	var fiberX: Float = 0;
+	var fiberY: Float = 0;
+
+	var previewScale: Float = 1;
 
 	public function new()
 	{
-		var size = haxe.macro.Compiler.getDefine("windowSize");
-		viewportWidth = 640;
-		viewportHeight = 360;
+		var viewportDimensions = IG.getViewportDimensions();
+		viewportWidth = viewportDimensions.width;
+		viewportHeight = viewportDimensions.height;
 
 		index = globalIndex++;
-
-		if( size != null )
-		{
-			var p = size.split("x");
-			viewportWidth = Std.parseInt(p[0]);
-			viewportHeight = Std.parseInt(p[1]);
-		}
 
 		preview = new h2d.Scene();
 		preview.scaleMode = Stretch(viewportWidth,viewportHeight);
@@ -73,7 +76,7 @@ class BulletEditor extends ImguiTool
 		sceneRT = new Texture(viewportWidth,viewportHeight, [Target] );
 
 		// TEMP: Populate with some crap
-		fileName = "";
+		fileName = "data/bullets.cml";
 
 		updateScene();
 	}
@@ -87,12 +90,14 @@ class BulletEditor extends ImguiTool
 
 	override public function render( e: h3d.Engine)
 	{
+		Metrics.begin();
 		sceneRT.clear( 0 );
 
 		e.pushTarget( sceneRT );
 		e.clear(0,1);
 		preview.render(e);
 		e.popTarget();
+		Metrics.end();
 	}
 
 	function updateScene()
@@ -111,8 +116,8 @@ class BulletEditor extends ImguiTool
 
 			try
 			{
-			seed = BulletManager.createSeed(fiberName, viewportWidth / 2, viewportHeight / 2);
-			var b : CannonBullet = cast seed.object;
+			seed = BulletManager.createSeed(fiberName, fiberX, fiberY);
+			bullet = cast seed.object;
 
 			}
 			catch( e)
@@ -122,15 +127,40 @@ class BulletEditor extends ImguiTool
 		}
 	}
 
+	function fire()
+	{
+		try
+		{
+		seed = BulletManager.createSeed(fiberName, fiberX, fiberY);
+		bullet = cast seed.object;
+		}
+		catch( e)
+		{
+			trace(e);
+			// Don't assert more than once
+		}
+	}
+
 
 	override public function update( delta: Float )
 	{
 		Metrics.begin();
+
+		fireTimer += delta;
+		if( fireTimer >= fireRate )
+		{
+			fireTimer -= fireRate;
+			fire();
+			trace("Fire!");
+		}
+
 		var isOpen = true;
 		var isOpenRef = hl.Ref.make(isOpen);
 
+		ImGui.pushID(windowID());
+
 		ImGui.setNextWindowSize({x: viewportWidth + 800, y: viewportHeight + 120}, ImGuiCond.Once);
-		ImGui.begin('\uf185 Bullet Editor (${fileName})###${windowID()}', isOpenRef, ImGuiWindowFlags.NoDocking | ImGuiWindowFlags.MenuBar );
+		ImGui.begin('\uf185 Bullet Editor (${fileName})', isOpenRef, ImGuiWindowFlags.NoDocking | ImGuiWindowFlags.MenuBar );
 
 		menuBar();
 
@@ -142,8 +172,42 @@ class BulletEditor extends ImguiTool
 
 		// Preview
 		ImGui.setNextWindowDockId( dockspaceIdCenter, dockCond );
-		ImGui.begin('Preview###${windowID()}_preview');
-		ImGui.image(sceneRT, { x: viewportWidth, y: viewportHeight } );
+		ImGui.begin('Preview');
+		IG.wref( ImGui.inputDouble("Fire rate", _, 0.1, 1, "%.1f"), fireRate );
+		//ImGui.setCursorPos({x:5, y:5});
+		var cursorPos: ImVec2 = ImGui.getCursorScreenPos();
+		ImGui.image(sceneRT, { x: viewportWidth * previewScale, y: viewportHeight * previewScale },null, null, null, {x: 1, y: 1, z: 1, w: 1} );
+		if( ImGui.isItemHovered() )
+		{
+			if( seed != null )
+			{
+				var mousePos: ImVec2 = ImGui.getMousePos();
+
+				fiberX = ( mousePos.x - cursorPos.x ) / previewScale;
+				fiberY = ( mousePos.y - cursorPos.y ) / previewScale;
+			}
+
+			// Should use imgui events here for consistency but GetIO isn't exposed to hl sooo...
+			if (Key.isPressed(Key.MOUSE_WHEEL_DOWN))
+			{
+				previewScale--;
+				if( previewScale <= 0 )
+					previewScale = 1;
+			}
+			if (Key.isPressed(Key.MOUSE_WHEEL_UP))
+			{
+				previewScale++;
+				if( previewScale > 20 )
+					previewScale = 20;
+			}
+
+		}
+		else if( seed != null )
+		{
+			fiberX = viewportWidth / 2;
+			fiberY = viewportHeight / 2;
+		}
+
 		ImGui.end();
 
 		// Windows
@@ -156,6 +220,8 @@ class BulletEditor extends ImguiTool
 		{
 			ImguiToolManager.closeTool( this );
 		}
+
+		ImGui.popID();
 		Metrics.end();
 	}
 
@@ -222,7 +288,7 @@ class BulletEditor extends ImguiTool
 	function editorWindow()
 	{
 		ImGui.setNextWindowDockId( dockspaceIdLeft, dockCond );
-		ImGui.begin('Script###${windowID()}_script' );
+		ImGui.begin('Script' );
 
 		if( fiberName != null )
 		{
@@ -244,7 +310,7 @@ class BulletEditor extends ImguiTool
 	function fiberList()
 	{
 		ImGui.setNextWindowDockId( dockspaceIdLeft, dockCond );
-		ImGui.begin('Fibers###${windowID()}_fiberlist');
+		ImGui.begin('Fibers');
 		ImGui.beginChild("FiberList",{x:300,y:400},false );
 		for( k => v in @:privateAccess BulletManager.patternList )
 		{
@@ -272,11 +338,11 @@ class BulletEditor extends ImguiTool
 			{
 				if( ImGui.menuItem("Rename") )
 				{
-					ImGui.openPopup('${windowID()}_rc_rename');
+					ImGui.openPopup('Rename Fiber');
 				}
 				if( ImGui.menuItem("Delete") )
 				{
-					ImGui.openPopup('${windowID()}_rc_delete');
+					ImGui.openPopup('Delete Fiber');
 				}
 				ImGui.endPopup();
 			}
@@ -293,7 +359,7 @@ class BulletEditor extends ImguiTool
 				fiberClickedName = 'fiber${i++}';
 			}
 			while( @:privateAccess BulletManager.patternList.exists(fiberClickedName) );
-			ImGui.openPopup('${windowID()}_rc_add');
+			ImGui.openPopup('New Fiber');
 		}
 
 		var isOpen = true;
@@ -302,7 +368,7 @@ class BulletEditor extends ImguiTool
 		//ImGui.openPopup('${windowID()}_rc_rename');
 
 
-		if( ImGui.beginPopupModal('New fiber name###${windowID()}_rc_rename', closeRef, ImGuiWindowFlags.AlwaysAutoResize) )
+		if( ImGui.beginPopupModal('Rename Fiber', closeRef, ImGuiWindowFlags.AlwaysAutoResize) )
 		{
 			var r = IG.textInput("New name", fiberClickedName);
 			if( r != null )
@@ -326,7 +392,7 @@ class BulletEditor extends ImguiTool
 			ImGui.endPopup();
 		}
 
-		if( ImGui.beginPopupModal('Really delete ${fiberClickedName}?###${windowID()}_rc_delete', closeRef, ImGuiWindowFlags.AlwaysAutoResize) )
+		if( ImGui.beginPopupModal('Really delete ${fiberClickedName}?###Delete Fiber', closeRef, ImGuiWindowFlags.AlwaysAutoResize) )
 		{
 			ImGui.text("This can't be undone since I'm too lazy to add proper undo support.");
 			ImGui.separator();
@@ -348,7 +414,7 @@ class BulletEditor extends ImguiTool
 			ImGui.endPopup();
 		}
 
-		if( ImGui.beginPopupModal('New Fiber###${windowID()}_rc_add', closeRef, ImGuiWindowFlags.AlwaysAutoResize) )
+		if( ImGui.beginPopupModal('New Fiber', null, ImGuiWindowFlags.AlwaysAutoResize) )
 		{
 
 			var r = IG.textInput("ID", fiberClickedName);

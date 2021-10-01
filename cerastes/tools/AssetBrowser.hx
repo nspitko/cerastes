@@ -458,7 +458,7 @@ class AssetBrowser  extends  ImguiTool
 
 	override public function render( e: h3d.Engine)
 	{
-
+		Metrics.begin();
 		for( file => target in previews )
 		{
 			if( !target.dirty && !target.alwaysUpdate )
@@ -473,7 +473,7 @@ class AssetBrowser  extends  ImguiTool
 
 			target.dirty = false;
 		}
-
+		Metrics.end();
 	}
 
 }

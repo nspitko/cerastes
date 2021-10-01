@@ -33,7 +33,6 @@ class BulletManager
 
 	static var patternList: Map<String, String>;
 
-	static var seed:CannonBullet;
 	static var parent:Object;
 	//var seedB:CannonBullet;
 
@@ -98,9 +97,6 @@ class BulletManager
 
 		CMLObject.destroyAll(9);
 
-		seed = new CannonBullet(parent);
-		seed.create(0, 0);
-		seed.active = false;
 	}
 
 	static function loadFromDisk(file: String)
@@ -112,23 +108,36 @@ class BulletManager
 			patternList.set( child.name, child.fiber );
 	}
 
-	public static function createSeed( pattern: String, x: Float, y: Float )
+	public static function createSeed( pattern: String, x: Float, y: Float, angle: Float = 0 )
 	{
+		/*
 		var seq = new CMLSequence( patternList.get(pattern) );
 		var obj = seed.execute( seq );
+		var o: CMLObject = cast obj.object;
 
-		obj.fx = x;
-		obj.fy = y;
+		o.x = obj.fx = x;
+		o.y = obj.fy = y;
 
-		return obj;
+		return seed.execute;
+*/
+
+		var seq = new CMLSequence( patternList.get(pattern) );
+		var f = new CannonBullet(parent);
+		f.create(x, y);
+
+		if( angle != 0 )
+			f.angle = angle * 180 / Math.PI; // in degrees?????
+
+		//f.active = false;
+		return f.execute( seq );
 	}
 
 	public static function destroy()
 	{
 		CMLObject.destroyAll(9);
-		seed = new CannonBullet(parent);
-		seed.create(0, 0);
-		seed.active = false;
+		// ANGRY
+		@:privateAccess CannonBullet._freeList = [];
+
 		//cmlRoot = null;
 
 	}

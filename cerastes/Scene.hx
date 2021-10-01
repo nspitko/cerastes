@@ -49,6 +49,8 @@ class Scene
         s2d.defaultSmooth = false;
 
         var size = haxe.macro.Compiler.getDefine("windowSize");
+        var scale = haxe.macro.Compiler.getDefine("renderScale");
+        var viewportScale = 1;
 		var viewportWidth = 640;
 		var viewportHeight = 360;
 		if( size != null )
@@ -57,9 +59,21 @@ class Scene
 			viewportWidth = Std.parseInt(p[0]);
 			viewportHeight = Std.parseInt(p[1]);
 		}
+        if( scale != null ) viewportScale = Std.parseInt(scale);
 
-		s2d.scaleMode = ScaleMode.LetterBox(viewportWidth, viewportHeight,false,Center,Center);
+		s2d.scaleMode = ScaleMode.LetterBox(Math.floor( viewportWidth / viewportScale ), Math.floor( viewportHeight / viewportScale ),false,Center,Center);
+    }
 
+    public function disableEvents()
+    {
+        app.sevents.removeScene(this.s3d);
+        app.sevents.removeScene(this.s2d);
+    }
+
+    public function enableEvents()
+    {
+        app.sevents.addScene(this.s2d);
+        app.sevents.addScene(this.s3d);
     }
 
     /**

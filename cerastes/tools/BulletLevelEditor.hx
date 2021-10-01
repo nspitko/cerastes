@@ -1,6 +1,8 @@
 
 package cerastes.tools;
 
+import cerastes.fmt.SpriteResource.CSDFile;
+import cerastes.fmt.BulletLevelResource;
 import cerastes.macros.Metrics;
 #if ( hlimgui && cannonml )
 
@@ -21,6 +23,14 @@ import imgui.ImGui;
 import cerastes.bulletml.BulletManager;
 import cerastes.bulletml.CannonBullet;
 
+enum SelectMode {
+	None;
+	Select;
+	PlaceEntity;
+	PlaceSpawnGroup;
+	Move;
+}
+
 @:keep
 class BulletLevelEditor extends ImguiTool
 {
@@ -40,26 +50,21 @@ class BulletLevelEditor extends ImguiTool
 
 	var dockCond = ImGuiCond.Appearing;
 
+	var level: BulletLevel;
+
 	var fileName = "";
 
-	var data: CannonFile;
+	var data: CBLFile;
 	var modalTextValue = "";
 
-	var seed: CMLFiber;
+
+	var selectMode: SelectMode;
 
 	public function new()
 	{
-		var size = haxe.macro.Compiler.getDefine("windowSize");
-		viewportWidth = 640;
-		viewportHeight = 360;
-
-
-		if( size != null )
-		{
-			var p = size.split("x");
-			viewportWidth = Std.parseInt(p[0]);
-			viewportHeight = Std.parseInt(p[1]);
-		}
+		var viewportDimensions = IG.getViewportDimensions();
+		viewportWidth = viewportDimensions.width;
+		viewportHeight = viewportDimensions.height;
 
 		preview = new h2d.Scene();
 		preview.scaleMode = Stretch(viewportWidth,viewportHeight);
@@ -69,13 +74,13 @@ class BulletLevelEditor extends ImguiTool
 		// TEMP: Populate with some crap
 		fileName = "";
 
-		updateScene();
+		rebuildScene();
 	}
 
 	public function openFile( f: String )
 	{
 		fileName = f;
-		updateScene();
+		rebuildScene();
 
 	}
 
@@ -89,12 +94,19 @@ class BulletLevelEditor extends ImguiTool
 		e.popTarget();
 	}
 
-	function updateScene()
+	function rebuildScene()
 	{
-		preview.removeChildren();
-		BulletManager.destroy();
-		BulletManager.initialize(preview, fileName);
+		if( level != null )
+		{
+			level.remove();
+			BulletManager.destroy();
+		}
+		level = new BulletLevel( data, preview );
+	}
 
+	function reset()
+	{
+		BulletManager.destroy();
 	}
 
 
@@ -108,20 +120,23 @@ class BulletLevelEditor extends ImguiTool
 		ImGui.pushID(windowID());
 
 		ImGui.setNextWindowSize({x: viewportWidth + 800, y: viewportHeight + 120}, ImGuiCond.Once);
-		ImGui.begin('\uf279 Bullet Level Editor (${fileName})', isOpenRef, ImGuiWindowFlags.NoDocking | ImGuiWindowFlags.MenuBar );
+		if( ImGui.begin('\uf279 Bullet Level Editor (${fileName})', isOpenRef, ImGuiWindowFlags.NoDocking | ImGuiWindowFlags.MenuBar ) )
+		{
 
-		menuBar();
+			menuBar();
 
-		dockSpace();
+			dockSpace();
 
-		ImGui.dockSpace( dockspaceId, null );
-
+			ImGui.dockSpace( dockspaceId, null );
+		}
 		ImGui.end();
 
 		// Preview
 		ImGui.setNextWindowDockId( dockspaceIdCenter, dockCond );
-		ImGui.begin('Preview');
-		ImGui.image(sceneRT, { x: viewportWidth, y: viewportHeight } );
+		if( ImGui.begin('Preview') )
+		{
+			ImGui.image(sceneRT, { x: viewportWidth, y: viewportHeight }, null, null, null, {x: 1, y: 1, z: 1, w: 1} );
+		}
 		ImGui.end();
 
 		// Windows
@@ -198,13 +213,30 @@ class BulletLevelEditor extends ImguiTool
 	function objectPalette()
 	{
 		ImGui.setNextWindowDockId( dockspaceIdLeft, dockCond );
-		ImGui.begin('Object Palette' );
-
-		ImGui.text("TODO");
-
+		if( ImGui.begin('Object Palette' ) )
+		{
+			modeButton("Select", Select);
+			modeButton("Place Move", Move);
+			modeButton("Place Entity", PlaceEntity);
+			modeButton("Place Group", PlaceSpawnGroup);
+		}
 		ImGui.end();
 
 
+	}
+
+	function modeButton( label: String, mode: SelectMode )
+	{
+		var selected = selectMode == mode;
+		if( selected )
+		{
+			ImGui.pushStyleColor(ImGuiCol.Button,0xFFFFFFFF);
+			ImGui.pushStyleColor(ImGuiCol.Text,0xFF000000);
+		}
+		if( ImGui.button(label) ) selectMode = mode;
+
+		if( selected )
+			ImGui.popStyleColor(2);
 	}
 
 

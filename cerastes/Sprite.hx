@@ -1,5 +1,6 @@
 package cerastes;
 
+import haxe.ds.Vector;
 import cerastes.collision.Collision.CAABB;
 import cerastes.collision.Collision.ColliderType;
 import cerastes.collision.Collision.CollisionMask;
@@ -142,6 +143,9 @@ class Sprite extends h2d.Drawable implements CollisionObject
 	// How fast should we play animations?
 	public var speed : Float = 1;
 
+	public var originX: Float = 0;
+	public var originY: Float = 0;
+
 	public var frameInfo(get, never): CSDFrame;
 
 	function get_frameInfo()
@@ -204,13 +208,6 @@ class Sprite extends h2d.Drawable implements CollisionObject
 	**/
 	public var loop : Bool = true;
 
-	/**
-		When enabled, fading will draw two consecutive frames with alpha transition between
-		them instead of directly switching from one to another when it reaches the next frame.
-		This can be used to have smoother animation on some effects.
-	**/
-	public var fading : Bool = false;
-
 	// END import
 
 	public function new( spriteCache: SpriteCache, ?parent: Object )
@@ -218,11 +215,14 @@ class Sprite extends h2d.Drawable implements CollisionObject
 		cache = spriteCache;
 
 		Utils.assert(spriteDef.animations.length > 0, 'Sprite ${spriteDef.name} has no animations defined!!' );
+		super(parent);
+		if( spriteCache.spriteDef.origin != null )
+		{
+			originX = spriteCache.spriteDef.origin.x;
+			originY = spriteCache.spriteDef.origin.y;
+		}
 
 		play( spriteDef.animations[0].name );
-
-
-		super(parent);
 
 		buildColliders();
 		loadSpriteData();
@@ -243,16 +243,25 @@ class Sprite extends h2d.Drawable implements CollisionObject
 	 */
 	function loadAttachments()
 	{
+		var needsFixup = false;
 		for( a in spriteDef.attachments )
 		{
 			var attachment: Object = null;
+
+			var attachmentParent: Object = cast this;
+			if( a.parent != null )
+			{
+				attachmentParent = attachments.get(a.parent);
+				if( attachmentParent == null ) needsFixup = true;
+			}
+
 			if( a.attachmentSprite != null )
 			{
-				attachment = hxd.Res.loader.loadCache( a.attachmentSprite, SpriteResource ).toSprite(this);
+				attachment = hxd.Res.loader.loadCache( a.attachmentSprite, SpriteResource ).toSprite(attachmentParent);
 			}
 			else
 			{
-				attachment = new h2d.Object(this);
+				attachment = new h2d.Object(attachmentParent);
 			}
 
 			attachment.x = a.position.x;
@@ -261,6 +270,29 @@ class Sprite extends h2d.Drawable implements CollisionObject
 
 			attachments.set(a.name, attachment);
 		}
+
+		if( needsFixup )
+		{
+			Utils.warning('Need attachment for ${spriteDef.name} fixeup! this is slow... fix order in csd please!');
+
+			for( name => a in attachments )
+			{
+				if( a.parent == null )
+				{
+					for( d in spriteDef.attachments )
+					{
+						if( d.name == name)
+						{
+							var other = attachments.get(d.parent);
+							Utils.assert(other != null, '${spriteDef.name} has Invalid attachment parent: ${d.name} for attachment ${name}');
+							if( other == null ) break;
+							other.addChild( a );
+						}
+					}
+				}
+			}
+		}
+
 	}
 
 	/**
@@ -358,39 +390,46 @@ class Sprite extends h2d.Drawable implements CollisionObject
 			}
 		}
 
-		/*
-		// We looped, reset state
-		if( animTimeLast > animTime )
+		// Edge detect tags
+		for( s in sequence.tags )
 		{
-			animTimeLast = 0;
-			for( a in spriteDef.attachments )
+			if( animTimeLast <= s.start && animTime > s.start )
 			{
-				var localAttachment = attachments.get( a.name );
-				localAttachment.x = a.position.x;
-				localAttachment.y = a.position.y;
-				localAttachment.rotation = a.rotation;
+				// 0 duration tags are events
+				if( s.duration == 0 )
+				{
+					onEvent(s.name);
+				}
+				else
+				{
+					onTagBegin(s.name);
+				}
+			}
+			// Check for trailing edge for tags
+			if( s.duration > 0 && animTimeLast <= s.start + s.duration && animTime > s.start + s.duration )
+			{
+				onTagEnd(s.name);
 			}
 		}
-
-		for( a in sequence.attachmentOverrides )
-		{
-			// Starting an override
-			if( a.start >= animTimeLast && a.start < animTime )
-			{
-
-			}
-			else if( a.start + a.duration >= animTimeLast && a.start + a.duration < animTime )
-			{
-				// Override ended, reset.
-				// bugbug this will undo an earlier override this frame
-				var localAttachment = attachments.get( a.name );
-				localAttachment.x = a.position.x;
-				localAttachment.y = a.position.y;
-				localAttachment.rotation = a.rotation;
-			}
-		}*/
-
 		animTimeLast = animTime;
+	}
+
+	// Called when a tag with no duration is hit
+	function onEvent(event: String )
+	{
+
+	}
+
+	// Called when a tag begins
+	function onTagBegin(tag: String )
+	{
+
+	}
+
+	// Called when a tag ends
+	function onTagEnd( tag: String )
+	{
+
 	}
 
 	function buildColliders()
@@ -503,7 +542,7 @@ class Sprite extends h2d.Drawable implements CollisionObject
 	override function getBoundsRec( relativeTo : Object, out : h2d.col.Bounds, forSize : Bool ) {
 		super.getBoundsRec(relativeTo, out, forSize);
 		var tile = getFrame();
-		if( tile != null ) addBounds(relativeTo, out, tile.dx, tile.dy, tile.width, tile.height);
+		if( tile != null ) addBounds(relativeTo, out, originX, originY, tile.width, tile.height);
 	}
 
 	override function sync( ctx : RenderContext ) {
@@ -558,6 +597,119 @@ class Sprite extends h2d.Drawable implements CollisionObject
 
 		emitTile(ctx,t);
 
+	}
+/*
+	override function emitTile( ctx : RenderContext, tile : Tile ) {
+		if( tile == null )
+			tile = @:privateAccess new Tile(null, 0, 0, 5, 5);
+		if( !ctx.hasBuffering() ) {
+			if( !ctx.drawTile(this, tile) ) return;
+			return;
+		}
+		if( !ctx.beginDrawBatch(this, tile.getTexture()) ) return;
+
+		var alpha = color.a * ctx.globalAlpha;
+		var ax = absX + originX * matA + originY * matC;
+		var ay = absY + originX * matB + originY * matD;
+		var buf = ctx.buffer;
+		var pos = ctx.bufPos;
+		buf.grow(pos + 4 * 8);
+
+		inline function emit(v:Float) buf[pos++] = v;
+
+		emit(ax);
+		emit(ay);
+		emit(@:privateAccess tile.u);
+		emit(@:privateAccess tile.v);
+		emit(@:privateAccess color.r);
+		emit(color.g);
+		emit(color.b);
+		emit(alpha);
+
+
+		var tw = tile.width;
+		var th = tile.height;
+		var dx1 = tw * matA;
+		var dy1 = tw * matB;
+		var dx2 = th * matC;
+		var dy2 = th * matD;
+
+		emit(ax + dx1);
+		emit(ay + dy1);
+		emit(@:privateAccess tile.u2);
+		emit(@:privateAccess tile.v);
+		emit(color.r);
+		emit(color.g);
+		emit(color.b);
+		emit(alpha);
+
+		emit(ax + dx2);
+		emit(ay + dy2);
+		emit(@:privateAccess tile.u);
+		emit(@:privateAccess tile.v2);
+		emit(color.r);
+		emit(color.g);
+		emit(color.b);
+		emit(alpha);
+
+		emit(ax + dx1 + dx2);
+		emit(ay + dy1 + dy2);
+		emit(@:privateAccess tile.u2);
+		emit(@:privateAccess tile.v2);
+		emit(color.r);
+		emit(color.g);
+		emit(color.b);
+		emit(alpha);
+
+		ctx.bufPos = pos;
+	}
+*/
+	@:dox(show)
+	override function calcAbsPos() {
+		if( parent == null ) {
+			var cr, sr;
+			if( rotation == 0 ) {
+				cr = 1.; sr = 0.;
+				matA = scaleX;
+				matB = 0;
+				matC = 0;
+				matD = scaleY;
+			} else {
+				cr = Math.cos(rotation);
+				sr = Math.sin(rotation);
+				matA = scaleX * cr;
+				matB = scaleX * sr;
+				matC = scaleY * -sr;
+				matD = scaleY * cr;
+			}
+			absX = x - originX;
+			absY = y - originY;
+		} else {
+			// M(rel) = S . R . T
+			// M(abs) = M(rel) . P(abs)
+			var cr: Float=1;
+			var sr: Float=1;
+			if( rotation == 0 ) {
+				matA = scaleX * parent.matA;
+				matB = scaleX * parent.matB;
+				matC = scaleY * parent.matC;
+				matD = scaleY * parent.matD;
+			} else {
+				cr = Math.cos(rotation);
+				sr = Math.sin(rotation);
+				var tmpA = scaleX * cr;
+				var tmpB = scaleX * sr;
+				var tmpC = scaleY * -sr;
+				var tmpD = scaleY * cr;
+				matA = tmpA * parent.matA + tmpB * parent.matC;
+				matB = tmpA * parent.matB + tmpB * parent.matD;
+				matC = tmpC * parent.matA + tmpD * parent.matC;
+				matD = tmpC * parent.matB + tmpD * parent.matD;
+			}
+
+			absX = x * parent.matA + y * parent.matC + parent.absX - ( originX * matA + originY * matC );
+          	absY = x * parent.matB + y * parent.matD + parent.absY - ( originX * matB + originY * matD );
+		}
 	}
 
 	@:noCompletion

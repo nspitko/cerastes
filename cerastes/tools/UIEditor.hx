@@ -1,6 +1,7 @@
 
 package cerastes.tools;
 
+import h3d.Vector;
 #if hlimgui
 
 import h2d.col.Point;
@@ -649,7 +650,6 @@ class UIEditor extends ImguiTool
 				if( IG.wref( ImGui.colorPicker4( "Color", _, flags), color ) )
 				{
 					t.color.set(color[0], color[1], color[2], color[3] );
-
 				}
 
 			case "h2d.Text":
@@ -746,6 +746,38 @@ class UIEditor extends ImguiTool
 
 				IG.wref( ImGui.inputInt("Width",_,1,10), t.width );
 				IG.wref( ImGui.inputInt("Height",_,1,10), t.height );
+
+
+			case "h2d.Interactive":
+				var t : h2d.Interactive = cast obj;
+
+				IG.wref( ImGui.inputDouble("Width",_,1,10), t.width );
+				IG.wref( ImGui.inputDouble("Height",_,1,10), t.height );
+
+				/*
+				var cursor = IG.combo("Cursor", t.cursor, hxd.Cursor );
+				if( cursor != null )
+				{
+					t.cursor = cursor;
+				}*/
+
+				// But why?
+				IG.wref( ImGui.checkbox( "Ellipse", _ ), t.isEllipse );
+
+				var c = Vector.fromColor( t.backgroundColor );
+				var color = new hl.NativeArray<Single>(4);
+				color[0] = c.r;
+				color[1] = c.g;
+				color[2] = c.b;
+				color[3] = c.a;
+				var flags = ImGuiColorEditFlags.AlphaBar | ImGuiColorEditFlags.AlphaPreview
+						| ImGuiColorEditFlags.DisplayRGB | ImGuiColorEditFlags.DisplayHex
+						| ImGuiColorEditFlags.AlphaPreviewHalf;
+				if( IG.wref( ImGui.colorPicker4( "Color", _, flags), color ) )
+				{
+					c.set(color[0], color[1], color[2], color[3] );
+					t.backgroundColor = c.toColor();
+				}
 
 
 

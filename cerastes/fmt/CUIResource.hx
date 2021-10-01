@@ -85,6 +85,9 @@ class CUIResource extends Resource
 			case "h2d.Mask":
 				obj = new h2d.Mask(props.get("width"),props.get("height"));
 
+			case "h2d.Interactive":
+				obj = new h2d.Interactive(props.get("width"),props.get("height"));
+
 			default:
 				Utils.error('CUI: Cannot create unknown type ${entry.type}; ignoring!!');
 
@@ -151,6 +154,16 @@ class CUIResource extends Resource
 					o.horizontalAlign = EnumTools.createByIndex( h2d.Flow.FlowAlign, props["horizontal_align"] );
 
 			case "h2d.Mask":
+
+			case "h2d.Interactive":
+				var o = cast(obj, h2d.Interactive);
+
+				if( props.exists("is_ellipse") )
+					o.isEllipse = props["is_ellipse"];
+				if( props.exists("background_color") )
+					o.backgroundColor = props["background_color"];
+				if( props.exists("cursor") )
+					o.cursor = EnumTools.createByIndex( hxd.Cursor, props["cursor"] );
 
 
 
@@ -249,6 +262,15 @@ class CUIResource extends Resource
 
 				props["width"] = o.width;
 				props["height"] = o.height;
+
+			case "h2d.Interactive":
+				var o = cast(obj, h2d.Interactive);
+
+				props["width"] = o.width;
+				props["height"] = o.height;
+				props["is_ellipse"] = o.isEllipse;
+				props["background_color"] = o.backgroundColor;
+				//props["cursor"] = EnumValueTools.getIndex(o.cursor);
 
 
 			default:

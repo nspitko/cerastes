@@ -16,14 +16,39 @@ import hxd.res.Resource;
 
 import haxe.Json;
 
-enum CBLTriggerType {
-	PauseForClear; // Wait for all enemies to be destroyed before continuring
-	ChangeVelocity; // Change the level velocity
+@:enum
+abstract CBLTriggerType(Int) from Int to Int
+{
+	var None = 0;		// Do not tween attachments
+	var PauseForClear = 1;		// Linear tweening
+	var ChangeVelocity = 2;
+	var Dialogue = 3;
+	var LevelEnd = 4;
+
+	public function toString()
+	{
+		return switch( this )
+		{
+			case PauseForClear: "PauseForClear";
+			case ChangeVelocity: "ChangeVelocity";
+			case Dialogue: "ChangeVeDialoguelocity";
+			case LevelEnd: "LevelEnd";
+			default: "None";
+		}
+	}
 }
+
 
 typedef CBLPoint = {
 	var x: Float;
 	var y: Float;
+}
+
+typedef CBLMesh = {
+	var position: CBLPoint; // Spawn position for this group.
+	var mesh: String;
+	var rotation: Float;
+	var scale: Float;
 }
 
 /**
@@ -32,28 +57,36 @@ typedef CBLPoint = {
  * against eachother.
  */
 typedef CBLSpawnGroup = {
-	var spawnPosition: CBLPoint; // Spawn position for this group.
-	var objects: Array<CBLObject>;
+	var position: CBLPoint; // Spawn position for this group.
+	var id: Int;
 }
 
 typedef CBLTrigger = {
 	var type: CBLTriggerType;
-	var pos: CBLPoint;
+	var position: CBLPoint;
 	var data: CBLPoint;
 }
 
 typedef CBLObject = {
-	var type: String;
+	var sprite: String;
 	var position: CBLPoint; // Spawn position outside of a group is bounds max towards level velocity, so enemies always spawn off screen
 	var fiber: String; // Optional fiber to run. Must be a CannonEntity
+	var rotation: Float; // In radians like a gentleman
+	// Stuff for feeding into the fiber
+	var speed: CBLPoint;
+	var acceleration: CBLPoint;
+	var spawnGroup: Int;
 }
 
 typedef CBLFile = {
 	var version: Int;
-	var objects: Array<CBLObject>;
+	var sprites: Array<CBLObject>;
 	var spawnGroups: Array<CBLSpawnGroup>;
-	var width: Float;
-	var height: Float;
+	var triggers: Array<CBLTrigger>;
+	var meshes: Array<CBLMesh>;
+	var size: CBLPoint;
+	var velocity: CBLPoint;
+	var fogColor: Int;
 }
 
 class BulletLevelResource extends Resource
@@ -68,7 +101,7 @@ class BulletLevelResource extends Resource
 	{
 		var data = getData();
 
-		//return new cerastes.Sprite(cache,parent);
+		return new cerastes.BulletLevel( data, 360, 480, parent );
 	}
 
 

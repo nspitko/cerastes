@@ -1,5 +1,8 @@
 package cerastes;
 
+import cerastes.Sprite.SpriteCache;
+import cerastes.macros.SpriteData.SpriteDataItem;
+
 @:native("cerastes.SpriteMetaProxy")
 class SpriteMeta
 {

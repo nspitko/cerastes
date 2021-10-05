@@ -21,17 +21,17 @@ class DitherPass extends h3d.pass.ScreenFx<DitherShader> {
 	}
 
 	public function apply(  ctx : h3d.impl.RenderContext, src : h3d.mat.Texture, ?output : h3d.mat.Texture ) {
-		
+
 		//shader.palette=palette;
 		shader.ditherPattern=ditherTable;
 		shader.ditherPatternW=36;
 		shader.ditherPatternH=4;
 		shader.colors = 32;
-		
-		
+
+
 		shader.texture = src;
-		shader.textureW = 320;
-		shader.textureH = 200;
+		shader.textureW = src.width;
+		shader.textureH = src.height;
 		//shader.delta.set(1 / texture.width, 1 / texture.height);
 		//render();
 
@@ -41,7 +41,7 @@ class DitherPass extends h3d.pass.ScreenFx<DitherShader> {
 		var faceCount = isCube ? 6 : 1;
 		var tmp = ctx.textures.allocTarget(src.name+"DitherTmp", src.width, src.height, false, src.format, isCube);
 
-		
+
 		for(i in 0 ... faceCount){
 			engine.pushTarget(tmp, i);
 			render();

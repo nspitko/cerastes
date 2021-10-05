@@ -1,6 +1,7 @@
 
 package cerastes.tools;
 
+import hxd.res.BitmapFont;
 import h3d.Vector;
 #if hlimgui
 
@@ -36,6 +37,7 @@ class UIEditor extends ImguiTool
 {
 	var viewportWidth: Int;
 	var viewportHeight: Int;
+	var viewportScale: Int;
 
 	var preview: h2d.Scene;
 	var previewRoot: Object;
@@ -68,15 +70,11 @@ class UIEditor extends ImguiTool
 	public function new()
 	{
 		var size = haxe.macro.Compiler.getDefine("windowSize");
-		viewportWidth = 640;
-		viewportHeight = 360;
-		if( size != null )
-		{
-			var p = size.split("x");
-			viewportWidth = Std.parseInt(p[0]);
-			viewportHeight = Std.parseInt(p[1]);
-		}
 
+		var viewportDimensions = IG.getViewportDimensions();
+		viewportWidth = viewportDimensions.width;
+		viewportHeight = viewportDimensions.height;
+		viewportScale = viewportDimensions.scale;
 		preview = new h2d.Scene();
 		preview.scaleMode = Stretch(viewportWidth,viewportHeight);
 
@@ -266,7 +264,7 @@ class UIEditor extends ImguiTool
 		var mousePos: ImVec2 = ImGui.getMousePos();
 		mouseScenePos = {x: mousePos.x - startPos.x, y: mousePos.y - startPos.y };
 
-		ImGui.image(sceneRT, { x: viewportWidth, y: viewportHeight } );
+		ImGui.image(sceneRT, { x: viewportWidth, y: viewportHeight }, null, null, null, {x: 1, y: 1, z:1, w:1} );
 
 		ImGui.end();
 
@@ -609,9 +607,24 @@ class UIEditor extends ImguiTool
 		ImGui.text(def.type);
 
 
+
 		var obj = preview.getObjectByName(def.name);
 		if( obj == null )
 			return;
+
+		var newName = IG.textInput( "ID", def.name );
+		if( newName != null )
+		{
+			var other = preview.getObjectByName(newName);
+			if( other == null )
+			{
+				obj.name = newName;
+				def.name = newName;
+			}
+		}
+
+		ImGui.pushID(def.name);
+
 
 		populateEditorFields(obj, def, def.type);
 
@@ -621,6 +634,8 @@ class UIEditor extends ImguiTool
 			populateEditorFields( obj, def, Type.getClassName(s) );
 			s = Type.getSuperClass( s );
 		}
+
+		ImGui.popID();
 	}
 
 	//
@@ -634,6 +649,12 @@ class UIEditor extends ImguiTool
 				ImGui.separator();
 				IG.wref( ImGui.inputDouble("X",_,1,10,"%.2f"), obj.x );
 				IG.wref( ImGui.inputDouble("Y",_,1,10,"%.2f"), obj.y );
+				var single: Single = obj.rotation;
+				if( IG.wref( ImGui.sliderAngle("Rotation", _), single ) )
+					obj.rotation = single;
+
+				IG.wref( ImGui.inputDouble("Scale X",_,1,10,"%.2f"), obj.scaleX );
+				IG.wref( ImGui.inputDouble("Scale Y",_,1,10,"%.2f"), obj.scaleY );
 
 			case "h2d.Drawable":
 				var t : h2d.Drawable = cast obj;
@@ -660,7 +681,28 @@ class UIEditor extends ImguiTool
 				if( val != null )
 				{
 					t.text = val;
+				}
 
+				var newFont = IG.textInput( "Font", def.props["font"] );
+				if( newFont != null && hxd.Res.loader.exists( newFont ) )
+				{
+					var fe = hxd.Res.loader.load( newFont) ;
+					var res = new BitmapFont( fe.entry );
+					t.font = res.toFont();
+					def.props["font"] = newFont;
+				}
+
+				if( ImGui.beginDragDropTarget() )
+				{
+					var payload = ImGui.acceptDragDropPayloadString("asset_name");
+					if( payload != null && hxd.Res.loader.exists( payload ) )
+					{
+						var fe = hxd.Res.loader.load( payload) ;
+						var res = new BitmapFont( fe.entry );
+						t.font = res.toFont();
+						def.props["font"] = payload;
+					}
+					ImGui.endDragDropTarget();
 				}
 
 				var out = IG.combo("Text Align", t.textAlign, h2d.Text.Align );
@@ -741,11 +783,33 @@ class UIEditor extends ImguiTool
 					t.horizontalAlign = align;
 				}
 
+				var overflow = IG.combo("Overflow", t.overflow, h2d.Flow.FlowOverflow );
+				if( overflow != null )
+				{
+					t.overflow = overflow;
+				}
+
+				var minW: Int = t.minWidth != null ? cast t.minWidth : 0;
+				var minH: Int = t.minHeight != null ? cast t.minHeight : 0;
+
+				if( IG.wref( ImGui.inputInt("Min Width",_,1,10), minW ) )
+					t.minWidth = minW;
+
+				if( IG.wref( ImGui.inputInt("Min Height",_,1,10), minH ) )
+					t.minHeight = minH;
+
+
+				IG.wref( ImGui.inputInt("Vertical Spacing",_,1,10), t.verticalSpacing );
+				IG.wref( ImGui.inputInt("Horizontal Spacing",_,1,10), t.horizontalSpacing );
+
 			case "h2d.Mask":
 				var t : h2d.Mask = cast obj;
 
 				IG.wref( ImGui.inputInt("Width",_,1,10), t.width );
 				IG.wref( ImGui.inputInt("Height",_,1,10), t.height );
+
+				IG.wref( ImGui.inputDouble("Scroll X",_,1,10,"%.2f"), t.scrollX );
+				IG.wref( ImGui.inputDouble("Scroll Y",_,1,10,"%.2f"), t.scrollY );
 
 
 			case "h2d.Interactive":

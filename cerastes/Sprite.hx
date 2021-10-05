@@ -1,5 +1,6 @@
 package cerastes;
 
+import game.GameState;
 import haxe.ds.Vector;
 import cerastes.collision.Collision.CAABB;
 import cerastes.collision.Collision.ColliderType;
@@ -61,6 +62,8 @@ class SpriteCache
 	}
 
 
+
+
 	// Loads animation frames into cache.
 	function loadAnimation( animation: CSDAnimation )
 	{
@@ -102,9 +105,12 @@ class Sprite extends h2d.Drawable implements CollisionObject
 
 	public var colliders(default, null): haxe.ds.Vector<Collider>;
 
-	public var collisionMask: CollisionMask = 0;
-	public var collisionType: CollisionGroup = 0;
+	public var collisionMask: CollisionMask = cast 0;
+	public var collisionType(default, set): CollisionGroup = 0;
 	public var mute: Bool = false;
+
+	function set_collisionType(v) { collisionType = v;  return v; }
+
 
 	var attachments: Map<String, Object> = [];
 
@@ -326,6 +332,11 @@ class Sprite extends h2d.Drawable implements CollisionObject
 					}
 					else
 					{
+						if( o.tweenOrigin != null )
+						{
+							localPosX = o.tweenOrigin.x;
+							localPosY = o.tweenOrigin.y;
+						}
 						var rate = ( animTime - o.start ) / o.tweenDuration;
 						switch( o.positionTween )
 						{
@@ -341,6 +352,25 @@ class Sprite extends h2d.Drawable implements CollisionObject
 							case ExpoInOut:
 								localPosX = rate.expoInOut().lerp( localPosX, o.position.x );
 								localPosY = rate.expoInOut().lerp( localPosY, o.position.y );
+							case CircIn:
+								localPosX = rate.circIn().lerp( localPosX, o.position.x );
+								localPosY = rate.circIn().lerp( localPosY, o.position.y );
+							case CircOut:
+								localPosX = rate.circOut().lerp( localPosX, o.position.x );
+								localPosY = rate.circOut().lerp( localPosY, o.position.y );
+							case CircInOut:
+								localPosX = rate.circInOut().lerp( localPosX, o.position.x );
+								localPosY = rate.circInOut().lerp( localPosY, o.position.y );
+							case SineIn:
+								localPosX = rate.sineIn().lerp( localPosX, o.position.x );
+								localPosY = rate.sineIn().lerp( localPosY, o.position.y );
+							case SineOut:
+								localPosX = rate.sineOut().lerp( localPosX, o.position.x );
+								localPosY = rate.sineOut().lerp( localPosY, o.position.y );
+							case SineInOut:
+								localPosX = rate.sineInOut().lerp( localPosX, o.position.x );
+								localPosY = rate.sineInOut().lerp( localPosY, o.position.y );
+
 							case None:
 						}
 						//new Tween( a.tweenDuration )
@@ -353,6 +383,10 @@ class Sprite extends h2d.Drawable implements CollisionObject
 					else
 					{
 						var rate = ( animTime - o.start ) / o.tweenDuration;
+						if( o.tweenRotation != null )
+						{
+							localRot = o.tweenRotation;
+						}
 						switch( o.rotationTween )
 						{
 							case Linear:
@@ -363,6 +397,18 @@ class Sprite extends h2d.Drawable implements CollisionObject
 								localRot = rate.expoOut().lerp( localRot, o.rotation );
 							case ExpoInOut:
 								localRot = rate.expoInOut().lerp( localRot, o.rotation );
+							case CircIn:
+								localRot = rate.circIn().lerp( localRot, o.rotation );
+							case CircOut:
+								localRot = rate.circOut().lerp( localRot, o.rotation );
+							case CircInOut:
+								localRot = rate.circInOut().lerp( localRot, o.rotation );
+							case SineIn:
+								localRot = rate.sineIn().lerp( localRot, o.rotation );
+							case SineOut:
+								localRot = rate.sineOut().lerp( localRot, o.rotation );
+							case SineInOut:
+								localRot = rate.sineInOut().lerp( localRot, o.rotation );
 							case None:
 						}
 					}
@@ -442,16 +488,16 @@ class Sprite extends h2d.Drawable implements CollisionObject
 			{
 				case ColliderType.AABB:
 					colliders[i] = new AABB({
-						min: { x: c.position.x, y: c.position.y	},
-						max: { x: c.size.x, y: c.size.y	},
+						min: { x: c.position.x - originX, y: c.position.y - originY	},
+						max: { x: c.position.x + c.size.x - originX, y: c.position.y + c.size.y - originY	},
 					 });
 				case ColliderType.Circle:
 					colliders[i] = new Circle({
-						p: { x: c.position.x, y: c.position.y},
+						p: { x: c.position.x - originX, y: c.position.y- originY},
 						r: c.size.x
 					});
 				case ColliderType.Point:
-					colliders[i] = new Point({ x: c.position.x, y: c.position.y});
+					colliders[i] = new Point({ x: c.position.x- originX, y: c.position.y- originY});
 				default:
 					Utils.error("Unsupported collision type");
 
@@ -542,7 +588,7 @@ class Sprite extends h2d.Drawable implements CollisionObject
 	override function getBoundsRec( relativeTo : Object, out : h2d.col.Bounds, forSize : Bool ) {
 		super.getBoundsRec(relativeTo, out, forSize);
 		var tile = getFrame();
-		if( tile != null ) addBounds(relativeTo, out, originX, originY, tile.width, tile.height);
+		if( tile != null ) addBounds(relativeTo, out, tile.dx, tile.dy, tile.width, tile.height);
 	}
 
 	override function sync( ctx : RenderContext ) {
@@ -555,7 +601,7 @@ class Sprite extends h2d.Drawable implements CollisionObject
 			animTime += speed * ctx.elapsedTime;
 		}
 
-		if( frameTime > frameInfo.duration )
+		if( frameInfo != null && frameTime > frameInfo.duration )
 		{
 			frameTime -= frameInfo.duration;
 			currentFrame++;

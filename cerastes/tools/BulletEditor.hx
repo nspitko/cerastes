@@ -1,6 +1,8 @@
 
 package cerastes.tools;
 
+import h2d.Graphics;
+import cerastes.fmt.SpriteResource.CSDPoint;
 import hxd.Key;
 import cerastes.macros.Metrics;
 #if ( hlimgui && cannonml )
@@ -62,6 +64,11 @@ class BulletEditor extends ImguiTool
 
 	var previewScale: Float = 1;
 
+	var target: CMLObject = null;
+	var source: CSDPoint = null;
+
+	var graphics: Graphics;
+
 	public function new()
 	{
 		var viewportDimensions = IG.getViewportDimensions();
@@ -77,6 +84,14 @@ class BulletEditor extends ImguiTool
 
 		// TEMP: Populate with some crap
 		fileName = "data/bullets.cml";
+
+		source = {x: viewportWidth/2, y: viewportHeight / 1.5 };
+		target = new CMLObject();
+		target.x = 20;
+		target.y = 20;
+		target.setAsDefaultTarget();
+
+		graphics = new Graphics(preview);
 
 		updateScene();
 	}
@@ -104,6 +119,8 @@ class BulletEditor extends ImguiTool
 	{
 		preview.removeChildren();
 		BulletManager.initialize(preview, fileName);
+		preview.addChild(graphics);
+
 
 	}
 
@@ -118,7 +135,6 @@ class BulletEditor extends ImguiTool
 			{
 			seed = BulletManager.createSeed(fiberName, fiberX, fiberY);
 			bullet = cast seed.object;
-
 			}
 			catch( e)
 			{
@@ -131,7 +147,7 @@ class BulletEditor extends ImguiTool
 	{
 		try
 		{
-		seed = BulletManager.createSeed(fiberName, fiberX, fiberY);
+		seed = BulletManager.createSeed(fiberName, source.x, source.x);
 		bullet = cast seed.object;
 		}
 		catch( e)
@@ -145,6 +161,12 @@ class BulletEditor extends ImguiTool
 	override public function update( delta: Float )
 	{
 		Metrics.begin();
+
+		graphics.clear();
+		graphics.lineStyle(0x44AA44);
+		graphics.drawCircle(source.x, source.y, 5);
+		graphics.lineStyle(0xAA4444);
+		graphics.drawCircle(BulletManager.target.x, BulletManager.target.y, 5);
 
 		fireTimer += delta;
 		if( fireTimer >= fireRate )
@@ -179,12 +201,20 @@ class BulletEditor extends ImguiTool
 		ImGui.image(sceneRT, { x: viewportWidth * previewScale, y: viewportHeight * previewScale },null, null, null, {x: 1, y: 1, z: 1, w: 1} );
 		if( ImGui.isItemHovered() )
 		{
-			if( seed != null )
+
+			if( Key.isPressed( Key.MOUSE_LEFT ) )
 			{
 				var mousePos: ImVec2 = ImGui.getMousePos();
 
-				fiberX = ( mousePos.x - cursorPos.x ) / previewScale;
-				fiberY = ( mousePos.y - cursorPos.y ) / previewScale;
+				source.x = ( mousePos.x - cursorPos.x ) / previewScale;
+				source.y = ( mousePos.y - cursorPos.y ) / previewScale;
+			}
+			if( Key.isPressed( Key.MOUSE_RIGHT  ) )
+			{
+				var mousePos: ImVec2 = ImGui.getMousePos();
+
+				target.x = ( mousePos.x - cursorPos.x ) / previewScale;
+				target.y = ( mousePos.y - cursorPos.y ) / previewScale;
 			}
 
 			// Should use imgui events here for consistency but GetIO isn't exposed to hl sooo...

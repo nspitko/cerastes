@@ -31,6 +31,14 @@ typedef SpriteDataItem = {
 	tooltip: String,
 }
 
+
+typedef FieldData =
+{
+	type: String,
+	fields: Array<SpriteDataExpr>,
+	parent: String,
+}
+
 /**
  * Builds fields related to sprite runtime data defined in the sprite editor
  *
@@ -283,6 +291,8 @@ class SpriteData
 	 * @param fields
 	 * @return Array<Field>
 	 */
+
+	static var fieldMap = new Map<String, FieldData>();
 	static function createSpriteDataClass( fields: Array<Field> ) : Array<Field>
 	{
 		var append: Array<Field> = [];
@@ -295,13 +305,30 @@ class SpriteData
 
 		addFieldsForClass(fields, dataFields );
 
-		var parent = cls;
+		var parent = ""+cls.get().superClass.t;
 
+		var d: FieldData = {
+			type: ""+cls,
+			fields: dataFields.copy(),
+			parent: parent
+		}
+
+		fieldMap.set(d.type, d);
+
+		while( fieldMap.exists( d.parent ) )
+		{
+			d = fieldMap[d.parent];
+			dataFields = dataFields.concat( d.fields );
+		}
+
+
+/*
 		while(parent.get().superClass != null )
 		{
 			parent = parent.get().superClass.t;
 			addFieldsForParentClass(parent.get().fields.get(), dataFields);
 		}
+*/
 
 		// Step 1: Define a custom type
 
@@ -335,14 +362,19 @@ class SpriteData
 			// Deal with packers
 			switch( f.type.toString() )
 			{
-				case "Int":
+				case "StdTypes.Int" | "StdTypes.Float" | "Int" | "Float" | "String":
 					kvReaders.push( macro {
 						if( kv.key == $v{n})
+						{
 							this.$n = cast kv.value;
+						}
 					});
 					kvWriters.push( macro {
 						kv.push({key: $v{n}, value: this.$n });
 					});
+
+				default:
+					throw('Unhandled kv type ${f.type.toString()}');
 			}
 
 		}
@@ -427,6 +459,9 @@ class SpriteData
 			args: []
 		};
 
+		//var p = new Printer();
+		//trace( p.printFunction(initFunc) );
+
 
 		var getKVFunc: Function = {
 			expr: macro {
@@ -452,9 +487,11 @@ class SpriteData
 			//meta: [{ name:":noCompletion", pos: Context.currentPos() }],
 		});
 
+		//trace( p.printFunction(getKVFunc) );
+
 		append.push({
 			name: spriteDataVarName,
-			access: [Access.AStatic, Access.APrivate],
+			access: [Access.APrivate], // Oh god no, this was static.
 			kind: FieldType.FVar(dataType),
 			pos: pos,
 			meta: [{ name:":noCompletion", pos: Context.currentPos() }],

@@ -1,30 +1,35 @@
 package cerastes;
+import haxe.ds.Vector;
 import cerastes.macros.Metrics;
 import hxd.Key;
 import hxd.Pad;
 
-enum InputButton {
-	UP;
-	DOWN;
-	LEFT;
-	RIGHT;
-	A;
-	B;
-	X;
-	Y;
-	START;
-	ENTER;
-	MOUSE_LEFT;
+@:enum
+abstract InputButton(Int) from Int to Int
+{
+	var UP 			= 0;
+	var DOWN 		= 1;
+	var LEFT 		= 2;
+	var RIGHT		= 3;
+	var A			= 4;
+	var B			= 5;
+	var X			= 6;
+	var Y			= 7;
+	var START 		= 8;
+	var ENTER		= 9;
+	var MOUSE_LEFT	= 10;
+	var MOUSE_RIGHT = 11;
+	var BUTTON_MAX	= 12;
 }
 
 enum InputState {
 	PRESSED;
 	HELD;
-	UP;
+	RELEASED;
 }
 
 typedef InputListener = {
-	callback: (InputButton, InputState) -> Bool,
+	callback: (InputButton, InputState, Float) -> Bool,
 	priority: Int
 }
 
@@ -34,9 +39,14 @@ class InputManager
 	private static var pads = new Array< hxd.Pad >();
 	public  static var enabled: Bool = true;
 
+	public static var state: Vector<InputState>;
+
 	public static function init()
 	{
+		state = new Vector(InputButton.BUTTON_MAX);
+		#if gamepad
 		hxd.Pad.wait(onPadConnected);
+		#end
 	}
 
 	private static function onPadConnected( p : hxd.Pad )
@@ -66,39 +76,53 @@ class InputManager
 		listeners = new Array<InputListener>();
 	}
 
+	static inline function checkKeyState( code : Int, button: InputButton, delta: Float )
+	{
+		if( Key.isPressed( code ) )
+			notifyListeners(button, PRESSED, delta );
+		if( Key.isDown( code ) )
+			notifyListeners(button, HELD, delta );
+		if( Key.isReleased( code ) )
+			notifyListeners(button, RELEASED, delta );
+	}
+
+	static inline function checkPadState( pad: Pad, key : Int, button: InputButton, delta: Float )
+	{
+
+	}
+
 	public static function tick( delta: Float )
 	{
 		Metrics.begin();
 
-		if( Key.isPressed( Key.UP ) )
-			notifyListeners(UP, PRESSED );
-		if( Key.isPressed( Key.DOWN ) )
-			notifyListeners(DOWN, PRESSED );
-		if( Key.isPressed( Key.LEFT ) )
-			notifyListeners(LEFT, PRESSED );
-		if( Key.isPressed( Key.RIGHT ) )
-			notifyListeners(RIGHT, PRESSED );
+		// Check pressed
 
-		if( Key.isPressed( Key.Z ) )
-			notifyListeners(A, PRESSED );
-		if( Key.isPressed( Key.X ) )
-			notifyListeners(B, PRESSED );
-		if( Key.isPressed( Key.C ) )
-			notifyListeners(X, PRESSED );
-		if( Key.isPressed( Key.V ) )
-			notifyListeners(Y, PRESSED );
+		// Arrow keys
+		checkKeyState( Key.UP, UP, delta );
+		checkKeyState( Key.DOWN, DOWN, delta );
+		checkKeyState( Key.LEFT, LEFT, delta );
+		checkKeyState( Key.RIGHT, RIGHT, delta );
+		// WASD
+		checkKeyState( Key.W, UP, delta );
+		checkKeyState( Key.A, LEFT, delta );
+		checkKeyState( Key.S, DOWN, delta );
+		checkKeyState( Key.D, RIGHT, delta );
 
-		if( Key.isPressed( Key.SPACE ) )
-			notifyListeners(START, PRESSED );
+		// zxcv
+		checkKeyState( Key.Z, A, delta );
+		checkKeyState( Key.X, B, delta );
+		checkKeyState( Key.C, X, delta );
+		checkKeyState( Key.V, Y, delta );
 
-		if( Key.isPressed( Key.ENTER ) ||  Key.isPressed( Key.NUMPAD_ENTER ) )
-			notifyListeners(ENTER, PRESSED );
+		// Start/Select
+		checkKeyState( Key.SPACE, START, delta );
+		checkKeyState( Key.ENTER, ENTER, delta );
+		checkKeyState( Key.NUMPAD_ENTER, ENTER, delta );
 
-		if( Key.isPressed( Key.MOUSE_LEFT ) )
-			notifyListeners(MOUSE_LEFT, PRESSED );
-
-
-
+		// Mouse
+		checkKeyState( Key.MOUSE_LEFT, MOUSE_LEFT, delta );
+		checkKeyState( Key.MOUSE_RIGHT, MOUSE_RIGHT, delta );
+		#if gamepad
 		for( p in pads )
 		{
 			if( !p.connected )
@@ -106,28 +130,20 @@ class InputManager
 
 			var conf = hxd.Pad.DEFAULT_CONFIG;
 
-			if( p.isPressed( conf.dpadUp ) )
-				notifyListeners(UP, PRESSED );
-			if( p.isPressed( conf.dpadDown ) )
-				notifyListeners(DOWN, PRESSED );
-			if( p.isPressed( conf.dpadLeft ) )
-				notifyListeners(LEFT, PRESSED );
-			if( p.isPressed( conf.dpadRight ) )
-				notifyListeners(RIGHT, PRESSED );
+			checkPadState( p, conf.dpadUp, UP, delta );
+			checkPadState( p, conf.dpadDown, DOWN, delta );
+			checkPadState( p, conf.dpadLeft, LEFT, delta );
+			checkPadState( p, conf.dpadRight, RIGHT, delta );
 
-			if( p.isPressed( conf.A ) )
-				notifyListeners(A, PRESSED );
-			if( p.isPressed( conf.B ) )
-				notifyListeners(B, PRESSED );
-			if( p.isPressed( conf.X ) )
-				notifyListeners(X, PRESSED );
-			if( p.isPressed( conf.Y ) )
-				notifyListeners(Y, PRESSED );
+			checkPadState( p, conf.A, A, delta );
+			checkPadState( p, conf.B, B, delta );
+			checkPadState( p, conf.X, X, delta );
+			checkPadState( p, conf.Y, Y, delta );
 
-			if( p.isPressed( conf.start ) )
-				notifyListeners(START, PRESSED );
+			checkPadState( p, conf.start, START, delta );
 
 		}
+		#end
 
 		Metrics.end();
 
@@ -135,13 +151,17 @@ class InputManager
 
 	}
 
-	private static function notifyListeners( button: InputButton, state: InputState )
+	private static function notifyListeners( button: InputButton, state: InputState, delta: Float )
 	{
 		if( !enabled ) return;
 
+		// Write up/down states
+		if( state != PRESSED )
+			InputManager.state[button] = state;
+
 		for( listener in listeners )
 		{
-			if( listener.callback(button,state) )
+			if( listener.callback(button,state, delta) )
 				return;
 		}
 	}

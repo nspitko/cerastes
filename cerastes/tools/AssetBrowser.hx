@@ -24,6 +24,7 @@ typedef AssetBrowserPreviewItem = {
 	var file: String;
 	var texture: Texture;
 	var scene: h2d.Scene;
+	var scene3d: h3d.scene.Scene;
 	var dirty: Bool;
 	var alwaysUpdate: Bool;
 	var loaded: Bool;
@@ -90,6 +91,7 @@ class AssetBrowser  extends  ImguiTool
 			file: file,
 			texture: null,
 			scene: null,
+			scene3d: null,
 			dirty: false,
 			loaded: false,
 			alwaysUpdate: false,
@@ -107,11 +109,11 @@ class AssetBrowser  extends  ImguiTool
 
 			p.dirty = true;
 			p.loaded = true;
-			p.scene = new h2d.Scene();
+			//p.scene = new h2d.Scene();
 			loadAsset(p);
 
 
-			if( p.texture == null )
+			if( p.texture == null && p.scene != null )
 			{
 				// loadAsset may just fill us with a texture
 
@@ -133,13 +135,13 @@ class AssetBrowser  extends  ImguiTool
 		switch(ext)
 		{
 			case "png" | "bmp" | "gif" | "jpg":
-
+				asset.scene = new h2d.Scene();
 				asset.texture = hxd.Res.load( asset.file ).toTexture();
 				asset.dirty = false;
 
 			case "fnt":
 				var any = hxd.Res.load( asset.file );
-
+				asset.scene = new h2d.Scene();
 				var font = hxd.fmt.bfnt.Reader.parse( any.entry.getBytes(), function(name){
 					return hxd.Res.load( '${any.entry.directory}/${name}'  ).toTile();
 				});
@@ -152,11 +154,13 @@ class AssetBrowser  extends  ImguiTool
 				t.text = "The quick brown fox jumps over the lazy dog";
 
 			case "bdef":
+				asset.scene = new h2d.Scene();
 				var bmp = new Bitmap( hxd.Res.tools.config.toTile(), asset.scene );
 				bmp.width = previewWidth;
 				bmp.height = previewHeight;
 
 			case "cui":
+				asset.scene = new h2d.Scene();
 				var res = new cerastes.fmt.CUIResource( hxd.Res.loader.load(asset.file).entry );
 
 				var obj = res.toObject();
@@ -167,7 +171,7 @@ class AssetBrowser  extends  ImguiTool
 				asset.scene.addChild( obj );
 
 			case "csd":
-
+				asset.scene = new h2d.Scene();
 				asset.alwaysUpdate = true;
 
 				var res = hxd.Res.load( asset.file ).to( SpriteResource );
@@ -189,6 +193,7 @@ class AssetBrowser  extends  ImguiTool
 
 
 			case "atlas":
+				asset.scene = new h2d.Scene();
 				var atlas = hxd.Res.load( asset.file ).to( Atlas );
 
 				var count = 0;
@@ -209,10 +214,20 @@ class AssetBrowser  extends  ImguiTool
 						break;
 				}
 
+			case "fbx":
+				asset.scene3d = new h3d.scene.Scene();
+				var cache = new h3d.prim.ModelCache();
+				var newObject = cache.loadModel( hxd.Res.loader.load( asset.file ).toModel() );
+				asset.scene3d.addChild( newObject);
+				asset.texture = new Texture(previewWidth,previewHeight, [Target] );
+
+
+
 
 
 
 			default:
+				asset.scene = new h2d.Scene();
 				var bmp = new Bitmap( hxd.Res.tools.hexagonal_nut.toTile(), asset.scene );
 				bmp.width = previewWidth;
 				bmp.height = previewHeight;
@@ -342,6 +357,9 @@ class AssetBrowser  extends  ImguiTool
 			case "atlas":
 				var t: AtlasBrowser = cast ImguiToolManager.showTool("AtlasBrowser");
 				t.openFile( asset.file );
+			case "cbl":
+				var t: BulletLevelEditor = cast ImguiToolManager.showTool("BulletLevelEditor");
+				t.openFile( asset.file );
 		}
 	}
 
@@ -468,7 +486,10 @@ class AssetBrowser  extends  ImguiTool
 
 			e.pushTarget( target.texture );
 			e.clear(0,1);
-			target.scene.render(e);
+			if( target.scene != null )
+				target.scene.render(e);
+			if( target.scene3d != null )
+				target.scene3d.render(e);
 			e.popTarget();
 
 			target.dirty = false;

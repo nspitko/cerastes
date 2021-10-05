@@ -9,6 +9,8 @@ class CerastesResources
 	public static function build()
 	{
 		Config.extensions["csd"] = "cerastes.fmt.SpriteResource";
+		Config.extensions["cbl"] = "cerastes.fmt.BulletLevelResource";
+		Config.extensions["cui"] = "cerastes.fmt.CUIResource";
 	}
 	#end
 }

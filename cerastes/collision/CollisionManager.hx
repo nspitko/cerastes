@@ -1,5 +1,12 @@
 package cerastes.collision;
 
+import cerastes.collision.Colliders.Collider;
+import cerastes.collision.Colliders.AABB;
+import cerastes.collision.Colliders.Circle;
+import h2d.Graphics;
+import cerastes.collision.Collision.CRaycast;
+import cerastes.collision.Collision.CollisionMask;
+import cerastes.collision.Collision.CRay;
 import game.GameState.CollisionGroup;
 import cerastes.collision.Collision.ColliderType;
 import haxe.ds.Vector;
@@ -22,99 +29,163 @@ class CollisionManager
 	// since >90% of our objects are bullets that only collide with
 	// <10 entities at any given time... it's way less work than
 	// we'd spend even building spatial buckets
-	var buckets: haxe.ds.Vector<List<CollisionObject>>;
+	var objects: Array<CollisionObject>;
+
+	public var debugGraphics: Graphics;
 
 	public function new()
 	{
-		buckets = new Vector(CollisionGroup.Max);
-		for( i in 0 ... CollisionGroup.Max )
-			buckets[i] = new List<CollisionObject>();
-
+		objects = [];
+		debugGraphics = new Graphics();
 	}
 
 	public function insert( o: CollisionObject )
 	{
-		buckets[ o.collisionType ].add( o );
+		objects.push( o );
+	}
+	public function remove( o: CollisionObject )
+	{
+		objects.remove( o );
+	}
+
+	public function castRay( ray: CRay, mask: CollisionMask ): Array<CRaycast>
+	{
+		var out: Array<CRaycast> = [];
+		/*
+		for( collisionType in 0 ... buckets.length )
+		{
+			if( !mask.interactsWith( collisionType ) )
+				continue;
+
+			for( o in buckets[collisionType] )
+			{
+				Utils.error("STUB");
+			}
+		}
+*/
+		return out;
+	}
+
+	public function query( c: Collider, mask: CollisionMask ): Array<CollisionObject>
+	{
+		Metrics.begin();
+
+		var out = new Array<CollisionObject>();
+
+
+		// For everything in this bucket...
+		for( other in objects )
+		{
+			if( !mask.interactsWith( other.collisionType ) )
+				continue;
+
+
+			// for each OTHER collider
+			for( oc in other.colliders )
+			{
+				// If they intersect...
+				//if( lc.intersects(oc, object.x, object.y, other.x, other.y) )
+				if( c.intersects(oc, 0, 0, other.x, other.y, 0) )
+				{
+					out.push(other);
+					break;
+				}
+			}
+
+
+		}
+
+		return out;
+
+
+		Metrics.end();
 	}
 
 	public function tick( delta: Float )
 	{
 		Metrics.begin();
 
+		if(Utils.SHOW_BULLET_AABBS)
+		{
+			if(debugGraphics.parent == null )
+				Main.currentScene.s2d.addChild(debugGraphics);
+			debugGraphics.clear();
+			for( o in objects )
+			{
+				for(c in o.colliders )
+				{
+					switch( c.colliderType )
+					{
+						case Circle:
+							var l: Circle = cast c;
+							debugGraphics.lineStyle(1,0xFF4444);
+							debugGraphics.drawCircle( o.x + l.p_x, o.y + l.p_y, l.r );
+						case AABB:
+							debugGraphics.lineStyle(1,0x44FF44);
+							var l: AABB = cast c;
+							debugGraphics.drawRect( o.x + l.min_x, o.y + l.min_y, l.max_x - l.min_x, l.max_y - l.min_y );
+
+						default:
+					}
+				}
+			}
+		}
+
 		// Array of collisions we've handled.
 		var hashes = new Array<{a: CollisionObject, b: CollisionObject }>();
 
 		// Loop over all collision type buckets
-		for( collisionType in 0 ... buckets.length )
+		for( object in objects  )
 		{
-			var bucket = buckets[collisionType];
 			// For everything in this bucket...
-			for( object in bucket )
+			for( other in objects )
 			{
-				var checkHashes = false;
-				// for every positive collision hash....
+				if( !object.collisionMask.interactsWith( other.collisionType ) )
+					continue;
+
+
+				// Don't interact with ourselves
+				if( object == other )
+					continue;
+
+
+				var hasCollided = false;
+				// for every positive collision hash.....
 				for(hash in hashes )
 				{
-					// If one of them is us, check hashes for every OTHER object later.
-					if( hash.a == object || hash.b == object )
-						checkHashes = true;
-				}
-				// for every collision type (again)
-				for( otherType in 0 ... buckets.length )
-				{
-					// If we interact with the other type...
-					if( object.collisionMask.interactsWith( otherType ) )
+					// skip if we've already handled this collision
+					if( ( hash.a == object || hash.b == object ) &&
+						( hash.a == other || hash.b == other ) )
 					{
-						// for everything in this other bucket...
-						for( other in buckets[otherType])
+						hasCollided = true;
+						break;
+					}
+
+				}
+
+
+				//if( hasCollided ) continue;
+
+
+				// for each collider
+				for( lc in object.colliders )
+				{
+					// for each OTHER collider
+					for( oc in other.colliders )
+					{
+						// If they intersect...
+						//if( lc.intersects(oc, object.x, object.y, other.x, other.y) )
+						if( lc.intersects(oc, object.x, object.y, other.x, other.y, 0) )
 						{
-							// Don't interact with ourselves
-							if( object == other )
-								continue;
-
-							var hasCollided = false;
-							// If we've collided with something already...
-							if( checkHashes )
-							{
-								// for every positive collision hash.....
-								for(hash in hashes )
-								{
-									// skip if we've already handled this collision
-									if( ( hash.a == object || hash.b == object ) &&
-										( hash.a == other || hash.b == other ) )
-									{
-										hasCollided = true;
-										break;
-									}
-
-								}
-							}
-
-							if( hasCollided ) continue;
-
-
-							// for each collider
-							for( lc in object.colliders )
-							{
-								// for each OTHER collider
-								for( oc in other.colliders )
-								{
-									// If they intersect...
-									//if( lc.intersects(oc, object.x, object.y, other.x, other.y) )
-									if( lc.intersects(oc, object.x, object.y, other.x, other.y, 0) )
-									{
-										hasCollided = true;
-										object.handleCollision(other);
-										other.handleCollision(object);
-										hashes.push({a:object, b:other});
-										break;
-									}
-								}
-								if( hasCollided )
-									break;
-							}
+							hasCollided = true;
+							object.handleCollision(other);
+							other.handleCollision(object);
+							hashes.push({a:object, b:other});
+							break;
 						}
 					}
+					if( hasCollided )
+						break;
 				}
 			}
 		}

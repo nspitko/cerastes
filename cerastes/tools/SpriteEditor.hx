@@ -1,11 +1,11 @@
 
 package cerastes.tools;
-
+#if hlimgui
 import hl.NativeArray;
 import hl.Ref;
 import cerastes.macros.SpriteData;
 import cerastes.macros.Metrics;
-#if hlimgui
+
 
 import h2d.Graphics;
 import hxd.res.Atlas;
@@ -491,7 +491,6 @@ class SpriteEditor extends ImguiTool
 					var kv = getKV( p.name );
 					if( kv == null )
 					{
-						trace(p.defaultValue);
 						kv = {
 							key: p.name,
 							value: p.defaultValue
@@ -518,6 +517,13 @@ class SpriteEditor extends ImguiTool
 								kv.value = ref.get();
 								rebuildCache();
 							}
+						case "String":
+							var staticVal: String = cast(kv.value, String);
+							//var ref = hl.Ref.make( staticVal );
+							var r = IG.textInput(p.label, staticVal);
+							if( r != null )
+								kv.value = r;
+
 						default:
 							ImGui.text( '${p.label} (${p.type}) UNSUPPORTED' );
 					}
@@ -1795,6 +1801,24 @@ class SpriteEditor extends ImguiTool
 					if( ImGui.selectable(SpriteAttachmentTween.ExpoInOut.toString(), selectedAttachmentOverride.positionTween == SpriteAttachmentTween.ExpoInOut ) )
 						selectedAttachmentOverride.positionTween = ExpoInOut;
 
+					if( ImGui.selectable(SpriteAttachmentTween.CircIn.toString(), selectedAttachmentOverride.positionTween == SpriteAttachmentTween.CircIn ) )
+						selectedAttachmentOverride.positionTween = CircIn;
+
+					if( ImGui.selectable(SpriteAttachmentTween.CircOut.toString(), selectedAttachmentOverride.positionTween == SpriteAttachmentTween.CircOut ) )
+						selectedAttachmentOverride.positionTween = CircOut;
+
+					if( ImGui.selectable(SpriteAttachmentTween.CircInOut.toString(), selectedAttachmentOverride.positionTween == SpriteAttachmentTween.CircInOut ) )
+						selectedAttachmentOverride.positionTween = CircInOut;
+
+					if( ImGui.selectable(SpriteAttachmentTween.SineIn.toString(), selectedAttachmentOverride.positionTween == SpriteAttachmentTween.SineIn ) )
+						selectedAttachmentOverride.positionTween = SineIn;
+
+					if( ImGui.selectable(SpriteAttachmentTween.SineOut.toString(), selectedAttachmentOverride.positionTween == SpriteAttachmentTween.SineOut ) )
+						selectedAttachmentOverride.positionTween = SineOut;
+
+					if( ImGui.selectable(SpriteAttachmentTween.SineInOut.toString(), selectedAttachmentOverride.positionTween == SpriteAttachmentTween.SineInOut ) )
+						selectedAttachmentOverride.positionTween = SineInOut;
+
 					ImGui.endCombo();
 				}
 
@@ -1826,10 +1850,56 @@ class SpriteEditor extends ImguiTool
 
 					if( ImGui.selectable(SpriteAttachmentTween.ExpoInOut.toString(), selectedAttachmentOverride.positionTween == SpriteAttachmentTween.ExpoInOut ) )
 						selectedAttachmentOverride.rotationTween = ExpoInOut;
+
+					if( ImGui.selectable(SpriteAttachmentTween.CircIn.toString(), selectedAttachmentOverride.positionTween == SpriteAttachmentTween.CircIn ) )
+						selectedAttachmentOverride.rotationTween = CircIn;
+
+					if( ImGui.selectable(SpriteAttachmentTween.CircOut.toString(), selectedAttachmentOverride.positionTween == SpriteAttachmentTween.CircOut ) )
+						selectedAttachmentOverride.rotationTween = CircOut;
+
+					if( ImGui.selectable(SpriteAttachmentTween.CircInOut.toString(), selectedAttachmentOverride.positionTween == SpriteAttachmentTween.CircInOut ) )
+						selectedAttachmentOverride.rotationTween = CircInOut;
+
+					if( ImGui.selectable(SpriteAttachmentTween.SineIn.toString(), selectedAttachmentOverride.positionTween == SpriteAttachmentTween.SineIn ) )
+						selectedAttachmentOverride.rotationTween = SineIn;
+
+					if( ImGui.selectable(SpriteAttachmentTween.SineOut.toString(), selectedAttachmentOverride.positionTween == SpriteAttachmentTween.SineOut ) )
+						selectedAttachmentOverride.rotationTween = SineOut;
+
+					if( ImGui.selectable(SpriteAttachmentTween.SineInOut.toString(), selectedAttachmentOverride.positionTween == SpriteAttachmentTween.SineInOut ) )
+						selectedAttachmentOverride.rotationTween = SineInOut;
 					ImGui.endCombo();
 				}
 
 				IG.wref( ImGui.inputDouble("Tween Duration", _), selectedAttachmentOverride.tweenDuration );
+
+				if( selectedAttachmentOverride.tweenOrigin == null )
+				{
+					var setOrigin = false;
+
+					if( IG.wref( ImGui.checkbox("Tween Origin", _), setOrigin) && setOrigin )
+					{
+						selectedAttachmentOverride.tweenOrigin = {x: 0, y:0};
+					}
+				}
+				else
+				{
+					if( IG.posInput("Tween Origin", selectedAttachmentOverride.tweenOrigin, "%.2f") )
+					{
+						rebuildSprite();
+					}
+
+					var single: Single = selectedAttachmentOverride.tweenRotation != null ? cast selectedAttachmentOverride.tweenRotation : 0.;
+					if( IG.wref( ImGui.sliderAngle("Tween Rotation", _), single ) )
+						selectedAttachmentOverride.tweenRotation = single;
+
+						if( ImGui.isItemHovered() )
+						{
+							ImGui.beginTooltip();
+							ImGui.text("Ctrl+click to manually set");
+							ImGui.endTooltip();
+						}
+				}
 
 				ImGui.popID();
 

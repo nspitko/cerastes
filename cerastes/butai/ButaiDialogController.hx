@@ -135,7 +135,7 @@ class ButaiDialogController
 	}
 
 
-	private function onInput( button: InputButton, state: InputState )
+	private function onInput( button: InputButton, state: InputState, delta: Float )
 	{
 		if( !busy )
 			return false;

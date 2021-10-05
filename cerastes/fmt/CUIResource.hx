@@ -34,13 +34,13 @@ class CUIResource extends Resource
 	static var minVersion = 1;
 	static var version = 1;
 
-	public function toObject()
+	public function toObject(?parent = null)
 	{
 		var data = getData();
 		Utils.assert( data.version <= version, "Warning: CUI generated with newer version than this parser supports" );
 		Utils.assert( data.version >= minVersion, "Warning: CUI version newer than parser understands; parsing will probably fail!" );
 
-		var root = new Object();
+		var root = new Object(parent);
 
 		recursiveCreateObjects(data.root, root);
 
@@ -76,7 +76,17 @@ class CUIResource extends Resource
 				var fe = hxd.Res.loader.load( props.get("font") );
 				var res = new BitmapFont( fe.entry );
 
-				obj = new h2d.Text( res.toFont() );
+				switch( props.get("font") )
+				{
+					case "fnt/ui_numerics.fnt":
+						obj = new h2d.Text( hxd.Res.fnt.dialogue.toSdfFont(14,4,0.475,1/10) );
+					case "fnt/speaker.fnt":
+						obj = new h2d.Text( hxd.Res.fnt.dialogue.toSdfFont(50,4,0.475,1/10) );
+					default:
+						obj = new h2d.Text( res.toSdfFont(24,4,0.475,1/10) );
+				}
+
+				//obj = new h2d.Text( res.toSdfFont(24,4,0.475,1/10) );
 
 			case "h2d.Bitmap":
 				var tile = hxd.Res.loader.load( props.get("tile") ).toTile();
@@ -117,6 +127,11 @@ class CUIResource extends Resource
 			case "h2d.Object":
 				obj.x = props["x"];
 				obj.y = props["y"];
+				obj.rotation = props["rotation"];
+				if( props.exists("scale_x") )
+					obj.scaleX = props["scale_x"];
+				if( props.exists("scale_y") )
+					obj.scaleY = props["scale_y"];
 
 
 			case "h2d.Text":
@@ -153,7 +168,19 @@ class CUIResource extends Resource
 				if( props.exists("horizontal_align") )
 					o.horizontalAlign = EnumTools.createByIndex( h2d.Flow.FlowAlign, props["horizontal_align"] );
 
+				if( props.exists("overflow") )
+					o.overflow = EnumTools.createByIndex( h2d.Flow.FlowOverflow, props["overflow"] );
+
+				o.minWidth = props["min_width"];
+				o.minHeight = props["min_height"];
+
+				o.verticalSpacing = props["vertical_spacing"];
+				o.horizontalSpacing = props["horizontal_spacing"];
+
 			case "h2d.Mask":
+				var o = cast(obj, h2d.Mask);
+				o.scrollX = props["scroll_x"];
+				o.scrollY = props["scroll_y"];
 
 			case "h2d.Interactive":
 				var o = cast(obj, h2d.Interactive);
@@ -232,12 +259,16 @@ class CUIResource extends Resource
 			case "h2d.Object":
 				props["x"] = obj.x;
 				props["y"] = obj.y;
+				props["rotation"] = obj.rotation;
+				props["scale_x"] = obj.scaleX;
+				props["scale_y"] = obj.scaleY;
 
 			case "h2d.Text":
 				var o = cast(obj, h2d.Text);
 				props["text"] = o.text;
 				props["text_align"] = EnumValueTools.getIndex(o.textAlign);
 				props["max_width"] = o.maxWidth;
+				//props["font"] = o.font.name
 
 			case "h2d.Bitmap":
 				var o = cast(obj, h2d.Bitmap);
@@ -256,12 +287,22 @@ class CUIResource extends Resource
 				props["layout"] = EnumValueTools.getIndex(o.layout);
 				props["vertical_align"] = EnumValueTools.getIndex(o.verticalAlign);
 				props["horizontal_align"] = EnumValueTools.getIndex(o.horizontalAlign);
+				props["overflow"] = EnumValueTools.getIndex(o.overflow);
+
+				props["min_width"] = o.minHeight;
+				props["min_height"] = o.minWidth;
+
+				props["vertical_spacing"] = o.verticalSpacing;
+				props["horizontal_spacing"] = o.horizontalSpacing;
 
 			case "h2d.Mask":
 				var o = cast(obj, h2d.Mask);
 
 				props["width"] = o.width;
 				props["height"] = o.height;
+
+				props["scroll_x"] = o.scrollX;
+				props["scroll_y"] = o.scrollY;
 
 			case "h2d.Interactive":
 				var o = cast(obj, h2d.Interactive);

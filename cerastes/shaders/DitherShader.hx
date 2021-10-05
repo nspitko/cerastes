@@ -26,7 +26,7 @@ class DitherShader extends h3d.shader.ScreenShader {
 		function ditheredChannel( err: Float, ditherBlockUV: Vec2, ditherSteps: Float): Float
 		{
 			err = floor(err * ditherSteps) / ditherSteps;
-			
+
 			var ditherUV = vec2(err, 0);
 			ditherUV.x += ditherBlockUV.x;
 			ditherUV.y = ditherBlockUV.y;
@@ -41,17 +41,17 @@ class DitherShader extends h3d.shader.ScreenShader {
 
 		/// YUV/RGB color space calculations
 
-		function RGBtoYUV(rgba: Vec4): Vec4 
+		function RGBtoYUV(rgba: Vec4): Vec4
 		{
 			var yuva: Vec4;
 			yuva.r = rgba.r * 0.2126 + 0.7152 * rgba.g + 0.0722 * rgba.b;
 			yuva.g = (rgba.b - yuva.r) / 1.8556;
 			yuva.b = (rgba.r - yuva.r) / 1.5748;
 			yuva.a = rgba.a;
-			
+
 			// Adjust to work on GPU
 			yuva.gb += 0.5;
-			
+
 			return yuva;
 		}
 
@@ -64,7 +64,7 @@ class DitherShader extends h3d.shader.ScreenShader {
                     yuva.a);
             }
 
-		function UVtoRGB(yuva: Vec4): Vec4 
+		function UVtoRGB(yuva: Vec4): Vec4
 		{
 			yuva.gb -= 0.5;
 			return vec4(
@@ -73,10 +73,10 @@ class DitherShader extends h3d.shader.ScreenShader {
 				yuva.r * 1 + yuva.g * 1.8556 + yuva.b * 0,
 				yuva.a);
 		}
-	
-		function fragment() 
+
+		function fragment()
 		{
-			
+
 			 // sample the texture and convert to YUV color space
 			var col = texture.get( calculatedUV );
 			var yuv = RGBtoYUV( col );
@@ -101,14 +101,14 @@ class DitherShader extends h3d.shader.ScreenShader {
 			ditherBlockUV.x /= ditherSteps;
 
 			// Dither each channel individually
-			
+
 			yuv.x = mix(col1.x, col2.x, ditheredChannel(channelError(yuv.x, col1.x, col2.x), ditherBlockUV, ditherSteps));
 			yuv.y = mix(col1.y, col2.y, ditheredChannel(channelError(yuv.y, col1.y, col2.y), ditherBlockUV, ditherSteps));
 			yuv.z = mix(col1.z, col2.z, ditheredChannel(channelError(yuv.z, col1.z, col2.z), ditherBlockUV, ditherSteps));
 
 			pixelColor = YUVtoRGB(yuv);
 
-	
+
 		}
 	}
 

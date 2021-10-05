@@ -2,7 +2,9 @@ package cerastes;
 
 
 import hxd.fmt.pak.FileSystem;
+#if hldx
 import dx.Driver.ResourceBind;
+#end
 import haxe.io.Path;
 #if hlsdl
 import sdl.Sdl;

@@ -1,5 +1,8 @@
 package cerastes;
 
+import hxd.snd.Manager;
+import hxd.res.Sound;
+import hxd.res.Resource;
 import h3d.scene.Object;
 import h3d.prim.Primitive;
 import hxd.snd.Channel;
@@ -17,6 +20,8 @@ class SoundManager
 	public static var soundVolume: Float = 1.;
 
 	public static var currentMusicFile = "";
+
+	static var soundCache: Map<String, Sound> = [];
 
 	static function set_musicVolume(v)
 	{
@@ -36,7 +41,36 @@ class SoundManager
 	}
 
 
-	public static function sfx( id: String, ?vol: Float = 1, ?loop: Bool = false )
+	public static function sfx( id: String, ?vol: Float = 1, ?loop: Bool = false  )
+	{
+
+		var sound: Sound;
+
+		if( soundCache.exists(id) )
+			sound = soundCache.get(id);
+		else
+		{
+			if( hxd.Res.loader.exists( 'sfx/${id}.mp3' ) )
+				sound = hxd.Res.load( 'sfx/${id}.mp3' ).toSound();
+			else if( hxd.Res.loader.exists( 'sfx/${id}.ogg' ) )
+				sound = hxd.Res.load( 'sfx/${id}.ogg' ).toSound();
+			else if( hxd.Res.loader.exists( 'sfx/${id}.wav' ) )
+				sound = hxd.Res.load( 'sfx/${id}.wav' ).toSound();
+			else
+			{
+				Utils.error('sfx/${id}.mp3 is missing!');
+				return;
+			}
+
+			soundCache.set(id, sound);
+		}
+
+		Manager.get().play(sound);
+
+	}
+
+
+	public static function bsfx( id: String, ?vol: Float = 1, ?loop: Bool = false )
 	{
 		var channel: Channel;
 		if( channels.exists( id ) )
@@ -192,6 +226,8 @@ class SoundManager
 	public static function playMusic( cue: String )
 	{
 		// Intentionally making this shit so I come up with something better later
+
+
 
 		if( cue == null || cue.length == 0 )
 		{

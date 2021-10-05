@@ -25,6 +25,12 @@ abstract SpriteAttachmentTween(Int) from Int to Int
 	var ExpoIn = 2;
 	var ExpoOut = 3;
 	var ExpoInOut = 4;
+	var CircIn = 5;
+	var CircOut = 6;
+	var CircInOut = 7;
+	var SineIn = 8;
+	var SineOut = 9;
+	var SineInOut = 10;
 
 	public function toString()
 	{
@@ -35,6 +41,12 @@ abstract SpriteAttachmentTween(Int) from Int to Int
 			case ExpoIn: "ExpoIn";
 			case ExpoOut: "ExpoOut";
 			case ExpoInOut: "ExpoInOut";
+			case CircIn: "CircIn";
+			case CircOut: "CircOut";
+			case CircInOut: "CircInOut";
+			case SineIn: "SineIn";
+			case SineOut: "SineOut";
+			case SineInOut: "SineInOut";
 			default: "None";
 		}
 	}
@@ -71,6 +83,8 @@ typedef CSDAttachmentOverride = {
 	var start: Float;		// The most recent non-expired override always wins.
 	var duration: Float;	// If 0 then forever
 	var tweenDuration: Float;	// How long to tween. if 0 then use duration. if duration is also  0 then don't tween regardless
+	var ?tweenOrigin: CSDPoint; // Optional. If set, used as a start point for tweens.
+	var ?tweenRotation: Float; // Optional. If set, used as a start point for tweens.
 }
 
 
@@ -140,9 +154,13 @@ class SpriteResource extends Resource
 		if( cache == null )
 			cache = new SpriteCache( data.sprite );
 
+		#if js
+		return js.Syntax.code("cerastes_SpriteMetaProxy.create({0}, {1});", localCache != null ? localCache : cache, parent );
+		#else
 		return SpriteMeta.create( localCache != null ? localCache : cache, parent );
+		#end
 
-		return new cerastes.Sprite(cache,parent);
+		//return new Sprite(cache,parent);
 	}
 
 

@@ -36,7 +36,7 @@ class BulletManager
 	static var parent:Object;
 	//var seedB:CannonBullet;
 
-	static var cmlTarget : CMLObject;
+	public static var cmlTarget : CMLObject;
 
 	private static var cmlRoot : CMLObject;
 
@@ -122,7 +122,35 @@ class BulletManager
 */
 
 		var seq = new CMLSequence( patternList.get(pattern) );
+
 		var f = new CannonBullet(parent);
+		f.create(x, y);
+
+
+
+
+		if( angle != 0 )
+			f.angle = angle * 180 / Math.PI; // in degrees?????
+
+		//f.active = false;
+		return f.execute( seq );
+	}
+
+	public static function createCustomSeed( pattern: String, x: Float, y: Float, angle: Float = 0 )
+	{
+		/*
+		var seq = new CMLSequence( patternList.get(pattern) );
+		var obj = seed.execute( seq );
+		var o: CMLObject = cast obj.object;
+
+		o.x = obj.fx = x;
+		o.y = obj.fy = y;
+
+		return seed.execute;
+*/
+
+		var seq = new CMLSequence( pattern );
+	var f = new CannonBullet(parent);
 		f.create(x, y);
 
 		if( angle != 0 )
@@ -134,9 +162,12 @@ class BulletManager
 
 	public static function destroy()
 	{
-		CMLObject.destroyAll(9);
-		// ANGRY
-		@:privateAccess CannonBullet._freeList = [];
+		if( cmlRoot != null )
+		{
+			CMLObject.destroyAll(9);
+			// ANGRY
+			@:privateAccess CannonBullet._freeList = [];
+		}
 
 		//cmlRoot = null;
 
@@ -145,13 +176,25 @@ class BulletManager
 	public static function tick( delta:Float )
     {
 		Metrics.begin();
-		if( target != null )
+		if( cmlTarget != null && target != null )
 		{
 			cmlTarget.x = target.x;
 			cmlTarget.y = target.y;
 		}
 
+		#if tools
+		try {
+			CMLObject.frameUpdate();
+		}
+		catch(e)
+		{
+			trace(e);
+		}
+		#else
 		CMLObject.frameUpdate();
+		#end
+
+
 		Metrics.end();
     }
 }

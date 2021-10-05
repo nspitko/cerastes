@@ -1,4 +1,14 @@
 package cerastes.bulletml;
+import game.objects.Enemy;
+import game.objects.Actor;
+import game.GameState;
+import cerastes.collision.Colliders.Circle;
+import cerastes.collision.Collision.CAABB;
+import game.GameState.CollisionGroup;
+import cerastes.collision.Collision.CollisionMask;
+import cerastes.collision.Colliders.Collider;
+import cerastes.collision.Collision.CCircle;
+import cerastes.collision.Colliders.CollisionObject;
 import cerastes.fmt.SpriteResource;
 #if cannonml
 import hxd.res.Loader;
@@ -22,13 +32,14 @@ abstract CannonDestructonReason(Int) from Int to Int {
     var FINISHED = 1;           // This bullet has completed its task and should be removed gracefully
     var EXIT_SCENE = 2;         // This vullet has exited the scene and should just be removed
     var COLLISION = 3;          // This bullet hit its target
+    var DEATH = 3;              // A sprite attached to me died
 
 
     var SCENE_CLEAR = 9;        // Special case: We called DestroyAll(), treat similarly to EXIT_SCENE
 
 }
 
-class CannonBullet extends CMLObject implements Collidable
+class CannonBullet extends CMLObject implements CollisionObject
 {
 	// Static junk ( Shared across particle container )
     static public var minX = 0;
@@ -40,17 +51,33 @@ class CannonBullet extends CMLObject implements Collidable
 	// Cerastes-specific
 	static public var container : Object;
 
-    // Collidable
-    public var aabb : Bounds = new Bounds();
-	public var bitmap : Bitmap;
+    public var bitmap : Bitmap;
 	public var sprite : Sprite;
-    public var bitmapContainer: Object;
 	public var position = new Point(0,0);
 	public var active = false; // Is collision active?
+
+    public var fiber: CMLFiber; // Surely I can get to this without the backsolve????
+
+    // Collidable
+    public var collider : Collider;
+
+    // CollisionObject
+    public var collisionMask: CollisionMask;	// Things that can interact with me
+	public var collisionType: CollisionGroup;	// My interaction type
+    public var colliders(default, null): haxe.ds.Vector<Collider>;
+
+    public var damage: Float = 10;
 
     public var debug : Graphics;
 
     public var padding = 6;
+
+    var offsetX: Float = 0;
+    var offsetY: Float = 0;
+
+    public var useOffset = false;
+
+
 
     static private function _new() : CannonBullet
     {
@@ -62,21 +89,66 @@ class CannonBullet extends CMLObject implements Collidable
         return new CannonBullet( container );
     }
 
+    public static dynamic function updateCollider( b: CannonBullet, width: Float, height: Float )
+    {
+        if( false && b.sprite != null )
+        {
+            b.collider = b.sprite.colliders[0].clone(b.offsetX, b.offsetY);
+            b.colliders[0] = b.collider;
+        }
+        else if( b.collider != null)
+        {
+            var c: Circle = cast b.collider;
+            c.r = Math.min( width/2, height/2 );
+        }
+        else
+        {
+            b.collider = new Circle({p: {x: 0, y: 0}, r: Math.min( width/2, height/2 ) });
+            b.colliders = new haxe.ds.Vector(1);
+            b.colliders[0] =  b.collider;
+        }
+    }
+
+    public function handleCollision( other: CollisionObject )
+    {
+        if( Std.isOfType( other, Actor ) )
+        {
+            var actor: Actor = cast other;
+            actor.takeDamage( damage, Bullet );
+        }
+        sprite.remove();
+        destroy(COLLISION);
+    }
+
+    public function setCollision( type: CollisionGroup, mask: CollisionMask, damage: Float )
+    {
+        if( collider == null )
+        {
+            updateCollider(this,5,5);
+        }
+        collisionType = type;
+        collisionMask = mask;
+        this.damage = damage;
+        GameState.collisionManager.insert(this);
+
+    }
+
+    // @todo?
+	//public var collisionBounds : CAABB;
+
 	public function new( parent: Object )
     {
 
         container = parent;
-        bitmapContainer = new Object(parent);
+        colliders = new haxe.ds.Vector(1);
+
+        updateCollider(this, 5, 5);
 
         //bitmap = new Bitmap(Tile.fromColor(0xffffffff,8,8), bitmapContainer);
 
         //setTile( hxd.Res.spr.atlas.getAnim("spr_bullet")[2 ] );
         //setTile( Tile.fromColor(0xffffff,12,12) );
 
-
-
-        if( SHOW_BULLET_AABBS )
-            debug = new Graphics(parent);
 
         active=true;
 
@@ -88,16 +160,11 @@ class CannonBullet extends CMLObject implements Collidable
 
     public function setTile( tile: Tile )
     {
-        if( sprite != null )
-        {
-            sprite.visible = false;
-        }
+        if( sprite != null ) sprite.remove();
 
-        bitmapContainer.visible = true;
-        bitmapContainer.setScale(1);
         if( bitmap != null  )
         {
-            bitmap.visible = true;
+            container.addChild(bitmap);
             if( bitmap.tile == tile)
                 return;
 
@@ -105,105 +172,110 @@ class CannonBullet extends CMLObject implements Collidable
         }
         else
         {
-            bitmap = new Bitmap(tile, bitmapContainer);
+            bitmap = new Bitmap(tile, container);
         }
 
-        bitmap.getSize(aabb);
 
-        aabb.width -= padding;
-        aabb.height -= padding;
-        bitmap.x = -aabb.width/2 - padding/2;
-        bitmap.y = -aabb.height/2 - padding/2;
+        updateCollider(this, tile.width - padding * 2, tile.height - padding * 2);
+
+        bitmap.tile.dx = -tile.width/2 - padding/2;
+        bitmap.tile.dy = -tile.height/2 - padding/2;
     }
 
     public function setSprite( name: String )
     {
-        bitmapContainer.visible = true;
-        bitmapContainer.setScale(1);
         if( bitmap != null  )
         {
-            bitmap.visible = false;
+            bitmap.remove();
         }
 
         if( sprite != null  )
         {
             sprite.currentFrame = 0;
-            sprite.visible = true;
+            container.addChild(sprite);
             if( sprite.spriteDef.name == name)
                 return;
 
             sprite.remove();
         }
 
-        sprite = hxd.Res.loader.loadCache( 'spr/$name.csd', SpriteResource ).toSprite( bitmapContainer );
+        sprite = hxd.Res.loader.loadCache( name, SpriteResource ).toSprite( container );
 
         if( sprite == null )
             return;
 
+        var enemy: game.objects.Enemy = Std.downcast( sprite, game.objects.Enemy );
+        if( enemy != null )
+        {
+            enemy.bullet = this;
+            enemy.fiber = fiber;
+        }
 
-        sprite.getSize(aabb);
 
         updateBounds();
     }
 
     function updateBounds()
     {
-        var aabb: Bounds;
-        if( sprite.visible )
+        var obj = getActiveObject();
+        if( obj != null )
         {
-
-            aabb = sprite.getBounds();
-            aabb.width -= padding;
-            aabb.height -= padding;
+            var bounds = obj.getBounds();
+            //offsetX = -sprite.originX;
+            //offsetY = -sprite.originY;
+            updateCollider( this, bounds.width, bounds.height );
 
         }
-        else if( bitmap.visible )
-        {
-            aabb = Bounds.fromValues(0,0,bitmap.width,bitmap.height);
-            aabb.width -= padding;
-            aabb.height -= padding;
-
-            // @todo fix padding.
-            //bitmap.x = -aabb.width/2 - padding/2;
-            //bitmap.y = -aabb.height/2 - padding/2;
-        }
-
-
 
     }
 
     public function setScale( scale: Float )
     {
-        bitmapContainer.setScale(scale);
+        Utils.error("STUB");
+        //bitmapContainer.setScale(scale);
         updateBounds();
     }
 
+    override public function _initialize(parent_:CMLObject, isPart_:Bool, access_id_:Int, x_:Float, y_:Float, vx_:Float, vy_:Float, head_:Float) : CMLObject
+    {
+        var b = Std.downcast(parent_,CannonBullet );
+
+        if( b != null  )
+        {
+            setCollision( b.collisionType, b.collisionMask, b.damage);
+
+        }
+
+        return super._initialize(parent_, isPart_, access_id_, x_, y_, vx_, vy_, head_);
+    }
 
     override public function onNewObject(args:Array<Dynamic>) : CMLObject {
         var ret = _new();
         ret.active = true;
-
-        if( ret.bitmapContainer.parent != null )
-            ret.bitmapContainer.parent.addChildAt(ret.bitmapContainer,0);
-
+        ret.useOffset = false;
         return ret;
     }
     override public function onFireObject(args:Array<Dynamic>) : CMLObject {
         var ret = _new();
         ret.active = true;
+        ret.useOffset = false;
 
-        if( ret.bitmapContainer.parent != null)
-            ret.bitmapContainer.parent.addChildAt(ret.bitmapContainer,0);
 
         return ret;
 	}
     override public function onDestroy()
     {
-        //bitmap.remove();
-        if( debug != null && SHOW_BULLET_AABBS )
-            debug.clear();
 
-        bitmapContainer.visible = false;
+
+        var obj = getActiveObject();
+        if( obj != null )
+        {
+            obj.remove();
+        }
+
+        GameState.collisionManager.remove(this);
+
+
         //if( bitmap != null )
         //    bitmap.visible = false;
 
@@ -212,32 +284,44 @@ class CannonBullet extends CMLObject implements Collidable
 
     }
 
+    function getActiveObject() : Object
+    {
+        if( sprite != null && sprite.parent != null ) return sprite;
+        if( bitmap != null && bitmap.parent != null ) return bitmap;
+
+        return null;
+    }
+
+
     override public function onUpdate()  {
         position.x = x;
         position.y = y;
 
-        bitmapContainer.x = x +aabb.width/2 ;
-        bitmapContainer.y = y +aabb.height/2 ;
+        var obj = getActiveObject();
+        if( obj != null )
+        {
+            if( false && useOffset )
+            {
+                obj.x = x + offsetX;
+                obj.y = y + offsetY;
+            }
+            else
+            {
+                obj.x = x;
+                obj.y = y;
+            }
+
+            obj.rotation = (90 + this.angle) * (Math.PI/180);
+        }
         //if( !this.isActive )
         active = this.isActive;
 
+        if( !GameState.inDialogue && sprite != null && sprite.parent != null )
+            sprite.tick( 1/60 );
 
-        if( SHOW_BULLET_AABBS )
-        {
-            debug.clear();
 
-            if( active )
-            {
-                debug.lineStyle(1,0xCC0000);
 
-                debug.moveTo( position.x, position.y);
-                debug.lineTo( position.x + aabb.width, position.y );
-                debug.lineTo( position.x + aabb.width, position.y + aabb.height );
-                debug.lineTo( position.x, position.y + aabb.height );
-                debug.lineTo( position.x, position.y );
-            }
-        }
-        bitmapContainer.rotation = (90 + this.angle) * (Math.PI/180);
+
         if (this.x<minX || this.x>maxX|| this.y<minY || this.y>maxY) this.destroy(2);
 
 

@@ -1,5 +1,7 @@
 package cerastes.collision;
 
+import cerastes.collision.Collision.CRaycast;
+import cerastes.collision.Collision.CRay;
 import cerastes.collision.Collision.CCapsule;
 import cerastes.collision.Collision.CAABB;
 import cerastes.collision.Collision.CCircle;
@@ -11,17 +13,17 @@ import game.GameState.CollisionGroup;
 
 interface CollisionObject
 {
-	public var x(default, set) : Float;
-	public var y(default, set) : Float;
+	public var x(default, null) : Float;
+	public var y(default, null) : Float;
 
 	// Collision is just mask | type, so a bullet
 	public var collisionMask: CollisionMask;	// Things that can interact with me
-	public var collisionType: CollisionGroup;	// My interaction type
+	public var collisionType(default, null): CollisionGroup;	// My interaction type
 	public var colliders(default, null): haxe.ds.Vector<Collider>;
 
 
 	public function handleCollision( other: CollisionObject ) : Void;
-	public var collisionBounds(get, null) : CAABB;
+	//public var collisionBounds(get, null) : CAABB;
 }
 
 interface Collider
@@ -41,6 +43,8 @@ interface Collider
 	 * ADDING A 5TH FLOAT UN-FUCKS THE VM?
 	 **/
 	public function intersects( other: Collider, x: Float, y: Float, otherX: Float, otherY: Float, bugfix: Float ): Bool;
+	public function castRay( ray: CRay, x: Float, y: Float, out: CRaycast ): Void;
+	public function clone( offsetX: Float, offsetY: Float ): Collider;
 }
 
 @:structInit
@@ -72,7 +76,7 @@ class Circle implements Collider
 				return Collision.circleToCircle( {p: {x:p_x + x, y: p_y + y}, r: r}, {p: {x:c.p_x + otherX, y: c.p_y + otherY}, r: c.r} );
 			case AABB:
 				var a: AABB = cast other;
-				return Collision.circleToAABB( {p: {x:p_x + x, y: p_y + x}, r: r}, { min:{ x: a.min_x + otherX, y: a.min_y + otherY }, max: {x: a.max_x + otherX, y: a.min_y + otherY} } );
+				return Collision.circleToAABB( {p: {x:p_x + x, y: p_y + y}, r: r}, { min:{ x: a.min_x + otherX, y: a.min_y + otherY }, max: {x: a.max_x + otherX, y: a.max_y + otherY} } );
 			case Point:
 				var p: Point = cast other;
 				return Collision.circleToPoint( {p: {x:p_x + x, y: p_y + y}, r: r}, { x: p.x + otherX, y: p.y + otherY } );
@@ -84,6 +88,16 @@ class Circle implements Collider
 				Utils.error('Unhandled collision between ${colliderType.toString()} and ${other.colliderType.toString()}');
 				return false;
 		}
+	}
+
+	public inline function castRay( ray: CRay, x: Float, y: Float, out: CRaycast )
+	{
+		Collision.rayToCircle(ray, {p: {x:p_x + x, y: p_y + y}, r: r}, out );
+	}
+
+	public inline function clone(x: Float, y: Float ): Collider
+	{
+		return new Circle( {p: {x:p_x + x, y: p_y + y}, r: r} );
 	}
 
 }
@@ -136,6 +150,21 @@ class AABB implements Collider
 
 		}
 	}
+
+	public inline function intersectsPoint( x: Float, y: Float, otherX: Float, otherY: Float )
+	{
+		return Collision.AABBToPoint({ min:{ x:min_x + x, y:min_y + y }, max:{ x:max_x + x, y:max_y + y } }, { x: otherX, y: otherY } );
+	}
+
+	public inline function castRay( ray: CRay, x: Float, y: Float, out: CRaycast )
+	{
+		Collision.rayToAABB(ray, { min:{ x:min_x + x, y:min_y + y }, max:{ x:max_x + x, y:max_y + y } }, out );
+	}
+
+	public inline function clone(x: Float, y: Float ): Collider
+	{
+		return new AABB({ min:{ x:min_x + x, y:min_y + y }, max:{ x:max_x + x, y:max_y + y } } );
+	}
 }
 
 @:structInit
@@ -184,6 +213,17 @@ class Point implements Collider
 		return false;
 	}
 
+	public inline function castRay( ray: CRay, x: Float, y: Float, out: CRaycast )
+	{
+		// Rays can never intersect lines
+	}
+
+	public inline function clone(offsetX: Float, offsetY: Float ): Collider
+	{
+		Utils.error("STUB");
+		return null;
+	}
+
 }
 
 @:structInit
@@ -224,6 +264,17 @@ class Capsule implements Collider
 
 
 		return false;
+	}
+
+	public inline function castRay( ray: CRay, x: Float, y: Float, out: CRaycast )
+	{
+		Utils.warning("Ray to capsule not implemented");
+	}
+
+	public inline function clone(offsetX: Float, offsetY: Float ): Collider
+	{
+		Utils.error("STUB");
+		return null;
 	}
 
 }

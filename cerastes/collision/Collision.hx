@@ -18,18 +18,20 @@ class CVector
 	// ============================================================================
 	// Vector Math
 	// ============================================================================
-	 public inline function sub(b: CVector ): CVector		{ return { x: x - b.x, y: y - b.y }; }
-	 public inline function add(b: CVector ): CVector		{ return { x: x + b.x, y: y + b.y }; }
-	 public inline function dot(b: CVector ): Float		{ return x * b.x + y * b.y; }
-	 public inline function mulVS(b: Float ): CVector		{ return { x: x * b, y: y * b }; }
-	 public inline function mulVV(b: CVector ): CVector	{ return { x: x * b.x, y: y * b.y }; }
-	 public inline function div(b: Float ): CVector		{ return this.mulVS(1.0 / b ); }
-	 public inline function maxV( b: CVector ): CVector	{ return {x: Math.max( x, b.x ), y: Math.max(y, b.y) }; }
-	 public inline function minV( b: CVector ): CVector	{ return {x: Math.min( x, b.x ), y: Math.min(y, b.y) }; }
-	 public inline function clampV( lo: CVector, hi: CVector ): CVector	{ return { lo.maxV( this.minV( hi ) ); } }
+	public inline function sub(b: CVector ): CVector		{ return { x: x - b.x, y: y - b.y }; }
+	public inline function add(b: CVector ): CVector		{ return { x: x + b.x, y: y + b.y }; }
+	public inline function dot(b: CVector ): Float			{ return x * b.x + y * b.y; }
+	public inline function mulVS(b: Float ): CVector		{ return { x: x * b, y: y * b }; }
+	public inline function mulVV(b: CVector ): CVector		{ return { x: x * b.x, y: y * b.y }; }
+	public inline function div(b: Float ): CVector			{ return this.mulVS(1.0 / b ); }
+	public inline function skew(): CVector					{ return { x: -y, y: x }; }
+	public inline function maxV( b: CVector ): CVector		{ return {x: Math.max( x, b.x ), y: Math.max(y, b.y) }; }
+	public inline function minV( b: CVector ): CVector		{ return {x: Math.min( x, b.x ), y: Math.min(y, b.y) }; }
+	public inline function clampV( lo: CVector, hi: CVector ): CVector	{ return { lo.maxV( this.minV( hi ) ); } }
+	public inline function absV(): CVector					{ return { x: Math.abs(x), y: Math.abs(y) }; }
 
-	 public inline function len(): Float					{ return { Math.sqrt( dot(this) ); } }
-	 public inline function norm(): CVector				{ return { div( len() ); } }
+	public inline function len(): Float					{ return { Math.sqrt( dot(this) ); } }
+	public inline function norm(): CVector					{ return { div( len() ); } }
 
 }
 
@@ -203,12 +205,21 @@ abstract CollisionMask(Int) from CollisionGroup to Int {
 
 	public function interactsWith(other: CollisionGroup )
 	{
-		return ( this | ( 1 << other ) ) != 0;
+		return ( this & other ) != 0;
 	}
 }
 
 class Collision
 {
+	// ============================================================================
+	// Helpers
+	// ============================================================================
+
+	public static inline function impact( ray: CRay, t: Float )
+	{
+		return ray.p.add( ray.d.mulVS(t ) );
+	}
+
 	// ============================================================================
 	// Collisions
 	// ============================================================================
@@ -226,7 +237,7 @@ class Collision
 		var l = a.p.clampV( b.min, b.max );
 		var ab: CVector = a.p.sub( l );
 		var d2: Float = ab.dot(ab);
-		var r2 = a.r * a.r;
+		var r2: Float = a.r * a.r;
 		return d2 < r2;
 	}
 
@@ -298,7 +309,7 @@ class Collision
 		{
 			out.t = t;
 			//#define c2Impact(ray, t) c2Add(ray.p, c2Mulvs(ray.d, t))
-			var impact: CVector = a.p.add( a.d.mulVS(t) );
+			var impact: CVector = impact(a, t);// a.p.add( a.d.mulVS(t) );
 
 			var n: CVector = impact.sub(p).norm();
 			out.n.x = n.x;
@@ -310,12 +321,12 @@ class Collision
 		return false;
 	}
 
-	public static inline function signedDistancePointToPlay_OneDimensional( p: Float, n: Float, d: Float ) : Float
+	public static inline function signedDistancePointToPlane_OneDimensional( p: Float, n: Float, d: Float ) : Float
 	{
 		return p * n - d * n;
 	}
 
-	public static inline function rayToPlane_OneDimensional( da: Float, db: Float ): Float
+	public static function rayToPlane_OneDimensional( da: Float, db: Float ): Float
 	{
 		if( da < 0 ) return 0; 					// Ray started behind plane.
 		else if( da * db >= 0 ) return 1.;		// Ray starts and ends on the same of the plane.
@@ -327,10 +338,90 @@ class Collision
 		return 0;
 	}
 
-	public static function rayToAABB( a: CRay, b: CAABB, out: CRaycast )
+	public static inline function rayToAABB( a: CRay, b: CAABB, out: CRaycast )
 	{
 		//https://github.com/RandyGaul/cute_headers/blob/master/cute_c2.h#L1427
 		Utils.error("Stub");
+		var p0: CVector = a.p;
+		var p1: CVector = impact(a, a.t);
+		var a_box: CAABB = {
+			min: p0.minV(p1),
+			max: p0.maxV(p1)
+		};
+
+		// Test B's axes
+		if( !AABBtoAABB( a_box, b ) ) return false;
+
+		var ab: CVector = p1.sub(p0);
+		var n: CVector = ab.skew();
+		var absN: CVector = n.absV();
+		var halfExtents: CVector = b.max.sub(b.min).mulVS(0.5);
+		var centerOfBBox: CVector = b.min.add(b.max).mulVS(0.5);
+
+		var d: Float = Math.abs( n.dot( p0.sub(centerOfBBox) ) ) - n.dot(halfExtents);
+		if( d > 0 ) return false ;
+
+		// Calculate intermediate values up front.
+		// This would play well with superscalar architecture in it's original C impl...
+		// WHO KNOWS what haxe will do!
+		var da0: Float = signedDistancePointToPlane_OneDimensional( p0.x, -1.0, b.min.x);
+		var db0: Float = signedDistancePointToPlane_OneDimensional( p1.x, -1.0, b.min.x);
+		var da1: Float = signedDistancePointToPlane_OneDimensional( p0.x,  1.0, b.max.x);
+		var db1: Float = signedDistancePointToPlane_OneDimensional( p1.x,  1.0, b.max.x);
+		var da2: Float = signedDistancePointToPlane_OneDimensional( p0.y, -1.0, b.min.y);
+		var db2: Float = signedDistancePointToPlane_OneDimensional( p1.y, -1.0, b.min.y);
+		var da3: Float = signedDistancePointToPlane_OneDimensional( p0.y,  1.0, b.max.y);
+		var db3: Float = signedDistancePointToPlane_OneDimensional( p1.y,  1.0, b.max.y);
+
+		var t0: Float = rayToPlane_OneDimensional( da0, db0 );
+		var t1: Float = rayToPlane_OneDimensional( da1, db1 );
+		var t2: Float = rayToPlane_OneDimensional( da2, db2 );
+		var t3: Float = rayToPlane_OneDimensional( da3, db3 );
+
+		// Calculate hit predicate
+		// In the C version we can avoid branching via int cast but not in haxe :(
+		var hit0: Int = t0 < 1.0 ? 1 : 0;
+		var hit1: Int = t1 < 1.0 ? 1 : 0;
+		var hit2: Int = t2 < 1.0 ? 1 : 0;
+		var hit3: Int = t3 < 1.0 ? 1 : 0;
+		var hit = hit0 | hit1 | hit2 | hit3;
+
+		if( hit == 1 )
+		{
+			// Remap t's within 0-1 range, where >= 1 is treated as 0.
+			t0 = hit0 * t0;
+			t1 = hit1 * t1;
+			t2 = hit2 * t2;
+			t3 = hit3 * t3;
+
+			// Sort output by finding largest t to deduce the normal
+			if( t0 >= t1 && t0 >= t2 && t0 >= t3)
+			{
+				out.t = t0 * a.t;
+				out.n = {x: -1, y: 0};
+			}
+			else if( t1 >= t0 && t1 >= t2 && t1 >= t3 )
+			{
+				out.t = t1 * a.t;
+				out.n = {x: 1, y: 0};
+			}
+			else if( t2 >= t0 && t2 >= t1 && t2 >= t3 )
+			{
+				out.t = t2 * a.t;
+				out.n = {x: 0, y: -1};
+			}
+			else
+			{
+				out.t = t3 * a.t;
+				out.n = {x: 0, y: 1};
+			}
+
+			return true;
+		}
+
+		// CATCH
+		return false;
+
 	}
 
 

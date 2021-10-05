@@ -52,7 +52,7 @@ class Scene
         var scale = haxe.macro.Compiler.getDefine("renderScale");
         var viewportScale = 1;
 		var viewportWidth = 640;
-		var viewportHeight = 360;
+		var viewportHeight = 480;
 		if( size != null )
 		{
 			var p = size.split("x");

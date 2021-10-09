@@ -5,12 +5,6 @@ import game.GameState;
 import cerastes.InputManager.InputListener;
 import cerastes.InputManager.InputButton;
 import cerastes.InputManager.InputState;
-import game.scenes.GameScene;
-import game.PSXMaterialSetup;
-#if !workaround
-import game.objects.PlayerSprite;
-#end
-import game.objects.Enemy;
 import cerastes.fmt.BulletLevelResource.CBLMesh;
 import cerastes.fmt.BulletLevelResource.CBLTrigger;
 import cerastes.fmt.BulletLevelResource.CBLTriggerType;
@@ -60,19 +54,14 @@ class BulletLevel extends h2d.Object
 	public var o3d: h3d.scene.Object;
 	public var meshZ: Float = -7;
 
-	var pauseForClear = false;
-	var pauseForDead = false;
-
-	var lines: Array<String>;
-
-	var inputListener: InputListener;
+	public var pause = false; // Pause the whole dang level
+	var pauseForClear = false; // Just stop scrolling until we clear the screen
 
 
-#if !workaround
-	public var player: PlayerSprite;
-#end
+	public var fogColor(get,never): Int;
+	public function get_fogColor(){ return levelData.fogColor; }
 
-	var dialogueNode: DialogueNode;
+
 
 	public function new( data: CBLFile, width: Float, height: Float, ?parent: Object )
 	{
@@ -93,38 +82,20 @@ class BulletLevel extends h2d.Object
 
 		velocityX = data.velocity.x;
 		velocityY = data.velocity.y;
-		#if !workaround
-		player = cast hxd.Res.spr.player_csd.toSprite(this);
-
-		player.x = 360 / 2;
-		player.y = 480 * 0.8;
-
-		#end
-
-		GameState.immortal = false;
-
-		PSXMaterial.fogColor = levelData.fogColor;
-
-		inputListener =  {callback: this.onInput, priority: 150 };
 
 
-		GameState.butai.registerOnDialogueNode(this, onDialogue);
 
 		//haxe.ds.ListSort.sortSingleLinked(objects.head, function(a, b): Int{ return cast a.elt.spawnPosition - b.elt.spawnPosition; });
 	}
 
 	override function onRemove()
 	{
-		GameState.butai.unregisterOnDialogueNode(this);
 		super.onRemove();
 	}
 
-	function levelEnd()
+	public dynamic function onLevelEnd()
 	{
-		var l = GameState.level;
-		GameState.level++;
-		GameState.butai.unregisterOnDialogueNode(this);
-		GameState.butai.jump('LevelEnd${l}');
+
 	}
 
 	public function tick( delta: Float )
@@ -132,29 +103,7 @@ class BulletLevel extends h2d.Object
 		var oldPX = posX;
 		var oldPY = posY;
 
-		if( GameState.goFast ) delta *= 100;
-
-		if( GameState.inDialogue ) return;
-		if( pauseForDead ) return;
-
-		if( player.health <= 0 )
-		{
-			pauseForDead = true;
-
-			var ded = hxd.Res.ui.gameover.toObject();
-			Main.currentScene.s2d.addChild( ded );
-
-			// ???????
-			GameState.butai.unregisterOnDialogueNode(this);
-
-			new Timer(5, function(){
-				GameState.butai.jump("Title");
-			});
-		}
-
-		#if !workaround
-		player.tick(delta);
-		#end
+		if( pause ) return;
 
 		for( o in activeObjects )
 		{
@@ -215,20 +164,13 @@ class BulletLevel extends h2d.Object
 		activeObjects = [];
 		activeMeshes = [];
 		pauseForClear = false;
-		GameState.inDialogue = false;
+		pause = false;
 
 		updateSpawns();
 
 	}
 
-	private function onInput( button: InputButton, state: InputState, delta: Float  )
-	{
 
-		if( state == InputState.PRESSED && button == InputButton.START )
-			nextLine();
-
-		return true;
-	}
 
 	function updateSpawns()
 	{
@@ -304,8 +246,8 @@ class BulletLevel extends h2d.Object
 
 		for(m in newObject.getMaterials() )
 		{
-			if(m.texture == null )
-				m.texture = hxd.Res.mdl.bldg4.toTexture();
+			m.receiveShadows = false;
+			//m.texture = m.texture;
 		}
 
 		activeMeshes.push( newObject );
@@ -324,82 +266,12 @@ class BulletLevel extends h2d.Object
 			case Dialogue:
 				GameState.butai.jump('dialogue_${Math.floor( t.data.x )}' );
 			case LevelEnd:
-				levelEnd();
+				onLevelEnd();
 			case None:
 
 		}
 	}
 
-	function onDialogue( node: DialogueNode, handled: Bool )
-	{
-		dialogueNode = node;
-		if( node == null ) return false;
-
-		InputManager.register( inputListener );
-
-		lines = node.dialogue.split("\n");
-		GameState.inDialogue = true;
-
-		nextLine();
-
-		return true;
-	}
-
-	function nextLine()
-	{
-		var line = lines.shift();
-		var gs: GameScene = Std.downcast( Main.currentScene, GameScene );
-		if( gs == null ) return;
-
-		if( line == null )
-		{
-			InputManager.unregister( inputListener );
-			GameState.inDialogue = false;
-			gs.dialogue.visible = false;
-			GameState.butai.nextAll(dialogueNode);
-			return;
-		}
-
-		var r = ~/&[A-z\-]+/g;
-		if( r.match(line ) )
-		{
-			var exp = StringTools.trim( r.matched(0) ).substr(1);
-
-			gs.setExpression(exp);
-
-			line = StringTools.trim( r.replace( line, "" ) );
-
-
-		}
-
-		line = StringTools.trim( StringTools.replace(line, "<br>","\n") );
-		line = StringTools.replace(line, "\r\n","\n");
-		line = StringTools.replace(line, "\n\n","\n");
-		line = StringTools.replace(line, "  "," ");
-
-
-
-		gs.dialogue.visible = true;
-
-		var fuck = ~/[：:]/g;
-		var bits = fuck.split(line);
-
-		if( bits.length > 1 )
-		{
-			var speaker = bits.shift();
-			gs.setSpeakerName(speaker);
-
-		}
-		else
-		{
-			gs.setSpeakerName(null);
-		}
-
-		var line = bits.join(":");
-
-		gs.setDialogueText(line);
-
-	}
 
 	public function simluateMove( newX: Float, newY: Float )
 	{

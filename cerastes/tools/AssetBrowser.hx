@@ -140,18 +140,28 @@ class AssetBrowser  extends  ImguiTool
 				asset.dirty = false;
 
 			case "fnt":
-				var any = hxd.Res.load( asset.file );
 				asset.scene = new h2d.Scene();
-				var font = hxd.fmt.bfnt.Reader.parse( any.entry.getBytes(), function(name){
-					return hxd.Res.load( '${any.entry.directory}/${name}'  ).toTile();
-				});
+				if( StringTools.endsWith( asset.file, ".msdf.fnt" ) )
+				{
+					var res = hxd.Res.loader.loadCache( asset.file, hxd.res.BitmapFont);
+					var t = new h2d.Text( res.toSdfFont(16,4,0.4, 1/16), asset.scene );
 
+					t.maxWidth = previewWidth - 8;
+					t.x = 4;
+					t.y = 4;
+					t.text = "The quick brown fox jumps over the lazy dog";
 
-				var t = new Text(font, asset.scene );
-				t.maxWidth = previewWidth - 8;
-				t.x = 4;
-				t.y = 4;
-				t.text = "The quick brown fox jumps over the lazy dog";
+				}
+				else
+				{
+					var res = hxd.Res.loader.loadCache( asset.file, hxd.res.BitmapFont);
+
+					var t = new Text(res.toFont(), asset.scene );
+					t.maxWidth = previewWidth - 8;
+					t.x = 4;
+					t.y = 4;
+					t.text = "The quick brown fox jumps over the lazy dog";
+				}
 
 			case "bdef":
 				asset.scene = new h2d.Scene();
@@ -434,7 +444,7 @@ class AssetBrowser  extends  ImguiTool
 		{
 			case "bdef":
 				ImGui.textColored(typeColor,"Butai node definition file");
-			case "fnt":
+			case "fnt" | "msdf":
 				ImGui.textColored(typeColor,"Font atlas");
 			case "cui":
 				ImGui.textColored(typeColor,"UI File");
@@ -461,7 +471,7 @@ class AssetBrowser  extends  ImguiTool
 		var ext = Path.extension( asset.file );
 		return switch(ext)
 		{
-			case "fnt": "Fonts";
+			case "fnt" | "msdf" | "sdf": "Fonts";
 			case "cui": "UI File";
 			case "png" | "bmp" | "gif" | "jpg": "Images";
 			case "bdef": "Butai";

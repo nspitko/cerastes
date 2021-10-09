@@ -292,7 +292,7 @@ class SpriteData
 	 * @return Array<Field>
 	 */
 
-	static var fieldMap = new Map<String, FieldData>();
+	@:persistent static var fieldMap = new Map<String, FieldData>();
 	static function createSpriteDataClass( fields: Array<Field> ) : Array<Field>
 	{
 		var append: Array<Field> = [];

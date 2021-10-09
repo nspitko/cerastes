@@ -1,6 +1,5 @@
 package cerastes.bulletml;
-import game.objects.Enemy;
-import game.objects.Actor;
+#if cannonml
 import game.GameState;
 import cerastes.collision.Colliders.Circle;
 import cerastes.collision.Collision.CAABB;
@@ -10,7 +9,7 @@ import cerastes.collision.Colliders.Collider;
 import cerastes.collision.Collision.CCircle;
 import cerastes.collision.Colliders.CollisionObject;
 import cerastes.fmt.SpriteResource;
-#if cannonml
+
 import hxd.res.Loader;
 import h2d.Tile;
 import h2d.Graphics;
@@ -37,6 +36,13 @@ abstract CannonDestructonReason(Int) from Int to Int {
 
     var SCENE_CLEAR = 9;        // Special case: We called DestroyAll(), treat similarly to EXIT_SCENE
 
+}
+
+// An actor attached to a bullet. Mostly used for attaching enemies to bullet patterns
+interface BulletActor
+{
+    public var bullet: CannonBullet;
+	public var fiber: CMLFiber;
 }
 
 class CannonBullet extends CMLObject implements CollisionObject
@@ -111,11 +117,6 @@ class CannonBullet extends CMLObject implements CollisionObject
 
     public function handleCollision( other: CollisionObject )
     {
-        if( Std.isOfType( other, Actor ) )
-        {
-            var actor: Actor = cast other;
-            actor.takeDamage( damage, Bullet );
-        }
         sprite.remove();
         destroy(COLLISION);
     }
@@ -204,7 +205,7 @@ class CannonBullet extends CMLObject implements CollisionObject
         if( sprite == null )
             return;
 
-        var enemy: game.objects.Enemy = Std.downcast( sprite, game.objects.Enemy );
+        var enemy: BulletActor = cast Std.downcast( sprite, cast BulletActor );
         if( enemy != null )
         {
             enemy.bullet = this;
@@ -316,7 +317,7 @@ class CannonBullet extends CMLObject implements CollisionObject
         //if( !this.isActive )
         active = this.isActive;
 
-        if( !GameState.inDialogue && sprite != null && sprite.parent != null )
+        if( sprite != null && sprite.parent != null )
             sprite.tick( 1/60 );
 
 

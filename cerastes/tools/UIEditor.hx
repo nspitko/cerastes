@@ -1,6 +1,7 @@
 
 package cerastes.tools;
 
+import hxd.res.Font;
 import hxd.res.BitmapFont;
 import h3d.Vector;
 #if hlimgui
@@ -305,8 +306,10 @@ class UIEditor extends ImguiTool
 
 	function processSceneMouse( delta: Float )
 	{
-		if( ImGui.isMouseClicked(ImGuiMouseButton.Left) && previewRoot != null )
+		var isMouseOverViewport = mouseScenePos.x > 0 && mouseScenePos.x < viewportWidth && mouseScenePos.y > 0 && mouseScenePos.y < viewportHeight;
+		if( isMouseOverViewport && ImGui.isMouseClicked(ImGuiMouseButton.Left) && previewRoot != null )
 		{
+
 			var matches = previewRoot.findAll(function(o: Object){
 				var bounds = o.getBounds();
 				return bounds.contains( new Point(mouseScenePos.x, mouseScenePos.y) ) ? o : null;
@@ -686,10 +689,8 @@ class UIEditor extends ImguiTool
 				var newFont = IG.textInput( "Font", def.props["font"] );
 				if( newFont != null && hxd.Res.loader.exists( newFont ) )
 				{
-					var fe = hxd.Res.loader.load( newFont) ;
-					var res = new BitmapFont( fe.entry );
-					t.font = res.toFont();
 					def.props["font"] = newFont;
+					loadFont( t, def );
 				}
 
 				if( ImGui.beginDragDropTarget() )
@@ -697,12 +698,32 @@ class UIEditor extends ImguiTool
 					var payload = ImGui.acceptDragDropPayloadString("asset_name");
 					if( payload != null && hxd.Res.loader.exists( payload ) )
 					{
-						var fe = hxd.Res.loader.load( payload) ;
-						var res = new BitmapFont( fe.entry );
-						t.font = res.toFont();
 						def.props["font"] = payload;
+						loadFont( t, def );
 					}
 					ImGui.endDragDropTarget();
+				}
+
+				if( StringTools.endsWith( def.props["font"], ".msdf.fnt" ) )
+				{
+					var s: Int = def.props["sdf_size"];
+					if( IG.wref( ImGui.inputInt( "Font Size", _ ), s ) )
+					{
+						def.props["sdf_size"] = s;
+						loadFont( t, def );
+					}
+					var a: Float = def.props["sdf_alpha"];
+					if( IG.wref( ImGui.inputDouble( "Alpha Cutoff", _ , 0.01, 0.1, "%.3f"), a ) )
+					{
+						def.props["sdf_alpha"] = a;
+						loadFont( t, def );
+					}
+					var s: Int = def.props["sdf_smoothing"];
+					if( IG.wref( ImGui.inputInt( "Smoothing", _ ), s ) )
+					{
+						def.props["sdf_smoothing"] = s;
+						loadFont( t, def );
+					}
 				}
 
 				var out = IG.combo("Text Align", t.textAlign, h2d.Text.Align );
@@ -847,6 +868,27 @@ class UIEditor extends ImguiTool
 
 
 
+		}
+	}
+
+	function loadFont(text: h2d.Text, def: CUIElementDef )
+	{
+		var isSDF = StringTools.endsWith( def.props["font"], ".msdf.fnt" );
+
+		if( !isSDF )
+		{
+			text.font = hxd.Res.loader.loadCache( def.props["font"], BitmapFont).toFont();
+		}
+		else
+		{
+			if( !def.props.exists("sdf_size") )
+			{
+				// Defaults
+				def.props["sdf_size"] = 14;
+				def.props["sdf_alpha"] = 0.5;
+				def.props["sdf_smoothing"] = 32;
+			}
+			text.font = hxd.Res.loader.loadCache( def.props["font"], BitmapFont).toSdfFont(def.props["sdf_size"],4,def.props["sdf_alpha"],1/def.props["sdf_smoothing"]);
 		}
 	}
 

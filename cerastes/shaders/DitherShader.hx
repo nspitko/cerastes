@@ -34,10 +34,6 @@ class DitherShader extends h3d.shader.ScreenShader {
 			return ditherPattern.get(ditherUV).x;
 		}
 
-		function mix_unused(a: Float, b: Float, amt: Float): Float
-		{
-			return ((1.0 - amt) * a) + (b * amt);
-		}
 
 		/// YUV/RGB color space calculations
 
@@ -64,15 +60,6 @@ class DitherShader extends h3d.shader.ScreenShader {
                     yuva.a);
             }
 
-		function UVtoRGB(yuva: Vec4): Vec4
-		{
-			yuva.gb -= 0.5;
-			return vec4(
-				yuva.r * 1 + yuva.g * 0 + yuva.b * 1.5748,
-				yuva.r * 1 + yuva.g * -0.187324 + yuva.b * -0.468124,
-				yuva.r * 1 + yuva.g * 1.8556 + yuva.b * 0,
-				yuva.a);
-		}
 
 		function fragment()
 		{

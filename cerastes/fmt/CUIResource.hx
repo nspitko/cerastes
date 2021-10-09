@@ -76,6 +76,14 @@ class CUIResource extends Resource
 				var fe = hxd.Res.loader.load( props.get("font") );
 				var res = new BitmapFont( fe.entry );
 
+				var isSDF = StringTools.endsWith( props.get("font"), ".msdf.fnt" );
+
+				if( isSDF )
+					obj = new h2d.Text( res.toSdfFont(props["sdf_size"],4,props["sdf_alpha"],props["sdf_smoothing"]) );
+				else
+					obj = new h2d.Text( res.toFont() );
+
+				/*
 				switch( props.get("font") )
 				{
 					case "fnt/ui_numerics.fnt":
@@ -84,7 +92,7 @@ class CUIResource extends Resource
 						obj = new h2d.Text( hxd.Res.fnt.dialogue.toSdfFont(50,4,0.475,1/10) );
 					default:
 						obj = new h2d.Text( res.toSdfFont(24,4,0.475,1/10) );
-				}
+				}*/
 
 				//obj = new h2d.Text( res.toSdfFont(24,4,0.475,1/10) );
 
@@ -141,6 +149,7 @@ class CUIResource extends Resource
 					o.textAlign = EnumTools.createByIndex(h2d.Text.Align, props["text_align"] );
 				if( props.exists("max_width") )
 					o.maxWidth = props["max_width"];
+
 
 			case "h2d.Bitmap":
 				var o = cast(obj, h2d.Bitmap);

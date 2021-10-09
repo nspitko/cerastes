@@ -12,8 +12,6 @@ import hxd.res.Atlas;
 import cerastes.Sprite.SpriteCache;
 import hxd.Key;
 import cerastes.fmt.SpriteResource;
-import org.si.cml.CMLObject;
-import org.si.cml.CMLFiber;
 import cerastes.tools.ImguiTool.ImguiToolManager;
 import hl.UI;
 import haxe.Json;
@@ -67,8 +65,6 @@ class SpriteEditor extends ImguiTool
 	var dockspaceIdCenter: ImGuiID;
 
 	var dockCond = ImGuiCond.Appearing;
-
-	var seed: CMLFiber;
 
 	var spriteDef: CSDDefinition;
 	var selectedAnimation: CSDAnimation;

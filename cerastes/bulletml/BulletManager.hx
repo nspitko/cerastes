@@ -1,12 +1,11 @@
 package cerastes.bulletml;
 
+#if cannonml
 import cerastes.macros.Metrics;
 import org.si.cml.core.CMLState;
 import cerastes.fmt.SpriteResource;
 import h2d.Tile;
 import haxe.Json;
-#if cannonml
-
 import hxd.res.Loader;
 import org.si.cml.CMLFiber;
 import org.si.cml.core.CMLParser;

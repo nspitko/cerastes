@@ -110,6 +110,9 @@ class Scene
 
         app.sevents.removeScene(this.s3d);
         app.sevents.removeScene(this.s2d);
+
+        s2d.dispose();
+        s3d.dispose();
     }
 
     /**

@@ -217,7 +217,7 @@ class UIEditor extends ImguiTool
 							fileName = localPath;
 						}
 
-						CUIResource.write(rootDef,fileName);
+						CUIResource.writeObject(rootDef, preview,fileName);
 
 						cerastes.tools.AssetBrowser.needsReload = true;
 					}
@@ -616,7 +616,7 @@ class UIEditor extends ImguiTool
 			return;
 
 		var newName = IG.textInput( "ID", def.name );
-		if( newName != null )
+		if( newName != null && newName.length > 0 )
 		{
 			var other = preview.getObjectByName(newName);
 			if( other == null )
@@ -749,6 +749,7 @@ class UIEditor extends ImguiTool
 				var newTile = IG.textInput( "Tile", def.props["tile"] );
 				if( newTile != null && hxd.Res.loader.exists( newTile ) )
 				{
+					def.props["tile"] = newTile;
 					b.tile = hxd.Res.loader.load( newTile ).toTile();
 				}
 
@@ -757,6 +758,7 @@ class UIEditor extends ImguiTool
 					var payload = ImGui.acceptDragDropPayloadString("asset_name");
 					if( payload != null && hxd.Res.loader.exists( payload ) )
 					{
+						def.props["tile"] = newTile;
 						b.tile = hxd.Res.loader.load( payload ).toTile();
 					}
 					ImGui.endDragDropTarget();

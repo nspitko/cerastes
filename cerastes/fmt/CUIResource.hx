@@ -209,21 +209,7 @@ class CUIResource extends Resource
 		}
 	}
 
-	public static function write( def: CUIElementDef, file: String )
-	{
-		var cui: CUIFile = {
-			version: version,
-			root: def
-		};
 
-		var s = new hxbit.Serializer();
-		var bytes = s.serialize(cui);
-
-		#if hl
-		// @todo We should peek the config to find out where res is; don't just assume
-		sys.io.File.saveBytes('res/${file}',bytes);
-		#end
-	}
 
 	public static function writeObject( def: CUIElementDef, obj: Object, file: String )
 	{
@@ -235,11 +221,11 @@ class CUIResource extends Resource
 			root: def
 		};
 
-		var s = new hxbit.Serializer();
-		var bytes = s.serialize(cui);
+		var s = new haxe.Serializer();
+		s.serialize(cui);
 
 		#if hl
-		sys.io.File.saveBytes('res/${file}',bytes);
+		sys.io.File.saveContent('res/${file}',s.toString());
 		#end
 	}
 
@@ -334,8 +320,11 @@ class CUIResource extends Resource
 	{
 		if (data != null) return data;
 
-		var u = new hxbit.Serializer();
-		data = u.unserialize(entry.getBytes(), CUIFile);
+
+
+		var u = new haxe.Unserializer(entry.getText());
+		data = u.unserialize();
+
 
 		return data;
 	}

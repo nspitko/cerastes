@@ -64,15 +64,13 @@ class AssetBrowser  extends  ImguiTool
 	public function new()
 	{
 		var size = haxe.macro.Compiler.getDefine("windowSize");
-		viewportWidth = 640;
-		viewportHeight = 360;
-		if( size != null )
-		{
-			var p = size.split("x");
-			viewportWidth = Std.parseInt(p[0]);
-			viewportHeight = Std.parseInt(p[1]);
-		}
+		var viewportDimensions = IG.getViewportDimensions();
+		viewportWidth = viewportDimensions.width;
+		viewportHeight = viewportDimensions.height;
 
+		// ???? hacky shit. We really want to just dynamically size this for our sprite
+		viewportWidth = cast viewportWidth;
+		viewportHeight = cast  viewportHeight;
 		previewWidth = cast Math.floor( previewWidth * scaleFactor );
 		previewHeight = cast Math.floor( previewHeight * scaleFactor );
 
@@ -177,6 +175,9 @@ class AssetBrowser  extends  ImguiTool
 
 				var scale = previewWidth / viewportWidth;
 				obj.scale( scale );
+
+				var offsetY = ( ( viewportWidth - viewportHeight ) / 2 ) * scale;
+				obj.y = offsetY;
 
 				asset.scene.addChild( obj );
 

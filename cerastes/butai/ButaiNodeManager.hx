@@ -197,27 +197,37 @@ class ButaiNodeManager
 		{
 			case "db.SceneNode":
 				var sceneNode : db.Butai.SceneNode = cast node;
-				Utils.info("Changing scene: " + sceneNode.scene );
-				ButaiSupport.changeScene( sceneNode.scene );
 
 				if( !onSceneNode(cast node) )
+				{
+					Utils.info("Changing scene: " + sceneNode.scene );
+					ButaiSupport.changeScene( sceneNode.scene );
+
 					nextAll( node );
+				}
 
 			case "db.MusicNode":
 
 				var mpn : db.Butai.MusicNode = cast node;
-				SoundManager.playMusic( mpn.file );
+
 
 				if( !onMusicNode( mpn ) )
+				{
+					SoundManager.playMusic( mpn.file );
 					nextAll( node );
+				}
 
 			case "db.SFXNode":
 
 				var mpn : db.Butai.SFXNode = cast node;
-				SoundManager.sfx( mpn.file, mpn.loop == "1" );
+
 
 				if( !onSFXNode( mpn ) )
+				{
+					SoundManager.sfx( mpn.file, mpn.loop == "1" );
+					
 					nextAll( node );
+				}
 
 			case "db.SFXStopNode":
 

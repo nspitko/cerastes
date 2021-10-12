@@ -242,14 +242,6 @@ class BulletLevel extends h2d.Object
 		//newObject.scale(0.17);
 
 
-		//trace('${sx}x${sy}x${meshZ}');
-
-		for(m in newObject.getMaterials() )
-		{
-			m.receiveShadows = false;
-			//m.texture = m.texture;
-		}
-
 		activeMeshes.push( newObject );
 		o3d.addChild(newObject);
 	}

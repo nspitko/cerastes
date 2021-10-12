@@ -175,12 +175,13 @@ class BulletManager
 	public static function tick( delta:Float )
     {
 		Metrics.begin();
+		if( cmlRoot == null ) return;
+
 		if( cmlTarget != null && target != null )
 		{
 			cmlTarget.x = target.x;
 			cmlTarget.y = target.y;
 		}
-
 		#if tools
 		try {
 			CMLObject.frameUpdate();

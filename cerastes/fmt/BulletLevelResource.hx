@@ -1,5 +1,7 @@
 package cerastes.fmt;
 
+#if cannonml
+
 import cerastes.collision.Collision.ColliderType;
 import cerastes.Sprite.SpriteCache;
 import h2d.col.Point;
@@ -139,3 +141,5 @@ class BulletLevelResource extends Resource
 		return d;
 	}
 }
+
+#end

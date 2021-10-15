@@ -1,6 +1,7 @@
 
 package cerastes.tools;
 
+import haxe.display.Protocol.HaxeResponseErrorData;
 import hxd.res.Font;
 import hxd.res.BitmapFont;
 import h3d.Vector;
@@ -16,7 +17,7 @@ import hxd.BytesBuffer;
 import h2d.Text;
 import hl.Ref;
 import cerastes.fmt.CUIResource;
-import cerastes.fmt.CUIResource.CUIElementDef;
+import cerastes.fmt.CUIResource.CUIObject;
 import h2d.Flow;
 import h2d.Bitmap;
 import h3d.mat.Texture;
@@ -46,11 +47,11 @@ class UIEditor extends ImguiTool
 	var sceneRTId: Int;
 
 	var fileName: String;
-	var rootDef: CUIElementDef;
+	var rootDef: CUIObject;
 
 	var treeIdx = 0;
-	var selectedInspectorTree: CUIElementDef;
-	var selectedDragDrop: CUIElementDef;
+	var selectedInspectorTree: CUIObject;
+	var selectedDragDrop: CUIObject;
 
 	var scaleFactor = Utils.getDPIScaleFactor();
 
@@ -85,6 +86,14 @@ class UIEditor extends ImguiTool
 		cursor = new h2d.Graphics();
 
 
+		rootDef = {
+			type: "h2d.Object",
+			name:"root",
+			children: []
+		};
+
+		previewRoot = new Object(preview);
+		cerastes.fmt.CUIResource.recursiveCreateObjects(rootDef, previewRoot);
 
 	}
 
@@ -112,6 +121,12 @@ class UIEditor extends ImguiTool
 		preview.addChild(selectedItemBorder);
 		preview.addChild(cursor);
 
+	}
+
+	function updateDef( o: CUIObject )
+	{
+		var e = previewRoot.getObjectByName( o.name );
+		cerastes.fmt.CUIResource.updateObject(o, e);
 	}
 
 	function inspectorColumn()
@@ -210,14 +225,8 @@ class UIEditor extends ImguiTool
 					});
 					if( newFile != null )
 					{
-						var idx = newFile.indexOf("res");
-						if( idx != -1 )
-						{
-							var localPath = newFile.substr(idx);
-							fileName = localPath;
-						}
-
-						CUIResource.writeObject(rootDef, preview,fileName);
+						fileName = Utils.toLocalFile( newFile );
+						CUIResource.writeObject(rootDef, preview,newFile);
 
 						cerastes.tools.AssetBrowser.needsReload = true;
 					}
@@ -369,7 +378,7 @@ class UIEditor extends ImguiTool
 		}
 	}
 
-	function getElementDefByName( name: String, def: CUIElementDef ) : CUIElementDef
+	function getElementDefByName( name: String, def: CUIObject ) : CUIObject
 	{
 		if( def.name == name )
 			return def;
@@ -424,10 +433,9 @@ class UIEditor extends ImguiTool
 		if( rootDef == null )
 			return;
 		// @todo this is dumb.
-		var dd: CUIElementDef = {
+		var dd: CUIObject = {
 			type:"dummy",
 			name:"dummy",
-			props: [],
 			children: [rootDef]
 		};
 		treeIdx = 0;
@@ -448,7 +456,7 @@ class UIEditor extends ImguiTool
 		return name;
 	}
 
-	function populateChildren( def: CUIElementDef )
+	function populateChildren( def: CUIObject )
 	{
 		for( idx in 0 ... def.children.length )
 		{
@@ -560,7 +568,7 @@ class UIEditor extends ImguiTool
 		}
 	}
 
-	function getDefByName(name: String, def: CUIElementDef = null )
+	function getDefByName(name: String, def: CUIObject = null )
 	{
 		if( def == null )
 			def = rootDef;
@@ -577,7 +585,7 @@ class UIEditor extends ImguiTool
 		return null;
 	}
 
-	function getDefParent(find: CUIElementDef, ?def: CUIElementDef = null )
+	function getDefParent(find: CUIObject, ?def: CUIObject = null )
 	{
 		if( def == null )
 			def = rootDef;
@@ -621,8 +629,8 @@ class UIEditor extends ImguiTool
 			var other = preview.getObjectByName(newName);
 			if( other == null )
 			{
-				obj.name = newName;
 				def.name = newName;
+				updateScene();
 			}
 		}
 
@@ -638,193 +646,155 @@ class UIEditor extends ImguiTool
 			s = Type.getSuperClass( s );
 		}
 
+		updateDef( def );
+
 		ImGui.popID();
 	}
 
 	//
 	// Field related functions
 	//
-	function populateEditorFields(obj: Object, def: CUIElementDef, type: String )
+	function populateEditorFields(obj: Object, def: CUIObject, type: String )
 	{
 		switch( type )
 		{
 			case "h2d.Object":
 				ImGui.separator();
-				IG.wref( ImGui.inputDouble("X",_,1,10,"%.2f"), obj.x );
-				IG.wref( ImGui.inputDouble("Y",_,1,10,"%.2f"), obj.y );
-				var single: Single = obj.rotation;
+				IG.wref( ImGui.inputDouble("X",_,1,10,"%.2f"), def.x );
+				IG.wref( ImGui.inputDouble("Y",_,1,10,"%.2f"), def.y );
+				var single: Single = def.rotation;
 				if( IG.wref( ImGui.sliderAngle("Rotation", _), single ) )
-					obj.rotation = single;
+					def.rotation = single;
 
-				IG.wref( ImGui.inputDouble("Scale X",_,1,10,"%.2f"), obj.scaleX );
-				IG.wref( ImGui.inputDouble("Scale Y",_,1,10,"%.2f"), obj.scaleY );
+				IG.wref( ImGui.inputDouble("Scale X",_,1,10,"%.2f"), def.scaleX );
+				IG.wref( ImGui.inputDouble("Scale Y",_,1,10,"%.2f"), def.scaleY );
 
 			case "h2d.Drawable":
-				var t : h2d.Drawable = cast obj;
+				var d : CUIDrawable = cast def;
 				ImGui.separator();
 				// Color
-				var color = new hl.NativeArray<Single>(4);
-				color[0] = t.color.r;
-				color[1] = t.color.g;
-				color[2] = t.color.b;
-				color[3] = t.color.a;
-				var flags = ImGuiColorEditFlags.AlphaBar | ImGuiColorEditFlags.AlphaPreview
-						| ImGuiColorEditFlags.DisplayRGB | ImGuiColorEditFlags.DisplayHex
-						| ImGuiColorEditFlags.AlphaPreviewHalf;
-				if( IG.wref( ImGui.colorPicker4( "Color", _, flags), color ) )
-				{
-					t.color.set(color[0], color[1], color[2], color[3] );
-				}
+				var nc = IG.inputColorInt( d.color );
+				if( nc != -1 )
+					d.color = nc;
 
 			case "h2d.Text":
-				var t : Text = cast obj;
+				var d: CUIText = cast def;
 
 				ImGui.separator();
-				var val = IG.textInputMultiline("Text", t.text, null, ImGuiInputTextFlags.Multiline);
+				var val = IG.textInputMultiline("Text", d.text, null, ImGuiInputTextFlags.Multiline);
 				if( val != null )
-				{
-					t.text = val;
-				}
+					d.text = val;
 
-				var newFont = IG.textInput( "Font", def.props["font"] );
+				var newFont = IG.textInput( "Font", d.font );
 				if( newFont != null && hxd.Res.loader.exists( newFont ) )
-				{
-					def.props["font"] = newFont;
-					loadFont( t, def );
-				}
+					d.font = newFont;
 
 				if( ImGui.beginDragDropTarget() )
 				{
 					var payload = ImGui.acceptDragDropPayloadString("asset_name");
 					if( payload != null && hxd.Res.loader.exists( payload ) )
-					{
-						def.props["font"] = payload;
-						loadFont( t, def );
-					}
+						d.font = payload;
+
 					ImGui.endDragDropTarget();
 				}
 
-				if( StringTools.endsWith( def.props["font"], ".msdf.fnt" ) )
+				if( StringTools.endsWith( d.font, ".msdf.fnt" ) )
 				{
-					var s: Int = def.props["sdf_size"];
-					if( IG.wref( ImGui.inputInt( "Font Size", _ ), s ) )
-					{
-						def.props["sdf_size"] = s;
-						loadFont( t, def );
-					}
-					var a: Float = def.props["sdf_alpha"];
-					if( IG.wref( ImGui.inputDouble( "Alpha Cutoff", _ , 0.01, 0.1, "%.3f"), a ) )
-					{
-						def.props["sdf_alpha"] = a;
-						loadFont( t, def );
-					}
-					var s: Int = def.props["sdf_smoothing"];
-					if( IG.wref( ImGui.inputInt( "Smoothing", _ ), s ) )
-					{
-						def.props["sdf_smoothing"] = s;
-						loadFont( t, def );
-					}
+					IG.wref( ImGui.inputDouble( "Font Size", _ ), d.sdfSize );
+					IG.wref( ImGui.inputDouble( "Alpha Cutoff", _ ), d.sdfAlpha );
+					IG.wref( ImGui.inputDouble( "Smoothing", _ ), d.sdfSmoothing );
 				}
 
-				var out = IG.combo("Text Align", t.textAlign, h2d.Text.Align );
+				var out = IG.combo("Text Align", d.textAlign, h2d.Text.Align );
 				if( out != null )
-				{
-					t.textAlign = out;
+					d.textAlign = out;
 
-				}
 
-				var maxWidth: Float = t.maxWidth > 0 ? t.maxWidth : 0;
+				var maxWidth: Float = d.maxWidth > 0 ? d.maxWidth : 0;
 				if( IG.wref( ImGui.inputDouble("Max Width",_,1,10,"%.2f"), maxWidth ) )
 				{
 					if( maxWidth > 0 )
-						t.maxWidth = maxWidth
+						d.maxWidth = maxWidth;
 					else
-						t.maxWidth = null;
+						d.maxWidth = null;
 
 				}
-
 
 			case "h2d.Bitmap":
-				var b : Bitmap = cast obj;
-				var newTile = IG.textInput( "Tile", def.props["tile"] );
+				var d: CUIBitmap = cast def;
+
+				var newTile = IG.textInput( "Tile", d.tile );
 				if( newTile != null && hxd.Res.loader.exists( newTile ) )
-				{
-					def.props["tile"] = newTile;
-					b.tile = hxd.Res.loader.load( newTile ).toTile();
-				}
+					d.tile = newTile;
 
 				if( ImGui.beginDragDropTarget() )
 				{
+					// Non-atlased bitmaps
 					var payload = ImGui.acceptDragDropPayloadString("asset_name");
 					if( payload != null && hxd.Res.loader.exists( payload ) )
-					{
-						def.props["tile"] = newTile;
-						b.tile = hxd.Res.loader.load( payload ).toTile();
-					}
+						d.tile = payload;
+
+					// Atlased tiles
+					var payload = ImGui.acceptDragDropPayloadString("atlas_tile");
+					if( payload != null )
+						d.tile = payload;
+						updateScene();
+
 					ImGui.endDragDropTarget();
 				}
 
-				var width: Float = b.width > 0 ? b.width : 0;
+				var width: Float = d.width > 0 ? d.width : 0;
 				if( IG.wref( ImGui.inputDouble("Width",_,1,10,"%.2f"), width ) )
 				{
 					if( width > 0 )
-						b.width = width
+						d.width = width;
 					else
-						b.width = null;
+						d.width = -1;
 				}
 
-				var height: Float = b.height > 0 ? b.height : 0;
+				var height: Float = d.height > 0 ? d.height : 0;
 				if( IG.wref( ImGui.inputDouble("Height",_,1,10,"%.2f"), height ) )
 				{
 					if( height > 0 )
-						b.height = height
+						d.height = height;
 					else
-						b.height = null;
+						d.height = -1;
 				}
 
 			case "h2d.Flow":
-				var t: h2d.Flow = cast obj;
+				var d: CUIFlow = cast def;
 
 
-				var layout = IG.combo("Layout", t.layout, h2d.Flow.FlowLayout );
+				var layout = IG.combo("Layout", d.layout, h2d.Flow.FlowLayout );
 				if( layout != null )
-				{
-					t.layout = layout;
-
-				}
+					d.layout = layout;
 
 
-				var align = IG.combo("Vertical Align", t.verticalAlign, h2d.Flow.FlowAlign );
+				var align = IG.combo("Vertical Align", d.verticalAlign, h2d.Flow.FlowAlign );
 				if( align != null )
-				{
-					t.verticalAlign = align;
+					d.verticalAlign = align;
 
-				}
-				align = IG.combo("Horizontal Align", t.horizontalAlign, h2d.Flow.FlowAlign );
+				align = IG.combo("Horizontal Align", d.horizontalAlign, h2d.Flow.FlowAlign );
 				if( align != null )
-				{
-					t.horizontalAlign = align;
-				}
+					d.horizontalAlign = align;
 
-				var overflow = IG.combo("Overflow", t.overflow, h2d.Flow.FlowOverflow );
+				var overflow = IG.combo("Overflow", d.overflow, h2d.Flow.FlowOverflow );
 				if( overflow != null )
-				{
-					t.overflow = overflow;
-				}
+					d.overflow = overflow;
 
-				var minW: Int = t.minWidth != null ? cast t.minWidth : 0;
-				var minH: Int = t.minHeight != null ? cast t.minHeight : 0;
+				var minW: Int = d.minWidth != -1 ? cast d.minWidth : 0;
+				var minH: Int = d.minHeight != -1 ? cast d.minHeight : 0;
 
 				if( IG.wref( ImGui.inputInt("Min Width",_,1,10), minW ) )
-					t.minWidth = minW;
+					d.minWidth = minW;
 
 				if( IG.wref( ImGui.inputInt("Min Height",_,1,10), minH ) )
-					t.minHeight = minH;
+					d.minHeight = minH;
 
 
-				IG.wref( ImGui.inputInt("Vertical Spacing",_,1,10), t.verticalSpacing );
-				IG.wref( ImGui.inputInt("Horizontal Spacing",_,1,10), t.horizontalSpacing );
-
+				IG.wref( ImGui.inputInt("Vertical Spacing",_,1,10), d.verticalSpacing );
+				IG.wref( ImGui.inputInt("Horizontal Spacing",_,1,10), d.horizontalSpacing );
+/*
 			case "h2d.Mask":
 				var t : h2d.Mask = cast obj;
 
@@ -833,13 +803,13 @@ class UIEditor extends ImguiTool
 
 				IG.wref( ImGui.inputDouble("Scroll X",_,1,10,"%.2f"), t.scrollX );
 				IG.wref( ImGui.inputDouble("Scroll Y",_,1,10,"%.2f"), t.scrollY );
-
+*/
 
 			case "h2d.Interactive":
-				var t : h2d.Interactive = cast obj;
+				var d : CUIInteractive = cast def;
 
-				IG.wref( ImGui.inputDouble("Width",_,1,10), t.width );
-				IG.wref( ImGui.inputDouble("Height",_,1,10), t.height );
+				IG.wref( ImGui.inputDouble("Width",_,1,10), d.width );
+				IG.wref( ImGui.inputDouble("Height",_,1,10), d.height );
 
 				/*
 				var cursor = IG.combo("Cursor", t.cursor, hxd.Cursor );
@@ -847,7 +817,7 @@ class UIEditor extends ImguiTool
 				{
 					t.cursor = cursor;
 				}*/
-
+/*
 				// But why?
 				IG.wref( ImGui.checkbox( "Ellipse", _ ), t.isEllipse );
 
@@ -866,13 +836,13 @@ class UIEditor extends ImguiTool
 					t.backgroundColor = c.toColor();
 				}
 
-
+*/
 
 
 
 		}
 	}
-
+/*
 	function loadFont(text: h2d.Text, def: CUIElementDef )
 	{
 		var isSDF = StringTools.endsWith( def.props["font"], ".msdf.fnt" );
@@ -893,7 +863,7 @@ class UIEditor extends ImguiTool
 			text.font = hxd.Res.loader.loadCache( def.props["font"], BitmapFont).toSdfFont(def.props["sdf_size"],4,def.props["sdf_alpha"],1/def.props["sdf_smoothing"]);
 		}
 	}
-
+*/
 	function getNameForType( type: String )
 	{
 		switch(type)
@@ -919,28 +889,32 @@ class UIEditor extends ImguiTool
 	function addItem(type: String)
 	{
 		var parent = selectedInspectorTree != null ? selectedInspectorTree : rootDef;
-
-		var def: CUIElementDef = {
-			type: type,
-			name: getAutoName(type),
-			props: [],
-			children: []
-		};
-
 		// Populate enough values to allow object creation
 		switch( type )
 		{
+			case "h2d.Object":
+
+				var def: CUIObject = {
+					type: type,
+					name: getAutoName(type),
+					children: []
+				};
+
+				parent.children.push(def);
+				/*
 			case "h2d.Text":
 				def.props["text"] = def.name;
 				def.props["font"] = "fnt/kodenmanhou16.fnt";
 			case "h2d.Bitmap":
-				def.props["tile"] = "spr/placeholder.png";
+				def.props["tile"] = "#444444";
 			case "h2d.Mask":
 				def.props["width"] = 100;
-				def.props["height"] = 100;
+				def.props["height"] = 100;*/
 		}
 
-		parent.children.push(def);
+
+
+
 
 		updateScene();
 	}

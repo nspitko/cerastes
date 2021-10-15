@@ -1,12 +1,12 @@
 
 package cerastes.tools;
 
+
+#if ( hlimgui && cannonml )
 import h2d.Graphics;
 import cerastes.fmt.SpriteResource.CSDPoint;
 import hxd.Key;
 import cerastes.macros.Metrics;
-#if ( hlimgui && cannonml )
-
 import org.si.cml.CMLObject;
 import org.si.cml.CMLFiber;
 import cerastes.tools.ImguiTool.ImguiToolManager;

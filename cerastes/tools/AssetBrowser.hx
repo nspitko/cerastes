@@ -356,9 +356,11 @@ class AssetBrowser  extends  ImguiTool
 		var ext = Path.extension( asset.file );
 		switch( ext )
 		{
+			#if cannonml
 			case "cml":
 				var t: BulletEditor = cast ImguiToolManager.showTool("BulletEditor");
 				t.openFile( asset.file );
+			#end
 			case "cui":
 				var t: UIEditor = cast ImguiToolManager.showTool("UIEditor");
 				t.openFile( asset.file );
@@ -368,9 +370,11 @@ class AssetBrowser  extends  ImguiTool
 			case "atlas":
 				var t: AtlasBrowser = cast ImguiToolManager.showTool("AtlasBrowser");
 				t.openFile( asset.file );
+			#if cannonml
 			case "cbl":
 				var t: BulletLevelEditor = cast ImguiToolManager.showTool("BulletLevelEditor");
 				t.openFile( asset.file );
+			#end
 		}
 	}
 
@@ -449,8 +453,10 @@ class AssetBrowser  extends  ImguiTool
 				ImGui.textColored(typeColor,"Font atlas");
 			case "cui":
 				ImGui.textColored(typeColor,"UI File");
+			#if cannonml
 			case "cml":
 				ImGui.textColored(typeColor,"Cannon package");
+			#end
 			case "atlas":
 				ImGui.textColored(typeColor,"Texture atlas");
 			case "csd":

@@ -361,6 +361,24 @@ class ImGuiTools {
 
 	}
 
+	public static function inputColorInt( nColor: Int ): Int
+	{
+		var c = Vector.fromColor(nColor);
+		var color = new hl.NativeArray<Single>(4);
+		color[0] = c.r;
+		color[1] = c.g;
+		color[2] = c.b;
+		color[3] = c.a;
+		var flags = ImGuiColorEditFlags.AlphaBar | ImGuiColorEditFlags.AlphaPreview
+				| ImGuiColorEditFlags.DisplayRGB | ImGuiColorEditFlags.DisplayHex
+				| ImGuiColorEditFlags.AlphaPreviewHalf;
+		if( IG.wref( ImGui.colorPicker4( "Color", _, flags), color ) )
+		{
+			return h3d.Vector.fromArray(cast color).toColor();
+		}
+		return -1;
+	}
+
 	public static function renderTimeline( groups: TimelineGroup )
 	{
 

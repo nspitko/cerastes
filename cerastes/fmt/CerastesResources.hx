@@ -9,8 +9,11 @@ class CerastesResources
 	public static function build()
 	{
 		Config.extensions["csd"] = "cerastes.fmt.SpriteResource";
+		#if cannonml
 		Config.extensions["cbl"] = "cerastes.fmt.BulletLevelResource";
+		#end
 		Config.extensions["cui"] = "cerastes.fmt.CUIResource";
+
 	}
 	#end
 }

@@ -1,5 +1,7 @@
 package cerastes;
 
+#if cannonml
+
 import cerastes.butai.ButaiNodeManager;
 import game.GameState;
 import cerastes.InputManager.InputListener;
@@ -351,3 +353,5 @@ ${o.fiber}';
 		return str;
 	}
 }
+
+#end

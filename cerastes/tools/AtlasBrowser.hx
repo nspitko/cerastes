@@ -58,7 +58,7 @@ class AtlasBrowser  extends  ImguiTool
 		index = globalIndex++;
 
 		// TESTING
-		openFile("spr/sample.atlas");
+		//openFile("spr/sample.atlas");
 	}
 
 	public function openFile( f: String )

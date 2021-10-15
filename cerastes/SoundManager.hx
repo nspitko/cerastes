@@ -228,7 +228,6 @@ class SoundManager
 		// Intentionally making this shit so I come up with something better later
 
 
-
 		if( cue == null || cue.length == 0 )
 		{
 			stopMusic();

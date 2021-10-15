@@ -1,6 +1,6 @@
 
 package cerastes.tools;
-
+#if ( hlimgui && cannonml )
 import cerastes.fmt.SpriteResource.CSDSound;
 import h3d.Vector;
 import h3d.mat.DepthBuffer;
@@ -9,7 +9,6 @@ import cerastes.collision.Colliders.AABB;
 import cerastes.fmt.SpriteResource.CSDFile;
 import cerastes.fmt.BulletLevelResource;
 import cerastes.macros.Metrics;
-#if ( hlimgui && cannonml )
 
 import org.si.cml.CMLObject;
 import org.si.cml.CMLFiber;

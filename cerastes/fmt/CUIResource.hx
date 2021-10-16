@@ -1,5 +1,6 @@
 package cerastes.fmt;
 
+import h2d.ScaleGrid;
 import h2d.Tile;
 import haxe.EnumTools;
 import h3d.Vector;
@@ -42,22 +43,22 @@ import hxd.res.Resource;
 
 @:structInit class CUIText extends CUIDrawable {
 	public var text: String = "";
-	public var font: String = "";
+	public var font: String = "fnt/kodenmanhou16.fnt";
 	// sdf
-	public var sdfSize: Float;
-	public var sdfAlpha: Float;
-	public var sdfSmoothing: Float;
+	public var sdfSize: Int = 12;
+	public var sdfAlpha: Float = 0.5;
+	public var sdfSmoothing: Float = 10;
 
-	public var textAlign: h2d.Text.Align;
+	public var textAlign: h2d.Text.Align = Left;
 
-	public var maxWidth: Null<Float>;
+	public var maxWidth: Float = -1;
 }
 
 
 @:structInit class CUIBitmap extends CUIDrawable {
-	public var tile: String;
-	public var width: Float;
-	public var height: Float;
+	public var tile: String = "#FF00FF";
+	public var width: Float = -1;
+	public var height: Float = -1;
 }
 
 @:structInit class CUIFlow extends CUIDrawable {
@@ -66,15 +67,48 @@ import hxd.res.Resource;
 	public var horizontalAlign: h2d.Flow.FlowAlign = Left;
 	public var overflow: h2d.Flow.FlowOverflow = Limit;
 
-	public var minWidth: Int;
-	public var minHeight: Int;
-	public var maxWidth: Int;
-	public var maxHeight: Int;
+	public var minWidth: Int = -1;
+	public var minHeight: Int = -1;
+	public var maxWidth: Int = -1;
+	public var maxHeight: Int = -1;
 
-	public var horizontalSpacing: Int;
-	public var verticalSpacing: Int;
+	public var horizontalSpacing: Int = 0;
+	public var verticalSpacing: Int = 0;
 
+	public var backgroundTile: String = "";
+	public var borderWidth: Int = 0;
+	public var borderHeight: Int = 0;
 }
+
+
+
+@:structInit class CUIMask extends CUIObject {
+
+	public var width: Int = 10;
+	public var height: Int = 10;
+
+	public var scrollX: Float = 0;
+	public var scrollY: Float = 0;
+}
+
+@:structInit class CUIScaleGrid extends CUIDrawable {
+
+	public var borderLeft: Int = 1;
+	public var borderRight: Int = 1;
+	public var borderTop: Int = 1;
+	public var borderBottom: Int = 1;
+	public var borderWidth: Int = 1;
+	public var borderHeight: Int = 1;
+
+	public var width: Float = 10;
+	public var height: Float = 10;
+
+	public var tileBorders: Bool = true;
+	public var ignoreScale: Bool = true;
+
+	public var contentTile: String = "#FF00FF";
+}
+
 
 @:structInit class CUIFile {
 	public var version: Int;
@@ -128,15 +162,19 @@ class CUIResource extends Resource
 			case "h2d.Flow":
 				obj = new h2d.Flow();
 			case "h2d.Text":
-				obj = new h2d.Text( null );
+				var d : CUIText = cast entry;
+				obj = new h2d.Text( getFont( d.font, d ) );
 
 			case "h2d.Bitmap":
 				obj = new Bitmap( );
 
 			case "h2d.Mask":
-				Utils.error("STUB");
-				//var props : CUIM
-				//obj = new h2d.Mask(props.get("width"),props.get("height"));
+				var d : CUIMask = cast entry;
+				obj = new h2d.Mask(d.width,d.height);
+
+			case "h2d.ScaleGrid":
+				var d : CUIScaleGrid = cast entry;
+				obj = new h2d.ScaleGrid(getTile(d.contentTile),d.borderLeft, d.borderTop);
 
 			case "h2d.Interactive":
 				var props: CUIInteractive = cast entry;
@@ -194,6 +232,8 @@ class CUIResource extends Resource
 				var e: CUIText = cast entry;
 				o.text = e.text;
 
+				o.font = getFont( e.font, e );
+
 				o.textAlign = e.textAlign;
 				o.maxWidth = e.maxWidth;
 
@@ -203,22 +243,10 @@ class CUIResource extends Resource
 				var e: CUIBitmap = cast entry;
 
 
-				if(e.tile.charAt(0) == "#" )
-					o.tile = Tile.fromColor( Std.parseInt( e.tile.substr(1) ) );
-				else if ( e.tile.indexOf(".atlas") != -1 )
-				{
+				o.tile = getTile( e.tile );
 
-					var atlasPos = e.tile.indexOf(".atlas") + 6;
-					var atlasName = e.tile.substr( 0,  atlasPos );
-					var tileName = e.tile.substr(atlasPos + 1);
-
-					o.tile = hxd.Res.loader.loadCache(atlasName, hxd.res.Atlas ).get( tileName );
-				}
-				else
-					o.tile = hxd.Res.loader.loadCache( e.tile, hxd.res.Image ).toTile();
-
-				o.width = e.width;
-				o.height = e.height;
+				o.width = e.width > 0 ? e.width : null;
+				o.height = e.height > 0 ? e.height : null;
 
 			case "h2d.Flow":
 				var o = cast(obj, h2d.Flow);
@@ -236,12 +264,21 @@ class CUIResource extends Resource
 
 				o.verticalSpacing = e.verticalSpacing;
 				o.horizontalSpacing = e.horizontalSpacing;
-/*
+
+				o.borderWidth = e.borderWidth;
+				o.borderHeight = e.borderHeight;
+
+				o.backgroundTile = e.backgroundTile.length > 0 ? getTile(e.backgroundTile) : null;
+
 			case "h2d.Mask":
 				var o = cast(obj, h2d.Mask);
-				o.scrollX = props["scroll_x"];
-				o.scrollY = props["scroll_y"];
-*/
+				var e: CUIMask = cast entry;
+				o.width = e.width;
+				o.height = e.height;
+
+				o.scrollY = e.scrollY;
+				o.scrollY = e.scrollY;
+
 			case "h2d.Interactive":
 				var o = cast(obj, h2d.Interactive);
 				var e: CUIInteractive = cast entry;
@@ -250,11 +287,65 @@ class CUIResource extends Resource
 				o.backgroundColor = e.backgroundColor;
 				o.cursor = e.cursor;
 
+			case "h2d.ScaleGrid":
+				var o = cast(obj, h2d.ScaleGrid);
+				var e: CUIScaleGrid = cast entry;
+
+				@:privateAccess o.contentTile = getTile( e.contentTile );
+
+				o.borderTop = e.borderTop;
+				o.borderBottom = e.borderBottom;
+				o.borderLeft = e.borderLeft;
+				o.borderRight = e.borderRight;
+
+				o.borderWidth = e.borderWidth;
+				o.borderHeight = e.borderHeight;
+
+				o.tileBorders = e.tileBorders;
+				o.ignoreScale = e.ignoreScale;
+
+				o.width = e.width;
+				o.height = e.height;
+
+
+
 
 			default:
 
 
 		}
+	}
+
+	static function getFont( file: String, e: { sdfSize: Int, sdfAlpha: Float, sdfSmoothing: Float } )
+	{
+		// Font shenanigans
+		var isSDF = StringTools.endsWith( file, ".msdf.fnt" );
+
+		if( !isSDF )
+		{
+			return hxd.Res.loader.loadCache( file, hxd.res.BitmapFont).toFont();
+		}
+		else
+		{
+			return hxd.Res.loader.loadCache( file, hxd.res.BitmapFont).toSdfFont(e.sdfSize,4,e.sdfAlpha,1/e.sdfSmoothing);
+		}
+	}
+
+	static function getTile( file: String )
+	{
+		if(file.charAt(0) == "#" )
+			return Tile.fromColor( Std.parseInt( file.substr(1) ) );
+		else if ( file.indexOf(".atlas") != -1 )
+		{
+
+			var atlasPos = file.indexOf(".atlas") + 6;
+			var atlasName = file.substr( 0, atlasPos );
+			var tileName = file.substr(atlasPos + 1);
+
+			return hxd.Res.loader.loadCache(atlasName, hxd.res.Atlas ).get( tileName );
+		}
+		else
+			return hxd.Res.loader.loadCache( file, hxd.res.Image ).toTile();
 	}
 
 

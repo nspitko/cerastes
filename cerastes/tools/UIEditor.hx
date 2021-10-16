@@ -1,6 +1,7 @@
 
 package cerastes.tools;
 
+import hxd.Key;
 import haxe.display.Protocol.HaxeResponseErrorData;
 import hxd.res.Font;
 import hxd.res.BitmapFont;
@@ -46,7 +47,7 @@ class UIEditor extends ImguiTool
 	var sceneRT: Texture;
 	var sceneRTId: Int;
 
-	var fileName: String;
+	var fileName: String = null;
 	var rootDef: CUIObject;
 
 	var treeIdx = 0;
@@ -68,6 +69,8 @@ class UIEditor extends ImguiTool
 	var mouseScenePos: ImVec2;
 	var mouseDragDuration: Float = -1;
 	var mouseDragStartPos: ImVec2;
+
+	var zoom: Int = 1;
 
 	public function new()
 	{
@@ -127,6 +130,7 @@ class UIEditor extends ImguiTool
 	{
 		var e = previewRoot.getObjectByName( o.name );
 		cerastes.fmt.CUIResource.updateObject(o, e);
+		@:privateAccess e.onContentChanged();
 	}
 
 	function inspectorColumn()
@@ -144,7 +148,7 @@ class UIEditor extends ImguiTool
 
 		if( ImGui.beginPopup("uie_additem") )
 		{
-			var types = ["h2d.Object", "h2d.Text", "h2d.Bitmap", "h2d.Flow", "h2d.Mask", "h2d.Interactive"];
+			var types = ["h2d.Object", "h2d.Text", "h2d.Bitmap", "h2d.Flow", "h2d.Mask", "h2d.ScaleGrid"];
 
 			for( t in types )
 			{
@@ -211,7 +215,7 @@ class UIEditor extends ImguiTool
 		{
 			if( ImGui.beginMenu("File", true) )
 			{
-				if (ImGui.menuItem("Save", "Ctrl+S"))
+				if ( fileName != null && ImGui.menuItem("Save", "Ctrl+S"))
 				{
 					CUIResource.writeObject(rootDef,preview,fileName);
 				}
@@ -251,7 +255,7 @@ class UIEditor extends ImguiTool
 		var isOpen = true;
 		var isOpenRef = hl.Ref.make(isOpen);
 
-		ImGui.setNextWindowSize({x: viewportWidth + 800, y: viewportHeight + 120}, ImGuiCond.Once);
+		ImGui.setNextWindowSize({x: viewportWidth * 2, y: viewportHeight * 1.6}, ImGuiCond.Once);
 		ImGui.begin('\uf108 UI Editor##${windowID()}', isOpenRef, ImGuiWindowFlags.NoDocking | ImGuiWindowFlags.MenuBar );
 
 		menuBar();
@@ -268,13 +272,32 @@ class UIEditor extends ImguiTool
 
 		// Preview
 		ImGui.setNextWindowDockId( dockspaceIdCenter, dockCond );
-		ImGui.begin('Preview##${windowID()}', null, ImGuiWindowFlags.NoMove);
+		ImGui.begin('Preview##${windowID()}', null, ImGuiWindowFlags.NoMove | ImGuiWindowFlags.HorizontalScrollbar );
 
 		var startPos: ImVec2 = ImGui.getCursorScreenPos();
 		var mousePos: ImVec2 = ImGui.getMousePos();
 		mouseScenePos = {x: mousePos.x - startPos.x, y: mousePos.y - startPos.y };
 
-		ImGui.image(sceneRT, { x: viewportWidth, y: viewportHeight }, null, null, null, {x: 1, y: 1, z:1, w:1} );
+		ImGui.image(sceneRT, { x: viewportWidth * zoom, y: viewportHeight * zoom }, null, null, null, {x: 1, y: 1, z:1, w:1} );
+
+		if( ImGui.isWindowHovered() )
+		{
+			// Should use imgui events here for consistency but GetIO isn't exposed to hl sooo...
+			if (Key.isPressed(Key.MOUSE_WHEEL_DOWN))
+			{
+				zoom--;
+				if( zoom <= 0 )
+					zoom = 1;
+			}
+			if (Key.isPressed(Key.MOUSE_WHEEL_UP))
+			{
+				zoom++;
+				if( zoom > 20 )
+					zoom = 20;
+			}
+
+
+		}
 
 		ImGui.end();
 
@@ -306,7 +329,7 @@ class UIEditor extends ImguiTool
 
 			if( bounds.getSize().x > 0 || bounds.getSize().y > 0 )
 			{
-				selectedItemBorder.lineStyle(4,0x6666ff);
+				selectedItemBorder.lineStyle(4,0x6666ff, 0.5);
 				selectedItemBorder.drawRect(bounds.xMin, bounds.yMin, bounds.width, bounds.height);
 			}
 
@@ -344,6 +367,12 @@ class UIEditor extends ImguiTool
 		if( selectedInspectorTree != null )
 		{
 			var o = preview.getObjectByName( selectedInspectorTree.name );
+			if( o == null )
+			{
+				Utils.warning("Lost selected object...");
+				selectedInspectorTree = null;
+				return;
+			}
 			var bounds = o.getBounds();
 
 			if( ImGui.isMouseDown( ImGuiMouseButton.Left ) )
@@ -700,7 +729,7 @@ class UIEditor extends ImguiTool
 
 				if( StringTools.endsWith( d.font, ".msdf.fnt" ) )
 				{
-					IG.wref( ImGui.inputDouble( "Font Size", _ ), d.sdfSize );
+					IG.wref( ImGui.inputInt( "Font Size", _ ), d.sdfSize );
 					IG.wref( ImGui.inputDouble( "Alpha Cutoff", _ ), d.sdfAlpha );
 					IG.wref( ImGui.inputDouble( "Smoothing", _ ), d.sdfSmoothing );
 				}
@@ -716,12 +745,14 @@ class UIEditor extends ImguiTool
 					if( maxWidth > 0 )
 						d.maxWidth = maxWidth;
 					else
-						d.maxWidth = null;
+						d.maxWidth = -1;
 
 				}
 
 			case "h2d.Bitmap":
 				var d: CUIBitmap = cast def;
+
+				ImGui.separator();
 
 				var newTile = IG.textInput( "Tile", d.tile );
 				if( newTile != null && hxd.Res.loader.exists( newTile ) )
@@ -764,6 +795,7 @@ class UIEditor extends ImguiTool
 			case "h2d.Flow":
 				var d: CUIFlow = cast def;
 
+				ImGui.separator();
 
 				var layout = IG.combo("Layout", d.layout, h2d.Flow.FlowLayout );
 				if( layout != null )
@@ -794,6 +826,35 @@ class UIEditor extends ImguiTool
 
 				IG.wref( ImGui.inputInt("Vertical Spacing",_,1,10), d.verticalSpacing );
 				IG.wref( ImGui.inputInt("Horizontal Spacing",_,1,10), d.horizontalSpacing );
+
+				var newTile = IG.textInput( "Background Tile", d.backgroundTile );
+				if( newTile != null && hxd.Res.loader.exists( newTile ) )
+					d.backgroundTile = newTile;
+
+				if( ImGui.isItemHovered() )
+				{
+					ImGui.beginTooltip();
+					ImGui.text("Setting a background tile will create an ScaleGrid background which uses the borderWidth / borderHeigh values for its borders.");
+					ImGui.endTooltip();
+				}
+
+				if( ImGui.beginDragDropTarget() )
+				{
+					// Non-atlased bitmaps
+					var payload = ImGui.acceptDragDropPayloadString("asset_name");
+					if( payload != null && hxd.Res.loader.exists( payload ) )
+						d.backgroundTile = payload;
+
+					// Atlased tiles
+					var payload = ImGui.acceptDragDropPayloadString("atlas_tile");
+					if( payload != null )
+						d.backgroundTile = payload;
+
+					ImGui.endDragDropTarget();
+				}
+
+				IG.wref( ImGui.inputInt("Border Width",_,1,10), d.borderWidth );
+				IG.wref( ImGui.inputInt("Border Height",_,1,10), d.borderHeight );
 /*
 			case "h2d.Mask":
 				var t : h2d.Mask = cast obj;
@@ -804,6 +865,44 @@ class UIEditor extends ImguiTool
 				IG.wref( ImGui.inputDouble("Scroll X",_,1,10,"%.2f"), t.scrollX );
 				IG.wref( ImGui.inputDouble("Scroll Y",_,1,10,"%.2f"), t.scrollY );
 */
+
+
+			case "h2d.ScaleGrid":
+				var d : CUIScaleGrid = cast def;
+
+				ImGui.separator();
+
+				IG.wref( ImGui.inputDouble("Width",_,1,10), d.width );
+				IG.wref( ImGui.inputDouble("Height",_,1,10), d.height );
+
+				IG.wref( ImGui.inputInt("Border Top",_,1,10), d.borderTop );
+				IG.wref( ImGui.inputInt("Border Bottom",_,1,10), d.borderBottom );
+				IG.wref( ImGui.inputInt("Border Left",_,1,10), d.borderLeft );
+				IG.wref( ImGui.inputInt("Border Right",_,1,10), d.borderRight );
+
+				IG.wref( ImGui.inputInt("Border Width",_,1,10), d.borderWidth );
+				IG.wref( ImGui.inputInt("Border Height",_,1,10), d.borderHeight );
+
+				var newTile = IG.textInput( "Background Tile", d.contentTile );
+				if( newTile != null && hxd.Res.loader.exists( newTile ) )
+					d.contentTile = newTile;
+
+				if( ImGui.beginDragDropTarget() )
+				{
+					// Non-atlased bitmaps
+					var payload = ImGui.acceptDragDropPayloadString("asset_name");
+					if( payload != null && hxd.Res.loader.exists( payload ) )
+						d.contentTile = payload;
+
+					// Atlased tiles
+					var payload = ImGui.acceptDragDropPayloadString("atlas_tile");
+					if( payload != null )
+						d.contentTile = payload;
+
+					ImGui.endDragDropTarget();
+				}
+
+
 
 			case "h2d.Interactive":
 				var d : CUIInteractive = cast def;
@@ -882,6 +981,7 @@ class UIEditor extends ImguiTool
 			case "h2d.Bitmap": return "\uf03e";
 			case "h2d.Flow": return "\uf0db";
 			case "h2d.Mask": return "\uf125";
+			case "h2d.ScaleGrid": return "\uf00a";
 			default: return "";
 		}
 	}
@@ -901,15 +1001,50 @@ class UIEditor extends ImguiTool
 				};
 
 				parent.children.push(def);
-				/*
+
 			case "h2d.Text":
-				def.props["text"] = def.name;
-				def.props["font"] = "fnt/kodenmanhou16.fnt";
+				var def: CUIText = {
+					type: type,
+					name: getAutoName(type),
+					children: []
+				};
+
+				parent.children.push(def);
+
 			case "h2d.Bitmap":
-				def.props["tile"] = "#444444";
+				var def: CUIBitmap = {
+					type: type,
+					name: getAutoName(type),
+					children: []
+				};
+
+				parent.children.push(def);
+			case "h2d.Flow":
+				var def: CUIFlow = {
+					type: type,
+					name: getAutoName(type),
+					children: []
+				};
+
+				parent.children.push(def);
+
+			case "h2d.ScaleGrid":
+				var def: CUIScaleGrid = {
+					type: type,
+					name: getAutoName(type),
+					children: []
+				};
+
+				parent.children.push(def);
+
 			case "h2d.Mask":
-				def.props["width"] = 100;
-				def.props["height"] = 100;*/
+				var def: CUIMask = {
+					type: type,
+					name: getAutoName(type),
+					children: []
+				};
+
+				parent.children.push(def);
 		}
 
 

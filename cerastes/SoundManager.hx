@@ -6,7 +6,7 @@ import hxd.res.Resource;
 import h3d.scene.Object;
 import h3d.prim.Primitive;
 import hxd.snd.Channel;
-import db.Data;
+
 import tweenxcore.Tools.Easing;
 
 class SoundManager

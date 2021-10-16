@@ -89,19 +89,20 @@ class SnakePak
 
 	}
 
-	static function addFieldPackers(identifier: String, t: ComplexType, packersPlain: Array<Expr>, unpackersPlain: Array<Expr>, packersBinary: Array<Expr>, unpackersBinary: Array<Expr> )
+	static function addFieldPackers(ident: String, t: ComplexType, packersPlain: Array<Expr>, unpackersPlain: Array<Expr>, packersBinary: Array<Expr>, unpackersBinary: Array<Expr> )
 	{
+		/*
 		var strType = t.toString();
 		switch(t.getParameters()[0].name)
 		{
 			// Basic types
 			case "String":
 				packersPlain.push(macro {
-					out += '\n${identifier}:"' + cerastes.fmt.SnakePak.packString.replace( $i{identifier}, '\\"') + '"';
+					out += '\n${ident}:"' + cerastes.fmt.SnakePak.packString.replace( $i{ident}, '\\"') + '"';
 				});
 			case "Int" | "Float":
 				packersPlain.push(macro {
-					out += '\n${identifier}:' + $i{identifier};
+					out += '\n${ident}:' + $i{ident};
 				});
 
 			case other:
@@ -110,7 +111,7 @@ class SnakePak
 				//throw new Exception('Unhandled packer type ${other}');
 				trace('Unhandled packer type ${other}');
 		}
-
+*/
 	}
 
 	#end

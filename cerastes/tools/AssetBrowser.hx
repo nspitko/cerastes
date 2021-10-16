@@ -1,5 +1,7 @@
 package cerastes.tools;
 
+import h3d.Vector;
+import h2d.Graphics;
 import cerastes.macros.Metrics;
 #if hlimgui
 
@@ -49,14 +51,15 @@ class AssetBrowser  extends  ImguiTool
 
 	var filterTypes = [
 		"Sprite" => true,
-		"Image" => true,
-		//"Model" => true,
+		"Image" => false,
+		"Model" => true,
+		"Sound" => true,
 		"Particles" => true,
-		"Fonts" => true,
-		"Butai" => true,
-		"UI File" => true,
+		"Font" => true,
+		"Butai" => false,
+		"UI Layout" => true,
 		"Texture Atlas" => true,
-		"Others" => true,
+		"Others" => false,
 	];
 
 	public static var needsReload = false;
@@ -145,9 +148,10 @@ class AssetBrowser  extends  ImguiTool
 					var t = new h2d.Text( res.toSdfFont(16,4,0.4, 1/16), asset.scene );
 
 					t.maxWidth = previewWidth - 8;
-					t.x = 4;
-					t.y = 4;
-					t.text = "The quick brown fox jumps over the lazy dog";
+					t.x = previewWidth / 2;
+					t.y = previewHeight / 2;
+					t.textAlign = Center;
+					t.text = t.font.name;
 
 				}
 				else
@@ -155,10 +159,13 @@ class AssetBrowser  extends  ImguiTool
 					var res = hxd.Res.loader.loadCache( asset.file, hxd.res.BitmapFont);
 
 					var t = new Text(res.toFont(), asset.scene );
+					trace(t.font.name);
 					t.maxWidth = previewWidth - 8;
-					t.x = 4;
-					t.y = 4;
-					t.text = "The quick brown fox jumps over the lazy dog";
+
+					t.textAlign = MultilineCenter;
+					t.text = t.font.name;
+					t.y = ( previewHeight - t.textHeight ) / 2;
+					t.x = ( previewWidth - t.textWidth ) / 2;
 				}
 
 			case "bdef":
@@ -181,6 +188,16 @@ class AssetBrowser  extends  ImguiTool
 
 				asset.scene.addChild( obj );
 
+				var t = new h2d.Text( hxd.Res.fnt.kodenmanhou16.toFont(), asset.scene);
+
+				t.text = Path.withoutDirectory( Path.withoutExtension(asset.file) );
+				t.textAlign = Center;
+				t.maxWidth = previewWidth - 8;
+				t.x = 4;
+				t.y = 4;
+				t.color = Vector.fromColor( getTypeColor(asset.file) );
+				t.dropShadow = { dx:1, dy : 1, color : 0, alpha : 1 };
+
 			case "csd":
 				asset.scene = new h2d.Scene();
 				asset.alwaysUpdate = true;
@@ -200,8 +217,15 @@ class AssetBrowser  extends  ImguiTool
 				obj.x = previewWidth / 2 - center.x;
 				obj.y = previewHeight / 2 - center.y;
 
+				var t = new h2d.Text( hxd.Res.fnt.kodenmanhou16.toFont(), asset.scene);
 
-
+				t.text = Path.withoutDirectory( Path.withoutExtension(asset.file) );
+				t.textAlign = Center;
+				t.maxWidth = previewWidth - 8;
+				t.x = 4;
+				t.y = 4;
+				t.color = Vector.fromColor( getTypeColor(asset.file) );
+				t.dropShadow = { dx:1, dy : 1, color : 0, alpha : 1 };
 
 			case "atlas":
 				asset.scene = new h2d.Scene();
@@ -225,6 +249,16 @@ class AssetBrowser  extends  ImguiTool
 						break;
 				}
 
+				var t = new h2d.Text( hxd.Res.fnt.kodenmanhou16.toFont(), asset.scene);
+
+				t.text = Path.withoutDirectory( Path.withoutExtension(asset.file) );
+				t.textAlign = Center;
+				t.maxWidth = previewWidth - 8;
+				t.x = 4;
+				t.y = 4;
+				t.color = Vector.fromColor( getTypeColor(asset.file) );
+				t.dropShadow = { dx:1, dy : 1, color : 0, alpha : 1 };
+
 			case "fbx":
 				asset.scene3d = new h3d.scene.Scene();
 				var cache = new h3d.prim.ModelCache();
@@ -232,6 +266,70 @@ class AssetBrowser  extends  ImguiTool
 				asset.scene3d.addChild( newObject);
 				asset.texture = new Texture(previewWidth,previewHeight, [Target] );
 
+				var t = new h2d.Text( hxd.Res.fnt.kodenmanhou16.toFont(), asset.scene);
+
+				t.text = Path.withoutDirectory( Path.withoutExtension(asset.file) );
+				t.textAlign = Center;
+				t.maxWidth = previewWidth - 8;
+				t.x = 4;
+				t.y = 4;
+				t.color = Vector.fromColor( getTypeColor(asset.file) );
+				t.dropShadow = { dx:1, dy : 1, color : 0, alpha : 1 };
+
+			case "wav" | "mp3" | "ogg":
+
+				asset.scene = new h2d.Scene();
+				var g = new Graphics(asset.scene);
+				var t = new h2d.Text( hxd.Res.fnt.kodenmanhou16.toFont(), asset.scene);
+				t.dropShadow = { dx:1, dy : 1, color : 0, alpha : 1 };
+
+				t.text = Path.withoutDirectory( Path.withoutExtension(asset.file) );
+				t.textAlign = Center;
+				t.maxWidth = previewWidth - 8;
+				t.x = 4;
+				t.y = 4;
+				t.color = Vector.fromColor( getTypeColor(asset.file) );
+
+
+
+				sys.thread.Thread.create(() -> {
+					var sound = hxd.Res.load( asset.file ).toSound();
+					var data = sound.getData();
+
+					var resample: hxd.snd.WavData = cast data.resample(8000, UI8, data.channels );
+
+					var sampleCount = resample.duration * resample.samplingRate;
+
+
+
+
+					g.moveTo(0, previewHeight / 2);
+					g.lineStyle(1,0xAAAAAA);
+					var scale = 4;
+					for( i in 0 ... previewWidth )
+					{
+
+						var pct = i / previewWidth;
+						var loc = pct * resample.duration;
+						var idx = Math.floor( loc * resample.samplingRate );
+						var min = 0.;
+						var max = 0.;
+						for( i in 0 ... 25 )
+						{
+							var val = ( ( @:privateAccess resample.rawData.get(idx + i*2) / 255.) - 0.5 ) * previewHeight;
+							min = Math.min(min, val);
+							max = Math.max(max, val);
+						}
+						g.lineTo(i,min + previewHeight / 2);
+						g.lineTo(i,max + previewHeight / 2);
+					}
+					asset.dirty = true;
+				});
+
+
+
+
+				trace("Not waiting for thread....");
 
 
 
@@ -243,8 +341,21 @@ class AssetBrowser  extends  ImguiTool
 				bmp.width = previewWidth;
 				bmp.height = previewHeight;
 
+				var t = new h2d.Text( hxd.Res.fnt.kodenmanhou16.toFont(), asset.scene);
+				t.dropShadow = { dx:1, dy : 1, color : 0, alpha : 1 };
+
+				t.text = Path.withoutDirectory( Path.withoutExtension(asset.file) );
+				t.textAlign = Center;
+				t.maxWidth = previewWidth - 8;
+				t.x = 4;
+				t.y = 4;
+				t.color = Vector.fromColor( getTypeColor(asset.file) );
+
 
 		}
+
+
+
 	}
 
 	function disposePreview( file )
@@ -272,7 +383,7 @@ class AssetBrowser  extends  ImguiTool
 		}
 
 		ImGui.setNextWindowSize({x: 700 * scaleFactor, y: 400 * scaleFactor}, ImGuiCond.Once);
-		ImGui.begin("\uf07c Asset browser", isOpenRef);
+		ImGui.begin("\uf07c Asset browser", isOpenRef, ImGuiWindowFlags.NoDocking);
 
 		var text = IG.textInput("",filterText,"Filter");
 		if( text != null )
@@ -375,6 +486,9 @@ class AssetBrowser  extends  ImguiTool
 				var t: BulletLevelEditor = cast ImguiToolManager.showTool("BulletLevelEditor");
 				t.openFile( asset.file );
 			#end
+
+			case "wav" | "ogg" | "mp3":
+				hxd.Res.load( asset.file ).toSound().play();
 		}
 	}
 
@@ -444,32 +558,35 @@ class AssetBrowser  extends  ImguiTool
 		ImGui.text(asset.file);
 
 		var ext = Path.extension( asset.file );
-		var typeColor: ImVec4 = {x:0.5,y:1.0,z:1.0,w:1.0};
+
+		var typeColor: ImVec4 =  IG.colorToImVec4( getTypeColor( asset.file ) );
 		switch(ext)
 		{
-			case "bdef":
-				ImGui.textColored(typeColor,"Butai node definition file");
-			case "fnt" | "msdf":
-				ImGui.textColored(typeColor,"Font atlas");
-			case "cui":
-				ImGui.textColored(typeColor,"UI File");
-			#if cannonml
-			case "cml":
-				ImGui.textColored(typeColor,"Cannon package");
-			#end
-			case "atlas":
-				ImGui.textColored(typeColor,"Texture atlas");
-			case "csd":
-				ImGui.textColored(typeColor,"Sprite");
 			case "png" | "bmp" | "gif" | "jpg":
 				ImGui.textColored(typeColor,"Texture");
 				ImGui.separator();
 				ImGui.image(asset.texture, {x: Math.min( asset.texture.width, 512 * scaleFactor), y: Math.min(asset.texture.height, 512 * scaleFactor) });
 			default:
+				ImGui.textColored(typeColor,getItemType(asset));
 
 		}
 
 		ImGui.endTooltip();
+	}
+
+	function getTypeColor( file: String )
+	{
+		var ext = Path.extension( file );
+		return switch(ext)
+		{
+			case "wav" | "mp3" | "ogg": 0xFF88FF88;
+			case "cui": 0xFF8888FF;
+			case "atlas": 0xFFff8888;
+			case "csd": 0xFF88ffff;
+			case "fbx": 0xFFff88ff;
+			case "png" | "bmp" | "gif": 0xFFffff88;
+			default: 0xFFFFFFFF;
+		}
 	}
 
 	function getItemType( asset: AssetBrowserPreviewItem )
@@ -478,12 +595,18 @@ class AssetBrowser  extends  ImguiTool
 		var ext = Path.extension( asset.file );
 		return switch(ext)
 		{
-			case "fnt" | "msdf" | "sdf": "Fonts";
-			case "cui": "UI File";
-			case "png" | "bmp" | "gif" | "jpg": "Images";
+			case "fnt" | "msdf" | "sdf": "Font";
+			case "cui": "UI Layout";
+			case "png" | "bmp" | "gif" | "jpg": "Image";
+			case "wav" | "ogg" | "mp3": "Sound";
 			case "bdef": "Butai";
 			case "csd": "Sprite";
 			case "atlas": "Texture Atlas";
+			case "fbx": "Model";
+			#if cannonml
+			case "cml": "Cannon Bullet File";
+			case "cbl": "Cannon Bullet Level";
+			#end
 			default: "Others";
 
 		}

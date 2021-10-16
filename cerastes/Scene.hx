@@ -61,7 +61,7 @@ class Scene
 		}
         if( scale != null ) viewportScale = Std.parseInt(scale);
 
-		s2d.scaleMode = ScaleMode.LetterBox(Math.floor( viewportWidth / viewportScale ), Math.floor( viewportHeight / viewportScale ),false,Center,Center);
+		s2d.scaleMode = ScaleMode.Stretch(Math.floor( viewportWidth / viewportScale ), Math.floor( viewportHeight / viewportScale ));
     }
 
     public function disableEvents()

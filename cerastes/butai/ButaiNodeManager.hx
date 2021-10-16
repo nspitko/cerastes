@@ -7,7 +7,6 @@ import cerastes.ui.Console.GlobalConsole;
 import cerastes.butai.ButaiTypeBuilder.ButaiNode;
 import cerastes.butai.ButaiDialogController;
 import db.Butai;
-import db.Data;
 
 import cerastes.butai.Debug;
 
@@ -225,7 +224,7 @@ class ButaiNodeManager
 				if( !onSFXNode( mpn ) )
 				{
 					SoundManager.sfx( mpn.file, mpn.loop == "1" );
-					
+
 					nextAll( node );
 				}
 

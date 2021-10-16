@@ -374,9 +374,18 @@ class ImGuiTools {
 				| ImGuiColorEditFlags.AlphaPreviewHalf;
 		if( IG.wref( ImGui.colorPicker4( "Color", _, flags), color ) )
 		{
-			return h3d.Vector.fromArray(cast color).toColor();
+			return ( Math.floor( 255. * color[0] ) << 16 ) |
+					( Math.floor( 255. * color[1] ) <<  8 ) |
+					( Math.floor( 255. * color[2] ) ) |
+					( Math.floor( 255. * color[3]) << 24);
 		}
 		return -1;
+	}
+
+	public static function colorToImVec4(c: Int): ImVec4
+	{
+		var vec = Vector.fromColor(c);
+		return {x: vec.x, y: vec.y, z: vec.z, w: vec.w};
 	}
 
 	public static function renderTimeline( groups: TimelineGroup )

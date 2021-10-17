@@ -69,6 +69,7 @@ class UIEditor extends ImguiTool
 	var mouseScenePos: ImVec2;
 	var mouseDragDuration: Float = -1;
 	var mouseDragStartPos: ImVec2;
+	var hasFocus = false;
 
 	var zoom: Int = 1;
 
@@ -276,7 +277,7 @@ class UIEditor extends ImguiTool
 
 		var startPos: ImVec2 = ImGui.getCursorScreenPos();
 		var mousePos: ImVec2 = ImGui.getMousePos();
-		mouseScenePos = {x: mousePos.x - startPos.x, y: mousePos.y - startPos.y };
+		mouseScenePos = {x: ( mousePos.x - startPos.x) / zoom, y: ( mousePos.y - startPos.y ) / zoom };
 
 		ImGui.image(sceneRT, { x: viewportWidth * zoom, y: viewportHeight * zoom }, null, null, null, {x: 1, y: 1, z:1, w:1} );
 

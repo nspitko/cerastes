@@ -42,8 +42,9 @@ class Scene
      */
     public function enter()
     {
-        app.sevents.addScene(this.s2d);
-        app.sevents.addScene(this.s3d);
+        if( !Main.instance.showTools)
+            enableEvents();
+
         GlobalConsole.instance.currentScene = this;
 
         s2d.defaultSmooth = false;

@@ -148,7 +148,7 @@ class UIEditor extends ImguiTool
 
 		if( ImGui.beginPopup("uie_additem") )
 		{
-			var types = ["h2d.Object", "h2d.Text", "h2d.Bitmap", "h2d.Flow", "h2d.Mask", "h2d.ScaleGrid"];
+			var types = ["h2d.Object", "h2d.Text", "h2d.Bitmap", "h2d.Flow", "h2d.Mask", "h2d.ScaleGrid", "cerastes.ui.Button"];
 
 			for( t in types )
 			{
@@ -902,6 +902,66 @@ class UIEditor extends ImguiTool
 					ImGui.endDragDropTarget();
 				}
 
+			case "cerastes.ui.Button":
+				var d : CUIButton = cast def;
+
+				var newTile = IG.textInput( "Background Tile##CUIButton", d.defaultTile );
+				if( newTile != null && hxd.Res.loader.exists( newTile ) )
+					d.defaultTile = newTile;
+
+				if( ImGui.beginDragDropTarget() )
+				{
+					// Non-atlased bitmaps
+					var payload = ImGui.acceptDragDropPayloadString("asset_name");
+					if( payload != null && hxd.Res.loader.exists( payload ) )
+						d.defaultTile = payload;
+
+					// Atlased tiles
+					var payload = ImGui.acceptDragDropPayloadString("atlas_tile");
+					if( payload != null )
+						d.defaultTile = payload;
+
+					ImGui.endDragDropTarget();
+				}
+
+				var newTile = IG.textInput( "Hover Tile", d.hoverTile );
+				if( newTile != null && hxd.Res.loader.exists( newTile ) )
+					d.hoverTile = newTile;
+
+				if( ImGui.beginDragDropTarget() )
+				{
+					// Non-atlased bitmaps
+					var payload = ImGui.acceptDragDropPayloadString("asset_name");
+					if( payload != null && hxd.Res.loader.exists( payload ) )
+						d.hoverTile = payload;
+
+					// Atlased tiles
+					var payload = ImGui.acceptDragDropPayloadString("atlas_tile");
+					if( payload != null )
+						d.hoverTile = payload;
+
+					ImGui.endDragDropTarget();
+				}
+
+				var newTile = IG.textInput( "Press Tile", d.pressTile );
+				if( newTile != null && hxd.Res.loader.exists( newTile ) )
+					d.pressTile = newTile;
+
+				if( ImGui.beginDragDropTarget() )
+				{
+					// Non-atlased bitmaps
+					var payload = ImGui.acceptDragDropPayloadString("asset_name");
+					if( payload != null && hxd.Res.loader.exists( payload ) )
+						d.pressTile = payload;
+
+					// Atlased tiles
+					var payload = ImGui.acceptDragDropPayloadString("atlas_tile");
+					if( payload != null )
+						d.pressTile = payload;
+
+					ImGui.endDragDropTarget();
+				}
+
 
 
 			case "h2d.Interactive":
@@ -982,6 +1042,7 @@ class UIEditor extends ImguiTool
 			case "h2d.Flow": return "\uf0db";
 			case "h2d.Mask": return "\uf125";
 			case "h2d.ScaleGrid": return "\uf00a";
+			case "cerastes.ui.Button": return "\uf04d";
 			default: return "";
 		}
 	}
@@ -1039,6 +1100,15 @@ class UIEditor extends ImguiTool
 
 			case "h2d.Mask":
 				var def: CUIMask = {
+					type: type,
+					name: getAutoName(type),
+					children: []
+				};
+
+				parent.children.push(def);
+
+			case "cerastes.ui.Button":
+				var def: CUIButton = {
 					type: type,
 					name: getAutoName(type),
 					children: []

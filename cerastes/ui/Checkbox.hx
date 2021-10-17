@@ -3,7 +3,7 @@ package cerastes.ui;
 import hxd.res.DefaultFont;
 import h2d.Object;
 
-class CerastesCheckbox extends cerastes.ui.BaseComponents.Flow
+class CerastesCheckbox extends h2d.Flow
 {
 	public var text(default, set): String;
 	public var value( default, set ): Bool;
@@ -46,9 +46,9 @@ class CerastesCheckbox extends cerastes.ui.BaseComponents.Flow
 		//label.textAlign = Right;
 
 
-		
+
 		b = new h2d.Graphics(this);
-	
+
 		var i = new h2d.Interactive(size, size, b);
 		i.onClick = function(_) {
 			value = !value;
@@ -69,21 +69,4 @@ class CerastesCheckbox extends cerastes.ui.BaseComponents.Flow
 			b.drawRect(2, 2, size-4, size-4);
 		}
 	}
-}
-
-@:uiComp("checkbox")
-class CheckboxComp extends h2d.domkit.BaseComponents.DrawableComp  implements domkit.Component.ComponentDecl<CerastesCheckbox> {
-
-	@:p var text: String;
-	@:p(font) var font : h2d.Font;
-
-	static function create( parent : h2d.Object ) {
-		return new CerastesCheckbox(parent);
-	}
-
-	static function set_text(o:h2d.Object,v) {
-		cast (o, CerastesCheckbox).text = v;
-	}
-
-
 }

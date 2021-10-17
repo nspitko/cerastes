@@ -14,6 +14,7 @@ import h2d.Object;
 import haxe.Json;
 import hxd.res.Resource;
 
+
 // Cerastes UI
 @:structInit class CUIObject {
 
@@ -59,6 +60,13 @@ import hxd.res.Resource;
 	public var tile: String = "#FF00FF";
 	public var width: Float = -1;
 	public var height: Float = -1;
+}
+
+
+@:structInit class CUIButton extends CUIFlow {
+	public var hoverTile: String = "";
+	public var pressTile: String = "";
+	public var defaultTile: String = "";
 }
 
 @:structInit class CUIFlow extends CUIDrawable {
@@ -179,6 +187,10 @@ class CUIResource extends Resource
 			case "h2d.Interactive":
 				var props: CUIInteractive = cast entry;
 				obj = new h2d.Interactive(props.width,props.height);
+
+			case "cerastes.ui.Button":
+				//var props: CUIButton = cast entry;
+				obj = new cerastes.ui.Button();
 
 			default:
 				Utils.error('CUI: Cannot create unknown type ${entry.type}; ignoring!!');
@@ -307,6 +319,14 @@ class CUIResource extends Resource
 				o.width = e.width;
 				o.height = e.height;
 
+			case "cerastes.ui.Button":
+				var o = cast(obj, cerastes.ui.Button);
+				var e: CUIButton = cast entry;
+
+				o.hoverTile = getTile( e.hoverTile );
+				o.pressTile = getTile( e.pressTile );
+				o.defaultTile = getTile( e.defaultTile );
+
 
 
 
@@ -333,6 +353,9 @@ class CUIResource extends Resource
 
 	static function getTile( file: String )
 	{
+		if( file == null || file == "")
+			return null;
+
 		if(file.charAt(0) == "#" )
 			return Tile.fromColor( Std.parseInt( file.substr(1) ) );
 		else if ( file.indexOf(".atlas") != -1 )
@@ -346,6 +369,7 @@ class CUIResource extends Resource
 		}
 		else
 			return hxd.Res.loader.loadCache( file, hxd.res.Image ).toTile();
+
 	}
 
 
@@ -353,6 +377,7 @@ class CUIResource extends Resource
 	public static function writeObject( def: CUIObject, obj: Object, file: String )
 	{
 
+		#if hl
 		var cui: CUIFile = {
 			version: version,
 			root: def
@@ -361,8 +386,13 @@ class CUIResource extends Resource
 		var s = new haxe.Serializer();
 		s.serialize(cui);
 
-		#if hl
 		sys.io.File.saveContent( Utils.fixWritePath(file,"cui"),s.toString());
+
+
+
+		//var json = Json.stringify(cui,null, "\t");
+
+		//sys.io.File.saveContent( Utils.fixWritePath(file,"cuij"), json);
 		#end
 	}
 
@@ -376,6 +406,15 @@ class CUIResource extends Resource
 		var u = new haxe.Unserializer(entry.getText());
 		data = u.unserialize();
 
+/*
+		var parser = new json2object.JsonParser<CUIFile>(); // Creating a parser for Cls class
+		parser.fromJson(entry.getText(), entry.name); // Parsing a string. A filename is specified for errors management
+		data = parser.value; // Access the parsed class
+		var errors:Array<json2object.Error> = parser.errors;
+		for( e in errors )
+		{
+			Utils.warning(json2object.ErrorUtils.convertError(e) );
+		}*/
 
 		return data;
 	}

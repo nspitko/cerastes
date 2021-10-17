@@ -277,7 +277,7 @@ class Utils
 
 
 
-	#if client
+	#if ( client && domkit )
 	public static function findElementTraverse( o: h2d.Object, id: String ) : Null<h2d.Object>
 	{
 		for( child in o.getChildren() )

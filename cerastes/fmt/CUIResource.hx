@@ -360,15 +360,24 @@ class CUIResource extends Resource
 			return Tile.fromColor( Std.parseInt( file.substr(1) ) );
 		else if ( file.indexOf(".atlas") != -1 )
 		{
-
 			var atlasPos = file.indexOf(".atlas") + 6;
 			var atlasName = file.substr( 0, atlasPos );
 			var tileName = file.substr(atlasPos + 1);
 
-			return hxd.Res.loader.loadCache(atlasName, hxd.res.Atlas ).get( tileName );
+			var res = hxd.Res.loader.loadCache(atlasName, hxd.res.Atlas );
+			if( res != null )
+				return res.get( tileName );
 		}
 		else
-			return hxd.Res.loader.loadCache( file, hxd.res.Image ).toTile();
+		{
+			var res = hxd.Res.loader.loadCache( file, hxd.res.Image );
+			if( res == null || res.entry.isDirectory )
+				return null;
+
+			return res.toTile();
+		}
+
+		return null;
 
 	}
 

@@ -55,6 +55,9 @@ import hxd.res.Resource;
 	public var maxWidth: Float = -1;
 }
 
+@:structInit class CUIAdvancedText extends CUIText {
+}
+
 
 @:structInit class CUIBitmap extends CUIDrawable {
 	public var tile: String = "#FF00FF";
@@ -67,6 +70,8 @@ import hxd.res.Resource;
 	public var hoverTile: String = "";
 	public var pressTile: String = "";
 	public var defaultTile: String = "";
+
+	public var orientation: cerastes.ui.Button.Orientation = None;
 }
 
 @:structInit class CUIFlow extends CUIDrawable {
@@ -84,8 +89,11 @@ import hxd.res.Resource;
 	public var verticalSpacing: Int = 0;
 
 	public var backgroundTile: String = "";
+
 	public var borderWidth: Int = 0;
 	public var borderHeight: Int = 0;
+
+	public var multiline: Bool = true;
 }
 
 
@@ -192,6 +200,10 @@ class CUIResource extends Resource
 				//var props: CUIButton = cast entry;
 				obj = new cerastes.ui.Button();
 
+			case "cerastes.ui.AdvancedText":
+				var d : CUIAdvancedText = cast entry;
+				obj = new cerastes.ui.AdvancedText( getFont( d.font, d )  );
+
 			default:
 				Utils.error('CUI: Cannot create unknown type ${entry.type}; ignoring!!');
 
@@ -249,6 +261,8 @@ class CUIResource extends Resource
 				o.textAlign = e.textAlign;
 				o.maxWidth = e.maxWidth;
 
+			case "cerastes.ui.AdvancedText":
+
 
 			case "h2d.Bitmap":
 				var o = cast(obj, h2d.Bitmap);
@@ -271,14 +285,20 @@ class CUIResource extends Resource
 
 				o.overflow = e.overflow;
 
-				o.minWidth = e.minWidth;
-				o.minHeight = e.minHeight;
+				// downstream items might set our mins for us
+				o.minWidth = e.minWidth > 0 ? e.minWidth : o.minWidth;
+				o.minHeight = e.minHeight > 0 ? e.minHeight : o.minHeight;
+
+				o.maxWidth = e.maxWidth;
+				o.maxHeight = e.maxHeight;
 
 				o.verticalSpacing = e.verticalSpacing;
 				o.horizontalSpacing = e.horizontalSpacing;
 
 				o.borderWidth = e.borderWidth;
 				o.borderHeight = e.borderHeight;
+
+				o.multiline = e.multiline;
 
 				o.backgroundTile = e.backgroundTile.length > 0 ? getTile(e.backgroundTile) : null;
 
@@ -327,7 +347,16 @@ class CUIResource extends Resource
 				o.pressTile = getTile( e.pressTile );
 				o.defaultTile = getTile( e.defaultTile );
 
+				if( e.orientation == null ) e.orientation = None;
 
+				o.orientation = e.orientation;
+
+
+				if( o.defaultTile != null )
+				{
+					o.minWidth = Math.ceil(o.defaultTile.width);
+					o.minHeight = Math.ceil(o.defaultTile.height);
+				}
 
 
 			default:

@@ -149,7 +149,7 @@ class UIEditor extends ImguiTool
 
 		if( ImGui.beginPopup("uie_additem") )
 		{
-			var types = ["h2d.Object", "h2d.Text", "h2d.Bitmap", "h2d.Flow", "h2d.Mask", "h2d.ScaleGrid", "cerastes.ui.Button"];
+			var types = ["h2d.Object", "h2d.Text", "h2d.Bitmap", "h2d.Flow", "h2d.Mask", "h2d.ScaleGrid", "cerastes.ui.Button", "cerastes.ui.AdvancedText"];
 
 			for( t in types )
 			{
@@ -179,7 +179,7 @@ class UIEditor extends ImguiTool
 		}
 
 
-		ImGui.beginChild("uie_inspector_tree",{x: 200 * scaleFactor, y: 400}, false, ImGuiWindowFlags.AlwaysAutoResize);
+		ImGui.beginChild("uie_inspector_tree",null, false, ImGuiWindowFlags.AlwaysAutoResize);
 
 		populateInspector();
 
@@ -267,6 +267,9 @@ class UIEditor extends ImguiTool
 
 		ImGui.end();
 
+		// Selected Border stuff
+		processSelection();
+
 		inspectorColumn();
 
 		//ImGui.sameLine();
@@ -275,14 +278,15 @@ class UIEditor extends ImguiTool
 		ImGui.setNextWindowDockId( dockspaceIdCenter, dockCond );
 		ImGui.begin('Preview##${windowID()}', null, ImGuiWindowFlags.NoMove | ImGuiWindowFlags.HorizontalScrollbar );
 
-		var startPos: ImVec2 = ImGui.getCursorScreenPos();
-		var mousePos: ImVec2 = ImGui.getMousePos();
-		mouseScenePos = {x: ( mousePos.x - startPos.x) / zoom, y: ( mousePos.y - startPos.y ) / zoom };
 
 		ImGui.image(sceneRT, { x: viewportWidth * zoom, y: viewportHeight * zoom }, null, null, null, {x: 1, y: 1, z:1, w:1} );
 
 		if( ImGui.isWindowHovered() )
 		{
+			var startPos: ImVec2 = ImGui.getCursorScreenPos();
+			var mousePos: ImVec2 = ImGui.getMousePos();
+
+			mouseScenePos = {x: ( mousePos.x - startPos.x) / zoom, y: ( mousePos.y - startPos.y ) / zoom };
 			// Should use imgui events here for consistency but GetIO isn't exposed to hl sooo...
 			if (Key.isPressed(Key.MOUSE_WHEEL_DOWN))
 			{
@@ -298,6 +302,10 @@ class UIEditor extends ImguiTool
 			}
 
 
+		}
+		else
+		{
+			mouseScenePos = null;
 		}
 
 		ImGui.end();
@@ -319,26 +327,58 @@ class UIEditor extends ImguiTool
 
 		processSceneMouse( delta );
 
-		// Selected Border stuff
+
+	}
+
+	function processSelection()
+	{
 		selectedItemBorder.clear();
-		if( selectedInspectorTree != null )
+		if( selectedInspectorTree == null )
+			return;
+
+		var o = preview.getObjectByName( selectedInspectorTree.name );
+		if( o == null )
+			return;
+
+		var type = Type.getClassName( Type.getClass( o ) );
+
+		var bounds = o.getBounds();
+
+		var colBounds = 0x6666ff;
+		var colMins = 0x66ff66;
+		var colMaxs = 0xff6666;
+
+		if( bounds.getSize().x > 0 || bounds.getSize().y > 0 )
 		{
-			var o = preview.getObjectByName( selectedInspectorTree.name );
-			var type = Type.getClassName( Type.getClass( o ) );
+			selectedItemBorder.lineStyle(4,colBounds, 0.5);
+			selectedItemBorder.drawRect(bounds.xMin, bounds.yMin, bounds.width, bounds.height);
 
-			var bounds = o.getBounds();
-
-			if( bounds.getSize().x > 0 || bounds.getSize().y > 0 )
+			var flow: CUIFlow = Std.downcast( selectedInspectorTree, CUIFlow );
+			if( flow != null )
 			{
-				selectedItemBorder.lineStyle(4,0x6666ff, 0.5);
-				selectedItemBorder.drawRect(bounds.xMin, bounds.yMin, bounds.width, bounds.height);
+				selectedItemBorder.lineStyle(4,colMins, 0.5);
+				selectedItemBorder.drawRect(bounds.xMin, bounds.yMin, flow.minWidth, flow.minHeight);
+				selectedItemBorder.lineStyle(4,colMaxs, 0.5);
+				selectedItemBorder.drawRect(bounds.xMin, bounds.yMin, flow.maxWidth, flow.maxHeight);
+			}
+			var text: CUIText = Std.downcast( selectedInspectorTree, CUIText );
+			if( text != null )
+			{
+				var t: h2d.Text = cast o;
+				selectedItemBorder.lineStyle(4,colMaxs, 0.5);
+				selectedItemBorder.drawRect(bounds.xMin, bounds.yMin, text.maxWidth, t.textHeight);
 			}
 
 		}
+
+
 	}
 
 	function processSceneMouse( delta: Float )
 	{
+		if( mouseScenePos == null )
+			return;
+
 		var isMouseOverViewport = mouseScenePos.x > 0 && mouseScenePos.x < viewportWidth && mouseScenePos.y > 0 && mouseScenePos.y < viewportHeight;
 		if( isMouseOverViewport && ImGui.isMouseClicked(ImGuiMouseButton.Left) && previewRoot != null )
 		{
@@ -750,6 +790,8 @@ class UIEditor extends ImguiTool
 
 				}
 
+			case "cerastes.ui.AdvancedText":
+
 			case "h2d.Bitmap":
 				var d: CUIBitmap = cast def;
 
@@ -802,6 +844,8 @@ class UIEditor extends ImguiTool
 				if( layout != null )
 					d.layout = layout;
 
+				IG.wref( ImGui.checkbox( "Wrap", _ ), d.multiline );
+
 
 				var align = IG.combo("Vertical Align", d.verticalAlign, h2d.Flow.FlowAlign );
 				if( align != null )
@@ -823,6 +867,15 @@ class UIEditor extends ImguiTool
 
 				if( IG.wref( ImGui.inputInt("Min Height",_,1,10), minH ) )
 					d.minHeight = minH;
+
+				var maxW: Int = d.maxWidth != -1 ? cast d.maxWidth : 0;
+				var maxH: Int = d.maxHeight != -1 ? cast d.maxHeight : 0;
+
+				if( IG.wref( ImGui.inputInt("Max Width",_,1,10), maxW ) )
+					d.maxWidth = maxW;
+
+				if( IG.wref( ImGui.inputInt("Max Height",_,1,10), maxH ) )
+					d.maxHeight = maxH;
 
 
 				IG.wref( ImGui.inputInt("Vertical Spacing",_,1,10), d.verticalSpacing );
@@ -906,21 +959,30 @@ class UIEditor extends ImguiTool
 			case "cerastes.ui.Button":
 				var d : CUIButton = cast def;
 
-				var newTile = IG.textInput( "Background Tile##CUIButton", d.defaultTile );
+				var newTile = IG.textInput( "Default Tile", d.defaultTile );
 				if( newTile != null && hxd.Res.loader.exists( newTile ) )
+				{
 					d.defaultTile = newTile;
+					d.backgroundTile = newTile;
+				}
 
 				if( ImGui.beginDragDropTarget() )
 				{
 					// Non-atlased bitmaps
 					var payload = ImGui.acceptDragDropPayloadString("asset_name");
 					if( payload != null && hxd.Res.loader.exists( payload ) )
+					{
 						d.defaultTile = payload;
+						d.backgroundTile = payload;
+					}
 
 					// Atlased tiles
 					var payload = ImGui.acceptDragDropPayloadString("atlas_tile");
 					if( payload != null )
+					{
 						d.defaultTile = payload;
+						d.backgroundTile = payload;
+					}
 
 					ImGui.endDragDropTarget();
 				}
@@ -961,6 +1023,12 @@ class UIEditor extends ImguiTool
 						d.pressTile = payload;
 
 					ImGui.endDragDropTarget();
+				}
+
+				var orientation = IG.combo("Orientation", d.orientation, cerastes.ui.Button.Orientation );
+				if( orientation != null )
+				{
+					d.orientation = orientation;
 				}
 
 
@@ -1029,7 +1097,7 @@ class UIEditor extends ImguiTool
 		switch(type)
 		{
 			default:
-				return type.substr( type.indexOf(".") +1 );
+				return type.substr( type.lastIndexOf(".") +1 );
 		}
 	}
 
@@ -1044,6 +1112,7 @@ class UIEditor extends ImguiTool
 			case "h2d.Mask": return "\uf125";
 			case "h2d.ScaleGrid": return "\uf00a";
 			case "cerastes.ui.Button": return "\uf04d";
+			case "cerastes.ui.AdvancedText": return "\uf033";
 			default: return "";
 		}
 	}
@@ -1066,6 +1135,15 @@ class UIEditor extends ImguiTool
 
 			case "h2d.Text":
 				var def: CUIText = {
+					type: type,
+					name: getAutoName(type),
+					children: []
+				};
+
+				parent.children.push(def);
+
+			case "cerastes.ui.AdvancedText":
+				var def: CUIAdvancedText = {
 					type: type,
 					name: getAutoName(type),
 					children: []

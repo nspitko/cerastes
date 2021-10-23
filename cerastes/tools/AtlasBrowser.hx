@@ -164,6 +164,7 @@ class AtlasBrowser  extends  ImguiTool
 	{
 		ImGui.beginTooltip();
 		ImGui.text(name);
+		ImGui.text('${tile.width}x${tile.height}');
 		IG.image( tile, {x: 2, y: 2} );
 
 		ImGui.endTooltip();

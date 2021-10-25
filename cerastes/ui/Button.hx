@@ -95,7 +95,7 @@ class Button extends h2d.Flow
 			if( pressTile != null )
 				this.backgroundTile = pressTile;
 
-			if( onActivate != null )
+			if( onActivate != null && alpha > 0 )
 				onActivate(_);
 
 		}

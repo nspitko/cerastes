@@ -380,7 +380,7 @@ class CUIResource extends Resource
 		}
 	}
 
-	static function getTile( file: String )
+	public static function getTile( file: String )
 	{
 		if( file == null || file == "")
 			return null;

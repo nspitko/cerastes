@@ -17,7 +17,7 @@ using haxe.macro.Tools;
  */
 
 
-abstract Id(String)
+abstract Id(String) to String
 {
 	inline function new(key) this = key;
 

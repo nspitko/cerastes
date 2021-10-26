@@ -99,6 +99,8 @@ class Utils
 				#end
 			}
 		}
+
+		return !condition;
 	}
 
 	public static function warning( msg: String, ?pos:haxe.PosInfos )

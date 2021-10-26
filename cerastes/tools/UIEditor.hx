@@ -82,8 +82,7 @@ class UIEditor extends ImguiTool
 		viewportHeight = viewportDimensions.height;
 		viewportScale = viewportDimensions.scale;
 		preview = new h2d.Scene();
-		preview.scaleMode = Stretch(viewportWidth,viewportHeight);
-
+		preview.scaleMode = Fixed(viewportWidth,viewportHeight, 1, Left, Top);
 		sceneRT = new Texture(viewportWidth,viewportHeight, [Target] );
 
 		selectedItemBorder = new h2d.Graphics();
@@ -672,13 +671,27 @@ class UIEditor extends ImguiTool
 		return null;
 	}
 
+
 	override public function render( e: h3d.Engine)
 	{
 		sceneRT.clear( 0 );
 
+		var oldW = e.width;
+		var oldH = e.height;
+
 		e.pushTarget( sceneRT );
 		e.clear(0,1);
-		preview.render(e);
+
+		@:privateAccess// @:bypassAccessor
+		{
+			e.width = sceneRT.width;
+			e.height = sceneRT.height;
+			preview.checkResize();
+			preview.render(e);
+			e.width = oldW;
+			e.height = oldH;
+		}
+
 		e.popTarget();
 	}
 

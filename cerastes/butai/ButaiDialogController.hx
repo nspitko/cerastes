@@ -188,8 +188,7 @@ class ButaiDialogController
 		if( advancing && bufferText != "")
 		{
 			advanceTimer.cancel();
-			currentText.animate = false;
-
+			
 			var char = advanceCharacter();
 			while( char != "")
 			{

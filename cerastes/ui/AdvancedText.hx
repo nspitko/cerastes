@@ -1,6 +1,5 @@
 package cerastes.ui;
 
-import tweenxcore.Tools.Easing;
 import h2d.RenderContext;
 import h3d.Vector;
 
@@ -13,35 +12,23 @@ class AdvancedText extends h2d.Text
 {
 	var rebuildEveryFrame : Bool = false;
 	var time : Float = 0;
-	public var speed : Float = 0.15;
-	public var xOffset : Int = 1620;
 
-	var tweens = new Array<Tween>();
-	public var animate = true;
+	public var revealed(default, null): Bool = false;
+	public var characters(default, set): Int = -1; // -1 -> All, else limit to a specific number
 
-	override function set_text(t : String) {
-		var t = t == null ? "null" : t;
-		if( t == this.text ) return t;
-
-		if( this.text != null && t.length < this.text.length )
-		{
-			tweens = [];
-			animate = true;
-		}
-
-
-		this.text = t;
+	function set_characters( v: Int )
+	{
 		rebuild();
-		return t;
+		characters = v;
+		return v;
 	}
+
 
 	override function initGlyphs( text : String, rebuild = true ) : Void
 	{
 		if( rebuild )
-		{
 			glyphs.clear();
-			rebuildEveryFrame = false;
-		}
+
 		var x = 0., y = 0., xMax = 0., xMin = 0., yMin = 0., prevChar = -1, linei = 0;
 		var align = textAlign;
 		var lines = new Array<Float>();
@@ -69,8 +56,8 @@ class AdvancedText extends h2d.Text
 		var mode = None;
 
 		var i: Int = 0;
-
-		while( i < t.length )
+		var characterIndex: Int = 0;
+		while( i < t.length && ( characters == -1 || characterIndex <= characters ) )
 		{
 			var c = t.substr(i,1);
 			var cc = t.charCodeAt(i);
@@ -92,12 +79,12 @@ class AdvancedText extends h2d.Text
 				y += dl;
 				prevChar = -1;
 			} else {
-			if( e != null )
+				if( e != null )
 				{
 					if( c == "#" )
 					{
 						if( colorOverride == null )
-							colorOverride = Vector.fromColor(0xed79ab);
+							colorOverride = Vector.fromColor(0xF7941D);
 						else
 							colorOverride = null;
 
@@ -123,20 +110,18 @@ class AdvancedText extends h2d.Text
 					if( rebuild )
 					{
 						var finalY = y;
-
-
 						if( mode == Sine )
-							finalY += Math.sin(time * 5 + x) * 2;
+							finalY += Math.sin(time * 10 + x/5) * 2;
 
 						if( colorOverride != null )
-							glyphs.addColor(x + offs, finalY, colorOverride.x, colorOverride.y, colorOverride.z, 1., e.t);
+							glyphs.addColor(x + offs, finalY, colorOverride.x, colorOverride.y, colorOverride.z, 1.0, e.t);
 						else
 							glyphs.add(x + offs, finalY, e.t);
-
-
 					}
 					if( y == 0 && e.t.dy < yMin ) yMin = e.t.dy;
 					x += esize + letterSpacing;
+
+					characterIndex++;
 				}
 				prevChar = cc;
 			}
@@ -145,22 +130,32 @@ class AdvancedText extends h2d.Text
 		}
 		if( x > xMax ) xMax = x;
 
+		// @bugbug this will count formatting text...
+		revealed = characters >= t.length;
+
 		calcXMin = xMin;
 		calcYMin = yMin;
 		calcWidth = xMax - xMin;
 		calcHeight = y + font.lineHeight;
-		calcSizeHeight = y + (font.baseLine > 0 ? font.baseLine : font.lineHeight);
+		calcSizeHeight = y + (font.baseLine > 0 ? font.baseLine : font.lineHeight) + 10;
 		calcDone = true;
+		if ( rebuild ) needsRebuild = false;
 	}
 
 	override function sync( ctx: RenderContext )
 	{
-		if( rebuildEveryFrame || true )
+		if( rebuildEveryFrame )
 		{
 			time = ctx.time;
 			// @bug? Calling initGlyphs directly avoids child recalc, which we don't need YET.
 			// rebuild();
 			initGlyphs(text);
+		}
+		else
+		{
+			checkText();
+			if ( needsRebuild )
+				initGlyphs(currentText);
 		}
 	}
 }

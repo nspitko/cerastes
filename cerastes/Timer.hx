@@ -34,6 +34,7 @@ class Timer
 	var time : Float = 0;
 	var duration: Float;
 	public var finished = false;
+	public var repeat = false;
 
 	var onComplete : Void->Void;
 
@@ -57,7 +58,10 @@ class Timer
 		if( time > duration && !finished )
 		{
 			onComplete();
-			finished = true;
+			if( repeat )
+				time = 0;
+			else
+				finished = true;
 
 		}
 	}

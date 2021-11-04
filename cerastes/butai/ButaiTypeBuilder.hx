@@ -87,8 +87,15 @@ typedef ButaiSaveNode = {
 	},
 }
 
+typedef ButaiVariable = {
+	name: String,
+	type: String,
+	value: String,
+};
+
 typedef ButaiSaveFile = {
 	nodes: Array<ButaiSaveNode>,
+	variables: Array<ButaiVariable>,
 }
 
 /* ======================================== */
@@ -259,10 +266,12 @@ class ButaiTypeBuilder
 			fields : (macro class {
 
 				public static var idMap = new Map<String, Dynamic>();
+				public static var variables: Array<cerastes.butai.ButaiTypeBuilder.ButaiVariable>;
 
 				public static function load( content : String ) {
 
-					var root = haxe.Json.parse( content );
+					var root: cerastes.butai.ButaiTypeBuilder.ButaiSaveFile = haxe.Json.parse( content );
+					variables = root.variables;
 					idMap = new Map<String, Dynamic>();
 
 					{$a{assigns}};

@@ -54,15 +54,10 @@ class ButaiNodeManager
 
 		reset();
 
-		interp.variables.set("GameState", GameState );
+		interp.variables.set("GS", GameState );
 		interp.variables.set("Std", Std );
 
 		interp.variables.set("changeScene", ButaiSupport.changeScene );
-
-		interp.variables.set("addItem", GameState.addItem );
-		interp.variables.set("hasItem", GameState.hasItem );
-		interp.variables.set("consumeItem", GameState.removeItem );
-		interp.variables.set("removeItem", GameState.removeItem );
 
 		interp.variables.set("set", GameState.set );
 		interp.variables.set("get", GameState.get );
@@ -71,16 +66,33 @@ class ButaiNodeManager
 		if( ButaiDialogController.instance == null )
 			ButaiDialogController.instance = new ButaiDialogController();
 
-		// pre-emptively register CDB types with blank units. these will get overwritten by the latest instances later
-		//for( unit in Data.units.all )
+
+		// @todo THIS IS BAD PLEASE FIX
+		for( v in Butai.variables )
 		{
-			//registerVariable( "units" , null );
+			switch( v.type )
+			{
+				case "Bool":
+					registerVariable( v.name, v.value == "True" );
+				case "Int":
+					registerVariable( v.name, Std.parseInt( v.value ) );
+				case "Float":
+					registerVariable( v.name, Std.parseFloat( v.value ) );
+			}
+
 		}
+
 
 		currentNode = node;
 		stack = [];
 
 		Debug.registerOnDebugMsg( this, onDebugJump );
+	}
+
+	// Regsiter butai variables directly into intrep with defaults
+	function setupVariables()
+	{
+
 	}
 
 	public function onDebugJump( cmd: DebugMessage, ?handled )

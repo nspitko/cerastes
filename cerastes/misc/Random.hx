@@ -52,5 +52,27 @@ class Random {
 		}
 	}
 
+	public function weighted(weights: Array<Int>)
+	{
+		// Add weights
+		var t = 0;
+		for( w in weights )
+			t += w;
+
+		var num = getUpTo(t);
+		t = 0;
+		for( i in 0 ... weights.length )
+		{
+
+			if( weights[i] > 0 && num >= t && num < t + weights[i] + 1 )
+				return i;
+
+			t += weights[i];
+		}
+
+		Utils.error("Invalid weighted random result");
+		return 0;
+	}
+
 
 }

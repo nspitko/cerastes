@@ -71,6 +71,14 @@ import hxd.res.Resource;
 	public var pressTile: String = "";
 	public var defaultTile: String = "";
 
+	public var defaultColor: Vector = new Vector(1,1,1,1);
+	public var hoverColor: Vector = new Vector(1,1,1,1);
+	public var pressColor: Vector = new Vector(1,1,1,1);
+
+	public var visitedColor: Vector = new Vector(1,1,1,1);
+	public var disabledColor: Vector = new Vector(1,1,1,1);
+
+
 	public var orientation: cerastes.ui.Button.Orientation = None;
 }
 
@@ -346,6 +354,16 @@ class CUIResource extends Resource
 				o.hoverTile = getTile( e.hoverTile );
 				o.pressTile = getTile( e.pressTile );
 				o.defaultTile = getTile( e.defaultTile );
+
+				if( e.defaultColor != null )
+				{
+					o.defaultColor = e.defaultColor;
+					o.pressColor = e.pressColor;
+					o.hoverColor = e.hoverColor;
+
+					o.visitedColor = e.visitedColor;
+					o.disabledColor = e.disabledColor;
+				}
 
 				if( e.orientation == null ) e.orientation = None;
 

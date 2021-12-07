@@ -1,7 +1,16 @@
 package cerastes.ui;
 
+import h3d.Vector;
 import hxd.res.DefaultFont;
 import h2d.Object;
+
+enum ButtonState
+{
+	Default;
+	Hover;
+	Press;
+	Disabled;
+}
 
 enum Orientation
 {
@@ -22,9 +31,31 @@ class Button extends h2d.Flow
 	public var hoverTile: h2d.Tile = null;
 	public var pressTile: h2d.Tile = null;
 
+	public var defaultColor: Vector = new Vector(1,1,1,1);
+	public var hoverColor: Vector = new Vector(1,1,1,1);
+	public var pressColor: Vector = new Vector(1,1,1,1);
+
+	public var visitedColor: Vector = new Vector(1,1,1,1); // Replaces defaultColor if visited = true
+	public var disabledColor: Vector = new Vector(1,1,1,1); // Replaces defaultColor if disabled = true
+
 	public var onActivate : (hxd.Event) -> Void;
 
 	public var orientation(default, set): Orientation = None;
+
+	//
+	public var visited(default, set) = false;
+
+	var buttonState: ButtonState = Default;
+
+	function set_visited(v)
+	{
+		if( buttonState == Default && v )
+		{
+			background.color = visitedColor;
+		}
+		visited = v;
+		return v;
+	}
 
 	function set_orientation(v)
 	{
@@ -87,9 +118,21 @@ class Button extends h2d.Flow
 		this.interactive.onOver = function(_) {
 			if( hoverTile != null )
 				this.backgroundTile = hoverTile;
+
+			if( hoverColor != null )
+				this.background.color = hoverColor;
+
+			buttonState = Hover;
 		}
 		this.interactive.onOut = function(_) {
 			this.backgroundTile = defaultTile;
+
+			if( visited && visitedColor != null )
+				this.background.color = visitedColor;
+			else if( defaultColor != null )
+				this.background.color = defaultColor;
+
+			buttonState = Default;
 		}
 		this.interactive.onPush = function(_) {
 			if( pressTile != null )
@@ -98,11 +141,24 @@ class Button extends h2d.Flow
 			if( onActivate != null && alpha > 0 )
 				onActivate(_);
 
+			if( pressColor != null )
+				this.background.color = pressColor;
+
+			buttonState = Press;
 		}
 
 		this.interactive.onRelease = function(_) {
 			if( hoverTile != null )
 				this.backgroundTile = defaultTile;
+
+			if( visited && visitedColor != null )
+				this.background.color = visitedColor;
+			else if( defaultColor != null )
+				this.background.color = defaultColor;
+
+			buttonState = Default;
+
+			Utils.assert(this.background.color != null,"Button color cannot be null!");
 		}
 
 		this.reflow();

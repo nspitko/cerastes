@@ -383,6 +383,35 @@ class ImGuiTools {
 		return -1;
 	}
 
+	public static function inputColorHVec( c:Vector, ?key: String = null ): Vector
+	{
+		if( key != null )
+		{
+			ImGui.pushID( key );
+		}
+		if( c == null )
+			c = new Vector(1,1,1,1);
+		var color = new hl.NativeArray<Single>(4);
+		color[0] = c.r;
+		color[1] = c.g;
+		color[2] = c.b;
+		color[3] = c.a;
+		var flags = ImGuiColorEditFlags.AlphaBar | ImGuiColorEditFlags.AlphaPreview
+				| ImGuiColorEditFlags.DisplayRGB | ImGuiColorEditFlags.DisplayHex
+				| ImGuiColorEditFlags.AlphaPreviewHalf;
+		if( IG.wref( ImGui.colorPicker4( "Color", _, flags), color ) )
+		{
+			if( key != null  )
+				ImGui.popID();
+
+			return new Vector( color[0], color[1], color[2], color[3] );
+		}
+		if( key != null  )
+			ImGui.popID();
+
+		return null;
+	}
+
 	public static function colorToImVec4(c: Int): ImVec4
 	{
 		var vec = Vector.fromColor(c);

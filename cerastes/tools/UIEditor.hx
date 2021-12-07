@@ -1000,6 +1000,20 @@ class UIEditor extends ImguiTool
 					ImGui.endDragDropTarget();
 				}
 
+				var nc = IG.inputColorHVec( d.defaultColor, "defaultColor" );
+				if( nc != null )
+					d.defaultColor = nc;
+
+				ImGui.text("Visited Color");
+				var nc = IG.inputColorHVec( d.visitedColor, "visitedColor" );
+				if( nc != null )
+					d.visitedColor = nc;
+
+				ImGui.text("Disabled Color");
+				var nc = IG.inputColorHVec( d.disabledColor, "disabledColor" );
+				if( nc != null )
+					d.disabledColor = nc;
+
 				var newTile = IG.textInput( "Hover Tile", d.hoverTile );
 				if( newTile != null && hxd.Res.loader.exists( newTile ) )
 					d.hoverTile = newTile;
@@ -1019,6 +1033,10 @@ class UIEditor extends ImguiTool
 					ImGui.endDragDropTarget();
 				}
 
+				var nc = IG.inputColorHVec( d.hoverColor, "hoverColor" );
+				if( nc != null )
+					d.hoverColor = nc;
+
 				var newTile = IG.textInput( "Press Tile", d.pressTile );
 				if( newTile != null && hxd.Res.loader.exists( newTile ) )
 					d.pressTile = newTile;
@@ -1037,6 +1055,10 @@ class UIEditor extends ImguiTool
 
 					ImGui.endDragDropTarget();
 				}
+
+				var nc = IG.inputColorHVec( d.pressColor, "pressColor" );
+				if( nc != null )
+					d.pressColor = nc;
 
 				var orientation = IG.combo("Orientation", d.orientation, cerastes.ui.Button.Orientation );
 				if( orientation != null )

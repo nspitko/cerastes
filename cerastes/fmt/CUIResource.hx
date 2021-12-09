@@ -376,6 +376,8 @@ class CUIResource extends Resource
 					o.minHeight = Math.ceil(o.defaultTile.height);
 				}
 
+				o.reflow();
+
 
 			default:
 

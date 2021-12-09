@@ -45,15 +45,50 @@ class Button extends h2d.Flow
 	//
 	public var visited(default, set) = false;
 
-	var buttonState: ButtonState = Default;
+	var state(default,set): ButtonState = Default;
 
 	function set_visited(v)
 	{
-		if( buttonState == Default && v )
-		{
-			background.color = visitedColor;
-		}
 		visited = v;
+		state = state;
+		return v;
+	}
+
+	function set_state(v: ButtonState)
+	{
+		switch( v )
+		{
+			case Hover:
+				if( hoverTile != null )
+					this.backgroundTile = hoverTile;
+
+				if( hoverColor != null )
+					this.background.color = hoverColor;
+
+			case Default:
+				this.backgroundTile = defaultTile;
+
+				if( visited && visitedColor != null )
+					this.background.color = visitedColor;
+				else if( defaultColor != null )
+					this.background.color = defaultColor;
+
+			case Press:
+				if( pressTile != null )
+					this.backgroundTile = pressTile;
+
+				if( pressColor != null )
+					this.background.color = pressColor;
+
+			case Disabled:
+				this.backgroundTile = defaultTile;
+
+				if( disabledColor != null )
+					this.background.color = disabledColor;
+
+		}
+
+		state = v;
 		return v;
 	}
 
@@ -93,6 +128,8 @@ class Button extends h2d.Flow
 				background.x = background.width;
 				background.y = background.height;
 		}
+
+		state = state;
 	}
 
 	function set_defaultTile(v)
@@ -116,49 +153,20 @@ class Button extends h2d.Flow
 		this.interactive.cursor = Button;
 		//this.interactive.onClick = function(_) onClick();
 		this.interactive.onOver = function(_) {
-			if( hoverTile != null )
-				this.backgroundTile = hoverTile;
-
-			if( hoverColor != null )
-				this.background.color = hoverColor;
-
-			buttonState = Hover;
+			state = Hover;
 		}
 		this.interactive.onOut = function(_) {
-			this.backgroundTile = defaultTile;
-
-			if( visited && visitedColor != null )
-				this.background.color = visitedColor;
-			else if( defaultColor != null )
-				this.background.color = defaultColor;
-
-			buttonState = Default;
+			state = Default;
 		}
 		this.interactive.onPush = function(_) {
-			if( pressTile != null )
-				this.backgroundTile = pressTile;
+			state = Press;
 
 			if( onActivate != null && alpha > 0 )
 				onActivate(_);
-
-			if( pressColor != null )
-				this.background.color = pressColor;
-
-			buttonState = Press;
 		}
 
 		this.interactive.onRelease = function(_) {
-			if( hoverTile != null )
-				this.backgroundTile = defaultTile;
-
-			if( visited && visitedColor != null )
-				this.background.color = visitedColor;
-			else if( defaultColor != null )
-				this.background.color = defaultColor;
-
-			buttonState = Default;
-
-			Utils.assert(this.background.color != null,"Button color cannot be null!");
+			state = Default;
 		}
 
 		this.reflow();

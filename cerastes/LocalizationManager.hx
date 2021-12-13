@@ -1,47 +1,54 @@
 package cerastes;
+import haxe.Json;
 import cerastes.Utils.*;
 
-typedef LocFile = {
-	var names: Array<String>;
-	var rooms: Array<String>;
-	var strings: Array<String>;
+typedef JsonLocalizationFile = {
+	public var token: String;
+	public var en: String;
 }
 
 class LocalizationManager
 {
-	public static var instance(default, null):LocalizationManager = new LocalizationManager();
+	public static var replacements = new Map<String,String>();
+	public static var tokens = new Map<String, String>();
+	public static var language: String;
 
-
-	public var replacements = new Map<String,String>();
-
-	var initialized = false;
-
-	public function new()
+	public static function initialize( language: String )
 	{
-		replacements.set("foo", "bar");
+		LocalizationManager.language = language;
+		var rows: Array<JsonLocalizationFile> = Json.parse( hxd.Res.data.localization.entry.getText() );
+		Utils.assert( rows != null && rows.length > 0, "Failed to parse localization file!" );
+
+		switch( language )
+		{
+			case "en":
+				for( row in rows )
+					tokens.set( row.token, row.en );
+			default:
+				Utils.error('Unsupported language $language');
+
+		}
+
 
 	}
 
-	public function initialize()
-	{
-		if( initialized )
-			return;
-
-
-
-		initialized = true;
-
-	}
-
-	public static function localize(str: String, ?subs: Array<String>)
+	public static function localize(token: String, ?subs: Array<String>) : String
 	{
 		//var str = ~/^[\t ]+|[\t ]+$/gm.replace( key, "");
 
-		return formatStr(str, subs);
+		return formatStr(token, subs);
 	}
 
-	public static function formatStr(str: String, ?subs: Array<String>)
+	public static function formatStr(token: String, ?subs: Array<String>)
 	{
+		var str = tokens.get(token);
+		Utils.assert(str != null, 'Token $token is missing for language $language');
+
+		if( str == null )
+		{
+			str = token;
+		}
+
 		str = ~/^[\t ]+|[\t ]+$/gm.replace( str, "");
 
 		if( subs != null )
@@ -54,9 +61,9 @@ class LocalizationManager
 		}
 
 
-		for( key in LocalizationManager.instance.replacements.keys() )
+		for( key in LocalizationManager.replacements.keys() )
 		{
-			var replace = LocalizationManager.instance.replacements[key];
+			var replace = LocalizationManager.replacements[key];
 			str = StringTools.replace(str,"$"+key,replace);
 
 		}

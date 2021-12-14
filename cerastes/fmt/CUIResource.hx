@@ -188,8 +188,6 @@ class CUIResource extends Resource
 					{
 						o.visible = true;
 					}
-				default:
-					trace(Type.getClassName( s ));
 			}
 
 			s = Type.getSuperClass( s );

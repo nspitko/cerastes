@@ -1,11 +1,7 @@
 package cerastes.tools;
 
 
-import haxe.EnumTools;
-import haxe.macro.Context;
-import h3d.Vector;
-import h2d.col.Point;
-import h2d.Tile;
+
 #if hlimgui
 
 #if macro
@@ -14,6 +10,12 @@ using haxe.macro.Tools;
 #else
 import imgui.ImGui;
 import hl.NativeArray;
+import cerastes.fmt.CUIResource;
+import haxe.EnumTools;
+import haxe.macro.Context;
+import h3d.Vector;
+import h2d.col.Point;
+import h2d.Tile;
 
 class ImVec2Impl {
 	public var x:Single;
@@ -421,6 +423,39 @@ class ImGuiTools {
 	public static function renderTimeline( groups: TimelineGroup )
 	{
 
+	}
+
+	public static function inputTile(title: String, tile: String): Null<String>
+	{
+		var newTile = IG.textInput( "Background Tile", tile );
+
+		if( ImGui.isItemHovered() && tile != null && tile.length > 0 )
+		{
+			var t = CUIResource.getTile(tile);
+			ImGui.beginTooltip();
+			ImGuiTools.image(t);
+			ImGui.endTooltip();
+		}
+
+		if( newTile != null && hxd.Res.loader.exists( newTile ) )
+			return newTile;
+
+		if( ImGui.beginDragDropTarget() )
+		{
+			// Non-atlased bitmaps
+			var payload = ImGui.acceptDragDropPayloadString("asset_name");
+			if( payload != null && hxd.Res.loader.exists( payload ) )
+				return payload;
+
+			// Atlased tiles
+			var payload = ImGui.acceptDragDropPayloadString("atlas_tile");
+			if( payload != null )
+				return payload;
+
+			ImGui.endDragDropTarget();
+		}
+
+		return null;
 	}
 
 	#end

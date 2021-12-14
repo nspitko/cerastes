@@ -700,7 +700,9 @@ class UIEditor extends ImguiTool
 	function populateEditor()
 	{
 		var def = selectedInspectorTree;
+		ImGui.pushFont( ImguiToolManager.headingFont );
 		ImGui.text(def.type);
+		ImGui.popFont();
 
 
 
@@ -720,6 +722,8 @@ class UIEditor extends ImguiTool
 		}
 
 		ImGui.pushID(def.name);
+
+		ImGui.separator();
 
 
 		populateEditorFields(obj, def, def.type);
@@ -741,10 +745,13 @@ class UIEditor extends ImguiTool
 	//
 	function populateEditorFields(obj: Object, def: CUIObject, type: String )
 	{
+
+		if (!ImGui.collapsingHeader(type, ImGuiTreeNodeFlags.DefaultOpen ))
+			return;
+
 		switch( type )
 		{
 			case "h2d.Object":
-				ImGui.separator();
 				IG.wref( ImGui.inputDouble("X",_,1,10,"%.2f"), def.x );
 				IG.wref( ImGui.inputDouble("Y",_,1,10,"%.2f"), def.y );
 				var single: Single = def.rotation;
@@ -760,7 +767,6 @@ class UIEditor extends ImguiTool
 
 			case "h2d.Drawable":
 				var d : CUIDrawable = cast def;
-				ImGui.separator();
 				// Color
 				var nc = IG.inputColorInt( d.color );
 				if( nc != -1 )
@@ -769,7 +775,6 @@ class UIEditor extends ImguiTool
 			case "h2d.Text":
 				var d: CUIText = cast def;
 
-				ImGui.separator();
 				var val = IG.textInputMultiline("Text", d.text, null, ImGuiInputTextFlags.Multiline);
 				if( val != null )
 					d.text = val;
@@ -814,27 +819,10 @@ class UIEditor extends ImguiTool
 			case "h2d.Bitmap":
 				var d: CUIBitmap = cast def;
 
-				ImGui.separator();
 
-				var newTile = IG.textInput( "Tile", d.tile );
-				if( newTile != null && hxd.Res.loader.exists( newTile ) )
+				var newTile = IG.inputTile( "Tile", d.tile );
+				if( newTile != null )
 					d.tile = newTile;
-
-				if( ImGui.beginDragDropTarget() )
-				{
-					// Non-atlased bitmaps
-					var payload = ImGui.acceptDragDropPayloadString("asset_name");
-					if( payload != null && hxd.Res.loader.exists( payload ) )
-						d.tile = payload;
-
-					// Atlased tiles
-					var payload = ImGui.acceptDragDropPayloadString("atlas_tile");
-					if( payload != null )
-						d.tile = payload;
-						updateScene();
-
-					ImGui.endDragDropTarget();
-				}
 
 				var width: Float = d.width > 0 ? d.width : 0;
 				if( IG.wref( ImGui.inputDouble("Width",_,1,10,"%.2f"), width ) )
@@ -857,7 +845,6 @@ class UIEditor extends ImguiTool
 			case "h2d.Flow":
 				var d: CUIFlow = cast def;
 
-				ImGui.separator();
 
 				var layout = IG.combo("Layout", d.layout, h2d.Flow.FlowLayout );
 				if( layout != null )
@@ -900,8 +887,8 @@ class UIEditor extends ImguiTool
 				IG.wref( ImGui.inputInt("Vertical Spacing",_,1,10), d.verticalSpacing );
 				IG.wref( ImGui.inputInt("Horizontal Spacing",_,1,10), d.horizontalSpacing );
 
-				var newTile = IG.textInput( "Background Tile", d.backgroundTile );
-				if( newTile != null && hxd.Res.loader.exists( newTile ) )
+				var newTile = IG.inputTile( "Background Tile", d.backgroundTile );
+				if( newTile != null )
 					d.backgroundTile = newTile;
 
 				if( ImGui.isItemHovered() )
@@ -911,20 +898,6 @@ class UIEditor extends ImguiTool
 					ImGui.endTooltip();
 				}
 
-				if( ImGui.beginDragDropTarget() )
-				{
-					// Non-atlased bitmaps
-					var payload = ImGui.acceptDragDropPayloadString("asset_name");
-					if( payload != null && hxd.Res.loader.exists( payload ) )
-						d.backgroundTile = payload;
-
-					// Atlased tiles
-					var payload = ImGui.acceptDragDropPayloadString("atlas_tile");
-					if( payload != null )
-						d.backgroundTile = payload;
-
-					ImGui.endDragDropTarget();
-				}
 
 				IG.wref( ImGui.inputInt("Border Width",_,1,10), d.borderWidth );
 				IG.wref( ImGui.inputInt("Border Height",_,1,10), d.borderHeight );
@@ -943,7 +916,6 @@ class UIEditor extends ImguiTool
 			case "h2d.ScaleGrid":
 				var d : CUIScaleGrid = cast def;
 
-				ImGui.separator();
 
 				IG.wref( ImGui.inputDouble("Width",_,1,10), d.width );
 				IG.wref( ImGui.inputDouble("Height",_,1,10), d.height );
@@ -956,55 +928,17 @@ class UIEditor extends ImguiTool
 				IG.wref( ImGui.inputInt("Border Width",_,1,10), d.borderWidth );
 				IG.wref( ImGui.inputInt("Border Height",_,1,10), d.borderHeight );
 
-				var newTile = IG.textInput( "Background Tile", d.contentTile );
-				if( newTile != null && hxd.Res.loader.exists( newTile ) )
+				var newTile = IG.inputTile( "Background Tile", d.contentTile );
+				if( newTile != null )
 					d.contentTile = newTile;
-
-				if( ImGui.beginDragDropTarget() )
-				{
-					// Non-atlased bitmaps
-					var payload = ImGui.acceptDragDropPayloadString("asset_name");
-					if( payload != null && hxd.Res.loader.exists( payload ) )
-						d.contentTile = payload;
-
-					// Atlased tiles
-					var payload = ImGui.acceptDragDropPayloadString("atlas_tile");
-					if( payload != null )
-						d.contentTile = payload;
-
-					ImGui.endDragDropTarget();
-				}
 
 			case "cerastes.ui.Button":
 				var d : CUIButton = cast def;
 
-				var newTile = IG.textInput( "Default Tile", d.defaultTile );
-				if( newTile != null && hxd.Res.loader.exists( newTile ) )
-				{
+
+				var newTile = IG.inputTile( "Default Tile", d.defaultTile );
+				if( newTile != null )
 					d.defaultTile = newTile;
-					d.backgroundTile = newTile;
-				}
-
-				if( ImGui.beginDragDropTarget() )
-				{
-					// Non-atlased bitmaps
-					var payload = ImGui.acceptDragDropPayloadString("asset_name");
-					if( payload != null && hxd.Res.loader.exists( payload ) )
-					{
-						d.defaultTile = payload;
-						d.backgroundTile = payload;
-					}
-
-					// Atlased tiles
-					var payload = ImGui.acceptDragDropPayloadString("atlas_tile");
-					if( payload != null )
-					{
-						d.defaultTile = payload;
-						d.backgroundTile = payload;
-					}
-
-					ImGui.endDragDropTarget();
-				}
 
 				var nc = IG.inputColorHVec( d.defaultColor, "defaultColor" );
 				if( nc != null )
@@ -1020,47 +954,17 @@ class UIEditor extends ImguiTool
 				if( nc != null )
 					d.disabledColor = nc;
 
-				var newTile = IG.textInput( "Hover Tile", d.hoverTile );
-				if( newTile != null && hxd.Res.loader.exists( newTile ) )
+				var newTile = IG.inputTile( "Hover Tile", d.hoverTile );
+				if( newTile != null )
 					d.hoverTile = newTile;
-
-				if( ImGui.beginDragDropTarget() )
-				{
-					// Non-atlased bitmaps
-					var payload = ImGui.acceptDragDropPayloadString("asset_name");
-					if( payload != null && hxd.Res.loader.exists( payload ) )
-						d.hoverTile = payload;
-
-					// Atlased tiles
-					var payload = ImGui.acceptDragDropPayloadString("atlas_tile");
-					if( payload != null )
-						d.hoverTile = payload;
-
-					ImGui.endDragDropTarget();
-				}
 
 				var nc = IG.inputColorHVec( d.hoverColor, "hoverColor" );
 				if( nc != null )
 					d.hoverColor = nc;
 
-				var newTile = IG.textInput( "Press Tile", d.pressTile );
-				if( newTile != null && hxd.Res.loader.exists( newTile ) )
+				var newTile = IG.inputTile( "Press Tile", d.pressTile );
+				if( newTile != null )
 					d.pressTile = newTile;
-
-				if( ImGui.beginDragDropTarget() )
-				{
-					// Non-atlased bitmaps
-					var payload = ImGui.acceptDragDropPayloadString("asset_name");
-					if( payload != null && hxd.Res.loader.exists( payload ) )
-						d.pressTile = payload;
-
-					// Atlased tiles
-					var payload = ImGui.acceptDragDropPayloadString("atlas_tile");
-					if( payload != null )
-						d.pressTile = payload;
-
-					ImGui.endDragDropTarget();
-				}
 
 				var nc = IG.inputColorHVec( d.pressColor, "pressColor" );
 				if( nc != null )
@@ -1110,6 +1014,8 @@ class UIEditor extends ImguiTool
 
 
 		}
+
+		ImGui.separator();
 	}
 /*
 	function loadFont(text: h2d.Text, def: CUIElementDef )

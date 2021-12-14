@@ -371,6 +371,11 @@ class UIEditor extends ImguiTool
 			}
 
 		}
+		else
+		{
+			selectedItemBorder.lineStyle(4,colBounds, 0.5);
+			selectedItemBorder.drawRect(bounds.x, bounds.y, 1, 1);
+		}
 
 
 	}

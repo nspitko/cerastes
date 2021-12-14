@@ -27,6 +27,8 @@ import hxd.res.Resource;
 	public var rotation: Float = 0;
 	public var scaleX: Float = 1;
 	public var scaleY: Float = 1;
+
+	public var visible: Bool = true;
 }
 
 @:structInit class CUIDrawable extends CUIObject {
@@ -144,19 +146,54 @@ class CUIResource extends Resource
 	var data: CUIFile;
 
 	static var minVersion = 1;
-	static var version = 1;
+	static var version = 2;
 
 	public function toObject(?parent = null)
 	{
 		var data = getData();
-		Utils.assert( data.version <= version, "Warning: CUI generated with newer version than this parser supports" );
-		Utils.assert( data.version >= minVersion, "Warning: CUI version newer than parser understands; parsing will probably fail!" );
+		Utils.assert( data.version <= version, "CUI generated with newer version than this parser supports" );
+		Utils.assert( data.version >= minVersion, "CUI version newer than parser understands; parsing will probably fail!" );
+		if( data.version < version )
+			Utils.warning( '${entry.name} was generated using a different code version. Open and save to upgrade.' );
 
 		var root = new Object(parent);
+
+		#if debug
+		recursiveUpgradeObjects( data.root, data.version );
+		#end
 
 		recursiveCreateObjects(data.root, root);
 
 		return root;
+	}
+
+	public static function recursiveUpgradeObjects( object: CUIObject, version: Int)
+	{
+		upgradeObject(object, version);
+
+		for( c in object.children )
+			recursiveUpgradeObjects( c, version );
+	}
+
+	static function upgradeObject(object: CUIObject, version: Int )
+	{
+		var s: Class<Dynamic> = Type.getClass( object );
+		while( s != null )
+		{
+			switch( Type.getClassName( s ) )
+			{
+				case "cerastes.fmt.CUIObject":
+					var o: CUIObject = cast object;
+					if( version < 2 )
+					{
+						o.visible = true;
+					}
+				default:
+					trace(Type.getClassName( s ));
+			}
+
+			s = Type.getSuperClass( s );
+		}
 	}
 
 	public static function recursiveCreateObjects( entry: CUIObject, parent: Object )
@@ -251,6 +288,8 @@ class CUIResource extends Resource
 
 				obj.scaleX = entry.scaleX;
 				obj.scaleY = entry.scaleY;
+
+				obj.visible = entry.visible;
 
 			case "h2d.Drawable":
 				var e: CUIDrawable = cast entry;

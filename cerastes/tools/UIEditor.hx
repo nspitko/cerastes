@@ -107,7 +107,9 @@ class UIEditor extends ImguiTool
 		try
 		{
 			var res = new cerastes.fmt.CUIResource( hxd.Res.loader.load(fileName).entry );
-			rootDef = res.getData().root;
+			var data = res.getData();
+			rootDef = data.root;
+			CUIResource.recursiveUpgradeObjects( rootDef, data.version  );
 			updateScene();
 		} catch(e)
 		{
@@ -751,6 +753,10 @@ class UIEditor extends ImguiTool
 
 				IG.wref( ImGui.inputDouble("Scale X",_,1,10,"%.2f"), def.scaleX );
 				IG.wref( ImGui.inputDouble("Scale Y",_,1,10,"%.2f"), def.scaleY );
+
+				IG.wref( ImGui.checkbox( "Visible", _ ), def.visible );
+
+
 
 			case "h2d.Drawable":
 				var d : CUIDrawable = cast def;

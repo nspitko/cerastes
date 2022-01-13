@@ -303,9 +303,9 @@ class ButaiNodeManager
 					var program = parser.parseString(script);
 					interp.execute(program);
 				}
-				catch( e: Dynamic )
+				catch( e: hscript.Expr.Error )
 				{
-					Utils.warning('Error in instruction ${instruction.id}: ${e}');
+					Utils.warning('Error in instruction ${instruction.id}(Line ${parser.line}): ${e}');
 					Utils.warning('Instruction was: ${instruction.script}');
 				}
 

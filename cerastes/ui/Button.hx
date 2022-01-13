@@ -45,8 +45,27 @@ class Button extends h2d.Flow
 	//
 	public var visited(default, set) = false;
 
+	// similar to visible but when hidden we still reserve space
+	public var hidden(default, set): Bool = false;
+
 	var state(default,set): ButtonState = Default;
 
+	function set_hidden(v)
+	{
+		if( v )
+		{
+			alpha = 0;
+			this.interactive.cursor = Hide;
+		}
+		else
+		{
+			alpha = 1;
+			this.interactive.cursor = Button;
+		}
+
+
+		return v;
+	}
 	function set_visited(v)
 	{
 		visited = v;

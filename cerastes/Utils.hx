@@ -70,6 +70,49 @@ class Utils
 		haxe.Log.trace( str, pos );
 	}
 
+	/**
+	 * Debug assert: Removed on release builds for MAXIMUM SPEEEEEEED
+	 * @param condition
+	 * @param msg
+	 * @param pos
+	 */
+	public static inline function debugAssert( condition: Bool, msg: String, ?pos:haxe.PosInfos )
+	{
+		#if debug
+		if( !condition )
+		{
+			writeLog('Assertion failed: ${pos.fileName}:${pos.lineNumber}: ${msg} ', pos);
+
+			#if ( butai && hl )
+			var json = Json.stringify({
+				line: pos.lineNumber,
+				text: msg,
+				"function": pos.methodName,
+				file: pos.fileName,
+				time: hxd.Timer.elapsedTime,
+				level: Spew.ASSERT
+			});
+			Debug.debugWrite("log",json);
+			#end
+
+			#if hl
+			if( WRITE_LOG )
+				logFile.flush();
+			#end
+			if( BREAK_ON_ASSERT )
+			{
+				#if hl
+					hl.Api.breakPoint();
+				#end
+			}
+		}
+
+		return !condition;
+		#else
+		return true;
+		#end
+	}
+
 	public static inline function assert( condition: Bool, msg: String, ?pos:haxe.PosInfos )
 	{
 		if( !condition )

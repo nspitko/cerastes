@@ -16,7 +16,7 @@ class LocalizationManager
 	public static function initialize( language: String )
 	{
 		LocalizationManager.language = language;
-		var rows: Array<JsonLocalizationFile> = Json.parse( hxd.Res.data.localization.entry.getText() );
+		var rows: Array<JsonLocalizationFile> = Json.parse( hxd.Res.load("data/localization.json").toText() );
 		Utils.assert( rows != null && rows.length > 0, "Failed to parse localization file!" );
 
 		switch( language )

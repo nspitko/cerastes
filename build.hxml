@@ -1,0 +1,20 @@
+# hl
+-cp src
+-lib heaps
+-lib hldx
+-lib tweenxcore
+-lib hscript
+-lib hlimgui
+
+-main Main
+-hl dist/main.hl
+
+--macro include("cerastes.ui", true)
+--macro include("cerastes.tools", true)
+--macro include("cerastes.fmt", true)
+
+--macro cerastes.macros.SpriteData.build()
+--macro cerastes.fmt.CerastesResources.build()
+
+-debug
+-D hl-check

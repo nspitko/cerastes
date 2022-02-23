@@ -2,13 +2,18 @@ package cerastes.file;
 
 import haxe.ds.StringMap;
 import haxe.Constraints.IMap;
-import haxe.display.Display.Package;
 
 enum ParserState {
 	NONE;
 	KEY;
 	VALUE;
 	BLOCK;
+}
+
+@:autoBuild( cerastes.macros.CKeyValues.build() )
+interface Packable
+{
+	public function unpack( kv: cerastes.file.CKeyValues ): Void;
 }
 
 class CKeyValues
@@ -33,17 +38,42 @@ class CKeyValues
 		kv = new Map<Any, Any>();
 	}
 
+	public function get( ...keys: String ) : String
+	{
+		var subkv: Map<Any, Any> = kv;
+		for( idx in 0 ... keys.length )
+		{
+			var k = keys[idx];
+			trace(k);
+			if( k == "int" )
+				trace(kv);
+			if( !subkv.exists( k ) )
+				return null;
+
+			if( idx == keys.length - 1)
+				return subkv[k];
+			else
+				subkv = subkv[k];
+
+		}
+
+		return null;
+
+	}
+
+
 
 	// ------------------------------------------------------------------------------------------------
 	// Read
 	// ------------------------------------------------------------------------------------------------
-	public static function parse<@:const T>( text: String, c: Class<T> ) : T
+	public static function parse<@:const T:Packable>( text: String, c: Class<T> ) : T
 	{
 		var kv = new CKeyValues(text);
-		var out = Type.createInstance( c,[]);
-
+		var out =  Type.createInstance( c,[]);
+		var packable: Packable = cast out;
 
 		kv.read();
+		packable.unpack( kv );
 
 
 
@@ -58,29 +88,33 @@ class CKeyValues
 	{
 		if( parseError ) return;
 
-		if( map == null )
-			map = this.kv;
-
 		while( pos < text.length )
 		{
 			skipWhitespace();
 			var c = text.charAt(pos);
 			if( c == "}" || pos >= text.length) return;
 
-			readKey();
+			var key = readKey();
 			skipWhitespace();
 
 			var c = text.charAt(pos++);
 			switch( c )
 			{
 				case '{':
-					trace("obj");
-					var subkv = new Map<Any, Any>();
+
+					var subkv;
+					if( map == null )
+						subkv = this.kv;
+					else
+					{
+						subkv = new Map<Any, Any>();
+						map.set(key, subkv );
+					}
+
 					read(subkv);
-					map.set(key, subkv );
 
 					require("}");
-					trace("OK");
+
 
 				case '[':
 					trace("arr");
@@ -102,7 +136,7 @@ class CKeyValues
 
 				default:
 					pos--;
-					readValue();
+					map.set(key, readValue());
 
 			}
 		}

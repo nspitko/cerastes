@@ -131,7 +131,7 @@ class CDPrinter {
 	}
 
 	inline function mapString(v:Map<Any, Any>) {
-		
+
 		fieldsString(v, [ for(k in v.keys() ) k ] );
 	}
 
@@ -144,6 +144,7 @@ class CDPrinter {
 		var len = fields.length;
 		var last = len - 1;
 		var first = true;
+		var isMap = false;
 
 		switch(Type.typeof(v)){
 			case TClass(c):
@@ -166,6 +167,8 @@ class CDPrinter {
 					addChar(' '.code);
 				write("_class", className);
 
+				isMap = className == "haxe.ds.StringMap";
+
 				if ( 0 == last) {
 					nind--;
 					newl();
@@ -179,7 +182,11 @@ class CDPrinter {
 
 		for (i in 0...len) {
 			var f = fields[i];
-			var value = Reflect.field(v, f);
+			var value;
+			if( isMap )
+				value = v.get(f);
+			else
+				value = Reflect.field(v, f);
 			if (Reflect.isFunction(value))
 				continue;
 			if (first) {

@@ -196,7 +196,7 @@ class ImGuiTools {
 		var vv = arrSingle2;
 		vv[0] = target.x;
 		vv[1] = target.y;
-		var ret = ImGui.inputFloat2(label, vv, format, flags);
+		var ret = ImGui.inputFloatN(label, vv, format, flags);
 		target.x = vv[0];
 		target.y = vv[1];
 		return ret;
@@ -206,7 +206,7 @@ class ImGuiTools {
 		var vv = arrSingle2;
 		vv[0] = target.x;
 		vv[1] = target.y;
-		ImGui.inputFloat2(label, vv, format, flags);
+		ImGui.inputFloatN(label, vv, format, flags);
 		target.x = vv[0];
 		target.y = vv[1];
 	}
@@ -216,7 +216,7 @@ class ImGuiTools {
 		vv[0] = target.x;
 		vv[1] = target.y;
 		vv[2] = target.z;
-		ImGui.inputFloat3(label, vv, format, flags);
+		ImGui.inputFloatN(label, vv, format, flags);
 		target.x = vv[0];
 		target.y = vv[1];
 		target.z = vv[2];
@@ -228,7 +228,7 @@ class ImGuiTools {
 		vv[1] = target.y;
 		vv[2] = target.z;
 		vv[3] = target.w;
-		ImGui.inputFloat3(label, vv, format, flags);
+		ImGui.inputFloatN(label, vv, format, flags);
 		target.x = vv[0];
 		target.y = vv[1];
 		target.z = vv[2];
@@ -240,15 +240,15 @@ class ImGuiTools {
 		vv[0] = target.x;
 		vv[1] = target.y;
 		vv[2] = target.z;
-		ImGui.inputFloat3(label, vv, format, flags);
+		ImGui.inputFloatN(label, vv, format, flags);
 		target.x = vv[0];
 		target.y = vv[1];
 		target.z = vv[2];
 	}
 
-	public static function sliderDouble(label : String, v : Single, v_min : Single, v_max : Single, format : String = "%.3f", power : Single = 1.0):Float {
+	public static function sliderDouble(label : String, v : Single, v_min : Single, v_max : Single, format : String = "%.3f", flags : ImGuiSliderFlags = 0):Float {
 		arrSingle1[0] = v;
-		ImGui.sliderFloat(label, arrSingle1, v_min, v_max, format, power);
+		ImGui.sliderFloat(label, arrSingle1, v_min, v_max, format, flags);
 		return arrSingle1[0];
 	}
 

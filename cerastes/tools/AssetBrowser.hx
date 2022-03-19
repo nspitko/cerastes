@@ -174,7 +174,7 @@ class AssetBrowser  extends  ImguiTool
 				bmp.width = previewWidth;
 				bmp.height = previewHeight;
 
-			case "cui":
+			case "ui":
 				asset.scene = new h2d.Scene();
 				var res = new cerastes.fmt.CUIResource( hxd.Res.loader.load(asset.file).entry );
 
@@ -385,7 +385,7 @@ class AssetBrowser  extends  ImguiTool
 		ImGui.setNextWindowSize({x: 700 * scaleFactor, y: 400 * scaleFactor}, ImGuiCond.Once);
 		ImGui.begin("\uf07c Asset browser", isOpenRef, ImGuiWindowFlags.NoDocking);
 
-		var text = IG.textInput("",filterText,"Filter");
+		var text = IG.textInput("##Filter",filterText);
 		if( text != null )
 			filterText = text;
 
@@ -472,7 +472,7 @@ class AssetBrowser  extends  ImguiTool
 				var t: BulletEditor = cast ImguiToolManager.showTool("BulletEditor");
 				t.openFile( asset.file );
 			#end
-			case "cui":
+			case "ui":
 				var t: UIEditor = cast ImguiToolManager.showTool("UIEditor");
 				t.openFile( asset.file );
 			case "csd":
@@ -580,7 +580,7 @@ class AssetBrowser  extends  ImguiTool
 		return switch(ext)
 		{
 			case "wav" | "mp3" | "ogg": 0xFF88FF88;
-			case "cui": 0xFF8888FF;
+			case "ui": 0xFF8888FF;
 			case "atlas": 0xFFff8888;
 			case "csd": 0xFF88ffff;
 			case "fbx": 0xFFff88ff;
@@ -596,7 +596,7 @@ class AssetBrowser  extends  ImguiTool
 		return switch(ext)
 		{
 			case "fnt" | "msdf" | "sdf": "Font";
-			case "cui": "UI Layout";
+			case "ui": "UI Layout";
 			case "png" | "bmp" | "gif" | "jpg": "Image";
 			case "wav" | "ogg" | "mp3": "Sound";
 			case "bdef": "Butai";

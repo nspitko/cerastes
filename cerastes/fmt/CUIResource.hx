@@ -1,5 +1,7 @@
 package cerastes.fmt;
 
+import cerastes.file.CDParser;
+import cerastes.file.CDPrinter;
 import h2d.ScaleGrid;
 import h2d.Tile;
 import haxe.EnumTools;
@@ -18,9 +20,9 @@ import hxd.res.Resource;
 // Cerastes UI
 @:structInit class CUIObject {
 
-	public var type: String;
-	public var name: String;
-	public var children: Array<CUIObject>;
+	public var type: String = null;
+	public var name: String = null;
+	public var children: Array<CUIObject> = null;
 
 	public var x: Float = 0;
 	public var y: Float = 0;
@@ -481,7 +483,8 @@ class CUIResource extends Resource
 		var s = new haxe.Serializer();
 		s.serialize(cui);
 
-		sys.io.File.saveContent( Utils.fixWritePath(file,"cui"),s.toString());
+		//sys.io.File.saveContent( Utils.fixWritePath(file,"cui"),s.toString());
+		sys.io.File.saveContent( Utils.fixWritePath(file,"ui"), CDPrinter.print( cui ) );
 
 
 
@@ -498,8 +501,10 @@ class CUIResource extends Resource
 
 
 
-		var u = new haxe.Unserializer(entry.getText());
-		data = u.unserialize();
+		//var u = new haxe.Unserializer(entry.getText());
+		//data = u.unserialize();
+
+		data = CDParser.parse( entry.getText(), CUIFile );
 
 /*
 		var parser = new json2object.JsonParser<CUIFile>(); // Creating a parser for Cls class

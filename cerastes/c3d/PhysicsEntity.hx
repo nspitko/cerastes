@@ -3,28 +3,31 @@ package cerastes.c3d;
 
 import bullet.Body;
 import h3d.scene.Object;
-import cerastes.Entity;
 
-class PhysicsEntity extends Object implements Entity
+class PhysicsEntity extends Entity
 {
-	public var lookupId: String;
 	public var body: Body;
 
-	public function new( ?parent: Object )
+	public override function destroy()
 	{
-		super( parent );
-	}
+		super.destroy();
 
-	public function isAlive() { return true; }
-
-	public function destroy() {
 		if( body != null )
 			body.remove();
 	}
 
-	public function tick( delta: Float )
+	public override function tick( delta: Float )
 	{
+		super.destroy();
 		body.sync();
+	}
+
+	public override function setWorld( world: World )
+	{
+		if( body != null )
+		{
+			body.addTo( world.physics );
+		}
 	}
 
 }

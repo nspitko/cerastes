@@ -1,5 +1,7 @@
 package cerastes.file;
 
+import haxe.rtti.Meta;
+
 class CDParser {
 	/**
 		Parse a Cerastes Key Values file. This format is roughly similar to JSON (and indeed the parser
@@ -63,7 +65,7 @@ class CDParser {
 									var v = parseRec();
 									var cls =Type.resolveClass(v);
 									if(cls==null) throw "Invalid class name - "+v;
-									obj = Type.createInstance(cls, []);
+									obj = Type.createEmptyInstance(cls);
 								}
 								else
 								{
@@ -72,12 +74,14 @@ class CDParser {
 
 									var rec: Dynamic = parseRec();
 
-									trace('${field} -> ${rec}');
+									//trace('${field} -> ${rec}');
 
 									if( obj is haxe.ds.StringMap)
 										obj.set( field.toString(), rec );
 									else
+									{
 										Reflect.setField(obj, field.toString(), rec );
+									}
 								}
 
 
@@ -130,6 +134,24 @@ class CDParser {
 						invalidChar();
 					}
 					return null;
+				case 'e'.code:
+					var save = pos;
+					if (nextChar() != 'n'.code || nextChar() != 'u'.code || nextChar() != 'm'.code || nextCharNonWS() != ':'.code) {
+						pos = save;
+						invalidChar();
+					}
+					// Parsing an enum!
+					var enumType = parseType();
+					var enumVal: Int = parseRec();
+
+					trace('${enumType} -> ${enumVal}');
+					var et = Type.resolveEnum( enumType.toString() );
+					Utils.assert(et != null, 'Unknown enum type ${enumType}');
+
+					var ev = Type.createEnumIndex(et,  enumVal );
+					return ev;
+
+
 				case '"'.code:
 					return parseString();
 				case '0'.code, '1'.code, '2'.code, '3'.code, '4'.code, '5'.code, '6'.code, '7'.code, '8'.code, '9'.code, '-'.code:
@@ -138,6 +160,24 @@ class CDParser {
 					invalidChar();
 			}
 		}
+	}
+
+	function parseType()
+	{
+		var field = new StringBuf();
+		var c = nextCharNonWS();
+		while (true) {
+			if( ( c >= 65 && c <= 90 ) || ( c >= 97 && c <= 122 ) || ( c >= 48 && c <= 57 ) || c == 95 || c == 46 )
+			{
+				field.addChar(c);
+				c = nextChar();
+			}
+			else
+				break;
+		}
+
+		return field;
+
 	}
 
 	function parseString() {
@@ -304,9 +344,22 @@ class CDParser {
 		return StringTools.fastCodeAt(str, pos++);
 	}
 
+	function nextCharNonWS() {
+		var r = 0;
+		var iter = 0;
+		do
+		{
+			r = StringTools.fastCodeAt(str, pos++);
+		} while( r == ' '.code || r == '\r'.code || r == '\n'.code || r == '\t'.code );
+
+
+
+		return r;
+	}
+
 	function invalidChar() {
 		pos--; // rewind
-		throw "Invalid char " + StringTools.fastCodeAt(str, pos) + " at position " + pos;
+		throw 'Invalid char ${str.charAt(pos)} (${StringTools.fastCodeAt(str, pos)}) at position ${pos}';
 	}
 
 	function invalidNumber(start:Int) {

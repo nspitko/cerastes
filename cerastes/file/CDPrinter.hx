@@ -1,5 +1,7 @@
 package cerastes.file;
 
+import haxe.EnumTools;
+
 /**
  An implementation of JSON printer in Haxe.
 
@@ -100,8 +102,11 @@ class CDPrinter {
 				} else
 					classString(v);
 			case TEnum(_):
-				var i:Dynamic = Type.enumIndex(v);
-				add(i);
+				var i:Int = Type.enumIndex(v);
+				var e = Type.getEnum(v);
+				var t = e.getName();
+
+				add( Std.string( 'enum:${t} $i' ) );
 			case TBool:
 				add(#if (php || jvm || hl) (v ? 'true' : 'false') #else v #end);
 			case TNull:

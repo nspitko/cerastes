@@ -12,7 +12,7 @@ class CerastesResources
 		#if cannonml
 		Config.extensions["cbl"] = "cerastes.fmt.BulletLevelResource";
 		#end
-		Config.extensions["cui"] = "cerastes.fmt.CUIResource";
+		Config.extensions["ui"] = "cerastes.fmt.CUIResource";
 
 	}
 	#end

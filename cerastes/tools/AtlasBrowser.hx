@@ -79,7 +79,7 @@ class AtlasBrowser  extends  ImguiTool
 		ImGui.setNextWindowSize({x: 700 * scaleFactor, y: 400 * scaleFactor}, ImGuiCond.Once);
 		ImGui.begin('\uf247 Atlas browser (${fileName})###${windowID()}', isOpenRef, ImGuiWindowFlags.NoDocking);
 
-		var text = IG.textInput("",filterText,"Filter");
+		var text = IG.textInput("##Filter",filterText,"Filter");
 		if( text != null )
 			filterText = text;
 

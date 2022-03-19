@@ -1,9 +1,7 @@
 
 package cerastes.tools;
-
-import hl.Ref;
 #if hlimgui
-
+import hl.Ref;
 import hl.Gc;
 import hxd.App;
 import hxd.System;
@@ -16,7 +14,7 @@ import cerastes.tools.ImguiTools.IG;
 import cerastes.tools.ImGuiNodes;
 
 @:keep
-class ParticleEditor extends ImguiTool
+class FlowEditor extends ImguiTool
 {
 
 	var dockID : ImGuiID = -1;
@@ -33,12 +31,10 @@ class ParticleEditor extends ImguiTool
 	override public function update( delta: Float )
 	{
 		if( dockID == -1 )
-			dockID = ImGui.getID("PEMain");
+			dockID = ImGui.getID("FlowMain");
 
-		ImGui.begin("\uf06d Particle Editor");
-
-
-
+		ImGui.begin("\uf06d Flow Editor");
+		
 		//ImGui.dockSpace(dockID);
 		//ImGui.setNextWindowDockId(dockID, Once);
 

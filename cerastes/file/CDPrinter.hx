@@ -145,7 +145,7 @@ class CDPrinter {
 	}
 
 	function fieldsString(v:Dynamic, fields:Array<String>) {
-		addChar('{'.code);
+
 		var len = fields.length;
 		var last = len - 1;
 		var first = true;
@@ -162,15 +162,11 @@ class CDPrinter {
 				//	dontEncodeFields = obj.TJ_noEncode();
 				//}
 
-				newl();
-				ipad();
-				add("_class");
+				add("cls:");
+				add(className);
+
 				if (pretty)
 					addChar(' '.code);
-				addChar('='.code);
-				if (pretty)
-					addChar(' '.code);
-				write("_class", className);
 
 				isMap = className == "haxe.ds.StringMap";
 
@@ -181,8 +177,10 @@ class CDPrinter {
 				}
 
 			default:
-				trace( Type.typeof(v) );
+
 		}
+
+		addChar('{'.code);
 
 
 		for (i in 0...len) {

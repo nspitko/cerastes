@@ -96,6 +96,67 @@ class CDParser {
 									invalidChar();
 						}
 					}
+				case 'c'.code:
+
+					var save = pos;
+					if (nextChar() != 'l'.code || nextChar() != 's'.code || nextCharNonWS() != ':'.code ) {
+						pos = save;
+						invalidChar();
+					}
+
+					eatWS();
+
+					var classType = parseType();
+
+					eatWS();
+
+					if ( nextChar() != '{'.code )
+					{
+						pos = save;
+						invalidChar();
+					}
+
+					var cls =Type.resolveClass(classType.toString());
+					if(cls==null) throw "Invalid class name - "+classType;
+					obj = Type.createEmptyInstance(cls);
+
+					var field = new StringBuf();
+					while (true) {
+						var c = nextChar();
+						switch (c) {
+							case ' '.code, '\r'.code, '\n'.code, '\t'.code:
+							// loop
+							case '}'.code:
+								if (field.length > 0 )
+									invalidChar();
+								return obj;
+							case '='.code:
+								if (field == null)
+									invalidChar();
+
+
+								var rec: Dynamic = parseRec();
+
+								if( obj is haxe.ds.StringMap)
+									obj.set( field.toString(), rec );
+								else
+								{
+									Reflect.setField(obj, field.toString(), rec );
+								}
+
+
+
+								field  = new StringBuf();
+
+							default:
+								if( ( c >= 65 && c <= 90 ) || ( c >= 97 && c <= 122 ) || ( c >= 48 && c <= 57 ) || c == 95 )
+								{
+									field.addChar(c);
+								}
+								else
+									invalidChar();
+						}
+					}
 				case '['.code:
 					var arr = [], comma:Null<Bool> = null;
 					while (true) {
@@ -144,7 +205,7 @@ class CDParser {
 					var enumType = parseType();
 					var enumVal: Int = parseRec();
 
-					trace('${enumType} -> ${enumVal}');
+					//trace('${enumType} -> ${enumVal}');
 					var et = Type.resolveEnum( enumType.toString() );
 					Utils.assert(et != null, 'Unknown enum type ${enumType}');
 
@@ -344,17 +405,23 @@ class CDParser {
 		return StringTools.fastCodeAt(str, pos++);
 	}
 
-	function nextCharNonWS() {
-		var r = 0;
-		var iter = 0;
+	inline function nextCharNonWS() {
+		var r;
 		do
 		{
 			r = StringTools.fastCodeAt(str, pos++);
 		} while( r == ' '.code || r == '\r'.code || r == '\n'.code || r == '\t'.code );
 
-
-
 		return r;
+	}
+
+	inline function eatWS() {
+		var r;
+		do
+		{
+			r = StringTools.fastCodeAt(str, pos++);
+		} while( r == ' '.code || r == '\r'.code || r == '\n'.code || r == '\t'.code );
+		pos--;
 	}
 
 	function invalidChar() {

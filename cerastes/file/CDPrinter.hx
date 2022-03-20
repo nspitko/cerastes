@@ -106,7 +106,7 @@ class CDPrinter {
 				var e = Type.getEnum(v);
 				var t = e.getName();
 
-				add( Std.string( 'enum:${t} $i' ) );
+				add( Std.string( 'enum:${t}.$v' ) );
 			case TBool:
 				add(#if (php || jvm || hl) (v ? 'true' : 'false') #else v #end);
 			case TNull:

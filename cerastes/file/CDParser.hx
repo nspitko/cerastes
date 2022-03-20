@@ -202,14 +202,16 @@ class CDParser {
 						invalidChar();
 					}
 					// Parsing an enum!
-					var enumType = parseType();
-					var enumVal: Int = parseRec();
+					var enumType: String = parseType();
+					var idx = enumType.lastIndexOf(".");
+					var enumVal = enumType.substr(idx+1);
+					var enumType = enumType.substr(0,idx);
 
 					//trace('${enumType} -> ${enumVal}');
 					var et = Type.resolveEnum( enumType.toString() );
 					Utils.assert(et != null, 'Unknown enum type ${enumType}');
 
-					var ev = Type.createEnumIndex(et,  enumVal );
+					var ev = Type.createEnum(et,  enumVal );
 					return ev;
 
 
@@ -237,7 +239,7 @@ class CDParser {
 				break;
 		}
 
-		return field;
+		return field.toString();
 
 	}
 

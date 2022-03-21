@@ -1,5 +1,6 @@
 package cerastes.tools;
 
+import cerastes.tools.ImguiTools.ComboFilterState;
 import haxe.Constraints;
 import cerastes.tools.ImguiTools.IG;
 import imgui.NodeEditor;
@@ -8,6 +9,7 @@ import imgui.ImGui;
 
 @:enum abstract NodeKind(Int) from Int to Int {
 	var Blueprint = 0;
+	var Comment = 1;
 }
 
 typedef PortId = Int;
@@ -53,6 +55,13 @@ typedef PortId = Int;
 	public var pins: Map<PortId,PinId> = [];
 	public var editorData: EditorData = {};
 
+	public var label(get, never): String;
+
+	function get_label()
+	{
+		return def.name;
+	}
+
 	function get_def()
 	{
 		return null;
@@ -60,9 +69,11 @@ typedef PortId = Int;
 
 	function init( n: ImGuiNodes )
 	{
-		Utils.assert( id == -1, "Double init on node" );
+		//Utils.assert( id > 0, "Double init on node" );
 
 		id = n.getNextId();
+		pins = [];
+		editorData = {};
 
 		for( pin in def.pins )
 		{
@@ -78,6 +89,30 @@ typedef PortId = Int;
 				return def.pins[portId];
 		}
 
+		return null;
+	}
+
+	inline function getPinDefForPort( portId: Int )
+	{
+		return def.pins[portId];
+	}
+
+	function getDefaultInputPinId(): PinId
+	{
+		for( portId => pinId in pins )
+		{
+			var pdef = getPinDefForPort( portId );
+			if( pdef.kind == Input )
+				return pinId;
+		}
+
+		return -1;
+	}
+
+	var size(get, never): ImVec2;
+
+	function get_size()
+	{
 		return null;
 	}
 }
@@ -102,7 +137,6 @@ typedef PortId = Int;
 }
 
 #if hlimgui
-
 @:structInit
 class TestNode extends Node
 {
@@ -153,18 +187,24 @@ class ImGuiNodes
 	var contextPinId: PinId;
 	var contextLinkId: LinkId;
 
+	var queryPinId: PinId;
+
 	var style: Style = null;
 
+	var registeredNodes: Map<String, Class<Node>> = [];
+
+	var lastPos: ImVec2 = {x: 0.0, y:0.0};
+
+	var iconWidth: Float = 0;
 
 	public function new()
 	{
 		editor = NodeEditor.createEditor();
+	}
 
-		// TEST
-		var t: TestNode = {};
-		addNode(t, 0,0);
-		var t: TestNode = {};
-		addNode(t, 50,200);
+	public function registerNode(name: String, cls: Class<Node>)
+	{
+		registeredNodes.set(name, cls);
 	}
 
 	function getNextId()
@@ -199,11 +239,19 @@ class ImGuiNodes
 	public function addNode(node: Node, x: Float, y: Float)
 	{
 		node.init(this);
+		node.editorData.x = x;
+		node.editorData.y = y;
 		nodes.push( node );
 	}
 
 	public function render()
 	{
+		if( iconWidth == 0 )
+		{
+			var size: ImVec2 = ImGui.calcTextSize("\uf04e");
+			iconWidth = size.x;
+		}
+
 		NodeEditor.setCurrentEditor( editor );
 
 		if( style == null )
@@ -233,6 +281,8 @@ class ImGuiNodes
 		{
 			case Blueprint:
 				renderBlueprintNode(node);
+			case Comment:
+				renderCommentNode(node);
 			default:
 				Utils.assert(false, 'Unknown node kind ${node.def.kind}');
 		}
@@ -244,10 +294,72 @@ class ImGuiNodes
 
 			NodeEditor.setNodePosition( node.id, {x: node.editorData.x, y: node.editorData.y } );
 
-			if( node.id == 1 )
-				NodeEditor.centerNodeOnScreen( node.id );
+			//if( node.id == 1 )
+			//	NodeEditor.centerNodeOnScreen( node.id );
 		}
 
+	}
+
+	function renderCommentNode( node: Node )
+	{
+
+		var commentAlpha = 0.75;
+
+		ImGui.pushStyleVar(ImGuiStyleVar.Alpha, commentAlpha);
+		NodeEditor.pushStyleColor(StyleColor.NodeBg, {x: 255, y: 255, z: 255, w: 0.1});
+		NodeEditor.pushStyleColor(StyleColor.NodeBorder, {x: 255, y: 255, z: 255, w: 0.3});
+		NodeEditor.beginNode(node.id);
+		ImGui.pushID( '${node.id}' );
+
+
+		ImGui.text(node.label);
+
+		NodeEditor.group({x:100, y:100});
+
+		ImGui.popID();
+		NodeEditor.endNode();
+		NodeEditor.popStyleColor(2);
+		ImGui.popStyleVar();
+
+		if (NodeEditor.beginGroupHint(node.id))
+		{
+			//auto alpha   = static_cast<int>(commentAlpha * ImGui::GetStyle().Alpha * 255);
+			var bgAlpha = 0.3;
+
+
+			var min: ImVec2 = NodeEditor.getGroupMin();
+			//auto max = ed::GetGroupMax();
+
+			//min.x -= 8;
+			min.y -= ImGui.getTextLineHeightWithSpacing() + 4;
+			ImGui.setCursorScreenPos(min );// - ImVec2(-8, ImGui::GetTextLineHeightWithSpacing() + 4));
+			ImGui.beginGroup();
+			ImGui.text(node.label);
+			ImGui.endGroup();
+
+			var drawList = NodeEditor.getHintBackgroundDrawList();
+
+			var itemMin = ImGui.getItemRectMin();
+			var itemMax = ImGui.getItemRectMax();
+
+			var padX = 8;
+			var padY = 4;
+
+
+
+			drawList.addRectFilled(
+				{x: itemMin.x - padX, y: itemMin.y - padY },
+				{x: itemMax.x + padX, y: itemMax.y + padY },
+				0x44FFFFFF, 4.0, ImDrawFlags.RoundCornersAll);
+
+			drawList.addRect(
+				{x: itemMin.x - padX, y: itemMin.y - padY },
+				{x: itemMax.x + padX, y: itemMax.y + padY },
+				0x88FFFFFF, 4.0, ImDrawFlags.RoundCornersAll);
+
+			//ImGui.popStyleVar();
+		}
+		NodeEditor.endGroupHint();
 	}
 
 	function renderBlueprintNode( node: Node )
@@ -255,9 +367,10 @@ class ImGuiNodes
 
 		var tile = hxd.Res.tools.BlueprintBackground.toTile();
 		var width = node.def.width > 0 ? node.def.width : 200;
-		var titleSize: ImVec2 = ImGui.calcTextSize(node.def.name);
+		var titleSize: ImVec2 = ImGui.calcTextSize(node.label);
 
 		NodeEditor.beginNode( node.id );
+		ImGui.pushID( '${node.id}' );
 
 
 		var headerStart: ImVec2 = ImGui.getCursorPos();
@@ -265,15 +378,16 @@ class ImGuiNodes
 		headerStart.x -= style.NodePadding.x;
 		headerStart.y -= style.NodePadding.y;
 
-		ImGui.text( node.def.name );
+		ImGui.text( node.label );
 
 		var headerEnd: ImVec2 = ImGui.getCursorPos();
-		headerEnd.x = headerStart.x + width - style.NodeBorderWidth * 2;
+		headerEnd.x = headerStart.x + width  + style.NodePadding.z;
 
+		var pinStart: ImVec2 = {x: headerStart.x, y: headerEnd.y + style.NodeBorderWidth * 8};
 
-		ImGui.beginTable("nodeTable", 2, ImGuiTableFlags.SizingFixedFit);
+		//ImGui.setCursorPos( pinStart );
+		ImGui.setCursorPosY( pinStart.y );
 
-		ImGui.tableNextColumn();
 
 		for( portId => pinId in node.pins )
 		{
@@ -281,14 +395,15 @@ class ImGuiNodes
 			if( def.kind == Input )
 			{
 				NodeEditor.beginPin(pinId, PinKind.Input );
+				NodeEditor.pinPivotAlignment({x:0.0,y:0.5});
 				ImGui.text( def.label );
 				NodeEditor.endPin();
 			}
 		}
 
-		ImGui.tableNextColumn();
+		var height =  ImGui.getCursorPosY() - pinStart.y;
+		ImGui.setCursorPos( pinStart );
 
-		ImGui.dummy({x: width/2, y: 1});
 
 		for( portId => pinId in node.pins )
 		{
@@ -296,17 +411,24 @@ class ImGuiNodes
 			if( def.kind == Output )
 			{
 				var size: ImVec2 = ImGui.calcTextSize(def.label);
-				var posX: Int = cast (ImGui.getCursorPosX() + ImGui.getColumnWidth() -  size.x  );
+				var posX: Int = cast (pinStart.x + width -  size.x  );
 				ImGui.setCursorPosX( posX );
 
 				NodeEditor.beginPin(pinId, PinKind.Output );
+				NodeEditor.pinPivotAlignment({x:1.0,y:0.5});
 				ImGui.text( def.label );
 				NodeEditor.endPin();
 			}
 		}
 
-		ImGui.endTable();
+		var height2 =  ImGui.getCursorPosY() - pinStart.y;
+		var height = height > height2 ? height : height2;
 
+		ImGui.setCursorPos( pinStart );
+
+		ImGui.dummy({x: width, y: height});
+
+		ImGui.popID();
 		NodeEditor.endNode();
 
 		var drawList: ImDrawList = NodeEditor.getNodeBackgroundDrawList( node.id );
@@ -379,6 +501,32 @@ class ImGuiNodes
 					}
 				}
 			}
+
+			if( NodeEditor.queryNewNode( inputRef ) )
+			{
+
+				var inputNode = queryPin( inputPinId );
+				var inputPinDef = inputNode.getPinDefForPin(inputPinId);
+
+				var isValid = inputPinDef.kind == Output;
+
+				if( isValid && NodeEditor.acceptNewItem() )
+				{
+					queryPinId = inputPinId;
+
+					var pos: ImVec2 = ImGui.getMousePos();
+					lastPos.x = pos.x;
+					lastPos.y = pos.y;
+
+
+
+					NodeEditor.suspend();
+					ImGui.openPopup("link_drop_rc");
+					NodeEditor.resume();
+
+				}
+			}
+
 		}
 		// Not a bug: Always endCreate even if beginCreate is false. (?)
 		NodeEditor.endCreate();
@@ -417,28 +565,37 @@ class ImGuiNodes
 
 		NodeEditor.endDelete();
 
-		NodeEditor.suspend();
+
 
 		if( IG.wref( NodeEditor.showNodeContextMenu( _ ), contextNodeId ) )
 		{
+			NodeEditor.suspend();
 			ImGui.openPopup("node_rc");
+			NodeEditor.resume();
 		}
 
 		if( IG.wref( NodeEditor.showLinkContextMenu( _ ), contextLinkId ) )
 		{
+			NodeEditor.suspend();
 			ImGui.openPopup("link_rc");
+			NodeEditor.resume();
 		}
 
 		if( IG.wref( NodeEditor.showPinContextMenu( _ ), contextPinId ) )
 		{
+			NodeEditor.suspend();
 			ImGui.openPopup("pin_rc");
+			NodeEditor.resume();
 		}
 
 
 		popups();
 
-		NodeEditor.resume();
+
 	}
+
+	var state: ComboFilterState = {};
+	var text = "";
 
 	function popups()
 	{
@@ -476,6 +633,80 @@ class ImGuiNodes
 
 			ImGui.endPopup();
 		}
+
+		var flags = ImGuiWindowFlags.AlwaysAutoResize;
+
+		if( ImGui.beginPopup("link_drop_rc", flags) )
+		{
+			var ref: hl.Ref<String> = text;
+
+			var hints = [ for( k => v in registeredNodes ) k ];
+
+
+			ImGui.setKeyboardFocusHere();
+			if( IG.comboFilter("##nodeInput",ref,hints, state)  )
+			{
+				var t = registeredNodes.get( ref.get() );
+				if( t != null )
+				{
+					var n = Type.createEmptyInstance(t);
+
+					var pos:ImVec2 = NodeEditor.screenToCanvas(lastPos);
+
+					addNode( n, pos.x, pos.y );
+
+					var targetPinId = n.getDefaultInputPinId();
+					if( targetPinId != -1 )
+					{
+						links.push({
+							id: getNextId(),
+							sourceId: queryPinId,
+							destId: targetPinId,
+						});
+					}
+
+					ImGui.closeCurrentPopup();
+					ref.set("");
+					state = {};
+				}
+			}
+
+
+			text = ref.get();
+
+			ImGui.endPopup();
+		}
+	}
+
+	public function getSelectedNodes()
+	{
+		var nodeIds: hl.NativeArray<NodeId> = NodeEditor.getSelectedNodes();
+		var out = [];
+		for( nodeId in nodeIds )
+		{
+			for( n in nodes )
+				if( n.id == nodeId )
+					out.push( n );
+		}
+
+		return out;
+
+	}
+
+	public function getSelectedNode() : Node
+	{
+		var nodeIds: hl.NativeArray<NodeId> = NodeEditor.getSelectedNodes();
+		if( nodeIds.length != 1 )
+			return null;
+
+		for( nodeId in nodeIds )
+		{
+			for( n in nodes )
+				if( n.id == nodeId )
+					return n;
+		}
+
+		return null;
 	}
 
 	function showLabel(label: String, color: ImU32)

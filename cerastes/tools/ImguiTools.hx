@@ -2,6 +2,7 @@ package cerastes.tools;
 
 
 
+import h3d.Engine;
 #if hlimgui
 
 #if macro
@@ -26,6 +27,13 @@ class ImVec2Impl {
 		this.x = x;
 		this.y = y;
 	}
+}
+
+// https://github.com/ocornut/imgui/issues/1658#issuecomment-427426154
+@:structInit class ComboFilterState {
+	public var activeIdx: Int = 0;				// Index of currently 'active' item by use of up/down keys
+	public var selectionChanged: Bool = false;	// Flag to help focus the correct item when selecting active item
+	public var lastInput: String = "";			// Tracks the last human input so we know whether to re-run the suggestion filter
 }
 
 private class ImVec4Impl {
@@ -189,6 +197,15 @@ class ImGuiTools {
 			realWidth: viewportWidth,
 			realHeight: viewportHeight,
 			scale: viewportScale
+		}
+	}
+
+	public static function getWindowDimensions()
+	{
+		return
+		{
+			width: Engine.getCurrent().width,
+			height: Engine.getCurrent().height,
 		}
 	}
 
@@ -457,6 +474,210 @@ class ImGuiTools {
 
 		return null;
 	}
+
+	static function comboFilterDrawPopup( state: ComboFilterState, start: Int, entries: Array<String> )
+	{
+		var clicked = 0;
+
+		// Grab the position for the popup
+		var pos: ImVec2 = ImGui.getItemRectMin();
+		pos.y += ImGui.getItemRectSize().y;
+		var size: ImVec2 = {x: ImGui.getItemRectSize().x-60, y: ImGui.getFrameHeightWithSpacing() * 4 };
+
+		ImGui.pushStyleVar( ImGuiStyleVar.WindowRounding, 0.0 );
+
+		var flags =
+			ImGuiWindowFlags.NoTitleBar          |
+			ImGuiWindowFlags.NoResize            |
+			ImGuiWindowFlags.NoMove              |
+			ImGuiWindowFlags.HorizontalScrollbar |
+			ImGuiWindowFlags.NoSavedSettings     |
+			ImGuiWindowFlags.NoFocusOnAppearing  |
+			//ImGuiWindowFlags.NoInputs			  |
+			0; //ImGuiWindowFlags_ShowBorders;
+
+
+		//ImGui.setNextWindowPos ( pos, ImGuiCond.Always );
+		//ImGui.setNextWindowSize( size, ImGuiCond.Always );
+		ImGui.pushAllowKeyboardFocus( false );
+		//ImGui.begin("##combo_filter", null, flags );
+		ImGui.beginChild("##combo_filter", size, false, flags);
+
+
+		for( i in 0 ... entries.length )
+		{
+			// Track if we're drawing the active index so we
+			// can scroll to it if it has changed
+			var isIndexActive: Bool = state.activeIdx == i;
+
+			if( isIndexActive ) {
+				// Draw the currently 'active' item differently
+				// ( used appropriate colors for your own style )
+				ImGui.pushStyleColor( ImGuiCol.Border, 0xFFFFFF00 );
+			}
+
+			ImGui.pushID( '${i}' );
+			if( ImGui.selectable( entries[i], isIndexActive ) ) {
+				// And item was clicked, notify the input
+				// callback so that it can modify the input buffer
+				state.activeIdx = i;
+				clicked = 1;
+			}
+			if( ImGui.isItemFocused() && ImGui.isKeyPressed( ImGuiKey.Enter ) ) {
+				// Allow ENTER key to select current highlighted item (w/ keyboard navigation)
+				state.activeIdx = i;
+				clicked = 1;
+			}
+			ImGui.popID();
+
+			if( isIndexActive ) {
+				if( state.selectionChanged ) {
+					// Make sure we bring the currently 'active' item into view.
+					ImGui.setScrollHereY();
+					state.selectionChanged = false;
+				}
+
+				ImGui.popStyleColor(1);
+			}
+		}
+
+		//ImGui.end();
+		ImGui.endChild();
+
+		ImGui.popAllowKeyboardFocus();
+		ImGui.popStyleVar(1);
+
+		return clicked > 0;
+
+	}
+
+	public static function comboFilter( id: String, ref: hl.Ref<String>, hints: Array<String>, s: ComboFilterState )
+	{
+
+		function search( needle: String, words: Array<String> )
+		{
+			var scoremax: Float = 0;
+			var best = -1;
+			for( i in 0 ... words.length )
+			{
+				var score = comboScore( needle, words[i] );
+				var record = ( score >= scoremax );
+                var draw = ( score == scoremax );
+
+                if( record ) {
+                    scoremax = score;
+                    if( !draw ) best = i;
+                    else best = best >= 0 && words[best].length < words[i].length ? best : i;
+                }
+			}
+
+			return best;
+		}
+
+		var length = 256;
+		var buffer = ref.get();
+		var textBuf = new hl.Bytes(length);
+		var src = haxe.io.Bytes.ofString(buffer);
+		textBuf.blit(0,src,0,buffer.length);
+		textBuf.setUI8(buffer.length,0); // Null term
+
+		var ret = ImGui.inputText(id, textBuf, length, ImGuiInputTextFlags.AutoSelectAll | ImGuiInputTextFlags.EnterReturnsTrue  );
+
+		buffer = @:privateAccess String.fromUTF8(textBuf);
+		ref.set( buffer );
+
+		var shouldScore = false;
+		if( s.lastInput != buffer )
+		{
+			shouldScore = true;
+			s.lastInput = buffer;
+		}
+
+
+		var done = ret != false;
+
+		var hot = s.activeIdx >= 0 && buffer != hints[s.activeIdx] && buffer.length > 0;
+		if( hot ) {
+			var idx = s.activeIdx;
+			if( shouldScore )
+			{
+				var new_idx = search( buffer, hints );
+				idx = new_idx >= 0 ? new_idx : s.activeIdx;
+			}
+
+			if( ImGui.isKeyPressed( ImGuiKey.UpArrow ) )
+			{
+				idx--;
+				if( idx < 0 ) idx = 0;
+			}
+
+			if( ImGui.isKeyPressed( ImGuiKey.DownArrow ) )
+			{
+				idx++;
+				if( idx >= hints.length ) idx = hints.length-1;
+			}
+
+			s.selectionChanged = s.activeIdx != idx;
+			s.activeIdx = idx;
+			if( done || comboFilterDrawPopup( s, idx, hints ) ) {
+				var i = s.activeIdx;
+				if( i >= 0 ) {
+					buffer = hints[i];
+					ref.set(buffer);
+					done = true;
+				}
+			}
+		}
+		return done;
+	}
+
+	static function comboScore(query:String, string:String):Float {
+		if (string == query) {
+			return 1;
+		}
+		if (queryIsLastPathSegment(string, query)) {
+			return 1;
+		}
+		var totalCharacterScore:Float = 0;
+		var queryLength = query.length;
+		var stringLength = string.length;
+		var indexInQuery = 0;
+		var indexInString = 0;
+		while (indexInQuery < queryLength) {
+			var character = query.charAt(indexInQuery++);
+			var lowerCaseIndex = string.indexOf(character.toLowerCase());
+			var upperCaseIndex = string.indexOf(character.toUpperCase());
+			var minIndex = Std.int(Math.min(lowerCaseIndex, upperCaseIndex));
+			if (minIndex == -1) {
+				minIndex = Std.int(Math.max(lowerCaseIndex, upperCaseIndex));
+			}
+			indexInString = minIndex;
+			if (indexInString == -1) {
+				return 0;
+			}
+			var characterScore = 0.1;
+			if (string.charAt(indexInString) == character) {
+				characterScore += 0.1;
+			}
+			if (indexInString == 0 ) {
+				characterScore += 0.8;
+            }
+            else {
+                var _ref = string.charAt(indexInString - 1);
+                if (_ref == '-' || _ref == '_' || _ref == ' ') {
+                    characterScore += 0.7;
+                }
+			}
+			string = string.substring(indexInString + 1, stringLength);
+			totalCharacterScore += characterScore;
+		}
+		var queryScore = totalCharacterScore / queryLength;
+		return ((queryScore * (queryLength / stringLength)) + queryScore) / 2;
+	}
+
+	static function queryIsLastPathSegment(string:String, query:String):Bool {
+        return false;
+    }
 
 	#end
 }

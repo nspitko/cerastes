@@ -226,7 +226,7 @@ class UIEditor extends ImguiTool
 					var newFile = UI.saveFile({
 						title:"Save As...",
 						filters:[
-						{name:"Cerastes UI files", exts:["cui"]}
+						{name:"Cerastes UI files", exts:["ui"]}
 						]
 					});
 					if( newFile != null )

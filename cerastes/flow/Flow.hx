@@ -1,36 +1,43 @@
 package cerastes.flow;
 
+import imgui.ImGui.ImVec2;
 import imgui.NodeEditor.PinId;
 import imgui.NodeEditor.NodeId;
 import cerastes.tools.ImGuiNodes;
 
 /**
- * A standard label node. Registers itself with the runner so string-based lookups can
+ * Used to switch between scenes
+ * be done from other sources.
+ */
+ @:structInit
+ class FlowComment extends FlowNode
+ {
+	@editor("Comment","String")
+	 public var comment: String;
+	 public var commentSize: ImVec2 = {x: 0, y: 0};
+
+	 static final d: NodeDefinition = {
+		 name:"Comment",
+		 kind: Comment,
+		 pins: []
+	 };
+
+	 override function get_def() { return d; }
+	 override function get_label() { return comment; }
+	 override function get_size() { return commentSize; }
+ }
+
+
+/**
+ * Used to switch between scenes
  * be done from other sources.
  */
 class SceneNode extends FlowNode
 {
 	public var scene: String;
-	//static var def
-
-	public override function process( runner: FlowRunner )
-	{
-		Main.currentScene.switchToNewScene( scene );
-
-		super.process(runner);
-	}
-}
-
-/**
- * A standard label node. Registers itself with the runner so string-based lookups can
- * be done from other sources.
- */
-class LabelNode extends FlowNode
-{
-	public var labelId: String = null;
 
 	static final d: NodeDefinition = {
-		name:"Label",
+		name:"Scene",
 		kind: Blueprint,
 		color: 0xFF228822,
 		pins: [
@@ -49,10 +56,48 @@ class LabelNode extends FlowNode
 		]
 	};
 
-	override function get_def()
+	override function get_def() { return d; }
+
+
+	public override function process( runner: FlowRunner )
 	{
-		return d;
+		Main.currentScene.switchToNewScene( scene );
+
+		super.process(runner);
 	}
+}
+
+/**
+ * A standard label node. Registers itself with the runner so string-based lookups can
+ * be done from other sources.
+ */
+ @:structInit
+class LabelNode extends FlowNode
+{
+	@editor("Label","String")
+	public var labelId: String = null;
+
+	static final d: NodeDefinition = {
+		name:"Label",
+		kind: Blueprint,
+		color: 0xFF882222,
+		pins: [
+			{
+				id: 0,
+				kind: Input,
+				label: "\uf04e Input",
+				dataType: Node,
+			},
+			{
+				id: 1,
+				kind: Output,
+				label: "Output \uf04b",
+				dataType: Node
+			}
+		]
+	};
+
+	override function get_def()	{ return d;	}
 
 	public override function register( runner: FlowRunner )
 	{

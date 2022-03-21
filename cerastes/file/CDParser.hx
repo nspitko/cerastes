@@ -60,7 +60,7 @@ class CDParser {
 								if( field.toString() == "_class" )
 								{
 									if( obj != null )
-										throw("_class must be the first element (for now)");
+										throw("_class must be the first element. Use cls tag to avoid this.");
 
 									var v = parseRec();
 									var cls =Type.resolveClass(v);
@@ -118,7 +118,11 @@ class CDParser {
 
 					var cls =Type.resolveClass(classType.toString());
 					if(cls==null) throw "Invalid class name - "+classType;
-					obj = Type.createEmptyInstance(cls);
+
+					if( classType.toString() == "haxe.ds.StringMap")
+						obj = Type.createInstance(cls, []);
+					else
+						obj = Type.createEmptyInstance(cls);
 
 					var field = new StringBuf();
 					while (true) {
@@ -143,8 +147,6 @@ class CDParser {
 								{
 									Reflect.setField(obj, field.toString(), rec );
 								}
-
-
 
 								field  = new StringBuf();
 

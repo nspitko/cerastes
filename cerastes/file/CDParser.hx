@@ -78,6 +78,8 @@ class CDParser {
 
 									if( obj is haxe.ds.StringMap)
 										obj.set( field.toString(), rec );
+									else if( obj is haxe.ds.IntMap)
+										obj.set( Std.parseInt( field.toString() ), rec );
 									else
 									{
 										Reflect.setField(obj, field.toString(), rec );
@@ -119,7 +121,7 @@ class CDParser {
 					var cls =Type.resolveClass(classType.toString());
 					if(cls==null) throw "Invalid class name - "+classType;
 
-					if( classType.toString() == "haxe.ds.StringMap")
+					if( classType.toString() == "haxe.ds.StringMap" || classType.toString() == "haxe.ds.IntMap")
 						obj = Type.createInstance(cls, []);
 					else
 						obj = Type.createEmptyInstance(cls);
@@ -140,12 +142,16 @@ class CDParser {
 
 
 								var rec: Dynamic = parseRec();
+								var fstr = field.toString();
 
 								if( obj is haxe.ds.StringMap)
-									obj.set( field.toString(), rec );
+									obj.set( fstr, rec );
+								else if( obj is haxe.ds.IntMap)
+									obj.set( Std.parseInt( fstr ), rec );
 								else
 								{
-									Reflect.setField(obj, field.toString(), rec );
+									if( Reflect.hasField( obj, fstr ) )
+										Reflect.setField(obj, fstr, rec );
 								}
 
 								field  = new StringBuf();

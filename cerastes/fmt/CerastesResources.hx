@@ -13,6 +13,9 @@ class CerastesResources
 		Config.extensions["cbl"] = "cerastes.fmt.BulletLevelResource";
 		#end
 		Config.extensions["ui"] = "cerastes.fmt.CUIResource";
+		#if flow
+		Config.extensions["flow"] = "cerastes.fmt.FlowResource";
+		#end
 
 	}
 	#end

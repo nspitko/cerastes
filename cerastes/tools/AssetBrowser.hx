@@ -57,6 +57,7 @@ class AssetBrowser  extends  ImguiTool
 		"Particles" => true,
 		"Font" => true,
 		"Butai" => false,
+		"Flow" => true,
 		"UI Layout" => true,
 		"Texture Atlas" => true,
 		"Others" => false,
@@ -168,7 +169,7 @@ class AssetBrowser  extends  ImguiTool
 					t.x = ( previewWidth - t.textWidth ) / 2;
 				}
 
-			case "bdef":
+			case "bdef" | "flow":
 				asset.scene = new h2d.Scene();
 				var bmp = new Bitmap( hxd.Res.tools.config.toTile(), asset.scene );
 				bmp.width = previewWidth;
@@ -326,15 +327,6 @@ class AssetBrowser  extends  ImguiTool
 					asset.dirty = true;
 				});
 
-
-
-
-				trace("Not waiting for thread....");
-
-
-
-
-
 			default:
 				asset.scene = new h2d.Scene();
 				var bmp = new Bitmap( hxd.Res.tools.hexagonal_nut.toTile(), asset.scene );
@@ -471,6 +463,9 @@ class AssetBrowser  extends  ImguiTool
 			case "cml":
 				var t: BulletEditor = cast ImguiToolManager.showTool("BulletEditor");
 				t.openFile( asset.file );
+			case "cbl":
+				var t: BulletLevelEditor = cast ImguiToolManager.showTool("BulletLevelEditor");
+				t.openFile( asset.file );
 			#end
 			case "ui":
 				var t: UIEditor = cast ImguiToolManager.showTool("UIEditor");
@@ -481,12 +476,9 @@ class AssetBrowser  extends  ImguiTool
 			case "atlas":
 				var t: AtlasBrowser = cast ImguiToolManager.showTool("AtlasBrowser");
 				t.openFile( asset.file );
-			#if cannonml
-			case "cbl":
-				var t: BulletLevelEditor = cast ImguiToolManager.showTool("BulletLevelEditor");
+			case "flow":
+				var t: FlowEditor = cast ImguiToolManager.showTool("FlowEditor");
 				t.openFile( asset.file );
-			#end
-
 			case "wav" | "ogg" | "mp3":
 				hxd.Res.load( asset.file ).toSound().play();
 		}
@@ -584,6 +576,7 @@ class AssetBrowser  extends  ImguiTool
 			case "atlas": 0xFFff8888;
 			case "csd": 0xFF88ffff;
 			case "fbx": 0xFFff88ff;
+			case "flow": 0xFF33ff88;
 			case "png" | "bmp" | "gif": 0xFFffff88;
 			default: 0xFFFFFFFF;
 		}
@@ -600,6 +593,7 @@ class AssetBrowser  extends  ImguiTool
 			case "png" | "bmp" | "gif" | "jpg": "Image";
 			case "wav" | "ogg" | "mp3": "Sound";
 			case "bdef": "Butai";
+			case "flow": "Flow";
 			case "csd": "Sprite";
 			case "atlas": "Texture Atlas";
 			case "fbx": "Model";

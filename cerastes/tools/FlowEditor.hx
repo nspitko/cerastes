@@ -1,15 +1,14 @@
 
 package cerastes.tools;
-import cerastes.flow.Flow.FlowComment;
+import cerastes.file.CDParser;
+import cerastes.file.CDPrinter;
+#if hlimgui
+import cerastes.flow.Flow;
 import haxe.rtti.Meta;
 import haxe.rtti.Rtti;
-import cerastes.flow.Flow.FlowNode;
 import cerastes.tools.ImguiTool.ImguiToolManager;
-#if hlimgui
-import cerastes.flow.Flow.SceneNode;
 import cerastes.tools.ImguiTools.ComboFilterState;
 import cerastes.tools.ImguiTools.ImGuiTools;
-import cerastes.flow.Flow.LabelNode;
 
 import hl.Ref;
 import hl.Gc;
@@ -31,7 +30,7 @@ enum FlowEditorMode {
 }
 
 @:keep
-@:access(cerastes.tools.Node)
+@:access(cerastes.data.Node)
 class FlowEditor extends ImguiTool
 {
 
@@ -56,26 +55,19 @@ class FlowEditor extends ImguiTool
 		nodes = new ImGuiNodes();
 
 		// TEST
-		var t: LabelNode = {};
-		nodes.addNode(t, 20, 20);
-		var t: LabelNode = {};
-		nodes.addNode(t, 50, 200);
-
-		var c: FlowComment = {
-			comment:"Test comment",
-		};
-
-		c.commentSize.x = 100;
-		c.commentSize.y = 100;
+		var t: EntryNode = {};
+		nodes.addNode(t, 25, 25);
 
 		nodes.registerNode("Label", LabelNode);
 		nodes.registerNode("Scene", SceneNode);
+		//nodes.registerNode("Entry", EntryNode); // We can only have one entry
+		nodes.registerNode("Exit", ExitNode);
+		nodes.registerNode("File", FileNode);
 
 		var dimensions = IG.getWindowDimensions();
 		windowWidth = dimensions.width;
 		windowHeight = dimensions.height;
 
-		nodes.addNode(c, 5,5);
 	}
 
 
@@ -111,6 +103,13 @@ class FlowEditor extends ImguiTool
 
 		commandPalette();
 		inspector();
+
+
+		if( !isOpenRef.get() )
+		{
+			ImguiToolManager.closeTool( this );
+		}
+
 
 	}
 
@@ -162,6 +161,21 @@ class FlowEditor extends ImguiTool
 							var ret = IG.textInput(args[0],val);
 							if( ret != null )
 								Reflect.setField( node, field, ret );
+						case "ComboString":
+							var val = Reflect.getProperty(node,field);
+							var opts = node.getOptions( field );
+							var idx = opts.indexOf( val );
+							if( ImGui.beginCombo( args[0], val ) )
+							{
+								for( opt in opts )
+								{
+									if( ImGui.selectable( opt, opt == val ) )
+										Reflect.setField( node, field, opt );
+								}
+								ImGui.endCombo();
+							}
+
+
 						default:
 							ImGui.text('UNHANDLED!!! ${field} -> ${args[0]} of type ${args[1]}');
 					}
@@ -212,6 +226,17 @@ class FlowEditor extends ImguiTool
 		}
 	}
 
+	public function openFile( fileName: String )
+	{
+		var res = hxd.Res.loader.load(fileName);
+		var obj: FlowFile = CDParser.parse( res.toText(), FlowFile );
+		nodes.nodes = cast obj.nodes;
+		nodes.links = obj.links;
+
+		for( n in nodes.nodes )
+			n.editorData.firstRender = true;
+	}
+
 	function menuBar()
 	{
 		if( ImGui.beginMenuBar() )
@@ -220,8 +245,13 @@ class FlowEditor extends ImguiTool
 			{
 				if ( fileName != null && ImGui.menuItem("Save", "Ctrl+S"))
 				{
-					//CUIResource.writeObject(rootDef,preview,fileName);
-					Utils.error("STUB!");
+					var obj: FlowFile = {
+						nodes: cast nodes.nodes,
+						links: nodes.links
+					};
+
+					sys.io.File.saveContent( Utils.fixWritePath(fileName,"flow"), CDPrinter.print( obj ) );
+
 				}
 				if (ImGui.menuItem("Save As..."))
 				{
@@ -234,11 +264,21 @@ class FlowEditor extends ImguiTool
 					if( newFile != null )
 					{
 						fileName = Utils.toLocalFile( newFile );
-						//CUIResource.writeObject(rootDef, preview,newFile);
-						Utils.error("STUB!");
+
+						var obj: FlowFile = {
+							nodes: cast nodes.nodes,
+							links: nodes.links
+						};
+
+						sys.io.File.saveContent( Utils.fixWritePath(fileName,"flow"), CDPrinter.print( obj ) );
 
 						cerastes.tools.AssetBrowser.needsReload = true;
 					}
+				}
+				ImGui.separator();
+				if( ImGui.menuItem("Load"))
+				{
+					Utils.error("STUB!");
 				}
 
 				ImGui.endMenu();

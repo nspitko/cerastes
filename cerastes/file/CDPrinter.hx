@@ -96,6 +96,8 @@ class CDPrinter {
 					addChar(']'.code);
 				} else if (c == haxe.ds.StringMap) {
 					mapString(v);
+				} else if (c == haxe.ds.IntMap) {
+					mapInt(v);
 				} else if (c == Date) {
 					var v:Date = v;
 					quote(v.toString());
@@ -140,6 +142,37 @@ class CDPrinter {
 		fieldsString(v, [ for(k in v.keys() ) k ] );
 	}
 
+	inline function mapInt(v:haxe.ds.IntMap<Any>)
+	{
+		var first = true;
+
+		add("cls:haxe.ds.IntMap");
+
+		if (pretty)
+			addChar(' '.code);
+
+		addChar('{'.code);
+
+		nind++;
+		for (key => value in v)
+		{
+			newl();
+			ipad();
+			add('${key}');
+			if (pretty)
+				addChar(' '.code);
+			addChar('='.code);
+			if (pretty)
+				addChar(' '.code);
+			write('${key}', value);
+		}
+		nind--;
+		newl();
+		ipad();
+		addChar('}'.code);
+
+	}
+
 	inline function objString(v:Dynamic) {
 		fieldsString(v, Reflect.fields(v));
 	}
@@ -168,7 +201,7 @@ class CDPrinter {
 				if (pretty)
 					addChar(' '.code);
 
-				isMap = className == "haxe.ds.StringMap";
+				isMap = className == "haxe.ds.StringMap" || className == "haxe.ds.IntMap";
 
 				if ( 0 == last) {
 					nind--;

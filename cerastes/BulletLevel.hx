@@ -258,7 +258,9 @@ class BulletLevel extends h2d.Object
 			case PauseForClear:
 				pauseForClear = true;
 			case Dialogue:
+				#if butai
 				GameState.butai.jump('dialogue_${Math.floor( t.data.x )}' );
+				#end
 			case LevelEnd:
 				onLevelEnd();
 			case None:

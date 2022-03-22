@@ -1,5 +1,5 @@
 package cerastes.butai;
-
+#if butai
 import h2d.Flow;
 import h3d.Vector;
 import cerastes.ui.AdvancedText;
@@ -188,7 +188,7 @@ class ButaiDialogController
 		if( advancing && bufferText != "")
 		{
 			advanceTimer.cancel();
-			
+
 			var char = advanceCharacter();
 			while( char != "")
 			{
@@ -362,3 +362,5 @@ class ButaiDialogController
 
 	}
 }
+
+#end

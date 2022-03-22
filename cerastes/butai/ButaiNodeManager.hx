@@ -12,7 +12,6 @@ import cerastes.butai.Debug;
 
 #if butai
 @:build(cerastes.macros.Callbacks.ButaiCallbackGenerator.build("res/nodes.bdef"))
-#end
 @:build(cerastes.macros.Callbacks.CallbackGenerator.build())
 class ButaiNodeManager
 {
@@ -525,3 +524,5 @@ class ButaiSupport
 		#end
 	}
 }
+
+#end

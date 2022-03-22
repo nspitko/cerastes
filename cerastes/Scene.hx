@@ -42,7 +42,9 @@ class Scene
      */
     public function enter()
     {
+        #if hlimgui
         if( !Main.instance.showTools)
+        #end
             enableEvents();
 
         GlobalConsole.instance.currentScene = this;
@@ -152,8 +154,11 @@ class Scene
 
     public function switchToNewScene( className: String )
     {
-
+        #if butai
         var type = Type.resolveClass( "game.scenes." + className);
+        #else
+        var type = Type.resolveClass( className);
+        #end
 
         var other: Scene = Type.createInstance(type, [app]);
         other.preload();

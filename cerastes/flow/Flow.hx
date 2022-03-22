@@ -1,9 +1,12 @@
 package cerastes.flow;
 
-import imgui.ImGui.ImVec2;
-import imgui.NodeEditor.PinId;
-import imgui.NodeEditor.NodeId;
-import cerastes.tools.ImGuiNodes;
+import cerastes.fmt.FlowResource;
+import cerastes.data.Nodes;
+#if hlimgui
+import imgui.NodeEditor;
+import imgui.ImGui;
+#end
+
 
 /**
  * Used to switch between scenes
@@ -12,9 +15,11 @@ import cerastes.tools.ImGuiNodes;
  @:structInit
  class FlowComment extends FlowNode
  {
+	#if hlimgui
 	@editor("Comment","String")
 	 public var comment: String;
 	 public var commentSize: ImVec2 = {x: 0, y: 0};
+
 
 	 static final d: NodeDefinition = {
 		 name:"Comment",
@@ -25,7 +30,48 @@ import cerastes.tools.ImGuiNodes;
 	 override function get_def() { return d; }
 	 override function get_label() { return comment; }
 	 override function get_size() { return commentSize; }
+	 #end
  }
+
+
+
+/**
+ * Loads (and jumps into) another flow file
+ */
+class FileNode extends FlowNode
+{
+	@editor("Label","File","flow")
+	public var file: String;
+
+	public override function process( runner: FlowRunner )
+	{
+		super.process(runner);
+	}
+
+	#if hlimgui
+	static final d: NodeDefinition = {
+		name:"Scene",
+		kind: Blueprint,
+		color: 0xFF228822,
+		pins: [
+			{
+				id: 0,
+				kind: Input,
+				label: "\uf04e Input",
+				dataType: Node,
+			},
+			{
+				id: 1,
+				kind: Output,
+				label: "Output \uf04b",
+				dataType: Node
+			}
+		]
+	};
+
+	override function get_def() { return d; }
+	#end
+}
 
 
 /**
@@ -34,8 +80,18 @@ import cerastes.tools.ImGuiNodes;
  */
 class SceneNode extends FlowNode
 {
+	@editor("Scene","ComboString")
 	public var scene: String;
 
+
+	public override function process( runner: FlowRunner )
+	{
+		Main.currentScene.switchToNewScene( scene );
+
+		super.process(runner);
+	}
+
+	#if hlimgui
 	static final d: NodeDefinition = {
 		name:"Scene",
 		kind: Blueprint,
@@ -58,13 +114,18 @@ class SceneNode extends FlowNode
 
 	override function get_def() { return d; }
 
-
-	public override function process( runner: FlowRunner )
+	override function getOptions( field: String ): Array<Dynamic>
 	{
-		Main.currentScene.switchToNewScene( scene );
+		if( field == "scene")
+		{
+			var cls = CompileTime.getAllClasses(Scene);
+			return [ for(c in cls) Type.getClassName(c) ];
+		}
 
-		super.process(runner);
+		return super.getOptions(field);
 	}
+	#end
+
 }
 
 /**
@@ -77,6 +138,12 @@ class LabelNode extends FlowNode
 	@editor("Label","String")
 	public var labelId: String = null;
 
+	public override function register( runner: FlowRunner )
+	{
+		runner.labels.set( labelId, this );
+	}
+
+	#if hlimgui
 	static final d: NodeDefinition = {
 		name:"Label",
 		kind: Blueprint,
@@ -98,12 +165,69 @@ class LabelNode extends FlowNode
 	};
 
 	override function get_def()	{ return d;	}
+	#end
+}
+
+/**
+ * The entry point for all flow files
+ */
+ @:structInit
+class EntryNode extends FlowNode
+{
+	public override function register( runner: FlowRunner )
+	{
+		runner.root = this;
+	}
+
+	#if hlimgui
+	static final d: NodeDefinition = {
+		name:"Entry",
+		kind: Blueprint,
+		color: 0xFF882222,
+		pins: [
+			{
+				id: 0,
+				kind: Output,
+				label: "Output \uf04b",
+				dataType: Node
+			}
+		]
+	};
+
+	override function get_def()	{ return d;	}
+	#end
+}
+
+/**
+ * The exit point for all flow files, pops stack
+ */
+ @:structInit
+class ExitNode extends FlowNode
+{
+	#if hlimgui
+	static final d: NodeDefinition = {
+		name:"Entry",
+		kind: Blueprint,
+		color: 0xFF882222,
+		pins: [
+			{
+				id: 0,
+				kind: Input,
+				label: "\uf04e Input",
+				dataType: Node,
+			},
+		]
+	};
+
+	override function get_def()	{ return d;	}
 
 	public override function register( runner: FlowRunner )
 	{
-		runner.labels.set( labelId, this );
+		runner.root = this;
 	}
+	#end
 }
+
 
 /**
  * FlowNodes are the base for all nodes in the flow
@@ -168,8 +292,21 @@ class FlowNode extends Node
 
 	}
 
+	#if hlimgui
+	function getOptions( field: String ) : Array<Dynamic>
+	{
+		return null;
+	}
+	#end
 
+}
 
+@:structInit
+class FlowFile
+{
+	public var version: Int = 1;
+	public var nodes: Array<FlowNode>;
+	public var links: Array<Link>;
 }
 
 @:allow(cerastes.flow.FlowNode)
@@ -178,18 +315,39 @@ class FlowRunner
 	var nodes: Array<FlowNode>;
 	var links: Array<Link>;
 
-	var labels: Map<String, Node>;
+	var labels: Map<String, FlowNode>;
 
-	public function new( nodes: Array<FlowNode> )
+	var root: FlowNode;
+	var stack: List<FlowNode>;
+
+	var res: FlowResource;
+
+	public function new( res: FlowResource )
 	{
-		this.nodes = nodes;
+		this.res = res;
+		this.nodes = res.getData().nodes;
+		this.links = res.getData().links;
 
 		for( n in nodes )
 			n.register(this);
 	}
 
-	public function jump( id: NodeId )
+	public function run()
 	{
+		root.process(this);
+	}
+
+	public function jump( id: String )
+	{
+		if( !labels.exists(id) )
+		{
+			Utils.error('Tried to jump to invalid label ${id} in file ${res.name}');
+			return;
+		}
+
+		var node = labels.get(id);
+		node.process( this );
+
 
 	}
 

@@ -1,5 +1,6 @@
 package cerastes.file;
 
+import haxe.rtti.Meta;
 import haxe.EnumTools;
 
 /**
@@ -61,6 +62,7 @@ class CDPrinter {
 	function write(k:Dynamic, v:Dynamic) {
 		if (replacer != null)
 			v = replacer(k, v);
+
 		switch (Type.typeof(v)) {
 			case TUnknown:
 				add('"???"');
@@ -215,9 +217,18 @@ class CDPrinter {
 
 		addChar('{'.code);
 
+		var meta: haxe.DynamicAccess<Dynamic> = Meta.getFields( Type.getClass( v ) );
 
 		for (i in 0...len) {
 			var f = fields[i];
+
+			if( meta.exists( f ) )
+			{
+				var metadata: haxe.DynamicAccess<Dynamic> = meta.get(f);
+				if( metadata.exists("noSerialize") )
+					continue;
+			}
+
 			var value;
 			if( isMap )
 				value = v.get(f);

@@ -43,14 +43,19 @@ class FileNode extends FlowNode
 	@editor("Label","File","flow")
 	public var file: String;
 
+	@noSerialize
+	var childRunner: FlowRunner;
+
 	public override function process( runner: FlowRunner )
 	{
-		super.process(runner);
+		childRunner = hxd.Res.loader.loadCache( file, FlowResource ).toFlow();
+		childRunner.registerOnExit( this, (handled: Bool) -> { nextAll( runner ); return handled; } );
+		childRunner.run();
 	}
 
 	#if hlimgui
 	static final d: NodeDefinition = {
-		name:"Scene",
+		name:"File",
 		kind: Blueprint,
 		color: 0xFF228822,
 		pins: [
@@ -204,6 +209,11 @@ class EntryNode extends FlowNode
  @:structInit
 class ExitNode extends FlowNode
 {
+	public override function process( runner: FlowRunner )
+	{
+		runner.onExit();
+	}
+
 	#if hlimgui
 	static final d: NodeDefinition = {
 		name:"Entry",
@@ -221,10 +231,6 @@ class ExitNode extends FlowNode
 
 	override function get_def()	{ return d;	}
 
-	public override function register( runner: FlowRunner )
-	{
-		runner.root = this;
-	}
 	#end
 }
 
@@ -310,6 +316,7 @@ class FlowFile
 }
 
 @:allow(cerastes.flow.FlowNode)
+@:build(cerastes.macros.Callbacks.CallbackGenerator.build())
 class FlowRunner
 {
 	var nodes: Array<FlowNode>;
@@ -321,6 +328,14 @@ class FlowRunner
 	var stack: List<FlowNode>;
 
 	var res: FlowResource;
+
+	/**
+	 * OnExit is called when a flow reaches it's exit node.
+	 * Mainly used for
+	 * @return Bool
+	 */
+	@:callback
+	public function onExit(): Bool;
 
 	public function new( res: FlowResource )
 	{

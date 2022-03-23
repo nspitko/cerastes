@@ -83,8 +83,33 @@ class ImGuiNodes
 
 	function getNextId()
 	{
-		return nextId++;
+		do
+		{
+			nextId++;
+		}
+		while( !isIdFree(nextId) );
+
+		return nextId;
 	}
+
+	function isIdFree( id: Int )
+	{
+		for( n in nodes )
+		{
+			if( n.id == nextId )
+				return false;
+			for( portId => pinId in n.pins )
+				if( pinId == id )
+					return false;
+		}
+
+		for( link in links )
+			if( link.id == id )
+				return false;
+
+		return true;
+	}
+
 
 	function idExists(id: NodeId  )
 	{

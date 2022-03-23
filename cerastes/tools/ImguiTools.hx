@@ -272,6 +272,10 @@ class ImGuiTools {
 	public static function textInput(label: String, value: String, ?textInputFlags: ImGuiInputTextFlags = 0, ?placeholder: String = null, ?length: Int = 1024): Null<String>
 	{
 		if( value == null ) value = "";
+
+		if( value.length * 1.2 > length )
+			length = Std.int( value.length * 1.2 );
+
 		var textBuf = new hl.Bytes(length);
 		var src = haxe.io.Bytes.ofString(value);
 		textBuf.blit(0,src,0,value.length);

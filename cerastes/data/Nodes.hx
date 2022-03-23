@@ -58,6 +58,7 @@ typedef PortId = Int;
 	public var firstRender = true;
 }
 
+@:keepSub
 @:allow(cerastes.tools.ImGuiNodes)
 @:structInit class Node
 {

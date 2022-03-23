@@ -58,11 +58,10 @@ class FlowEditor extends ImguiTool
 		var t: EntryNode = {};
 		nodes.addNode(t, 25, 25);
 
-		nodes.registerNode("Label", LabelNode);
-		nodes.registerNode("Scene", SceneNode);
-		//nodes.registerNode("Entry", EntryNode); // We can only have one entry
-		nodes.registerNode("Exit", ExitNode);
-		nodes.registerNode("File", FileNode);
+		for( label => cls in cerastes.Config.flowEditorNodes )
+		{
+			nodes.registerNode(label, cast cls);
+		}
 
 		var dimensions = IG.getWindowDimensions();
 		windowWidth = dimensions.width;
@@ -161,6 +160,42 @@ class FlowEditor extends ImguiTool
 							var ret = IG.textInput(args[0],val);
 							if( ret != null )
 								Reflect.setField( node, field, ret );
+
+						case "StringMultiline":
+							var val = Reflect.getProperty(node,field);
+							var ret = IG.textInput(args[0],val, ImGuiInputTextFlags.Multiline,null,1024*8);
+							if( ret != null )
+								Reflect.setField( node, field, ret );
+
+						case "File":
+							var val = Reflect.getProperty(node,field);
+							var ret = IG.textInput(args[0],val);
+							if( ret != null )
+								Reflect.setField( node, field, ret );
+
+							if( ImGui.beginDragDropTarget( ) )
+							{
+								var payload = ImGui.acceptDragDropPayloadString("asset_name");
+								if( payload != null && StringTools.endsWith(payload, "flow") )
+								{
+									Reflect.setField( node, field, payload );
+								}
+							}
+
+
+							if( ImGui.button("Select...") )
+							{
+								var file = UI.saveFile({
+									title:"Select file",
+									filters:[
+									{name:"Cerastes flow files", exts:["flow"]},
+									],
+									filterIndex: 0
+								});
+								if( file != null )
+									Reflect.setField( node, field, file );
+							}
+
 						case "ComboString":
 							var val = Reflect.getProperty(node,field);
 							var opts = node.getOptions( field );
@@ -232,6 +267,8 @@ class FlowEditor extends ImguiTool
 		var obj: FlowFile = CDParser.parse( res.toText(), FlowFile );
 		nodes.nodes = cast obj.nodes;
 		nodes.links = obj.links;
+
+		this.fileName = fileName;
 
 		for( n in nodes.nodes )
 			n.editorData.firstRender = true;

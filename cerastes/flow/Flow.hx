@@ -1,11 +1,58 @@
 package cerastes.flow;
 
+import game.GameState;
 import cerastes.fmt.FlowResource;
 import cerastes.data.Nodes;
 #if hlimgui
 import imgui.NodeEditor;
 import imgui.ImGui;
 #end
+
+/**
+ * Puts text on the screen
+ */
+ class ConditionNode extends FlowNode
+ {
+	 @editor("Condition","StringMultiline")
+	 public var condition: String;
+
+	 public override function process( runner: FlowRunner )
+	 {
+		nextAll(runner);
+	 }
+
+	 #if hlimgui
+	 static final d: NodeDefinition = {
+		 name:"Condition",
+		 kind: Blueprint,
+		 color: 0xFF222288,
+		 pins: [
+			 {
+				 id: 0,
+				 kind: Input,
+				 label: "\uf04e Input",
+				 dataType: Node,
+			 },
+			 {
+				 id: 1,
+				 kind: Output,
+				 label: "True \uf04b",
+				 dataType: Node,
+				 color: 0xFF22AA22
+			 },
+			 {
+				 id: 2,
+				 kind: Output,
+				 label: "False \uf04b",
+				 dataType: Node,
+				 color: 0xFFaa2222
+			 }
+		 ]
+	 };
+
+	 override function get_def() { return d; }
+	 #end
+ }
 
 
 /**
@@ -307,12 +354,69 @@ class FlowNode extends Node
 
 }
 
+@:enum abstract FlowOp(Int) from Int to Int {
+	var Invalid = 0;
+	var Equ = 1;
+	var Gt = 2;
+	var Lt = 3;
+	var Gte = 4;
+	var Lte = 5;
+	var Neq = 6;
+}
+
+@:structInit
+class FlowCondition
+{
+	public var varA: String = null;
+	public var varB: String = null;
+	public var constB: Float = 0;
+	public var op: FlowOp = Invalid;
+}
+
+/**
+ * Flow links contain additional data that may control their viability as exits, such as conditions
+ */
+@:structInit
+class FlowLink extends Link
+{
+	public var conditions: Array<FlowCondition> = null;
+}
+
 @:structInit
 class FlowFile
 {
 	public var version: Int = 1;
 	public var nodes: Array<FlowNode>;
-	public var links: Array<Link>;
+	public var links: Array<FlowLink>;
+}
+
+class FlowContext
+{
+	public var parser = new hscript.Parser();
+	public var interp = new hscript.Interp();
+
+	var runner: FlowRunner;
+
+	public function new( runner: FlowRunner )
+	{
+		this.runner = runner;
+
+		interp.variables.set("GS", GameState );
+		interp.variables.set("Std", Std );
+
+		interp.variables.set("changeScene", changeScene );
+
+		interp.variables.set("set", GameState.set );
+		interp.variables.set("get", GameState.get );
+		//interp.variables.set("seenNode", seenNode );
+	}
+
+	public static function changeScene( className: String )
+	{
+		#if client
+		Main.currentScene.switchToNewScene( className );
+		#end
+	}
 }
 
 @:allow(cerastes.flow.FlowNode)
@@ -320,7 +424,7 @@ class FlowFile
 class FlowRunner
 {
 	var nodes: Array<FlowNode>;
-	var links: Array<Link>;
+	var links: Array<FlowLink>;
 
 	var labels: Map<String, FlowNode>;
 
@@ -328,6 +432,7 @@ class FlowRunner
 	var stack: List<FlowNode>;
 
 	var res: FlowResource;
+	var context: FlowContext;
 
 	/**
 	 * OnExit is called when a flow reaches it's exit node.
@@ -337,11 +442,13 @@ class FlowRunner
 	@:callback
 	public function onExit(): Bool;
 
-	public function new( res: FlowResource )
+	public function new( res: FlowResource, ?ctx: FlowContext )
 	{
 		this.res = res;
 		this.nodes = res.getData().nodes;
 		this.links = res.getData().links;
+
+		context = ctx == null ? new FlowContext( this ) : ctx;
 
 		for( n in nodes )
 			n.register(this);

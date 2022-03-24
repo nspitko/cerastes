@@ -301,6 +301,7 @@ class ImGuiTools {
 
 	public static function textInputMultiline(label: String, value: String, ?size: ImVec2 = null, ?textInputFlags: ImGuiInputTextFlags = 0, ?length: Int = 10240 ): Null<String>
 	{
+		if( value == null ) value = "";
 		var textBuf = new hl.Bytes(length);
 		var src = haxe.io.Bytes.ofString(value);
 		textBuf.blit(0,src,0,value.length);

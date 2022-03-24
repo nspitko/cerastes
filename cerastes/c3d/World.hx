@@ -32,12 +32,15 @@ class GeoEntry
 @:structInit
 class WorldDef
 {
+	@serializeType("cerastes.c3d.PrefabEntry")
 	public var prefabs: Array<PrefabEntry>;
+	@serializeType("cerastes.c3d.GeoEntry")
 	public var geo: Array<GeoEntry>;
 
 	public function save(file: String)
 	{
 		var kv = CDPrinter.print(this);
+		trace(kv);
 		sys.io.File.saveContent( Utils.fixWritePath(file,"world"),kv);
 	}
 

@@ -258,7 +258,7 @@ class UIEditor extends ImguiTool
 		var isOpenRef = hl.Ref.make(isOpen);
 
 		ImGui.setNextWindowSize({x: viewportWidth * 2, y: viewportHeight * 1.6}, ImGuiCond.Once);
-		ImGui.begin('\uf108 UI Editor##${windowID()}', isOpenRef, ImGuiWindowFlags.NoDocking | ImGuiWindowFlags.MenuBar );
+		ImGui.begin('\uf108 UI Editor ${fileName}##${windowID()}', isOpenRef, ImGuiWindowFlags.NoDocking | ImGuiWindowFlags.MenuBar );
 
 		menuBar();
 

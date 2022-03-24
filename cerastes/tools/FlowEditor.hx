@@ -1,5 +1,6 @@
 
 package cerastes.tools;
+import cerastes.data.Nodes.Link;
 import cerastes.file.CDParser;
 import cerastes.file.CDPrinter;
 #if hlimgui
@@ -31,6 +32,7 @@ enum FlowEditorMode {
 
 @:keep
 @:access(cerastes.data.Node)
+@multiInstance(true)
 class FlowEditor extends ImguiTool
 {
 
@@ -53,6 +55,7 @@ class FlowEditor extends ImguiTool
 	public function new()
 	{
 		nodes = new ImGuiNodes();
+		nodes.createLink = (sourceId: PinId, destId: PinId, id: Int)  -> { var l: FlowLink = { sourceId: sourceId, destId: destId, id: id }; return l; };
 
 		// TEST
 		var t: EntryNode = {};
@@ -77,8 +80,8 @@ class FlowEditor extends ImguiTool
 		var isOpen = true;
 		var isOpenRef = hl.Ref.make(isOpen);
 
-		ImGui.setNextWindowSize({x: windowWidth, y: windowHeight}, ImGuiCond.Once);
-		ImGui.begin("\uf1e0 Flow Editor", isOpenRef, ImGuiWindowFlags.NoDocking | ImGuiWindowFlags.MenuBar);
+		ImGui.setNextWindowSize({x: windowWidth * 0.7, y: windowHeight * 0.7}, ImGuiCond.Once);
+		ImGui.begin('\uf1e0 Flow Editor ${fileName}##${windowID()}', isOpenRef, ImGuiWindowFlags.NoDocking | ImGuiWindowFlags.MenuBar);
 
 
 		menuBar();
@@ -163,7 +166,7 @@ class FlowEditor extends ImguiTool
 
 						case "StringMultiline":
 							var val = Reflect.getProperty(node,field);
-							var ret = IG.textInput(args[0],val, ImGuiInputTextFlags.Multiline,null,1024*8);
+							var ret = IG.textInputMultiline(args[0],val,{x: -1, y: 300 * Utils.getDPIScaleFactor()},0,1024*8);
 							if( ret != null )
 								Reflect.setField( node, field, ret );
 
@@ -266,12 +269,9 @@ class FlowEditor extends ImguiTool
 		var res = hxd.Res.loader.load(fileName);
 		var obj: FlowFile = CDParser.parse( res.toText(), FlowFile );
 		nodes.nodes = cast obj.nodes;
-		nodes.links = obj.links;
+		nodes.links = cast obj.links;
 
 		this.fileName = fileName;
-
-		for( n in nodes.nodes )
-			n.editorData.firstRender = true;
 	}
 
 	function menuBar()
@@ -284,7 +284,7 @@ class FlowEditor extends ImguiTool
 				{
 					var obj: FlowFile = {
 						nodes: cast nodes.nodes,
-						links: nodes.links
+						links: cast nodes.links
 					};
 
 					sys.io.File.saveContent( Utils.fixWritePath(fileName,"flow"), CDPrinter.print( obj ) );
@@ -304,7 +304,7 @@ class FlowEditor extends ImguiTool
 
 						var obj: FlowFile = {
 							nodes: cast nodes.nodes,
-							links: nodes.links
+							links: cast nodes.links
 						};
 
 						sys.io.File.saveContent( Utils.fixWritePath(fileName,"flow"), CDPrinter.print( obj ) );

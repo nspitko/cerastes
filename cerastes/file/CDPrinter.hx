@@ -59,7 +59,7 @@ class CDPrinter {
 			addChar('\n'.code);
 	}
 
-	function write(k:Dynamic, v:Dynamic) {
+	function write(k:Dynamic, v:Dynamic, ?assumeType: String) {
 		if (replacer != null)
 			v = replacer(k, v);
 
@@ -88,7 +88,7 @@ class CDPrinter {
 							nind++;
 						newl();
 						ipad();
-						write(i, v[i]);
+						write(i, v[i], assumeType);
 						if (i == last) {
 							nind--;
 							newl();
@@ -104,7 +104,7 @@ class CDPrinter {
 					var v:Date = v;
 					quote(v.toString());
 				} else
-					classString(v);
+					classString(v, assumeType);
 			case TEnum(_):
 				var i:Int = Type.enumIndex(v);
 				var e = Type.getEnum(v);
@@ -135,8 +135,8 @@ class CDPrinter {
 		#end
 	}
 
-	function classString(v:Dynamic) {
-		fieldsString(v, Type.getInstanceFields(Type.getClass(v)));
+	function classString(v:Dynamic, assumeType: String) {
+		fieldsString(v, Type.getInstanceFields(Type.getClass(v)), assumeType);
 	}
 
 	inline function mapString(v:Map<Any, Any>) {
@@ -179,10 +179,9 @@ class CDPrinter {
 		fieldsString(v, Reflect.fields(v));
 	}
 
-	function fieldsString(v:Dynamic, fields:Array<String>) {
+	function fieldsString(v:Dynamic, fields:Array<String>, ?assumedType: String) {
 
 		var len = fields.length;
-		var last = len - 1;
 		var first = true;
 		var isMap = false;
 
@@ -190,26 +189,17 @@ class CDPrinter {
 			case TClass(c):
 				var className = Type.getClassName(c);
 
-				nind++;
-				first = false;
+				if( assumedType != className )
+				{
+					add("cls:");
+					add(className);
 
-				//if( #if flash9 try obj.TJ_noEncode != null catch( e : Dynamic ) false #elseif (cs || java) Reflect.hasField(obj, "TJ_noEncode") #else obj.TJ_noEncode != null #end  ) {
-				//	dontEncodeFields = obj.TJ_noEncode();
-				//}
-
-				add("cls:");
-				add(className);
-
-				if (pretty)
-					addChar(' '.code);
+					if (pretty)
+						addChar(' '.code);
+				}
 
 				isMap = className == "haxe.ds.StringMap" || className == "haxe.ds.IntMap";
 
-				if ( 0 == last) {
-					nind--;
-					newl();
-					ipad();
-				}
 
 			default:
 
@@ -219,27 +209,46 @@ class CDPrinter {
 
 		var meta: haxe.DynamicAccess<Dynamic> = Meta.getFields( Type.getClass( v ) );
 
+		nind++;
+
 		for (i in 0...len) {
 			var f = fields[i];
 
+			var assumeType = null;
 			if( meta.exists( f ) )
 			{
 				var metadata: haxe.DynamicAccess<Dynamic> = meta.get(f);
 				if( metadata.exists("noSerialize") )
 					continue;
+
+				if( metadata.exists("serializeType") )
+				{
+					assumeType = metadata.get("serializeType")[0];
+				}
 			}
 
-			var value;
+			var value : Any;
 			if( isMap )
 				value = v.get(f);
 			else
 				value = Reflect.field(v, f);
 			if (Reflect.isFunction(value))
 				continue;
-			if (first) {
-				nind++;
-				first = false;
+
+			switch (Type.typeof(value))
+			{
+				case TNull:
+					continue;
+				case TInt | TFloat:
+					if( value == 0 )
+						continue;
+
+				default:
+
 			}
+
+
+
 			newl();
 			ipad();
 			add(f);
@@ -248,13 +257,11 @@ class CDPrinter {
 			addChar('='.code);
 			if (pretty)
 				addChar(' '.code);
-			write(f, value);
-			if (i == last) {
-				nind--;
-				newl();
-				ipad();
-			}
+			write(f, value, assumeType);
 		}
+		nind--;
+		newl();
+		ipad();
 		addChar('}'.code);
 	}
 

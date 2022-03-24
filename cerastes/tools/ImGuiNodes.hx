@@ -71,9 +71,12 @@ class ImGuiNodes
 
 	var iconWidth: Float = 0;
 
+	public var createLink: (sourceId: PinId, destId: PinId, id: Int) -> Link = (sourceId: PinId, destId: PinId, id: Int) -> { var l: Link = { sourceId: sourceId, destId: destId, id: id }; return l; };
+
 	public function new()
 	{
 		editor = NodeEditor.createEditor();
+
 	}
 
 	public function registerNode(name: String, cls: Class<Node>)
@@ -187,9 +190,9 @@ class ImGuiNodes
 		}
 
 
-		if( node.editorData.firstRender )
+		if( !node.editorData.hasRendered )
 		{
-			node.editorData.firstRender = false;
+			node.editorData.hasRendered = true;
 
 			NodeEditor.setNodePosition( node.id, {x: node.editorData.x, y: node.editorData.y } );
 

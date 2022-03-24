@@ -34,7 +34,7 @@ class CDParser {
 		return result;
 	}
 
-	function parseRec( ):Dynamic {
+	function parseRec( ?assumeType: String ):Dynamic {
 		var obj: Dynamic = null;
 
 		while (true) {
@@ -43,6 +43,14 @@ class CDParser {
 				case ' '.code, '\r'.code, '\n'.code, '\t'.code:
 				// loop
 				case '{'.code:
+
+					if( assumeType != null )
+					{
+						var cls =Type.resolveClass(assumeType);
+						if(cls==null) throw "Invalid class name - "+assumeType;
+						obj = Type.createEmptyInstance(cls);
+					}
+
 					var field = new StringBuf();
 					while (true) {
 						var c = nextChar();
@@ -56,7 +64,6 @@ class CDParser {
 							case '='.code:
 								if (field == null)
 									invalidChar();
-
 								if( field.toString() == "_class" )
 								{
 									if( obj != null )
@@ -73,8 +80,6 @@ class CDParser {
 										obj = {};
 
 									var rec: Dynamic = parseRec();
-
-									//trace('${field} -> ${rec}');
 
 									if( obj is haxe.ds.StringMap)
 										obj.set( field.toString(), rec );
@@ -140,9 +145,25 @@ class CDParser {
 								if (field == null)
 									invalidChar();
 
-
-								var rec: Dynamic = parseRec();
 								var fstr = field.toString();
+								var assumeType: String = null;
+
+								var meta: haxe.DynamicAccess<Dynamic> = Meta.getFields( cls );
+								if( meta != null && meta.exists( fstr ) )
+								{
+									var metadata: haxe.DynamicAccess<Dynamic> = meta.get(fstr);
+									if( metadata.exists("serializeType") )
+									{
+
+										assumeType = metadata.get("serializeType")[0];
+										trace('ASSUME TYPE: ${assumeType}');
+									}
+								}
+
+
+								var rec: Dynamic = parseRec( assumeType );
+
+
 
 								if( obj is haxe.ds.StringMap)
 									obj.set( fstr, rec );
@@ -178,7 +199,7 @@ class CDParser {
 								// optional!
 							default:
 								pos--;
-								arr.push(parseRec());
+								arr.push(parseRec(assumeType));
 								comma = true;
 						}
 					}

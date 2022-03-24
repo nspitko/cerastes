@@ -55,7 +55,8 @@ typedef PortId = Int;
 {
 	public var x: Float = 0;
 	public var y: Float = 0;
-	public var firstRender = true;
+	@noSerialize
+	public var hasRendered = false;
 }
 
 @:keepSub

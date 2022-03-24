@@ -364,22 +364,13 @@ class FlowNode extends Node
 	var Neq = 6;
 }
 
-@:structInit
-class FlowCondition
-{
-	public var varA: String = null;
-	public var varB: String = null;
-	public var constB: Float = 0;
-	public var op: FlowOp = Invalid;
-}
-
 /**
  * Flow links contain additional data that may control their viability as exits, such as conditions
  */
 @:structInit
 class FlowLink extends Link
 {
-	public var conditions: Array<FlowCondition> = null;
+	public var conditions: Array<String> = null;
 }
 
 @:structInit

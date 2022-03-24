@@ -1,5 +1,7 @@
 
 package cerastes.tools;
+import game.GameState;
+import hscript.Checker;
 import cerastes.data.Nodes.Link;
 import cerastes.file.CDParser;
 import cerastes.file.CDPrinter;
@@ -52,6 +54,8 @@ class FlowEditor extends ImguiTool
 
 	var mode: FlowEditorMode = Select;
 
+	var context = new FlowContext(null);
+
 	public function new()
 	{
 		nodes = new ImGuiNodes();
@@ -70,6 +74,7 @@ class FlowEditor extends ImguiTool
 		windowWidth = dimensions.width;
 		windowHeight = dimensions.height;
 
+		openFile( "data/nested_test.flow" );
 	}
 
 
@@ -142,6 +147,7 @@ class FlowEditor extends ImguiTool
 		ImGui.begin('Inspector##${windowID()}');
 
 		var node: FlowNode = Std.downcast( nodes.getSelectedNode(), FlowNode );
+		var link: FlowLink = Std.downcast( nodes.getSelectedLink( ), FlowLink );
 		if( node != null )
 		{
 			ImGui.pushID( '${node.id}' );
@@ -223,9 +229,41 @@ class FlowEditor extends ImguiTool
 
 			ImGui.popID();
 		}
+		else if( link != null )
+		{
+			var i = 0;
+			if( link.conditions != null && link.conditions.length > 0 )
+			{
+				for( i in 0 ... link.conditions.length )
+				{
+					var c = link.conditions[i];
+					var newVal = IG.textInput('Condition ${i}', c );
+					if( newVal != null )
+						link.conditions[i] = newVal;
+
+					runChecker( link.conditions[i] );
+				}
+
+				i = link.conditions.length;
+			}
+
+			var newVal = IG.textInput('Condition ${i}', "" );
+			if( newVal != null )
+			{
+				if( link.conditions == null )
+					link.conditions = [ newVal ];
+				else
+					link.conditions.push( newVal );
+
+				link.color = { x: 0.9, y: 0.95, z: 0.2, w: 1.0 };
+				link.thickness = 3.0;
+			}
+			if( newVal != null )
+				runChecker( newVal );
+		}
 		else
 		{
-			ImGui.text("No node selected");
+			ImGui.text("No item selected");
 		}
 
 
@@ -233,6 +271,24 @@ class FlowEditor extends ImguiTool
 
 		ImGui.end();
 
+	}
+
+	function runChecker( val: String )
+	{
+		if( ImGui.isItemFocused() )
+		{
+			try
+			{
+				context.parser.parseString(val);
+			}
+			catch( e )
+			{
+				ImGui.textColored( {x: 1.0, y: 0.3, z: 0.3, w: 1.0}, e.message );
+			}
+
+
+
+		}
 	}
 
 

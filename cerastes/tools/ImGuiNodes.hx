@@ -394,11 +394,7 @@ class ImGuiNodes
 					showLabel('+ Create Link: ${inputNode.id} -> ${outputNode.id}', 0x55202d20 );
 					if( NodeEditor.acceptNewItem() )
 					{
-						links.push({
-							id: getNextId(),
-							sourceId: inputPinId,
-							destId: outputPinId,
-						});
+						links.push(createLink(inputPinId, outputPinId, getNextId()));
 
 					}
 				}
@@ -560,11 +556,7 @@ class ImGuiNodes
 					var targetPinId = n.getDefaultInputPinId();
 					if( targetPinId != -1 )
 					{
-						links.push({
-							id: getNextId(),
-							sourceId: queryPinId,
-							destId: targetPinId,
-						});
+						links.push(createLink(queryPinId, targetPinId, getNextId()));
 					}
 
 					ImGui.closeCurrentPopup();
@@ -606,6 +598,22 @@ class ImGuiNodes
 			for( n in nodes )
 				if( n.id == nodeId )
 					return n;
+		}
+
+		return null;
+	}
+
+	public function getSelectedLink() : Link
+	{
+		var linkIds: hl.NativeArray<LinkId> = NodeEditor.getSelectedLinks();
+		if( linkIds.length != 1 )
+			return null;
+
+		for( linkId in linkIds )
+		{
+			for( l in links )
+				if( l.id == linkId )
+					return l;
 		}
 
 		return null;

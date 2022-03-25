@@ -263,7 +263,7 @@ class ExitNode extends FlowNode
 
 	#if hlimgui
 	static final d: NodeDefinition = {
-		name:"Entry",
+		name:"Exit",
 		kind: Blueprint,
 		color: 0xFF882222,
 		pins: [
@@ -385,6 +385,7 @@ class FlowContext
 {
 	public var parser = new hscript.Parser();
 	public var interp = new hscript.Interp();
+	public var globals = new Map<String,String>();
 
 	var runner: FlowRunner;
 
@@ -393,9 +394,12 @@ class FlowContext
 		this.runner = runner;
 
 		interp.variables.set("GS", GameState );
+		globals.set("GS", "game.GameState" );
 		interp.variables.set("Std", Std );
+		globals.set("Std", "Std" );
 
 		interp.variables.set("changeScene", changeScene );
+		globals.set("changeScene", "cerastes.flow.FlowContext.changeScene" );
 
 		interp.variables.set("set", GameState.set );
 		interp.variables.set("get", GameState.get );

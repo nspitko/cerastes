@@ -1,5 +1,6 @@
 
 package cerastes.tools;
+import sys.io.File;
 import game.GameState;
 import hscript.Checker;
 import cerastes.data.Nodes.Link;
@@ -231,15 +232,25 @@ class FlowEditor extends ImguiTool
 		}
 		else if( link != null )
 		{
+			var n = 0;
+			if( link.conditions != null )
+				n = link.conditions.length;
+
+			var idToRemove = -1;
+
 			var i = 0;
 			if( link.conditions != null && link.conditions.length > 0 )
 			{
 				for( i in 0 ... link.conditions.length )
 				{
 					var c = link.conditions[i];
-					var newVal = IG.textInput('Condition ${i}', c );
+					var newVal = IG.textInput('##${i}', c );
 					if( newVal != null )
 						link.conditions[i] = newVal;
+
+					ImGui.sameLine();
+					if( ImGui.button("\uf55a"))
+						idToRemove = i;
 
 					runChecker( link.conditions[i] );
 				}
@@ -247,19 +258,29 @@ class FlowEditor extends ImguiTool
 				i = link.conditions.length;
 			}
 
-			var newVal = IG.textInput('Condition ${i}', "" );
-			if( newVal != null )
+			if( idToRemove != -1 )
 			{
-				if( link.conditions == null )
-					link.conditions = [ newVal ];
-				else
-					link.conditions.push( newVal );
-
-				link.color = { x: 0.9, y: 0.95, z: 0.2, w: 1.0 };
-				link.thickness = 3.0;
+				link.conditions.splice(idToRemove,1);
+				if( link.conditions.length == 0 )
+				{
+					link.conditions = null;
+					link.color = null;
+					link.thickness = 0;
+				}
 			}
-			if( newVal != null )
-				runChecker( newVal );
+
+			if( ImGui.button('\u002b') )
+			{
+				if( link.conditions != null )
+					link.conditions.push('');
+				else
+				{
+					link.conditions = [''];
+					link.color = { x: 0.9, y: 0.95, z: 0.2, w: 1.0 };
+					link.thickness = 3.0;
+				}
+			}
+
 		}
 		else
 		{
@@ -273,13 +294,50 @@ class FlowEditor extends ImguiTool
 
 	}
 
+	static var checker: Checker;
+
 	function runChecker( val: String )
 	{
+/*
+		if( checker == null )
+		{
+			checker = new Checker();
+			var types = new CheckerTypes();
+			types.addXmlApi(Xml.parse( File.getContent("api.xml") ).firstElement()); // `xml` = api.xml contents as String
+			checker.types = types;
+
+			for( k => v in context.globals )
+			{
+				trace('${k} -> ${v}');
+				var t = types.resolve( v );
+				if( t == null )
+				{
+					for( t => v in @:privateAccess types.types )
+					{
+						if( t.indexOf("changeScene") != -1 )
+							trace('FOUND IT!! ${t}');
+					}
+				}
+				Utils.assert( t != null, 'Unable to resolve ${k} (${v}) for hscript checker. Type checking may fail!!');
+				checker.setGlobal(k, t);
+			}
+		}
+*/
 		if( ImGui.isItemFocused() )
 		{
 			try
 			{
-				context.parser.parseString(val);
+				var expr = context.parser.parseString(val);
+/*
+				try
+				{
+					checker.check( expr );
+				}
+				catch( e )
+				{
+					ImGui.textColored( {x: 1.0, y: 0.3, z: 0.3, w: 1.0}, e.message );
+				}
+*/
 			}
 			catch( e )
 			{

@@ -68,6 +68,7 @@ typedef PortId = Int;
 	public var pins: Map<PortId,PinId> = [];
 	#if hlimgui
 	var def(get, never): NodeDefinition;
+	@serializeType("cerastes.data.EditorData")
 	public var editorData: EditorData = {};
 
 	public var label(get, never): String;
@@ -141,7 +142,9 @@ typedef PortId = Int;
 	public var sourceId: PinId;
 	public var destId: PinId;
 	#if hlimgui
+	@noSerialize
 	public var color: ImVec4 = null;
+	@noSerialize
 	public var thickness: Float = 0;
 	#end
 }

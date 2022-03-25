@@ -207,25 +207,17 @@ class CDPrinter {
 
 		addChar('{'.code);
 
-		var meta: haxe.DynamicAccess<Dynamic> = Meta.getFields( Type.getClass( v ) );
 
 		nind++;
 
 		for (i in 0...len) {
 			var f = fields[i];
 
-			var assumeType = null;
-			if( meta.exists( f ) )
-			{
-				var metadata: haxe.DynamicAccess<Dynamic> = meta.get(f);
-				if( metadata.exists("noSerialize") )
-					continue;
+			if( getMetaForField(f, "noSerialize", Type.getClass( v ) ) )
+				continue;
 
-				if( metadata.exists("serializeType") )
-				{
-					assumeType = metadata.get("serializeType")[0];
-				}
-			}
+			var assumeType = null;
+			var assumeType = getMetaForField(f, "serializeType", Type.getClass( v ) );
 
 			var value : Any;
 			if( isMap )
@@ -263,6 +255,35 @@ class CDPrinter {
 		newl();
 		ipad();
 		addChar('}'.code);
+	}
+
+	function getMetaForField( f: String, m: String, cls: Class<Dynamic> ) : Any
+	{
+		var meta: haxe.DynamicAccess<Dynamic> = null;
+		if( cls != null )
+			meta = Meta.getFields( cls );
+
+		if( meta != null && meta.exists( f ) )
+		{
+			var metadata: haxe.DynamicAccess<Dynamic> = meta.get(f);
+
+			if( metadata.exists(m) )
+			{
+				var val = metadata.get(m);
+				if( val == null )
+					return true;
+				else
+					return val[0];
+			}
+
+		}
+
+		cls = Type.getSuperClass( cls );
+		if( cls != null )
+			return getMetaForField(f, m, cls );
+
+		return null;
+
 	}
 
 	function quote(s:String) {

@@ -40,7 +40,6 @@ class WorldDef
 	public function save(file: String)
 	{
 		var kv = CDPrinter.print(this);
-		trace(kv);
 		sys.io.File.saveContent( Utils.fixWritePath(file,"world"),kv);
 	}
 

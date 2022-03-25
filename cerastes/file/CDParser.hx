@@ -146,20 +146,7 @@ class CDParser {
 									invalidChar();
 
 								var fstr = field.toString();
-								var assumeType: String = null;
-
-								var meta: haxe.DynamicAccess<Dynamic> = Meta.getFields( cls );
-								if( meta != null && meta.exists( fstr ) )
-								{
-									var metadata: haxe.DynamicAccess<Dynamic> = meta.get(fstr);
-									if( metadata.exists("serializeType") )
-									{
-
-										assumeType = metadata.get("serializeType")[0];
-										trace('ASSUME TYPE: ${assumeType}');
-									}
-								}
-
+								var assumeType: String = getMetaForField( fstr, "serializeType", cls );
 
 								var rec: Dynamic = parseRec( assumeType );
 
@@ -252,6 +239,35 @@ class CDParser {
 					invalidChar();
 			}
 		}
+	}
+
+	function getMetaForField( f: String, m: String, cls: Class<Dynamic> ) : Any
+	{
+		var meta: haxe.DynamicAccess<Dynamic> = null;
+		if( cls != null )
+			meta = Meta.getFields( cls );
+
+		if( meta != null && meta.exists( f ) )
+		{
+			var metadata: haxe.DynamicAccess<Dynamic> = meta.get(f);
+
+			if( metadata.exists(m) )
+			{
+				var val = metadata.get(m);
+				if( val == null )
+					return true;
+				else
+					return val[0];
+			}
+
+		}
+
+		cls = Type.getSuperClass( cls );
+		if( cls != null )
+			return getMetaForField(f, m, cls );
+
+		return null;
+
 	}
 
 	function parseType()

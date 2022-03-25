@@ -176,6 +176,17 @@ class ImGuiNodes
 		NodeEditor.end();
 	}
 
+	function getNode(nodeId: NodeId )
+	{
+		for( n in nodes )
+		{
+			if( n.id == nodeId )
+				return n;
+		}
+
+		return null;
+	}
+
 	function renderNode( node: Node )
 	{
 
@@ -489,6 +500,30 @@ class ImGuiNodes
 
 		popups();
 
+		//Handle node movement
+
+		var selectedNodes = NodeEditor.getSelectedNodes();
+		for( nodeId in selectedNodes )
+		{
+			// I have no idea why 0 can be a selected node but it can??
+			if( nodeId == 0 )
+				continue;
+
+			var node = getNode(nodeId);
+			var pos: ImVec2 = NodeEditor.getNodePosition(nodeId );
+			node.editorData.x = pos.x;
+			node.editorData.y = pos.y;
+		}
+
+		// Hover specifically deals with a single drag, which may not select.
+		var nodeId = NodeEditor.getHoveredNode();
+		if( nodeId > 0 )
+		{
+			var node = getNode(nodeId);
+			var pos: ImVec2 = NodeEditor.getNodePosition(nodeId );
+			node.editorData.x = pos.x;
+			node.editorData.y = pos.y;
+		}
 
 	}
 

@@ -95,8 +95,18 @@ class FileNode extends FlowNode
 
 	public override function process( runner: FlowRunner )
 	{
-		childRunner = hxd.Res.loader.loadCache( file, FlowResource ).toFlow();
-		childRunner.registerOnExit( this, (handled: Bool) -> { nextAll( runner ); return handled; } );
+		var hasExited = false;
+		childRunner = hxd.Res.loader.loadCache( file, FlowResource ).toFlow( runner.context );
+		childRunner.registerOnExit( this, (handled: Bool) -> {
+			if( hasExited )
+			{
+				Utils.error('File ${ file } has exited more than once!');
+				return handled;
+			}
+			hasExited = true;
+			nextAll( runner );
+			return handled;
+		} );
 		childRunner.run();
 	}
 
@@ -333,6 +343,33 @@ class FlowNode extends Node
 		{
 			if( link.sourceId == pin )
 			{
+				// Check conditions, if any
+				if( link.conditions != null )
+				{
+					var valid = true;
+					for( condition in link.conditions )
+					{
+						try
+						{
+							var program = runner.context.parser.parseString(condition);
+
+							var result : Bool = runner.context.interp.execute(program);
+							trace('${condition} -> ${result}');
+							if( !result )
+							{
+								valid = false;
+								break;
+							}
+
+						}
+						catch (e )
+						{
+							Utils.warning('Error:${e.message}\nWhile running conditions for link ${link.id}.\nCondition was ${condition}');
+						}
+					}
+					if( !valid )
+						continue;
+				}
 				var target = runner.lookupNodeByPin( link.destId );
 				target.process( runner );
 			}
@@ -378,6 +415,7 @@ class FlowFile
 {
 	public var version: Int = 1;
 	public var nodes: Array<FlowNode>;
+	@serializeType("cerastes.flow.FlowLink")
 	public var links: Array<FlowLink>;
 }
 
@@ -385,7 +423,6 @@ class FlowContext
 {
 	public var parser = new hscript.Parser();
 	public var interp = new hscript.Interp();
-	public var globals = new Map<String,String>();
 
 	var runner: FlowRunner;
 
@@ -394,16 +431,14 @@ class FlowContext
 		this.runner = runner;
 
 		interp.variables.set("GS", GameState );
-		globals.set("GS", "game.GameState" );
 		interp.variables.set("Std", Std );
-		globals.set("Std", "Std" );
 
 		interp.variables.set("changeScene", changeScene );
-		globals.set("changeScene", "cerastes.flow.FlowContext.changeScene" );
 
 		interp.variables.set("set", GameState.set );
 		interp.variables.set("get", GameState.get );
 		//interp.variables.set("seenNode", seenNode );
+
 	}
 
 	public static function changeScene( className: String )
@@ -487,6 +522,33 @@ class FlowRunner
 		{
 			if( l.sourceId == pinId )
 			{
+				// Check conditions, if any
+				if( l.conditions != null )
+				{
+					var valid = true;
+					for( condition in l.conditions )
+					{
+						try
+						{
+							var program = context.parser.parseString(condition);
+
+							var result : Bool = context.interp.execute(program);
+							trace('${program} -> ${result}');
+							if( !result )
+							{
+								valid = false;
+								break;
+							}
+
+						}
+						catch (e )
+						{
+							Utils.warning('Error:${e.message}\nWhile running conditions for link ${l.id}.\nCondition was ${condition}');
+						}
+					}
+					if( !valid )
+						continue;
+				}
 				out.push( lookupNodeByPin( l.destId ) );
 			}
 		}

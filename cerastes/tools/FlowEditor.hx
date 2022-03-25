@@ -264,9 +264,8 @@ class FlowEditor extends ImguiTool
 				if( link.conditions.length == 0 )
 				{
 					link.conditions = null;
-					link.color = null;
-					link.thickness = 0;
 				}
+				decorateLink( link );
 			}
 
 			if( ImGui.button('\u002b') )
@@ -276,9 +275,9 @@ class FlowEditor extends ImguiTool
 				else
 				{
 					link.conditions = [''];
-					link.color = { x: 0.9, y: 0.95, z: 0.2, w: 1.0 };
-					link.thickness = 3.0;
 				}
+
+				decorateLink( link );
 			}
 
 		}
@@ -295,6 +294,20 @@ class FlowEditor extends ImguiTool
 	}
 
 	static var checker: Checker;
+
+	function decorateLink( link: FlowLink )
+	{
+		if( link.conditions != null && link.conditions.length > 0 )
+		{
+			link.color = { x: 0.9, y: 0.95, z: 0.2, w: 1.0 };
+			link.thickness = 3.0;
+		}
+		else
+		{
+			link.color = null;
+			link.thickness = 0;
+		}
+	}
 
 	function runChecker( val: String )
 	{
@@ -386,6 +399,11 @@ class FlowEditor extends ImguiTool
 		nodes.links = cast obj.links;
 
 		this.fileName = fileName;
+
+		// Decorate links
+		for( link in nodes.links )
+			decorateLink( cast link );
+
 	}
 
 	function menuBar()
@@ -400,6 +418,7 @@ class FlowEditor extends ImguiTool
 						nodes: cast nodes.nodes,
 						links: cast nodes.links
 					};
+
 
 					sys.io.File.saveContent( Utils.fixWritePath(fileName,"flow"), CDPrinter.print( obj ) );
 

@@ -1,5 +1,6 @@
 package cerastes.fmt;
 
+import cerastes.flow.Flow.FlowContext;
 import cerastes.flow.Flow.FlowRunner;
 import cerastes.flow.Flow.FlowFile;
 import cerastes.file.CDParser;
@@ -27,11 +28,11 @@ class FlowResource extends Resource
 	static var version = 1;
 
 
-	public function toFlow( )
+	public function toFlow( ?context: FlowContext )
 	{
 		var data = getData();
 
-		return new FlowRunner( this );
+		return new FlowRunner( this, context );
 	}
 
 

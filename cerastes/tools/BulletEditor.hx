@@ -476,7 +476,7 @@ class BulletEditor extends ImguiTool
 
 	}
 
-	inline function windowID()
+	public override function windowID()
 	{
 		return 'bmle${index}';
 	}

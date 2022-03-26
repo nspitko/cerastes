@@ -474,7 +474,7 @@ class WorldEditor extends ImguiTool
 	}
 
 
-	inline function windowID()
+	public override function windowID()
 	{
 		return 'we${fileName}';
 	}

@@ -631,5 +631,10 @@ class AssetBrowser  extends  ImguiTool
 		Metrics.end();
 	}
 
+	public override function windowID()
+	{
+		return 'ASSET${toolId}';
+	}
+
 }
 #end

@@ -76,6 +76,11 @@ class AtlasBrowser  extends  ImguiTool
 		var isOpen = true;
 		var isOpenRef = hl.Ref.make(isOpen);
 
+		if( forceFocus )
+		{
+			forceFocus = false;
+			ImGui.setNextWindowFocus();
+		}
 		ImGui.setNextWindowSize({x: 700 * scaleFactor, y: 400 * scaleFactor}, ImGuiCond.Once);
 		ImGui.begin('\uf247 Atlas browser (${fileName})###${windowID()}', isOpenRef, ImGuiWindowFlags.NoDocking);
 
@@ -170,9 +175,9 @@ class AtlasBrowser  extends  ImguiTool
 		ImGui.endTooltip();
 	}
 
-	inline function windowID()
+	public override function windowID()
 	{
-		return 'atlasbrs${index}';
+		return 'atlasbrs${fileName}';
 	}
 
 

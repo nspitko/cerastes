@@ -48,6 +48,7 @@ class BarReservation
 
 
 @:keep
+@multiInstance(true)
 class SpriteEditor extends ImguiTool
 {
 
@@ -333,6 +334,11 @@ class SpriteEditor extends ImguiTool
 		var isOpen = true;
 		var isOpenRef = hl.Ref.make(isOpen);
 
+		if( forceFocus )
+		{
+			forceFocus = false;
+			ImGui.setNextWindowFocus();
+		}
 		ImGui.setNextWindowSize({x: viewportWidth * 2.3, y: viewportHeight * 2.4}, ImGuiCond.Once);
 		ImGui.begin('\uf6be Sprite Editor (${fileName})##${windowID()}', isOpenRef, ImGuiWindowFlags.NoDocking | ImGuiWindowFlags.MenuBar );
 
@@ -1917,9 +1923,9 @@ class SpriteEditor extends ImguiTool
 		ImGui.end();
 	}
 
-	inline function windowID()
+	public override function windowID()
 	{
-		return 'spre${fileName}';
+		return 'spre${fileName != null ? fileName : ""+toolId}';
 	}
 
 	function dockSpace()

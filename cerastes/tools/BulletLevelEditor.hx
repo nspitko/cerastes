@@ -926,7 +926,7 @@ class BulletLevelEditor extends ImguiTool
 
 	}
 
-	inline function windowID()
+	public override function windowID()
 	{
 		return 'blevel${fileName}';
 	}

@@ -36,6 +36,7 @@ typedef ObjectWidthDimensions = {
 }
 
 @:keep
+@multiInstance(true)
 class UIEditor extends ImguiTool
 {
 	var viewportWidth: Int;
@@ -72,6 +73,8 @@ class UIEditor extends ImguiTool
 	var hasFocus = false;
 
 	var zoom: Int = 1;
+
+	var lastSaved: Float = 0;
 
 	public function new()
 	{
@@ -137,7 +140,6 @@ class UIEditor extends ImguiTool
 
 	function inspectorColumn()
 	{
-		//ImGui.beginChild("uie_inspector",{x: 200 * scaleFactor, y: viewportHeight}, false, ImGuiWindowFlags.AlwaysAutoResize );
 		ImGui.setNextWindowDockId( dockspaceIdLeft, dockCond );
 		ImGui.begin('Inspector##${windowID()}');
 
@@ -213,29 +215,54 @@ class UIEditor extends ImguiTool
 
 	function menuBar()
 	{
+		function saveAs()
+		{
+			var newFile = UI.saveFile({
+				title:"Save As...",
+				filters:[
+				{name:"Cerastes UI files", exts:["ui"]}
+				]
+			});
+			if( newFile != null )
+			{
+				fileName = Utils.toLocalFile( newFile );
+				CUIResource.writeObject(rootDef, preview,newFile);
+
+				cerastes.tools.AssetBrowser.needsReload = true;
+				lastSaved = Sys.time() * 1000;
+			}
+		}
+
+		function save()
+		{
+			if( fileName == null )
+			{
+				saveAs();
+				return;
+			}
+
+			CUIResource.writeObject(rootDef,preview,fileName);
+
+			lastSaved = Sys.time() * 1000;
+		}
+
+		if( ImGui.isWindowFocused( ImGuiFocusedFlags.DockHierarchy ) && Key.isDown( Key.CTRL ) && Key.isDown( Key.S ) )
+		{
+			save();
+		}
+
+
 		if( ImGui.beginMenuBar() )
 		{
 			if( ImGui.beginMenu("File", true) )
 			{
-				if ( fileName != null && ImGui.menuItem("Save", "Ctrl+S"))
+				if ( fileName != null && ImGui.menuItem("Save", "CTRL+S"))
 				{
-					CUIResource.writeObject(rootDef,preview,fileName);
+					save();
 				}
 				if (ImGui.menuItem("Save As..."))
 				{
-					var newFile = UI.saveFile({
-						title:"Save As...",
-						filters:[
-						{name:"Cerastes UI files", exts:["ui"]}
-						]
-					});
-					if( newFile != null )
-					{
-						fileName = Utils.toLocalFile( newFile );
-						CUIResource.writeObject(rootDef, preview,newFile);
-
-						cerastes.tools.AssetBrowser.needsReload = true;
-					}
+					saveAs();
 				}
 
 				ImGui.endMenu();
@@ -250,6 +277,8 @@ class UIEditor extends ImguiTool
 			}
 			ImGui.endMenuBar();
 		}
+
+
 	}
 
 	override public function update( delta: Float )
@@ -257,8 +286,15 @@ class UIEditor extends ImguiTool
 		var isOpen = true;
 		var isOpenRef = hl.Ref.make(isOpen);
 
+		var saveString = ( Sys.time() * 1000 ) - lastSaved < 5000 ? " - Saved!" : "";
+
+		if( forceFocus )
+		{
+			forceFocus = false;
+			ImGui.setNextWindowFocus();
+		}
 		ImGui.setNextWindowSize({x: viewportWidth * 2, y: viewportHeight * 1.6}, ImGuiCond.Once);
-		ImGui.begin('\uf108 UI Editor ${fileName}##${windowID()}', isOpenRef, ImGuiWindowFlags.NoDocking | ImGuiWindowFlags.MenuBar );
+		ImGui.begin('\uf108 UI Editor ${fileName != null ? fileName : ""} ${saveString}###${windowID()}', isOpenRef, ImGuiWindowFlags.NoDocking | ImGuiWindowFlags.MenuBar );
 
 		menuBar();
 
@@ -469,9 +505,9 @@ class UIEditor extends ImguiTool
 		return null;
 	}
 
-	inline function windowID()
+	public override inline function windowID()
 	{
-		return 'spre${fileName}';
+		return 'spre${fileName != null ? fileName : ""+toolId}';
 	}
 
 	function dockSpace()

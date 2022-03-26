@@ -1,6 +1,7 @@
 
 package cerastes.tools;
 
+import imgui.ImGui;
 #if hlimgui
 
 import imgui.ImGui.ImFont;
@@ -10,10 +11,18 @@ import haxe.macro.Expr;
 
 class ImguiTool
 {
+	public var toolId: Int = 0;
+	public var forceFocus: Bool = false;
+
 	public function update( delta: Float ) {}
 	public function render( e: h3d.Engine)	{}
 
 	public function destroy() {}
+
+	public function windowID()
+	{
+		return 'INVALID${toolId}';
+	}
 }
 
 class ImguiToolManager
@@ -22,6 +31,8 @@ class ImguiToolManager
 
 	public static var defaultFont: ImFont;
 	public static var headingFont: ImFont;
+
+	public static var toolIdx = 0;
 
 	public static function showTool( cls: String )
 	{
@@ -39,7 +50,10 @@ class ImguiToolManager
 		}
 
 
-		var t = Type.createInstance(type, []);
+		var t : ImguiTool = Type.createInstance(type, []);
+
+		t.toolId = toolIdx++;
+
 		tools.push(t);
 
 		return t;
@@ -54,8 +68,24 @@ class ImguiToolManager
 	public static function update( delta: Float )
 	{
 		Metrics.begin();
-		for( t in tools )
-			t.update( delta );
+
+		// Make sure there aren't any tool ID collisions
+		var toolMap: Map<String, ImguiTool> = [];
+		var toolCopy = tools.copy();
+		for( i in 0 ... toolCopy.length )
+		{
+			var tool = toolCopy[i];
+			if( toolMap.exists( tool.windowID() ) )
+			{
+				toolMap.get(tool.windowID()).forceFocus = true;
+				tools.remove(tool);
+				continue;
+			}
+
+			toolMap.set(tool.windowID(), tool);
+			tool.update( delta );
+		}
+
 		Metrics.end();
 	}
 
@@ -66,7 +96,6 @@ class ImguiToolManager
 			t.render( e );
 		Metrics.end();
 	}
-
 }
 
 #end

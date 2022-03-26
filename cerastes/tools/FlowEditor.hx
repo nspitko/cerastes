@@ -1,5 +1,6 @@
 
 package cerastes.tools;
+import hxd.Key;
 import sys.io.File;
 import game.GameState;
 import hscript.Checker;
@@ -75,7 +76,7 @@ class FlowEditor extends ImguiTool
 		windowWidth = dimensions.width;
 		windowHeight = dimensions.height;
 
-		openFile( "data/nested_test.flow" );
+		//openFile( "data/nested_test.flow" );
 	}
 
 
@@ -86,8 +87,13 @@ class FlowEditor extends ImguiTool
 		var isOpen = true;
 		var isOpenRef = hl.Ref.make(isOpen);
 
+		if( forceFocus )
+		{
+			forceFocus = false;
+			ImGui.setNextWindowFocus();
+		}
 		ImGui.setNextWindowSize({x: windowWidth * 0.7, y: windowHeight * 0.7}, ImGuiCond.Once);
-		ImGui.begin('\uf1e0 Flow Editor ${fileName}##${windowID()}', isOpenRef, ImGuiWindowFlags.NoDocking | ImGuiWindowFlags.MenuBar);
+		ImGui.begin('\uf1e0 Flow Editor ${fileName != null ? fileName : ""}###${windowID()}', isOpenRef, ImGuiWindowFlags.NoDocking | ImGuiWindowFlags.MenuBar);
 
 
 		menuBar();
@@ -367,7 +373,8 @@ class FlowEditor extends ImguiTool
 	{
 		if( dockspaceId == -1 || ImGui.dockBuilderGetNode( dockspaceId ) == null || dockCond == Always )
 		{
-			var str = "FlowEditorDockspace";
+			var str = 'FlowEditorDockspace${windowID()}';
+			trace('Creating dockspace ${str} ');
 
 			dockspaceId = ImGui.getID(str);
 			dockspaceIdLeft = ImGui.getID(str+"Left");
@@ -408,42 +415,89 @@ class FlowEditor extends ImguiTool
 
 	function menuBar()
 	{
+
+		function saveAs()
+		{
+			var newFile = UI.saveFile({
+				title:"Save As...",
+				filters:[
+				{name:"Cerastes flow files", exts:["flow"]}
+				]
+			});
+			if( newFile != null )
+			{
+				fileName = Utils.toLocalFile( newFile );
+
+				var obj: FlowFile = {
+					nodes: cast nodes.nodes,
+					links: cast nodes.links
+				};
+
+				sys.io.File.saveContent( Utils.fixWritePath(fileName,"flow"), CDPrinter.print( obj ) );
+
+				cerastes.tools.AssetBrowser.needsReload = true;
+			}
+		}
+
+		function save()
+		{
+			if( fileName == null )
+			{
+				saveAs();
+				return;
+			}
+			var obj: FlowFile = {
+				nodes: cast nodes.nodes,
+				links: cast nodes.links
+			};
+
+
+			sys.io.File.saveContent( Utils.fixWritePath(fileName,"flow"), CDPrinter.print( obj ) );
+		}
+
+		if( ImGui.isWindowFocused( ImGuiFocusedFlags.DockHierarchy ) && Key.isDown( Key.CTRL ) && Key.isDown( Key.S ) )
+		{
+			save();
+		}
+
+
+		if( ImGui.beginMenuBar() )
+		{
+			if( ImGui.beginMenu("File", true) )
+			{
+				if ( fileName != null && ImGui.menuItem("Save", "CTRL+S"))
+				{
+					save();
+				}
+				if (ImGui.menuItem("Save As..."))
+				{
+					saveAs();
+				}
+
+				ImGui.endMenu();
+			}
+			if( ImGui.beginMenu("View", true) )
+			{
+				if (ImGui.menuItem("Reset docking"))
+				{
+					dockCond = ImGuiCond.Always;
+				}
+				ImGui.endMenu();
+			}
+			ImGui.endMenuBar();
+		}
+
 		if( ImGui.beginMenuBar() )
 		{
 			if( ImGui.beginMenu("File", true) )
 			{
 				if ( fileName != null && ImGui.menuItem("Save", "Ctrl+S"))
 				{
-					var obj: FlowFile = {
-						nodes: cast nodes.nodes,
-						links: cast nodes.links
-					};
-
-
-					sys.io.File.saveContent( Utils.fixWritePath(fileName,"flow"), CDPrinter.print( obj ) );
-
+					save();
 				}
 				if (ImGui.menuItem("Save As..."))
 				{
-					var newFile = UI.saveFile({
-						title:"Save As...",
-						filters:[
-						{name:"Cerastes flow files", exts:["flow"]}
-						]
-					});
-					if( newFile != null )
-					{
-						fileName = Utils.toLocalFile( newFile );
-
-						var obj: FlowFile = {
-							nodes: cast nodes.nodes,
-							links: cast nodes.links
-						};
-
-						sys.io.File.saveContent( Utils.fixWritePath(fileName,"flow"), CDPrinter.print( obj ) );
-
-						cerastes.tools.AssetBrowser.needsReload = true;
-					}
+					saveAs();
 				}
 				ImGui.separator();
 				if( ImGui.menuItem("Load"))
@@ -465,9 +519,9 @@ class FlowEditor extends ImguiTool
 		}
 	}
 
-	inline function windowID()
+	public override inline function windowID()
 	{
-		return 'flow${fileName}';
+		return 'flow${fileName != null ? fileName : ""+toolId}';
 	}
 
 }

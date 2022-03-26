@@ -95,7 +95,6 @@ class FlowEditor extends ImguiTool
 		ImGui.setNextWindowSize({x: windowWidth * 0.7, y: windowHeight * 0.7}, ImGuiCond.Once);
 		ImGui.begin('\uf1e0 Flow Editor ${fileName != null ? fileName : ""}###${windowID()}', isOpenRef, ImGuiWindowFlags.NoDocking | ImGuiWindowFlags.MenuBar);
 
-
 		menuBar();
 
 		dockSpace();
@@ -109,7 +108,7 @@ class FlowEditor extends ImguiTool
 
 		ImGui.setNextWindowDockId( dockspaceIdCenter, dockCond );
 		ImGui.begin('View##${windowID()}', null, ImGuiWindowFlags.NoMove | ImGuiWindowFlags.HorizontalScrollbar );
-
+		handleShortcuts();
 
 		nodes.render();
 
@@ -134,6 +133,7 @@ class FlowEditor extends ImguiTool
 	{
 		ImGui.setNextWindowDockId( dockspaceIdLeft, dockCond );
 		ImGui.begin('Command Palette##${windowID()}');
+		handleShortcuts();
 
 		ImGui.text("HI");
 
@@ -152,6 +152,7 @@ class FlowEditor extends ImguiTool
 	{
 		ImGui.setNextWindowDockId( dockspaceIdRight, dockCond );
 		ImGui.begin('Inspector##${windowID()}');
+		handleShortcuts();
 
 		var node: FlowNode = Std.downcast( nodes.getSelectedNode(), FlowNode );
 		var link: FlowLink = Std.downcast( nodes.getSelectedLink( ), FlowLink );
@@ -412,54 +413,61 @@ class FlowEditor extends ImguiTool
 
 	}
 
-	function menuBar()
+	function saveAs()
 	{
-
-		function saveAs()
+		var newFile = UI.saveFile({
+			title:"Save As...",
+			filters:[
+			{name:"Cerastes flow files", exts:["flow"]}
+			]
+		});
+		if( newFile != null )
 		{
-			var newFile = UI.saveFile({
-				title:"Save As...",
-				filters:[
-				{name:"Cerastes flow files", exts:["flow"]}
-				]
-			});
-			if( newFile != null )
-			{
-				fileName = Utils.toLocalFile( newFile );
+			fileName = Utils.toLocalFile( newFile );
 
-				var obj: FlowFile = {
-					nodes: cast nodes.nodes,
-					links: cast nodes.links
-				};
-
-				sys.io.File.saveContent( Utils.fixWritePath(fileName,"flow"), CDPrinter.print( obj ) );
-
-				cerastes.tools.AssetBrowser.needsReload = true;
-			}
-		}
-
-		function save()
-		{
-			if( fileName == null )
-			{
-				saveAs();
-				return;
-			}
 			var obj: FlowFile = {
 				nodes: cast nodes.nodes,
 				links: cast nodes.links
 			};
 
-
 			sys.io.File.saveContent( Utils.fixWritePath(fileName,"flow"), CDPrinter.print( obj ) );
-		}
 
-		if( ImGui.isWindowFocused( ImGuiFocusedFlags.DockHierarchy ) && Key.isDown( Key.CTRL ) && Key.isDown( Key.S ) )
+			cerastes.tools.AssetBrowser.needsReload = true;
+		}
+	}
+
+	function save()
+	{
+		if( fileName == null )
+		{
+			saveAs();
+			return;
+		}
+		var obj: FlowFile = {
+			nodes: cast nodes.nodes,
+			links: cast nodes.links
+		};
+
+		var file = Utils.fixWritePath(fileName,"flow");
+
+
+		sys.io.File.saveContent( file, CDPrinter.print( obj ) );
+
+		ImguiToolManager.showPopup("File saved",'Wrote ${file} successfully.', Info);
+	}
+
+	function handleShortcuts()
+	{
+		if( ImGui.isWindowFocused(  ImGuiFocusedFlags.RootAndChildWindows ) && Key.isDown( Key.CTRL ) && Key.isPressed( Key.S ) )
 		{
 			save();
 		}
+	}
 
+	function menuBar()
+	{
 
+		handleShortcuts();
 		if( ImGui.beginMenuBar() )
 		{
 			if( ImGui.beginMenu("File", true) )

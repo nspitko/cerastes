@@ -135,7 +135,7 @@ class UIEditor extends ImguiTool
 	{
 		ImGui.setNextWindowDockId( dockspaceIdLeft, dockCond );
 		ImGui.begin('Inspector##${windowID()}');
-
+		handleShortcuts();
 
 		// Buttons
 		if( ImGui.button("Add") )
@@ -192,6 +192,7 @@ class UIEditor extends ImguiTool
 		//ImGui.beginChild("uie_editor",{x: 300 * scaleFactor, y: viewportHeight}, false, ImGuiWindowFlags.AlwaysAutoResize);
 		ImGui.setNextWindowDockId( dockspaceIdRight, dockCond );
 		ImGui.begin('Editor##${windowID()}');
+		handleShortcuts();
 
 		if( selectedInspectorTree == null )
 		{
@@ -206,43 +207,52 @@ class UIEditor extends ImguiTool
 		ImGui.end();
 	}
 
-	function menuBar()
+	function saveAs()
 	{
-		function saveAs()
+		var newFile = UI.saveFile({
+			title:"Save As...",
+			filters:[
+			{name:"Cerastes UI files", exts:["ui"]}
+			]
+		});
+		if( newFile != null )
 		{
-			var newFile = UI.saveFile({
-				title:"Save As...",
-				filters:[
-				{name:"Cerastes UI files", exts:["ui"]}
-				]
-			});
-			if( newFile != null )
-			{
-				fileName = Utils.toLocalFile( newFile );
-				CUIResource.writeObject(rootDef, preview,newFile);
+			fileName = Utils.toLocalFile( newFile );
+			CUIResource.writeObject(rootDef, preview,newFile);
 
-				cerastes.tools.AssetBrowser.needsReload = true;
-				lastSaved = Sys.time() * 1000;
-			}
-		}
-
-		function save()
-		{
-			if( fileName == null )
-			{
-				saveAs();
-				return;
-			}
-
-			CUIResource.writeObject(rootDef,preview,fileName);
-
+			cerastes.tools.AssetBrowser.needsReload = true;
 			lastSaved = Sys.time() * 1000;
+			ImguiToolManager.showPopup("File saved",'Wrote ${fileName} successfully.', Info);
+		}
+	}
+
+	function save()
+	{
+		if( fileName == null )
+		{
+			saveAs();
+			return;
 		}
 
-		if( ImGui.isWindowFocused( ImGuiFocusedFlags.DockHierarchy ) && Key.isDown( Key.CTRL ) && Key.isDown( Key.S ) )
+		CUIResource.writeObject(rootDef,preview,fileName);
+
+		lastSaved = Sys.time() * 1000;
+		ImguiToolManager.showPopup("File saved",'Wrote ${fileName} successfully.', Info);
+	}
+
+	function handleShortcuts()
+	{
+		if( ImGui.isWindowFocused( ImGuiFocusedFlags.RootAndChildWindows ) && Key.isDown( Key.CTRL ) && Key.isPressed( Key.S ) )
 		{
 			save();
 		}
+	}
+
+
+	function menuBar()
+	{
+
+		handleShortcuts();
 
 
 		if( ImGui.beginMenuBar() )
@@ -307,7 +317,7 @@ class UIEditor extends ImguiTool
 		// Preview
 		ImGui.setNextWindowDockId( dockspaceIdCenter, dockCond );
 		ImGui.begin('Preview##${windowID()}', null, ImGuiWindowFlags.NoMove | ImGuiWindowFlags.HorizontalScrollbar );
-
+		handleShortcuts();
 
 		ImGui.image(sceneRT, { x: viewportWidth * zoom, y: viewportHeight * zoom }, null, null, null, {x: 1, y: 1, z:1, w:1} );
 

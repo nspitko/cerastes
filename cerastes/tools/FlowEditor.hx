@@ -374,7 +374,6 @@ class FlowEditor extends ImguiTool
 		if( dockspaceId == -1 || ImGui.dockBuilderGetNode( dockspaceId ) == null || dockCond == Always )
 		{
 			var str = 'FlowEditorDockspace${windowID()}';
-			trace('Creating dockspace ${str} ');
 
 			dockspaceId = ImGui.getID(str);
 			dockspaceIdLeft = ImGui.getID(str+"Left");

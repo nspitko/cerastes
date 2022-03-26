@@ -1,13 +1,11 @@
 
 package cerastes.tools;
 
+#if hlimgui
 import hxd.Key;
-import haxe.display.Protocol.HaxeResponseErrorData;
 import hxd.res.Font;
 import hxd.res.BitmapFont;
 import h3d.Vector;
-#if hlimgui
-
 import h2d.col.Point;
 import h2d.Graphics;
 import hl.UI;
@@ -29,11 +27,6 @@ import imgui.ImGuiDrawable;
 import imgui.ImGuiDrawable.ImGuiDrawableBuffers;
 import imgui.ImGui;
 import cerastes.tools.ImguiTools.IG;
-
-typedef ObjectWidthDimensions = {
-	var width: Float;
-	var height: Float;
-}
 
 @:keep
 @multiInstance(true)

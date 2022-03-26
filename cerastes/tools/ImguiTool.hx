@@ -25,6 +25,24 @@ class ImguiTool
 	}
 }
 
+enum ImGuiPopupType
+{
+	Info;
+	Warning;
+	Error;
+}
+
+@:structInit
+class ImGuiPopup
+{
+	public var title: String = null;
+	public var description: String = null;
+	public var type: ImGuiPopupType = Info;
+
+	public var spawnTime: Float = 0;
+	public var duration: Float = 5;
+}
+
 class ImguiToolManager
 {
 	static var tools = new Array<ImguiTool>();
@@ -32,7 +50,21 @@ class ImguiToolManager
 	public static var defaultFont: ImFont;
 	public static var headingFont: ImFont;
 
+	public static var scaleFactor = Utils.getDPIScaleFactor();
+
 	public static var toolIdx = 0;
+
+	public static var popupStack: Array<ImGuiPopup> = [];
+
+	public static function showPopup( title: String, desc: String, type: ImGuiPopupType )
+	{
+		popupStack.push({
+			title: title,
+			description: desc,
+			type: type,
+			spawnTime: Sys.time()
+		});
+	}
 
 	public static function showTool( cls: String )
 	{
@@ -86,7 +118,70 @@ class ImguiToolManager
 			tool.update( delta );
 		}
 
+		var offset: Float = 0;
+
+		var i = popupStack.length;
+		while( i-- > 0 )
+		{
+			var popup = popupStack[i];
+			if( popup.spawnTime + popup.duration < Sys.time() )
+			{
+				popupStack.splice(i,1);
+				i--;
+			}
+
+			offset = renderPopup( popup, i, offset );
+		}
+
+
 		Metrics.end();
+	}
+
+	public static function renderPopup( popup: ImGuiPopup, idx: Int, offset: Float )
+	{
+		var windowFlags = ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoDecoration | ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoSavedSettings | ImGuiWindowFlags.NoFocusOnAppearing | ImGuiWindowFlags.NoNav;
+
+		var padding: Float = 10 * scaleFactor;
+		var height: Float = 0;
+
+		ImGui.setNextWindowBgAlpha(0.350); // Transparent background
+		ImGui.setNextWindowPos({x: 10, y: 50 + offset }, ImGuiCond.Always);
+		//ImGui.setNextWindowSize(null, ImGuiCond.Always);
+		if (ImGui.begin('${popup.title}##${idx}', null, windowFlags))
+		{
+			ImGui.pushTextWrapPos( 200 * scaleFactor );
+			switch( popup.type )
+			{
+				case Info:
+					ImGui.pushFont( headingFont );
+					ImGui.text( '\uf05a ${popup.title}');
+					ImGui.popFont();
+
+				case Warning:
+					ImGui.pushFont( headingFont );
+					ImGui.textColored( {x: 1.0, y: 1.0, z: 0, w: 1.0}, '\uf071 ${popup.title}');
+					ImGui.popFont();
+
+				case Error:
+					ImGui.pushFont( headingFont );
+					ImGui.textColored( {x: 1.0, y: 0, z: 0, w: 1.0}, '\uf1e2 ${popup.title}');
+					ImGui.popFont();
+			}
+
+			ImGui.separator();
+			ImGui.dummy({x:10,y:5 * scaleFactor});
+			ImGui.text(popup.description);
+			height = ImGui.getWindowHeight();
+
+			ImGui.popTextWrapPos();
+
+		}
+
+		ImGui.end();
+
+
+
+		return offset + height + padding;
 	}
 
 	public static function render( e: h3d.Engine )

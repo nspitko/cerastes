@@ -14,5 +14,7 @@ class Config {
 		"Scene" => Type.resolveClass("cerastes.flow.SceneNode"),
 		"Exit" => Type.resolveClass("cerastes.flow.ExitNode"),
 		"File" => Type.resolveClass("cerastes.flow.FileNode"),
+		"Condition" => Type.resolveClass("cerastes.flow.ConditionNode"),
+		"Instruction" => Type.resolveClass("cerastes.flow.InstructionNode"),
 	];
 }

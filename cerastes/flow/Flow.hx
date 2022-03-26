@@ -11,6 +11,59 @@ import imgui.ImGui;
 /**
  * Puts text on the screen
  */
+ class InstructionNode extends FlowNode
+ {
+	 @editor("Condition","StringMultiline")
+	 public var instruction: String;
+
+	 public override function process( runner: FlowRunner )
+	 {
+
+		try
+		{
+			var program = runner.context.parser.parseString(instruction);
+
+			runner.context.interp.execute(program);
+
+
+		}
+		catch (e )
+		{
+			Utils.warning('Error:${e.message}\nWhile running instruction for node ${id}\nInstruction was ${instruction}');
+		}
+
+		nextAll( runner );
+	 }
+
+	 #if hlimgui
+	 static final d: NodeDefinition = {
+		 name:"Instruction",
+		 kind: Blueprint,
+		 color: 0xFF222288,
+		 pins: [
+			 {
+				 id: 0,
+				 kind: Input,
+				 label: "\uf04e Input",
+				 dataType: Node,
+			 },
+			 {
+				 id: 1,
+				 kind: Output,
+				 label: "Output \uf04b",
+				 dataType: Node,
+			 }
+		 ]
+	 };
+
+	 override function get_def() { return d; }
+	 #end
+ }
+
+/**
+ * True/false logic block, because sometimes you need a bit more explicit control than link conditions
+ * give you out of the box.
+ */
  class ConditionNode extends FlowNode
  {
 	 @editor("Condition","StringMultiline")
@@ -18,7 +71,24 @@ import imgui.ImGui;
 
 	 public override function process( runner: FlowRunner )
 	 {
-		nextAll(runner);
+
+		try
+		{
+			var program = runner.context.parser.parseString(condition);
+
+			var result : Bool = runner.context.interp.execute(program);
+			if( result )
+				next( pins[1], runner ); // true
+			else
+				next( pins[2], runner ); // false
+
+
+		}
+		catch (e )
+		{
+			next( pins[2], runner ); // false
+			Utils.warning('Error:${e.message}\nWhile running conditions for node ${id}.\nInstruction was ${condition}');
+		}
 	 }
 
 	 #if hlimgui
@@ -390,17 +460,6 @@ class FlowNode extends Node
 	#end
 
 }
-
-@:enum abstract FlowOp(Int) from Int to Int {
-	var Invalid = 0;
-	var Equ = 1;
-	var Gt = 2;
-	var Lt = 3;
-	var Gte = 4;
-	var Lte = 5;
-	var Neq = 6;
-}
-
 /**
  * Flow links contain additional data that may control their viability as exits, such as conditions
  */

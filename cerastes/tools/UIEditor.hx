@@ -150,7 +150,7 @@ class UIEditor extends ImguiTool
 
 		if( ImGui.beginPopup("uie_additem") )
 		{
-			var types = ["h2d.Object", "h2d.Text", "h2d.Bitmap", "h2d.Flow", "h2d.Mask", "h2d.ScaleGrid", "cerastes.ui.Button", "cerastes.ui.AdvancedText"];
+			var types = ["h2d.Object", "h2d.Text", "h2d.Bitmap", "h2d.Flow", "h2d.Mask", "h2d.ScaleGrid", "cerastes.ui.Button", "cerastes.ui.AdvancedText", "cerastes.ui.Reference"];
 
 			for( t in types )
 			{
@@ -981,6 +981,22 @@ class UIEditor extends ImguiTool
 					d.orientation = orientation;
 				}
 
+			case "cerastes.ui.Reference":
+				var d : CUIReference = cast def;
+
+				var newFile = IG.textInput( "File", d.file );
+				if( newFile != null && hxd.Res.loader.exists( newFile ) )
+					d.file = newFile;
+
+				if( ImGui.beginDragDropTarget() )
+				{
+					var payload = ImGui.acceptDragDropPayloadString("asset_name");
+					if( payload != null && hxd.Res.loader.exists( payload ) )
+						d.file = payload;
+
+					ImGui.endDragDropTarget();
+				}
+
 
 
 			case "h2d.Interactive":
@@ -1065,6 +1081,7 @@ class UIEditor extends ImguiTool
 			case "h2d.ScaleGrid": return "\uf00a";
 			case "cerastes.ui.Button": return "\uf04d";
 			case "cerastes.ui.AdvancedText": return "\uf033";
+			case "cerastes.ui.Reference": return "\uf07c";
 			default: return "";
 		}
 	}
@@ -1146,6 +1163,16 @@ class UIEditor extends ImguiTool
 				};
 
 				parent.children.push(def);
+
+			case "cerastes.ui.Reference":
+				var def: CUIReference = {
+					type: type,
+					name: getAutoName(type),
+					children: []
+				};
+
+				parent.children.push(def);
+
 		}
 
 

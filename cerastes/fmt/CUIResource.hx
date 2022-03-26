@@ -1,5 +1,6 @@
 package cerastes.fmt;
 
+import haxe.display.Display.CompletionItemResolveParams;
 import cerastes.file.CDParser;
 import cerastes.file.CDPrinter;
 import h2d.ScaleGrid;
@@ -35,6 +36,10 @@ import hxd.res.Resource;
 
 @:structInit class CUIDrawable extends CUIObject {
 	public var color: Int = 0xFFFFFFFF;
+}
+
+@:structInit class CUIReference extends CUIObject {
+	public var file: String = null;
 }
 
 @:structInit class CUIInteractive extends CUIDrawable {
@@ -249,6 +254,10 @@ class CUIResource extends Resource
 				var d : CUIAdvancedText = cast entry;
 				obj = new cerastes.ui.AdvancedText( getFont( d.font, d )  );
 
+			case "cerastes.ui.Reference":
+				var d : CUIReference = cast entry;
+				obj = new cerastes.ui.Reference( d.file );
+
 			default:
 				Utils.error('CUI: Cannot create unknown type ${entry.type}; ignoring!!');
 
@@ -416,6 +425,13 @@ class CUIResource extends Resource
 				}
 
 				o.reflow();
+
+			case "cerastes.ui.Reference":
+				var o = cast(obj, cerastes.ui.Reference);
+				var e: CUIReference = cast entry;
+
+				if( e.file != null && hxd.Res.loader.exists( e.file ) )
+					o.load( e.file );
 
 
 			default:

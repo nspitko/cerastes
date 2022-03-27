@@ -1,5 +1,8 @@
 package cerastes;
 
+import hxd.snd.SoundGroup;
+import hxd.snd.ChannelGroup;
+import cerastes.file.CDParser;
 import hxd.snd.Manager;
 import hxd.res.Sound;
 import hxd.res.Resource;
@@ -9,265 +12,168 @@ import hxd.snd.Channel;
 
 import tweenxcore.Tools.Easing;
 
+@:enum abstract SoundCueKind(Int) from Int to Int {
+	var CueGlobal = 0; // Event does not have spatial data
+	var Cue2D = 1; // Event exists in a 2d world with spatial data
+	var Cue3D = 2; // Event exists in a 3d world with spatial data
+}
+
+@:enum abstract SoundCueItemType(Int) from Int to Int {
+	var Clip = 0; // A sound clip
+	var Event = 1; // A sound event
+
+}
+
+@:structInit
+class SoundCueItem
+{
+	public var name: String = null; // Expresses either a file or event name depending on type
+	public var type: SoundCueItemType = Clip;
+	public var start: Float = 0;
+	public var end: Float = 0; // If zero, use clip length
+
+	@serializeAlways
+	public var volume: Float = 1;
+	public var volumeVariance: Float = 0; // If set, choose a random volume between volume and volume + volumeVariance
+
+	public var pitch: Float = 0; // if zero, use default pitch, else float where 1.0 = default
+	public var pitchVariance: Float = 0; // If set, choose a random pitch between pitch and pitch + pitchVariance
+
+}
+
+@:structInit
+class SoundCueTrack
+{
+	@serializeType("cerastes.SoundCueItem")
+	public var items: Array<SoundCueItem> = null;
+}
+
+@:structInit
+class SoundCue
+{
+	public var type: SoundCueKind = CueGlobal;
+	@serializeType("cerastes.SoundCueTrack")
+	public var tracks: Array<SoundCueTrack> = null;
+
+	@noSerialize
+	public var x: Float = 0;
+	@noSerialize
+	public var y: Float = 0;
+	@noSerialize
+	public var z: Float = 0;
+
+	public function play(x: Float = 0, y: Float = 0, z: Float = 0)
+	{
+
+	}
+}
+
+@:structInit
+class SoundCueFile
+{
+	public var version: Int = 1;
+	@serializeType("cerastes.SoundCue")
+	public var cues: Map<String, SoundCue> = null; // Name is dot mapped to folders, ie 'Foo.Bar.Baz' is clip 'Baz' in 'foo/bar'
+}
+
+class CueInstance
+{
+	var cue: SoundCue;
+	var time: Float;
+	var channelGroup: ChannelGroup;
+	var soundGroup: SoundGroup;
+
+	public var isFinished = false;
+
+
+	public function new( cue: SoundCue, channelGroup: ChannelGroup = null, soundGroup: SoundGroup = null )
+	{
+		this.cue = cue;
+		this.soundGroup = soundGroup == null ? new SoundGroup( null ) : soundGroup;
+		this.channelGroup = channelGroup;
+	}
+
+	public function tick( delta: Float )
+	{
+		var lastTime = time;
+		time += delta;
+
+
+		isFinished = true;
+		for( track in cue.tracks )
+		{
+			for( item in track.items )
+			{
+				if( item.start >= lastTime && item.start < time )
+				{
+					switch( item.type )
+					{
+						case Clip:
+							var channel = hxd.Res.loader.loadCache( item.name, Sound ).play(false, 1.0, channelGroup, soundGroup );
+							if( item.pitch > 0 )
+							{
+								var effect = new hxd.snd.effect.Pitch( item.pitch + Math.random() * item.pitchVariance );
+								channel.addEffect( effect );
+							}
+
+						case Event:
+							var instance = SoundManager.play( item.name, channelGroup, soundGroup );
+					}
+
+				}
+				else if( item.start > time )
+					isFinished = false;
+			}
+		}
+	}
+}
+
 class SoundManager
 {
-	private static var channels = new Map<String,Channel>();
+	private static var cues: Map<String,SoundCue> = [];
+	private static var instances: haxe.ds.List<CueInstance> = new haxe.ds.List<CueInstance>();
 
-	private static var music : Channel;
-	public  static var defaultMusicVolume: Float = 0.7;
-	public static var musicVolume( default, set ): Float = defaultMusicVolume;
-
-	public static var soundVolume: Float = 1.;
-
-	public static var currentMusicFile = "";
-
-	static var soundCache: Map<String, Sound> = [];
-
-	static function set_musicVolume(v)
+	public static function loadFile( file: String )
 	{
-		musicVolume = v;
-		if( music != null )
-			music.volume = v;
-
-		return v;
+		var fileContents = hxd.Res.loader.load(file).toText();
+		var f: SoundCueFile = CDParser.parse(  fileContents, SoundCueFile);
+		for( name => cue in f.cues )
+			cues.set(name, cue);
 	}
 
-	public static function dsfx( o: Object, id: String )
+	public static function play( cueName: String, ?channelGroup: ChannelGroup = null, ?soundGroup = null )
 	{
-		//var d = o.getAbsPos().getPosition().distance( GameState.player.getAbsPos().getPosition() );
+		var cue = cues.get(cueName );
+		if( Utils.assert( cue != null, 'Tried to play unknown cue ${cueName}') )
+			return null;
 
-		sfx(id);
+		var instance = new CueInstance( cue, channelGroup, soundGroup );
+		instances.add(instance);
+
+		return instance;
+
 
 	}
 
 
-	public static function sfx( id: String, ?vol: Float = 1, ?loop: Bool = false  )
+	static function init()
 	{
-
-		var sound: Sound;
-
-		if( soundCache.exists(id) )
-			sound = soundCache.get(id);
-		else
-		{
-			if( hxd.Res.loader.exists( 'sfx/${id}.mp3' ) )
-				sound = hxd.Res.load( 'sfx/${id}.mp3' ).toSound();
-			else if( hxd.Res.loader.exists( 'sfx/${id}.ogg' ) )
-				sound = hxd.Res.load( 'sfx/${id}.ogg' ).toSound();
-			else if( hxd.Res.loader.exists( 'sfx/${id}.wav' ) )
-				sound = hxd.Res.load( 'sfx/${id}.wav' ).toSound();
-			else
-			{
-				Utils.error('sfx/${id}.mp3 is missing!');
-				return;
-			}
-
-			soundCache.set(id, sound);
-		}
-
-		Manager.get().play(sound);
 
 	}
 
-
-	public static function bsfx( id: String, ?vol: Float = 1, ?loop: Bool = false )
+	public static function tick( delta: Float )
 	{
-		var channel: Channel;
-		if( channels.exists( id ) )
+
+		for( i in instances )
 		{
-			channel = channels[id];
-			channel.stop();
-			channel.sound.stop();
-			channel.sound.play(loop);
-			channel.volume = vol;
-			return;
+			i.tick( delta );
+			if( i.isFinished )
+				instances.remove(i);
 		}
-
-
-		var res = null;
-		try
-		{
-			res = 	hxd.Res.load( "sfx/" + id + ".mp3" );
-		}
-		catch(e : Dynamic )
-		{
-			try
-				{
-					res = 	hxd.Res.load( "sfx/" + id + ".wav" );
-				}
-				catch(e : Dynamic )
-				{
-					Utils.warning('Missing sfx: sfx/${id}');
-					return;
-				}
-		}
-
-		if( res == null )
-		{
-			Utils.error('Missing sound file: ' +  id);
-			return;
-		}
-
-
-		try {
-			var snd;
-			snd = res.toSound();
-
-			var channel = snd.play( loop );
-			channel.priority = 0.5;
-
-			channel.volume = vol == 1 ? soundVolume : vol;
-
-			channels.set(id,channel);
-		}
-		catch( e: Dynamic )
-		{
-			Utils.error('Unable to play $id: $e');
-			return;
-		}
-
-
 	}
 
-	public static function stopsfx( id: String )
-	{
-		var channel: Channel;
-		if( channels.exists( id ) )
-		{
-			channel = channels[id];
-			channel.stop();
-
-		}
-
-	}
-
-	public static function stopall(  )
-	{
-		for( id => channel in channels )
-		{
-			channel.sound.stop();
-			channel.stop();
 
 
-		}
-
-	}
-
-	public static function play( id: String )
-	{
-		/*
-		var cue = Data.sounds.resolve( id, true );
-		if( cue == null )
-		{
-			Utils.error('Missing sound cue: $id');
-			return;
-		}
-
-		if( channels.exists( id ) )
-		{
-			switch( cue.overlap )
-			{
-				case cut:
-					channels[id].stop();
-				case ignore:
-					return;
-				case overlap:
-			}
-		}
-
-		// @todo support play modes
-		var idx = Std.random( cue.sounds.length );
-
-		var res = 	hxd.Res.load( cue.sounds[idx].sound );
-
-		if( res == null )
-		{
-			Utils.error('Missing sound file: ' +  cue.sounds[idx]);
-			return;
-		}
-
-		var snd = res.toSound();
-		var channel = snd.play( cue.loop );
-		channel.priority = 0.5;
-
-		if( cue.priority != null )
-			channel.priority = cue.priority;
-
-		if( cue.volume != null )
-			channel.volume = cue.volume;
-
-		channels.set(id,channel);
-
-		channel.onEnd = function() {
-			channels.remove(id);
-		};
-		*/
-
-	}
-
-	public static function stopMusic( ?speed: Float )
-	{
-		if( speed == null ) speed = 2;
-		if( music != null )
-		{
-			var oldMusic = music;
-			new Tween(speed, musicVolume, 0, function(v){
-				oldMusic.volume = v;
-			},
-			Easing.expoOut,
-			function(){ oldMusic.stop(); }
-			);
-		}
-
-		currentMusicFile = "";
-
-	}
-
-	public static function playMusic( cue: String )
-	{
-		// Intentionally making this shit so I come up with something better later
-
-
-		if( cue == null || cue.length == 0 )
-		{
-			stopMusic();
-			return;
-		}
-
-		if( cue == currentMusicFile )
-			return;
-
-		currentMusicFile = cue;
-
-		if( music != null )
-		{
-			var oldMusic = music;
-			new Tween(2, musicVolume, 0, function(v){
-				oldMusic.volume = v;
-			},
-			Easing.expoOut,
-			function(){ oldMusic.stop(); }
-			);
-		}
-
-		var crossFade = music != null;
-
-		music = hxd.Res.loader.load( "mus/" + cue ).toSound().play(true);
-
-		music.priority = 1.;
-
-		if( crossFade )
-		{
-			new Tween(2, 0, musicVolume, function(v){
-				music.volume = v;
-			},
-			Easing.expoIn
-			);
-		}
-		else
-			music.volume = musicVolume;
-
-	}
 
 
 }

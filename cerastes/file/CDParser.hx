@@ -37,6 +37,8 @@ class CDParser {
 	function parseRec( ?assumeType: String ):Dynamic {
 		var obj: Dynamic = null;
 
+		var cls = null;
+
 		while (true) {
 			var c = nextChar();
 			switch (c) {
@@ -46,7 +48,7 @@ class CDParser {
 
 					if( assumeType != null )
 					{
-						var cls =Type.resolveClass(assumeType);
+						cls =Type.resolveClass(assumeType);
 						if(cls==null) throw "Invalid class name - "+assumeType;
 						obj = Type.createEmptyInstance(cls);
 					}
@@ -64,38 +66,34 @@ class CDParser {
 							case '='.code:
 								if (field == null)
 									invalidChar();
-								if( field.toString() == "_class" )
-								{
-									if( obj != null )
-										throw("_class must be the first element. Use cls tag to avoid this.");
 
-									var v = parseRec();
-									var cls =Type.resolveClass(v);
-									if(cls==null) throw "Invalid class name - "+v;
-									obj = Type.createEmptyInstance(cls);
+								var assumeType: String = null;
+								if( cls != null )
+								{
+									var fstr = field.toString();
+									assumeType = getMetaForField( fstr, "serializeType",  cls );
 								}
+
+								if( obj == null )
+									obj = {};
+
+								var rec: Dynamic = parseRec( assumeType );
+
+								if( obj is haxe.ds.StringMap)
+									obj.set( field.toString(), rec );
+								else if( obj is haxe.ds.IntMap)
+									obj.set( Std.parseInt( field.toString() ), rec );
 								else
 								{
-									if( obj == null )
-										obj = {};
-
-									var rec: Dynamic = parseRec();
-
-									if( obj is haxe.ds.StringMap)
-										obj.set( field.toString(), rec );
-									else if( obj is haxe.ds.IntMap)
-										obj.set( Std.parseInt( field.toString() ), rec );
-									else
-									{
-										Reflect.setField(obj, field.toString(), rec );
-									}
+									Reflect.setField(obj, field.toString(), rec );
 								}
+
 
 
 								field  = new StringBuf();
 
 							default:
-								if( ( c >= 65 && c <= 90 ) || ( c >= 97 && c <= 122 ) || ( c >= 48 && c <= 57 ) || c == 95 )
+								if( ( c >= 65 && c <= 90 ) || ( c >= 97 && c <= 122 ) || ( c >= 48 && c <= 57 ) || c == 95  )
 								{
 									field.addChar(c);
 								}
@@ -147,6 +145,11 @@ class CDParser {
 
 								var fstr = field.toString();
 								var assumeType: String = getMetaForField( fstr, "serializeType", cls );
+								if( assumeType != null )
+									trace('Assumetype: ${fstr} -> ${assumeType}');
+
+								if( fstr == "items")
+									trace("???");
 
 								var rec: Dynamic = parseRec( assumeType );
 
@@ -165,7 +168,7 @@ class CDParser {
 								field  = new StringBuf();
 
 							default:
-								if( ( c >= 65 && c <= 90 ) || ( c >= 97 && c <= 122 ) || ( c >= 48 && c <= 57 ) || c == 95 )
+								if( ( c >= 65 && c <= 90 ) || ( c >= 97 && c <= 122 ) || ( c >= 48 && c <= 57 ) || c == 95 || c == 46 )
 								{
 									field.addChar(c);
 								}

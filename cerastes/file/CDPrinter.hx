@@ -216,8 +216,8 @@ class CDPrinter {
 			if( getMetaForField(f, "noSerialize", Type.getClass( v ) ) )
 				continue;
 
-			var assumeType = null;
 			var assumeType = getMetaForField(f, "serializeType", Type.getClass( v ) );
+			var alwaysSerialize: Bool = getMetaForField(f, "serializeAlways", Type.getClass( v ) );
 
 			var value : Any;
 			if( isMap )
@@ -227,18 +227,20 @@ class CDPrinter {
 			if (Reflect.isFunction(value))
 				continue;
 
-			switch (Type.typeof(value))
+			if( !alwaysSerialize )
 			{
-				case TNull:
-					continue;
-				case TInt | TFloat:
-					if( value == 0 )
+				switch (Type.typeof(value))
+				{
+					case TNull:
 						continue;
+					case TInt | TFloat:
+						if( value == 0 )
+							continue;
 
-				default:
+					default:
 
+				}
 			}
-
 
 
 			newl();

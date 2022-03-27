@@ -431,7 +431,7 @@ class Sprite extends h2d.Drawable implements CollisionObject
 				if( animTimeLast <= s.start && animTime > s.start )
 				{
 					// @todo fix sound system
-					SoundManager.sfx( s.name );
+					//SoundManager.sfx( s.name );
 				}
 			}
 		}

@@ -233,8 +233,11 @@ class CDPrinter {
 				{
 					case TNull:
 						continue;
-					case TInt | TFloat:
+					case TInt:
 						if( value == 0 )
+							continue;
+					case TFloat:
+						if( value == 0.0 )
 							continue;
 
 					default:

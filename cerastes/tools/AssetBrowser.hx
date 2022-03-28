@@ -55,6 +55,7 @@ class AssetBrowser  extends  ImguiTool
 		"Image" => false,
 		"Model" => true,
 		"Sound" => true,
+		"Audio Cue Sheet" => true,
 		"Particles" => true,
 		"Font" => true,
 		"Butai" => false,
@@ -170,11 +171,21 @@ class AssetBrowser  extends  ImguiTool
 					t.x = ( previewWidth - t.textWidth ) / 2;
 				}
 
-			case "bdef" | "flow":
+			case "bdef" | "flow" | "audio":
 				asset.scene = new h2d.Scene();
 				var bmp = new Bitmap( hxd.Res.tools.config.toTile(), asset.scene );
 				bmp.width = previewWidth;
 				bmp.height = previewHeight;
+
+				var t = new h2d.Text( hxd.Res.fnt.kodenmanhou16.toFont(), asset.scene);
+
+				t.text = Path.withoutDirectory( Path.withoutExtension(asset.file) );
+				t.textAlign = Center;
+				t.maxWidth = previewWidth - 8;
+				t.x = 4;
+				t.y = 4;
+				t.color = Vector.fromColor( getTypeColor(asset.file) );
+				t.dropShadow = { dx:1, dy : 1, color : 0, alpha : 1 };
 
 			case "ui":
 				asset.scene = new h2d.Scene();
@@ -499,6 +510,9 @@ class AssetBrowser  extends  ImguiTool
 			case "flow":
 				var t: FlowEditor = cast ImguiToolManager.showTool("FlowEditor");
 				t.openFile( asset.file );
+			case "audio":
+				var t: AudioEditor = cast ImguiToolManager.showTool("AudioEditor");
+				t.openFile( asset.file );
 			case "wav" | "ogg" | "mp3":
 				hxd.Res.load( asset.file ).toSound().play();
 		}
@@ -597,6 +611,7 @@ class AssetBrowser  extends  ImguiTool
 			case "csd": 0xFF88ffff;
 			case "fbx": 0xFFff88ff;
 			case "flow": 0xFF33ff88;
+			case "audio": 0xFF88FF88;
 			case "png" | "bmp" | "gif": 0xFFffff88;
 			default: 0xFFFFFFFF;
 		}
@@ -617,6 +632,7 @@ class AssetBrowser  extends  ImguiTool
 			case "csd": "Sprite";
 			case "atlas": "Texture Atlas";
 			case "fbx": "Model";
+			case "audio": "Audio Cue Sheet";
 			#if cannonml
 			case "cml": "Cannon Bullet File";
 			case "cbl": "Cannon Bullet Level";

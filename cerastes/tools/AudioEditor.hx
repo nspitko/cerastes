@@ -75,6 +75,8 @@ class AudioEditor extends ImguiTool
 	var selectedTrack: SoundCueTrack;
 	var selectedItem: SoundCueItem;
 
+	var showPopupNew = false;
+
 	var zoom: Float = 50; // pixels per second
 
 	var cueInstance: CueInstance;
@@ -128,6 +130,8 @@ class AudioEditor extends ImguiTool
 		browser();
 		inspector();
 
+		popups();
+
 
 		if( !isOpenRef.get() )
 		{
@@ -135,6 +139,39 @@ class AudioEditor extends ImguiTool
 		}
 
 
+	}
+
+	var tmpInput = "";
+	function popups()
+	{
+		if( showPopupNew )
+		{
+			ImGui.openPopup("new_cue");
+			showPopupNew = false;
+		}
+
+		if( ImGui.beginPopupModal('new_cue'))
+		{
+
+			ImGui.setKeyboardFocusHere();
+			var r = IG.textInput("Name", tmpInput,ImGuiInputTextFlags.EnterReturnsTrue);
+
+			if( r != null )
+			{
+				tmpInput = r;
+				cues.set(tmpInput, {});
+				recomputeTree();
+				ImGui.closeCurrentPopup();
+			}
+
+			if( ImGui.button("Cancel") )
+			{
+				ImGui.closeCurrentPopup();
+			}
+
+
+			ImGui.endPopup();
+		}
 	}
 
 	inline function sToPixel( seconds: Float )
@@ -610,7 +647,10 @@ class AudioEditor extends ImguiTool
 						flags |= ImGuiTreeNodeFlags.Selected;
 					}
 
-					var label = '${icon} ${name}';
+					var shortName = name.split('.').pop();
+
+
+					var label = '${icon} ${shortName}';
 
 					var isOpen = ImGui.treeNodeEx( label, flags );
 
@@ -771,6 +811,11 @@ class AudioEditor extends ImguiTool
 			save();
 		}
 
+		if( Key.isDown( Key.CTRL ) && Key.isPressed( Key.N ) )
+		{
+			showPopupNew = true;
+		}
+
 		if(  Key.isPressed( Key.SPACE ) )
 		{
 			if( selectedCue != null )
@@ -826,32 +871,11 @@ class AudioEditor extends ImguiTool
 		{
 			if( ImGui.beginMenu("File", true) )
 			{
-				if ( fileName != null && ImGui.menuItem("Save", "CTRL+S"))
+				if( ImGui.menuItem("New Cue", "Ctrl+N") )
 				{
-					save();
+					showPopupNew = true;
 				}
-				if (ImGui.menuItem("Save As..."))
-				{
-					saveAs();
-				}
-
-				ImGui.endMenu();
-			}
-			if( ImGui.beginMenu("View", true) )
-			{
-				if (ImGui.menuItem("Reset docking"))
-				{
-					dockCond = ImGuiCond.Always;
-				}
-				ImGui.endMenu();
-			}
-			ImGui.endMenuBar();
-		}
-
-		if( ImGui.beginMenuBar() )
-		{
-			if( ImGui.beginMenu("File", true) )
-			{
+				ImGui.separator();
 				if ( fileName != null && ImGui.menuItem("Save", "Ctrl+S"))
 				{
 					save();

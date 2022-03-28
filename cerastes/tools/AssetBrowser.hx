@@ -1,5 +1,6 @@
 package cerastes.tools;
 
+import hxd.res.Sound;
 import h3d.Vector;
 import h2d.Graphics;
 import cerastes.macros.Metrics;
@@ -294,8 +295,27 @@ class AssetBrowser  extends  ImguiTool
 
 
 				sys.thread.Thread.create(() -> {
-					var sound = hxd.Res.load( asset.file ).toSound();
-					var data = sound.getData();
+
+
+					var bytes = sys.io.File.getBytes( 'res/${asset.file}' );
+
+					var data: hxd.snd.Data = null;
+
+					switch( bytes.get(0) ) {
+					case 'R'.code: // RIFF (wav)
+						data = new hxd.snd.WavData(bytes);
+					case 255, 'I'.code: // MP3 (or ID3)
+						data = new hxd.snd.Mp3Data(bytes);
+					case 'O'.code: // Ogg (vorbis)
+						#if (hl || stb_ogg_sound)
+						data = new hxd.snd.OggData(bytes);
+						#else
+						throw "OGG format requires -lib stb_ogg_sound (for " + entry.path+")";
+						#end
+					default:
+					}
+					if( data == null )
+						return;
 
 					var resample: hxd.snd.WavData = cast data.resample(8000, UI8, data.channels );
 

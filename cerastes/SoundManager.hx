@@ -39,6 +39,10 @@ class SoundCueItem
 	public var pitch: Float = 0; // if zero, use default pitch, else float where 1.0 = default
 	public var pitchVariance: Float = 0; // If set, choose a random pitch between pitch and pitch + pitchVariance
 
+	public var lowpass: Float = 0; // if zero, use default pitch, else float where 1.0 = default
+	public var lowpassVariance: Float = 0; // If set, choose a random pitch between pitch and pitch + pitchVariance
+
+
 }
 
 @:structInit
@@ -120,6 +124,19 @@ class CueInstance
 							{
 								var effect = new hxd.snd.effect.Pitch( ( item.pitch > 0 ? item.pitch : 1 ) + Math.random() * item.pitchVariance );
 								channel.addEffect( effect );
+							}
+
+							if( item.lowpass > 0 || item.lowpassVariance > 0 )
+							{
+								var effect = new hxd.snd.effect.LowPass();
+								effect.gainHF = ( item.lowpass > 0 ? item.lowpass : 1 ) + Math.random() * item.lowpassVariance ;
+								channel.addEffect( effect );
+							}
+
+
+							if( item.volume > 0 || item.volumeVariance > 0 )
+							{
+								channel.volume = ( item.volume > 0 ? item.volume : 1 ) + Math.random() * item.volumeVariance;
 							}
 							activeChannels.add( channel );
 

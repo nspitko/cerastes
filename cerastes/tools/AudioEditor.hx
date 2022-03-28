@@ -474,7 +474,7 @@ class AudioEditor extends ImguiTool
 			{
 				// Load the clip and determine its length
 				var sound = hxd.Res.loader.loadCache( item.name, Sound ).getData();
-				end = item.start + sound.duration;
+				end = item.start + sound.duration * ( item.pitch > 0 ? 1 / item.pitch : 1.0 );
 			}
 			else
 			{
@@ -663,8 +663,15 @@ class AudioEditor extends ImguiTool
 						ImGui.text( selectedItem.name );
 						ImGui.popFont();
 
+						IG.wref( ImGui.sliderDouble( "Volume", _, 0, 2 ), selectedItem.volume );
+						IG.wref( ImGui.sliderDouble( "Volume Variance", _, -1, 1 ), selectedItem.volumeVariance );
+
 						IG.wref( ImGui.sliderDouble( "Pitch", _, 0, 2 ), selectedItem.pitch );
 						IG.wref( ImGui.sliderDouble( "Pitch Variance", _, -1, 1 ), selectedItem.pitchVariance );
+
+						IG.wref( ImGui.sliderDouble( "Low Pass", _, 0, 1 ), selectedItem.lowpass );
+						IG.wref( ImGui.sliderDouble( "Low Pass Variance", _, -1, 1 ), selectedItem.lowpassVariance );
+
 					}
 
 
@@ -712,6 +719,8 @@ class AudioEditor extends ImguiTool
 		var file: SoundCueFile = CDParser.parse(hxd.Res.loader.load( fileName ).toText(), SoundCueFile );
 		cues = file.cues;
 
+		this.fileName = fileName;
+
 		recomputeTree();
 
 	}
@@ -728,6 +737,8 @@ class AudioEditor extends ImguiTool
 		{
 			fileName = Utils.toLocalFile( newFile );
 
+			save();
+
 
 			cerastes.tools.AssetBrowser.needsReload = true;
 		}
@@ -741,6 +752,14 @@ class AudioEditor extends ImguiTool
 			return;
 		}
 
+		var obj: SoundCueFile = {
+			cues: cues
+		}
+
+		sys.io.File.saveContent( Utils.fixWritePath(fileName,"audio"), CDPrinter.print( obj ) );
+
+
+		ImguiToolManager.showPopup("File saved",'Wrote ${fileName} successfully.', Info);
 	}
 
 	function handleShortcuts()

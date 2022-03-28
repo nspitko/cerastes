@@ -223,7 +223,7 @@ class ButaiNodeManager
 
 				if( !onMusicNode( mpn ) )
 				{
-					SoundManager.playMusic( mpn.file );
+					//SoundManager.playMusic( mpn.file );
 					nextAll( node );
 				}
 
@@ -234,7 +234,7 @@ class ButaiNodeManager
 
 				if( !onSFXNode( mpn ) )
 				{
-					SoundManager.sfx( mpn.file, mpn.loop == "1" );
+					//SoundManager.sfx( mpn.file, mpn.loop == "1" );
 
 					nextAll( node );
 				}
@@ -242,7 +242,7 @@ class ButaiNodeManager
 			case "db.SFXStopNode":
 
 				var mpn : db.Butai.SFXStopNode = cast node;
-				SoundManager.stopsfx( mpn.file );
+				//SoundManager.stopsfx( mpn.file );
 
 				if( !onSFXStopNode( mpn ) )
 					nextAll( node );

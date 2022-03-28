@@ -1,10 +1,11 @@
 
 package cerastes.tools;
+#if hlimgui
 import hxd.res.Sound;
 import cerastes.SoundManager;
 import cerastes.SoundManager;
 import cerastes.tools.ImguiTools.IG;
-#if hlimgui
+
 import hxd.Key;
 import sys.io.File;
 import game.GameState;
@@ -89,7 +90,7 @@ class AudioEditor extends ImguiTool
 		windowWidth = dimensions.width;
 		windowHeight = dimensions.height;
 
-		openFile( "data/soundtest.audio" );
+		//openFile( "data/soundtest.audio" );
 	}
 
 

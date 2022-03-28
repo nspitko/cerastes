@@ -1,9 +1,9 @@
 package cerastes.tools;
 
+#if hlimgui
 import cerastes.data.Nodes;
 import cerastes.data.Nodes;
 import haxe.Constraints;
-#if hlimgui
 import cerastes.tools.ImguiTools.ComboFilterState;
 import cerastes.tools.ImguiTools.IG;
 import imgui.NodeEditor;
@@ -571,15 +571,14 @@ class ImGuiNodes
 
 		if( ImGui.beginPopup("link_drop_rc", flags) )
 		{
-			var ref: hl.Ref<String> = text;
-
 			var hints = [ for( k => v in registeredNodes ) k ];
 
 
 			ImGui.setKeyboardFocusHere();
-			if( IG.comboFilter("##nodeInput",ref,hints, state)  )
+			var ret = IG.comboFilter("##nodeInput",hints, state) ;
+			if( ret != null )
 			{
-				var t = registeredNodes.get( ref.get() );
+				var t = registeredNodes.get( ret );
 				if( t != null )
 				{
 					var n = Type.createEmptyInstance(t);
@@ -595,13 +594,9 @@ class ImGuiNodes
 					}
 
 					ImGui.closeCurrentPopup();
-					ref.set("");
 					state = {};
 				}
 			}
-
-
-			text = ref.get();
 
 			ImGui.endPopup();
 		}

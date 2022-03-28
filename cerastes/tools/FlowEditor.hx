@@ -1,26 +1,22 @@
 
 package cerastes.tools;
+#if ( hlimgui )
 import hxd.Key;
 import sys.io.File;
 import game.GameState;
-import hscript.Checker;
 import cerastes.data.Nodes.Link;
 import cerastes.file.CDParser;
 import cerastes.file.CDPrinter;
-#if hlimgui
 import cerastes.flow.Flow;
 import haxe.rtti.Meta;
-import haxe.rtti.Rtti;
-import cerastes.tools.ImguiTool.ImguiToolManager;
-import cerastes.tools.ImguiTools.ComboFilterState;
-import cerastes.tools.ImguiTools.ImGuiTools;
+import cerastes.tools.ImguiTool;
+import cerastes.tools.ImguiTools;
+import cerastes.tools.ImguiTools;
 
 import hl.Ref;
-import hl.Gc;
 import hxd.App;
 import hxd.System;
 import imgui.ImGuiDrawable;
-import imgui.ImGuiDrawable.ImGuiDrawableBuffers;
 import imgui.ImGui;
 import imgui.NodeEditor;
 import hl.UI;
@@ -300,7 +296,7 @@ class FlowEditor extends ImguiTool
 
 	}
 
-	static var checker: Checker;
+	//static var checker: Checker;
 
 	function decorateLink( link: FlowLink )
 	{

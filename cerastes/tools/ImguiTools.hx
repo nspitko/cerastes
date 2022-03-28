@@ -556,9 +556,8 @@ class ImGuiTools {
 
 	}
 
-	public static function comboFilter( id: String, ref: hl.Ref<String>, hints: Array<String>, s: ComboFilterState )
+	public static function comboFilter( id: String, hints: Array<String>, s: ComboFilterState ) : String
 	{
-
 		function search( needle: String, words: Array<String> )
 		{
 			var scoremax: Float = 0;
@@ -580,7 +579,7 @@ class ImGuiTools {
 		}
 
 		var length = 256;
-		var buffer = ref.get();
+		var buffer = "";
 		var textBuf = new hl.Bytes(length);
 		var src = haxe.io.Bytes.ofString(buffer);
 		textBuf.blit(0,src,0,buffer.length);
@@ -589,7 +588,6 @@ class ImGuiTools {
 		var ret = ImGui.inputText(id, textBuf, length, ImGuiInputTextFlags.AutoSelectAll | ImGuiInputTextFlags.EnterReturnsTrue  );
 
 		buffer = @:privateAccess String.fromUTF8(textBuf);
-		ref.set( buffer );
 
 		var shouldScore = false;
 		if( s.lastInput != buffer )
@@ -628,12 +626,14 @@ class ImGuiTools {
 				var i = s.activeIdx;
 				if( i >= 0 ) {
 					buffer = hints[i];
-					ref.set(buffer);
 					done = true;
 				}
 			}
 		}
-		return done;
+		if( !done )
+			return null;
+
+		return buffer;
 	}
 
 	static function comboScore(query:String, string:String):Float {

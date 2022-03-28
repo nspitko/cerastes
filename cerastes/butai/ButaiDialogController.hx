@@ -285,7 +285,7 @@ class ButaiDialogController
 			{
 				// PLAY SFX
 				var sfx = word.substr(5);
-				SoundManager.sfx('${sfx}');
+				//SoundManager.sfx('${sfx}');
 
 
 				bufferText = bufferText.substr(wordIdx);

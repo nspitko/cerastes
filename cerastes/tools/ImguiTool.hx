@@ -1,8 +1,8 @@
 
 package cerastes.tools;
 
-import imgui.ImGui;
 #if hlimgui
+import imgui.ImGui;
 
 import imgui.ImGui.ImFont;
 import cerastes.macros.Metrics;

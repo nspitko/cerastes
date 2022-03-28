@@ -37,6 +37,13 @@ class AETreeNode
 	public var children: Array<AETreeNode> = [];
 }
 
+enum AESelectMode
+{
+	Cue;
+	Item;
+	Track;
+}
+
 @:keep
 @multiInstance(true)
 class AudioEditor extends ImguiTool
@@ -53,6 +60,7 @@ class AudioEditor extends ImguiTool
 
 	var cueTree: AETreeNode = {};
 
+	var selectMode: AESelectMode = Cue;
 
 	var fileName: String = null;
 
@@ -64,8 +72,12 @@ class AudioEditor extends ImguiTool
 	var selectedTreeNode: AETreeNode;
 	var selectedTreeCue: String;
 	var selectedCue: SoundCue;
+	var selectedTrack: SoundCueTrack;
+	var selectedItem: SoundCueItem;
 
-	var zoom: Float = 500; // pixels per second
+	var zoom: Float = 50; // pixels per second
+
+	var cueInstance: CueInstance;
 
 
 	public function new()
@@ -130,34 +142,48 @@ class AudioEditor extends ImguiTool
 		return ( seconds * zoom );
 	}
 
+	inline function pixelToS( pixels: Float )
+	{
+		return pixels / zoom;
+	}
+
+	var nextScrollX: Float = -1;
 	function cueEditor()
 	{
 		if( selectedCue == null )
 			return;
 
+		if( selectedCue.tracks == null ) selectedCue.tracks = [];
+
 
 		ImGui.pushStyleColor( ImGuiCol.ChildBg, 0x66444444 );
-		ImGui.beginChild("tracklist",{x: -1, y: 0}, false, ImGuiWindowFlags.HorizontalScrollbar );
-		var windowPos = ImGui.getWindowPos();
 
-		var size: ImVec2 = ImGui.getWindowSize();
+		ImGui.beginChild("tracklist",{x: -1, y: 0}, false, ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.HorizontalScrollbar );
+		var windowPos = ImGui.getWindowPos();
+		if( nextScrollX > 0 )
+		{
+			 ImGui.setScrollX(nextScrollX);
+			 nextScrollX = -1;
+		}
+
+		var trackWidth = getTrackAreaWidth( selectedCue );
+		var contentWidth = ImGui.getWindowContentRegionWidth();
+		if( trackWidth > contentWidth  )
+			contentWidth = trackWidth;
+
+		//var size: ImVec2 = ImGui.getWindowSize();
 
 		var x = ImGui.getCursorPosX();
 		var step = 100;
 
 
-		while( x < size.x  )
+		while( x < contentWidth  )
 		{
-
-
 			var ms = x / zoom * 1000;
 
 			ImGui.sameLine();
 			ImGui.setCursorPosX(x);
-			ImGui.textColored( {x: 1, y: 1, z: 1, w: 0.5}, '${ms}ms');
-
-
-
+			ImGui.textColored( {x: 1, y: 1, z: 1, w: 0.5}, '${ Math.floor(ms)}ms');
 			x += step;
 		}
 
@@ -167,13 +193,15 @@ class AudioEditor extends ImguiTool
 
 		var cursorPos = ImGui.getCursorPos();
 
-		if( selectedCue.tracks == null ) selectedCue.tracks = [];
 
 		var trackIdx = 0;
+
+		ImGui.pushStyleVar2( ImGuiStyleVar.ButtonTextAlign, {x: 0.0, y: 0.5} );
 		for(track in selectedCue.tracks )
 		{
-			renderTrack( track, trackIdx++ );
+			renderTrack( track, trackIdx++, contentWidth );
 		}
+		ImGui.popStyleVar( );
 
 
 		var drawList = ImGui.getWindowDrawList();
@@ -194,8 +222,75 @@ class AudioEditor extends ImguiTool
 			x += step;
 		}
 
+		var scrollX = ImGui.getScrollX();
 		ImGui.endChild();
+
+		if( ImGui.isWindowHovered( ImGuiFocusedFlags.RootAndChildWindows ) )
+		{
+			if( Key.isPressed( Key.MOUSE_WHEEL_UP ) )
+				zoom *= 1.1;
+			else if( Key.isPressed( Key.MOUSE_WHEEL_DOWN ) )
+				zoom *= 0.9;
+
+			if( zoom < 1 )
+				zoom = 1;
+
+		}
+
+
+		if( ImGui.isItemHovered(  ImGuiHoveredFlags.AllowWhenBlockedByActiveItem ) && ImGui.beginDragDropTarget( ) )
+		{
+			var dropPos = ImGui.getMousePos();
+			var position = dropPos.x - screenPos.x;
+
+			var start = pixelToS(position);
+			var item = toDragDropItem(start);
+
+			if( item != null )
+			{
+				var track: SoundCueTrack = {
+					items: [ item ]
+				}
+
+				selectedCue.tracks.push(track);
+			}
+		}
+
 		ImGui.popStyleColor();
+
+		if( cueInstance != null && cueInstance.time > 0 && !cueInstance.isFinished )
+		{
+			var contentWidth = ImGui.getWindowContentRegionWidth();
+
+
+			var cursorPos = sToPixel( cueInstance.time );
+
+			drawList.addLine({x: startX + cursorPos - scrollX, y: startY}, {x: startX +  cursorPos - scrollX, y: startY + size.y}, 0x77FF2222, 4.0);
+
+			if( cursorPos > scrollX + contentWidth  )
+				nextScrollX = cursorPos;
+		}
+	}
+
+	function toDragDropItem( start: Float )
+	{
+		var payload = ImGui.acceptDragDropPayloadString("asset_name");
+		var item: SoundCueItem = null;
+		if( payload != null )
+		{
+			// Is it an audio file?
+			if( StringTools.endsWith( payload, ".wav" ) || StringTools.endsWith( payload, ".ogg" ) || StringTools.endsWith( payload, ".mp3" ))
+			{
+				item = {
+					name: payload,
+					type: Clip,
+					start: start
+				}
+			}
+		}
+
+		return item;
+
 	}
 
 	static var imguiIds: Map<String, ImGuiID> = [];
@@ -207,10 +302,28 @@ class AudioEditor extends ImguiTool
 		return imguiIds[id];
 	}
 
-	function renderTrack( track: SoundCueTrack, idx: Int)
+	function getTrackAreaWidth( cue: SoundCue ): Float
+	{
+
+		var w: Float = 0;
+		for( track in cue.tracks )
+		{
+			for( i in track.items)
+			{
+				var end = getItemEnd( i );
+				end = sToPixel( end );
+				if( end > w )
+					w = end;
+			}
+		}
+
+		return w;
+	}
+
+	function renderTrack( track: SoundCueTrack, idx: Int, trackWidth: Float)
 	{
 		var trackHeight = 50;
-
+		var screenPos = ImGui.getWindowPos();
 
 
 		ImGui.textColored({x: 1, y: 1, z: 0.5, w: 1.0},'Track ${idx+1}');
@@ -218,57 +331,159 @@ class AudioEditor extends ImguiTool
 		var padding = 8;
 		ImGui.pushStyleVar2( ImGuiStyleVar.FramePadding, {x: 2, y: padding} );
 
-		ImGui.beginChildFrame( getID('track_${idx}'), {x: -1, y: trackHeight}, ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse );
-
+		ImGui.beginChildFrame( getID('track_${idx}'), {x: trackWidth, y: trackHeight}, ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse );
 
 		var pos = ImGui.getCursorPos();
-
-
 		if( track.items == null ) track.items = [];
+
+		var trackItemMax: Float = 0;
+
+		ImGui.pushStyleVar( ImGuiStyleVar.FrameBorderSize, 1 );
+		ImGui.pushStyleColor( ImGuiCol.Border, 0xFFFFFFFF );
+
 		for( item in track.items )
 		{
-			renderItem( item, trackHeight - padding * 2, pos );
+			var end = renderItem( item, trackHeight - padding * 2, pos );
+			if( end > trackItemMax )
+				trackItemMax = end;
 		}
 
+		ImGui.popStyleColor();
+		ImGui.popStyleVar();
+
 		ImGui.endChildFrame();
+		if( ImGui.isItemClicked(ImGuiMouseButton.Left) )
+		{
+			selectedTrack = track;
+			selectMode = Track;
+		}
+		//ImGui.dummy({x: trackItemMax, y: 1});
+
+
+		if( ImGui.beginDragDropTarget() )
+		{
+			var dropPos = ImGui.getMousePos();
+			var position = dropPos.x - screenPos.x;
+
+			var start = pixelToS(position);
+			var item = toDragDropItem(start);
+			if( item != null )
+			{
+				var end = getItemEnd( item );
+
+
+				// Nudge start to not collide with anything else on the track
+				var blocked;
+				do
+				{
+					blocked = false;
+					for( i in track.items )
+					{
+						var otherEnd = getItemEnd( i );
+						if( ( item.start < i.start && end > i.start ) || // Before
+							( item.start < otherEnd && end > otherEnd ) ||  // after
+							( item.start > i.start && end < otherEnd ) // inside
+							)
+						{
+							item.start = otherEnd;
+							end = getItemEnd(item);
+							blocked = true;
+						}
+					}
+				}
+				while( blocked );
+
+
+				track.items.push(item);
+			}
+		}
+
 
 		ImGui.popStyleVar();
 	}
 
+	var dragLast = -1;
+	var dragItem: SoundCueItem = null;
+
 	function renderItem( item: SoundCueItem, height: Float, pos: ImVec2)
 	{
 		var start = item.start;
+		var end = getItemEnd( item );
+
+		start = sToPixel( start );
+		end = sToPixel( end );
+
+
+		ImGui.sameLine();
+		ImGui.setCursorPosX( pos.x + start );
+
+		//ImGui.pushStyleColor( ImGuiCol.Button, 0x8811DDDD );
+
+		//drawList.addRectFilled( {x: startPos.x + start, y: startPos.y }, { x: startPos.x + end, y: startPos.y + height  }, 0x88AADD11 );
+		if( ImGui.button( item.name, {x: end - start, y: height} ) )
+		{
+			selectedItem = item;
+			selectMode = Item;
+		}
+
+		if( dragItem == null && ImGui.isItemHovered() && ImGui.isMouseDown( ImGuiMouseButton.Left )  )
+		{
+			dragLast = ImGui.getMousePos().x;
+			dragItem = item;
+
+		}
+		if( dragItem == item )
+		{
+			if( ImGui.isMouseDragging(ImGuiMouseButton.Left) )
+			{
+
+				var newX = ImGui.getMousePos().x;
+				var delta = newX - dragLast;
+				dragLast = newX;
+
+				var localDelta = pixelToS(delta);
+				item.start += localDelta;
+				if( item.start < 0 ) item.start = 0;
+			}
+			else
+			{
+				dragItem = null;
+			}
+		}
+
+
+
+		//ImGui.setCursorPosX( start + 20 );
+		//ImGui.text( item.name );
+
+
+		//ImGui.popStyleColor();
+
+		return end;
+
+	}
+
+
+
+	function getItemEnd( item: SoundCueItem )
+	{
 		var end = item.end;
-		if( item.end == 0 )
+		if( end == 0 )
 		{
 			if( item.type == Clip )
 			{
 				// Load the clip and determine its length
 				var sound = hxd.Res.loader.loadCache( item.name, Sound ).getData();
-				end = start + sound.duration;
+				end = item.start + sound.duration;
 			}
 			else
 			{
 				// ????!?!?!
-				end = start + 100;
+				end = item.start + 100;
 			}
 		}
 
-		start = pos.x + sToPixel( start );
-		end = pos.x + sToPixel( end );
-
-		ImGui.setCursorPosX( start );
-
-		ImGui.pushStyleColor( ImGuiCol.Header, 0x8811DDDD );
-
-		//drawList.addRectFilled( {x: startPos.x + start, y: startPos.y }, { x: startPos.x + end, y: startPos.y + height  }, 0x88AADD11 );
-		ImGui.selectable( item.name, true, 0, {x: end - start, y: height} );
-		//ImGui.setCursorPosX( start + 20 );
-		//ImGui.text( item.name );
-
-
-		ImGui.popStyleColor();
-
+		return end;
 	}
 
 
@@ -315,7 +530,7 @@ class AudioEditor extends ImguiTool
 			var node = path[i];
 			if( isLeaf )
 			{
-				target.cues.set(node, cue);
+				target.cues.set( path.join("."), cue);
 			}
 			else
 			{
@@ -404,6 +619,7 @@ class AudioEditor extends ImguiTool
 						selectedTreeCue = name;
 						selectedCue = cue;
 						selectedTreeNode = null;
+						selectMode = Cue;
 					}
 
 					if( isOpen )
@@ -427,7 +643,33 @@ class AudioEditor extends ImguiTool
 		ImGui.begin('Inspector##${windowID()}');
 		handleShortcuts();
 
-		ImGui.text("!!");
+		switch( selectMode )
+		{
+			case Cue:
+				if( selectedCue != null )
+				{
+					ImGui.pushFont( ImguiToolManager.headingFont );
+					ImGui.text( selectedTreeCue );
+					ImGui.popFont();
+				}
+
+			case Track:
+				ImGui.text("Track");
+			case Item:
+				if( selectedItem != null )
+					{
+
+						ImGui.pushFont( ImguiToolManager.headingFont );
+						ImGui.text( selectedItem.name );
+						ImGui.popFont();
+
+						IG.wref( ImGui.sliderDouble( "Pitch", _, 0, 2 ), selectedItem.pitch );
+						IG.wref( ImGui.sliderDouble( "Pitch Variance", _, -1, 1 ), selectedItem.pitchVariance );
+					}
+
+
+		}
+
 
 
 		ImGui.end();
@@ -503,9 +745,57 @@ class AudioEditor extends ImguiTool
 
 	function handleShortcuts()
 	{
-		if( ImGui.isWindowFocused(  ImGuiFocusedFlags.RootAndChildWindows ) && Key.isDown( Key.CTRL ) && Key.isPressed( Key.S ) )
+		if( !ImGui.isWindowFocused(  ImGuiFocusedFlags.RootAndChildWindows ) )
+			return;
+		if( Key.isDown( Key.CTRL ) && Key.isPressed( Key.S ) )
 		{
 			save();
+		}
+
+		if(  Key.isPressed( Key.SPACE ) )
+		{
+			if( selectedCue != null )
+			{
+				if( cueInstance != null && !cueInstance.isFinished )
+					cueInstance.stop();
+				else
+					cueInstance = selectedCue.play();
+			}
+		}
+
+		if( Key.isPressed( Key.DELETE ) )
+		{
+			switch( selectMode )
+			{
+				case Cue:
+					cues.remove( selectedTreeCue );
+					selectedCue = null;
+					recomputeTree();
+				case Track:
+					if( selectedCue != null && selectedTrack != null )
+					{
+						for( t in selectedCue.tracks )
+						{
+
+							if( t == selectedTrack )
+								selectedCue.tracks.remove(t);
+
+						}
+					}
+
+				case Item:
+					if( selectedCue != null && selectedItem != null )
+					{
+						for( t in selectedCue.tracks )
+						{
+							for( i in t.items )
+							{
+								if( i == selectedItem )
+									t.items.remove( i );
+							}
+						}
+					}
+			}
 		}
 	}
 

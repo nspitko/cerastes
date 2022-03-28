@@ -62,9 +62,12 @@ class SoundCue
 	@noSerialize
 	public var z: Float = 0;
 
-	public function play(x: Float = 0, y: Float = 0, z: Float = 0)
+	public function play( ?channelGroup: ChannelGroup = null, ?soundGroup = null )
 	{
+		var instance = new CueInstance( this, channelGroup, soundGroup );
+		SoundManager.instances.add(instance);
 
+		return instance;
 	}
 }
 
@@ -79,11 +82,14 @@ class SoundCueFile
 class CueInstance
 {
 	var cue: SoundCue;
-	var time: Float;
+	public var time(default, null): Float;
 	var channelGroup: ChannelGroup;
 	var soundGroup: SoundGroup;
 
+
 	public var isFinished = false;
+
+	public var activeChannels = new haxe.ds.List<hxd.snd.Channel>();
 
 
 	public function new( cue: SoundCue, channelGroup: ChannelGroup = null, soundGroup: SoundGroup = null )
@@ -95,10 +101,10 @@ class CueInstance
 
 	public function tick( delta: Float )
 	{
+		if( cue == null ) return;
+
 		var lastTime = time;
 		time += delta;
-
-
 		isFinished = true;
 		for( track in cue.tracks )
 		{
@@ -110,11 +116,12 @@ class CueInstance
 					{
 						case Clip:
 							var channel = hxd.Res.loader.loadCache( item.name, Sound ).play(false, 1.0, channelGroup, soundGroup );
-							if( item.pitch > 0 )
+							if( item.pitch > 0 || item.pitchVariance > 0 )
 							{
-								var effect = new hxd.snd.effect.Pitch( item.pitch + Math.random() * item.pitchVariance );
+								var effect = new hxd.snd.effect.Pitch( ( item.pitch > 0 ? item.pitch : 1 ) + Math.random() * item.pitchVariance );
 								channel.addEffect( effect );
 							}
+							activeChannels.add( channel );
 
 						case Event:
 							var instance = SoundManager.play( item.name, channelGroup, soundGroup );
@@ -125,9 +132,28 @@ class CueInstance
 					isFinished = false;
 			}
 		}
+
+		// Check to see if we have any active channels
+		if( isFinished )
+		{
+			for( c in activeChannels )
+				if( c.duration > c.position )
+					isFinished = false;
+		}
+	}
+
+	public function stop()
+	{
+		for( channel in activeChannels )
+		{
+			channel.stop();
+		}
+		cue = null;
+		isFinished = true;
 	}
 }
 
+@:allow(cerastes.SoundCue)
 class SoundManager
 {
 	private static var cues: Map<String,SoundCue> = [];

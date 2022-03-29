@@ -166,6 +166,15 @@ class FileNode extends FlowNode
 	public override function process( runner: FlowRunner )
 	{
 		var hasExited = false;
+
+
+		if( file == null || !hxd.Res.loader.exists( file ) )
+		{
+			Utils.error('File node ${id} points to missing file ${file}!');
+			super.process(runner);
+			return;
+		}
+
 		childRunner = hxd.Res.loader.loadCache( file, FlowResource ).toFlow( runner.context );
 		childRunner.registerOnExit( this, (handled: Bool) -> {
 			if( hasExited )
@@ -441,7 +450,8 @@ class FlowNode extends Node
 						continue;
 				}
 				var target = runner.lookupNodeByPin( link.destId );
-				target.process( runner );
+				if( !runner.onNode( target, runner ) )
+					target.process( runner );
 			}
 		}
 	}
@@ -515,7 +525,7 @@ class FlowRunner
 	var nodes: Array<FlowNode>;
 	var links: Array<FlowLink>;
 
-	var labels: Map<String, FlowNode>;
+	var labels: Map<String, FlowNode> = [];
 
 	var root: FlowNode;
 	var stack: List<FlowNode>;
@@ -530,6 +540,15 @@ class FlowRunner
 	 */
 	@:callback
 	public function onExit(): Bool;
+
+	/**
+	 * Register to listen for node events, and have a chance to process them in leaf code
+	 *
+	 * @param node
+	 * @return Bool
+	 */
+	@:callback
+	public function onNode( node: FlowNode, runner: FlowRunner ): Bool;
 
 	public function new( res: FlowResource, ?ctx: FlowContext )
 	{
@@ -557,7 +576,8 @@ class FlowRunner
 		}
 
 		var node = labels.get(id);
-		node.process( this );
+		if( !onNode( node, this ) )
+			node.process( this );
 
 
 	}

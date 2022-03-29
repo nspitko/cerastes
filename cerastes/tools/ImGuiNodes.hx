@@ -451,7 +451,7 @@ class ImGuiNodes
 			{
 				var node = findNode(nodeId);
 
-				if( Utils.assert( node != null, "Unknown nodeID marked as deleted!") )
+				if( Utils.assert( node != null, 'Unknown nodeID ${nodeId} marked as deleted!') )
 					continue;
 
 				nodes.remove( node );
@@ -463,7 +463,7 @@ class ImGuiNodes
 			{
 				var link = findLink(linkId);
 
-				if( Utils.assert( link != null, "Unknown nodeID marked as deleted!") )
+				if( Utils.assert( link != null, 'Unknown linkID ${linkId} marked as deleted!') )
 					continue;
 
 				links.remove( link );
@@ -520,9 +520,12 @@ class ImGuiNodes
 		if( nodeId > 0 )
 		{
 			var node = getNode(nodeId);
-			var pos: ImVec2 = NodeEditor.getNodePosition(nodeId );
-			node.editorData.x = pos.x;
-			node.editorData.y = pos.y;
+			if( node != null )
+			{
+				var pos: ImVec2 = NodeEditor.getNodePosition(nodeId );
+				node.editorData.x = pos.x;
+				node.editorData.y = pos.y;
+			}
 		}
 
 	}

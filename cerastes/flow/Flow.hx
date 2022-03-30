@@ -4,8 +4,14 @@ import game.GameState;
 import cerastes.fmt.FlowResource;
 import cerastes.data.Nodes;
 #if hlimgui
+import haxe.rtti.Meta;
+import cerastes.tools.ImGuiNodes;
+import cerastes.tools.ImguiTool;
+import cerastes.tools.ImguiTools;
 import imgui.NodeEditor;
 import imgui.ImGui;
+import cerastes.tools.ImguiTools.IG;
+import hl.UI;
 #end
 
 /**
@@ -281,7 +287,8 @@ class LabelNode extends FlowNode
 
 	public override function register( runner: FlowRunner )
 	{
-		runner.labels.set( labelId, this );
+		if( labelId != null)
+			runner.labels.set( labelId, this );
 	}
 
 	#if hlimgui
@@ -463,6 +470,101 @@ class FlowNode extends Node
 	}
 
 	#if hlimgui
+	function renderProps()
+	{
+		ImGui.pushID( '${id}' );
+		ImGui.pushFont( ImguiToolManager.headingFont );
+		ImGui.text( def.name );
+		ImGui.popFont();
+
+		var meta: haxe.DynamicAccess<Dynamic> = Meta.getFields( Type.getClass( this ) );
+		for( field => data in meta )
+		{
+			var metadata: haxe.DynamicAccess<Dynamic> = data;
+			if( metadata.exists("editor") )
+			{
+				var args = metadata.get("editor");
+				switch( args[1] )
+				{
+					case "String" | "LocalizedString":
+						var val = Reflect.getProperty(this,field);
+						var ret = IG.textInput(args[0],val);
+						if( ret != null )
+							Reflect.setField( this, field, ret );
+
+					case "StringMultiline" | "LocalizedStringMultiline":
+						var val = Reflect.getProperty(this,field);
+						var ret = IG.textInputMultiline(args[0],val,{x: -1, y: 300 * Utils.getDPIScaleFactor()},0,1024*8);
+						if( ret != null )
+							Reflect.setField( this, field, ret );
+
+					case "Tile":
+						var val = Reflect.getProperty(this,field);
+						var ret = IG.inputTile(args[0],val);
+						if( ret != null )
+							Reflect.setField( this, field, ret );
+
+					case "File":
+						var val = Reflect.getProperty(this,field);
+						var ret = IG.textInput(args[0],val);
+						if( ret != null )
+							Reflect.setField( this, field, ret );
+
+						if( ImGui.beginDragDropTarget( ) )
+						{
+							var payload = ImGui.acceptDragDropPayloadString("asset_name");
+							if( payload != null && StringTools.endsWith(payload, "flow") )
+							{
+								Reflect.setField( this, field, payload );
+							}
+						}
+
+
+						if( ImGui.button("Select...") )
+						{
+							var file = UI.loadFile({
+								title:"Select file",
+								filters:[
+								{name:"Cerastes flow files", exts:["flow"]},
+								],
+								filterIndex: 0
+							});
+							if( file != null )
+								Reflect.setField( this, field, file );
+						}
+
+					case "ComboString":
+						var val = Reflect.getProperty(this,field);
+						var opts = getOptions( field );
+						var idx = opts.indexOf( val );
+						if( ImGui.beginCombo( args[0], val ) )
+						{
+							for( opt in opts )
+							{
+								if( ImGui.selectable( opt, opt == val ) )
+									Reflect.setField( this, field, opt );
+							}
+							ImGui.endCombo();
+						}
+
+
+					default:
+						ImGui.text('UNHANDLED!!! ${field} -> ${args[0]} of type ${args[1]}');
+				}
+
+			}
+		}
+
+		customRender();
+
+		ImGui.popID();
+	}
+
+	function customRender()
+	{
+		// Add your own magic here!
+	}
+
 	function getOptions( field: String ) : Array<Dynamic>
 	{
 		return null;

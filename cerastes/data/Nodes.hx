@@ -1,12 +1,13 @@
 package cerastes.data;
 
-
 import haxe.Constraints;
 #if hlimgui
 import cerastes.tools.ImGuiNodes;
 import imgui.NodeEditor;
 import cerastes.tools.ImguiTools.ImVec2Impl;
 import imgui.ImGui;
+import cerastes.tools.ImguiTools.IG;
+import hl.UI;
 #else
 typedef NodeId = Int;
 typedef PinId = Int;

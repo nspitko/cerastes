@@ -11,7 +11,6 @@ import cerastes.flow.Flow;
 import haxe.rtti.Meta;
 import cerastes.tools.ImguiTool;
 import cerastes.tools.ImguiTools;
-import cerastes.tools.ImguiTools;
 
 import hl.Ref;
 import hxd.App;
@@ -154,84 +153,7 @@ class FlowEditor extends ImguiTool
 		var link: FlowLink = Std.downcast( nodes.getSelectedLink( ), FlowLink );
 		if( node != null )
 		{
-			ImGui.pushID( '${node.id}' );
-			ImGui.pushFont( ImguiToolManager.headingFont );
-			ImGui.text( node.def.name );
-			ImGui.popFont();
-
-			var meta: haxe.DynamicAccess<Dynamic> = Meta.getFields( Type.getClass( node ) );
-			for( field => data in meta )
-			{
-				var metadata: haxe.DynamicAccess<Dynamic> = data;
-				if( metadata.exists("editor") )
-				{
-					var args = metadata.get("editor");
-					switch( args[1] )
-					{
-						case "String":
-							var val = Reflect.getProperty(node,field);
-							var ret = IG.textInput(args[0],val);
-							if( ret != null )
-								Reflect.setField( node, field, ret );
-
-						case "StringMultiline":
-							var val = Reflect.getProperty(node,field);
-							var ret = IG.textInputMultiline(args[0],val,{x: -1, y: 300 * Utils.getDPIScaleFactor()},0,1024*8);
-							if( ret != null )
-								Reflect.setField( node, field, ret );
-
-						case "File":
-							var val = Reflect.getProperty(node,field);
-							var ret = IG.textInput(args[0],val);
-							if( ret != null )
-								Reflect.setField( node, field, ret );
-
-							if( ImGui.beginDragDropTarget( ) )
-							{
-								var payload = ImGui.acceptDragDropPayloadString("asset_name");
-								if( payload != null && StringTools.endsWith(payload, "flow") )
-								{
-									Reflect.setField( node, field, payload );
-								}
-							}
-
-
-							if( ImGui.button("Select...") )
-							{
-								var file = UI.saveFile({
-									title:"Select file",
-									filters:[
-									{name:"Cerastes flow files", exts:["flow"]},
-									],
-									filterIndex: 0
-								});
-								if( file != null )
-									Reflect.setField( node, field, file );
-							}
-
-						case "ComboString":
-							var val = Reflect.getProperty(node,field);
-							var opts = node.getOptions( field );
-							var idx = opts.indexOf( val );
-							if( ImGui.beginCombo( args[0], val ) )
-							{
-								for( opt in opts )
-								{
-									if( ImGui.selectable( opt, opt == val ) )
-										Reflect.setField( node, field, opt );
-								}
-								ImGui.endCombo();
-							}
-
-
-						default:
-							ImGui.text('UNHANDLED!!! ${field} -> ${args[0]} of type ${args[1]}');
-					}
-
-				}
-			}
-
-			ImGui.popID();
+			node.renderProps();
 		}
 		else if( link != null )
 		{
@@ -304,11 +226,6 @@ class FlowEditor extends ImguiTool
 		{
 			link.color = { x: 0.9, y: 0.95, z: 0.2, w: 1.0 };
 			link.thickness = 3.0;
-		}
-		else
-		{
-			link.color = null;
-			link.thickness = 0;
 		}
 	}
 
@@ -402,6 +319,9 @@ class FlowEditor extends ImguiTool
 		nodes.links = cast obj.links;
 
 		this.fileName = fileName;
+
+		// Have editor rebuild it's internal state
+		nodes.regenerateData();
 
 		// Decorate links
 		for( link in nodes.links )

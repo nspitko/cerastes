@@ -79,6 +79,21 @@ class ImGuiNodes
 
 	}
 
+	public function regenerateData()
+	{
+		for( l in links )
+		{
+			var startPinId = l.sourceId;
+			var startNode = queryPin( startPinId );
+
+			var startPinDef = startNode.getPinDefForPin(startPinId);
+
+			if( startPinDef.color != 0 )
+				l.color = IG.colorToImVec4( startPinDef.color );
+
+		}
+	}
+
 	public function registerNode(name: String, cls: Class<Node>)
 	{
 		registeredNodes.set(name, cls);
@@ -329,7 +344,10 @@ class ImGuiNodes
 
 				NodeEditor.beginPin(pinId, PinKind.Output );
 				NodeEditor.pinPivotAlignment({x:1.0,y:0.5});
-				ImGui.text( def.label );
+				if( def.color != 0 )
+					ImGui.textColored( IG.colorToImVec4( def.color ), def.label );
+				else
+					ImGui.text( def.label );
 				NodeEditor.endPin();
 			}
 		}
@@ -376,52 +394,70 @@ class ImGuiNodes
 		if( NodeEditor.beginCreate() )
 		{
 
-			var outputPinId: PinId = -1;
-			var inputPinId: PinId = -1;
+			var endPinId: PinId = -1;
+			var startPinId: PinId = -1;
 
-			var inputRef = new hl.Ref(inputPinId);
-			var outputRef = new hl.Ref(outputPinId);
+			var startRef = new hl.Ref(startPinId);
+			var endRef = new hl.Ref(endPinId);
 
-			if( NodeEditor.queryNewLink( inputRef, outputRef ) )
+			if( NodeEditor.queryNewLink( startRef, endRef ) )
 			{
 				var isValid = true;
 
-				var inputNode = queryPin( inputPinId );
-				var outputNode = queryPin( outputPinId );
+				var startNode = queryPin( startPinId );
+				var endNode = queryPin( endPinId );
 
-				var inputPinDef = inputNode.getPinDefForPin(inputPinId);
-				var outputPinDef = outputNode.getPinDefForPin(outputPinId);
+				var startPinDef = startNode.getPinDefForPin(startPinId);
+				var endPinDef = endNode.getPinDefForPin(endPinId);
 
-				if( inputPinDef.kind == outputPinDef.kind )
+				if( startPinDef.kind == endPinDef.kind )
 					isValid = false;
 
 				// @todo: Need to special case bool/int conversions
-				if( inputPinDef.dataType != outputPinDef.dataType )
+				if( startPinDef.dataType != endPinDef.dataType )
 					isValid = false;
 
 
 				if( isValid )
 				{
-					showLabel('+ Create Link: ${inputNode.id} -> ${outputNode.id}', 0x55202d20 );
-					if( NodeEditor.acceptNewItem() )
+					showLabel('+ Create Link: ${startNode.id} -> ${endNode.id}', 0x55202d20 );
+					var accept = false;
+					if( startPinDef.color != 0 )
+						accept = NodeEditor.acceptNewItem2( IG.colorToImVec4( startPinDef.color ) );
+					else
+						accept = NodeEditor.acceptNewItem();
+
+
+					if( accept )
 					{
-						links.push(createLink(inputPinId, outputPinId, getNextId()));
+						var link = createLink(startPinId, endPinId, getNextId());
+						links.push( link );
+						if( startPinDef.color != 0 )
+							link.color = IG.colorToImVec4( startPinDef.color );
+
 
 					}
 				}
+				else
+				{
+					if( startPinDef != null && startPinDef.color != 0 )
+						NodeEditor.rejectNewItem2( IG.colorToImVec4( startPinDef.color ) );
+					else
+						NodeEditor.rejectNewItem2();
+				}
 			}
 
-			if( NodeEditor.queryNewNode( inputRef ) )
+			if( NodeEditor.queryNewNode( startRef ) )
 			{
 
-				var inputNode = queryPin( inputPinId );
-				var inputPinDef = inputNode.getPinDefForPin(inputPinId);
+				var startNode = queryPin( startPinId );
+				var startPinDef = startNode.getPinDefForPin(startPinId);
 
-				var isValid = inputPinDef.kind == Output;
+				var isValid = startPinDef.kind == Output;
 
 				if( isValid && NodeEditor.acceptNewItem() )
 				{
-					queryPinId = inputPinId;
+					queryPinId = startPinId;
 
 					var pos: ImVec2 = ImGui.getMousePos();
 					lastPos.x = pos.x;
@@ -593,7 +629,16 @@ class ImGuiNodes
 					var targetPinId = n.getDefaultInputPinId();
 					if( targetPinId != -1 )
 					{
-						links.push(createLink(queryPinId, targetPinId, getNextId()));
+						var link = createLink(queryPinId, targetPinId, getNextId());
+
+						var startNode = queryPin( queryPinId );
+
+						var startPinDef = startNode.getPinDefForPin(queryPinId);
+
+						if( startPinDef.color != 0 )
+							link.color = IG.colorToImVec4( startPinDef.color );
+
+						links.push(link);
 					}
 
 					ImGui.closeCurrentPopup();

@@ -132,6 +132,12 @@ typedef PortId = Int;
 	{
 		return null;
 	}
+
+	// Not a property for *reasons*
+	function setSize( newSize: ImVec2 )
+	{
+
+	}
 	#end
 }
 

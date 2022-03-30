@@ -211,6 +211,9 @@ class ImGuiNodes
 				renderBlueprintNode(node);
 			case Comment:
 				renderCommentNode(node);
+
+				var size: ImVec2 = NodeEditor.getNodeSize( node.id );
+				node.setSize( size );
 			default:
 				Utils.assert(false, 'Unknown node kind ${node.def.kind}');
 		}
@@ -242,7 +245,7 @@ class ImGuiNodes
 
 		ImGui.text(node.label);
 
-		NodeEditor.group({x:100, y:100});
+		NodeEditor.group(node.size);
 
 		ImGui.popID();
 		NodeEditor.endNode();

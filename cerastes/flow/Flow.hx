@@ -140,19 +140,25 @@ import hl.UI;
  {
 	#if hlimgui
 	@editor("Comment","String")
-	 public var comment: String;
-	 public var commentSize: ImVec2 = {x: 0, y: 0};
+	public var comment: String;
+	public var commentWidth: Single = 0;
+	public var commentHeight: Single = 0;
 
 
-	 static final d: NodeDefinition = {
-		 name:"Comment",
-		 kind: Comment,
-		 pins: []
-	 };
+	static final d: NodeDefinition = {
+		name:"Comment",
+		kind: Comment,
+		pins: []
+	};
 
-	 override function get_def() { return d; }
-	 override function get_label() { return comment; }
-	 override function get_size() { return commentSize; }
+	override function get_def() { return d; }
+	override function get_label() { return comment; }
+	override function get_size() { return {x: commentWidth, y: commentHeight}; }
+	override function setSize(v: ImVec2)
+	{
+		commentWidth = v.x;
+		commentHeight = v.y;
+	}
 	 #end
  }
 

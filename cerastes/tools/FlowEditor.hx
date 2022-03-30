@@ -106,11 +106,14 @@ class FlowEditor extends ImguiTool
 		handleShortcuts();
 
 		nodes.render();
+		processMouse();
+
 
 		ImGui.end();
 
 		commandPalette();
 		inspector();
+
 
 
 		if( !isOpenRef.get() )
@@ -119,6 +122,41 @@ class FlowEditor extends ImguiTool
 		}
 
 
+	}
+
+	var mouseStart: ImVec2;
+	function processMouse()
+	{
+		switch( mode )
+		{
+			case AddComment:
+				if( ImGui.isMouseDown(ImGuiMouseButton.Left ) && mouseStart == null )
+				{
+					mouseStart = ImGui.getMousePos();
+				}
+
+				if( ImGui.isMouseReleased( ImGuiMouseButton.Left ) && mouseStart != null )
+				{
+
+					var startPos:ImVec2 = NodeEditor.screenToCanvas(mouseStart);
+					var endPos:ImVec2 = NodeEditor.screenToCanvas(ImGui.getMousePos());
+
+					var comment: FlowComment = {
+						comment: "",
+						commentWidth: endPos.x - startPos.x,
+						commentHeight: endPos.y - startPos.y,
+
+					};
+
+					nodes.addNode( comment, startPos.x, startPos.y );
+
+					mouseStart = null;
+					mode = Select;
+				}
+
+			case Select:
+			case AddNode:
+		}
 	}
 
 

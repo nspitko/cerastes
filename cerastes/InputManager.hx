@@ -33,6 +33,7 @@ typedef InputListener = {
 	priority: Int
 }
 
+@:deprecated
 class InputManager
 {
 	private static var listeners = new Array<InputListener>();

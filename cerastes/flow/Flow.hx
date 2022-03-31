@@ -463,8 +463,7 @@ class FlowNode extends Node
 						continue;
 				}
 				var target = runner.lookupNodeByPin( link.destId );
-				if( !runner.onNode( target, runner ) )
-					target.process( runner );
+				target.process( runner );
 			}
 		}
 	}
@@ -649,14 +648,6 @@ class FlowRunner
 	@:callback
 	public function onExit(): Bool;
 
-	/**
-	 * Register to listen for node events, and have a chance to process them in leaf code
-	 *
-	 * @param node
-	 * @return Bool
-	 */
-	@:callback
-	public function onNode( node: FlowNode, runner: FlowRunner ): Bool;
 
 	public function new( res: FlowResource, ?ctx: FlowContext )
 	{
@@ -684,8 +675,7 @@ class FlowRunner
 		}
 
 		var node = labels.get(id);
-		if( !onNode( node, this ) )
-			node.process( this );
+		node.process( this );
 
 
 	}

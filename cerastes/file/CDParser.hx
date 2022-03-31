@@ -145,8 +145,8 @@ class CDParser {
 
 								var fstr = field.toString();
 								var assumeType: String = getMetaForField( fstr, "serializeType", cls );
-								if( assumeType != null )
-									trace('Assumetype: ${fstr} -> ${assumeType}');
+								//if( assumeType != null )
+								//	trace('Assumetype: ${fstr} -> ${assumeType}');
 
 								if( fstr == "items")
 									trace("???");

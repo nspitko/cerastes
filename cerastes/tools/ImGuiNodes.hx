@@ -297,7 +297,7 @@ class ImGuiNodes
 	{
 
 		var tile = hxd.Res.tools.BlueprintBackground.toTile();
-		var width = node.def.width > 0 ? node.def.width : 200;
+		var width = node.width;
 		var titleSize: ImVec2 = ImGui.calcTextSize(node.label);
 
 		NodeEditor.beginNode( node.id );
@@ -310,11 +310,20 @@ class ImGuiNodes
 		headerStart.y -= style.NodePadding.y;
 
 		ImGui.text( node.label );
+		if( node.labelInfo != null )
+		{
+			ImGui.sameLine();
+			ImGui.textColored( IG.colorToImVec4(0xFF888888 ), node.labelInfo );
+		}
 
 		var headerEnd: ImVec2 = ImGui.getCursorPos();
 		headerEnd.x = headerStart.x + width  + style.NodePadding.z;
 
-		var pinStart: ImVec2 = {x: headerStart.x, y: headerEnd.y + style.NodeBorderWidth * 8};
+		ImGui.setCursorPosY( headerEnd.y + style.NodeBorderWidth * 8 );
+
+		node.render();
+
+		var pinStart: ImVec2 = {x: headerStart.x, y: ImGui.getCursorPosY()};
 
 		//ImGui.setCursorPos( pinStart );
 		ImGui.setCursorPosY( pinStart.y );

@@ -1,5 +1,8 @@
 package cerastes.tools;
 
+import cerastes.file.CDParser;
+import cerastes.flow.Flow.FlowFile;
+import cerastes.data.Nodes.NodeKind;
 import hxd.res.Sound;
 import h3d.Vector;
 import h2d.Graphics;
@@ -162,7 +165,7 @@ class AssetBrowser  extends  ImguiTool
 					var res = hxd.Res.loader.loadCache( asset.file, hxd.res.BitmapFont);
 
 					var t = new Text(res.toFont(), asset.scene );
-					trace(t.font.name);
+
 					t.maxWidth = previewWidth - 8;
 
 					t.textAlign = MultilineCenter;
@@ -171,7 +174,73 @@ class AssetBrowser  extends  ImguiTool
 					t.x = ( previewWidth - t.textWidth ) / 2;
 				}
 
-			case "bdef" | "flow" | "audio":
+			case "flow":
+				asset.scene = new h2d.Scene();
+
+
+				sys.thread.Thread.create(() -> {
+					var ff: FlowFile = CDParser.parse( sys.io.File.getContent('res/${asset.file}'), FlowFile);
+
+					var nodes = ff.nodes;
+					var minX = 0.0; var minY = 0.0; var maxX = 0.0; var maxY = 0.0;
+					var g = new Graphics();
+
+					for( n in nodes )
+					{
+						if( n.kind == NodeKind.Blueprint )
+						{
+							if( n.editorData.x < minX ) minX = n.editorData.x;
+							if( n.editorData.y < minY ) minY = n.editorData.y;
+							if( n.editorData.x + n.width > maxX ) maxX = n.editorData.x + n.width;
+							if( n.editorData.y + n.width/3 > maxY ) maxY = n.editorData.y + n.width/3;
+
+							//g.lineStyle(2, @:privateAccess n.def.color );
+							g.beginFill( @:privateAccess n.def.color );
+							g.drawRect( n.editorData.x, n.editorData.y, n.width, n.width / 3  );
+							g.endFill(  );
+						}
+					}
+
+					var width = maxX - minX;
+					var height = maxY - minY;
+
+
+					var scaleX = previewWidth /width ;
+					var scaleY = previewHeight / height ;
+
+					var scale = scaleX < scaleY ? scaleX : scaleY;
+					g.scale(scale);
+
+					g.x = -minX * scale;
+					g.y = -minY * scale;
+
+					if( scaleX < scaleY )
+					{
+						g.y = previewHeight / 2 - ( height * scale ) / 2;
+					}
+					else
+					{
+						g.x = previewWidth / 2 - ( width * scale ) / 2;
+					}
+
+
+
+					asset.scene.addChild( g );
+					asset.dirty = true;
+				});
+
+				var t = new h2d.Text( hxd.Res.fnt.kodenmanhou16.toFont(), asset.scene);
+
+				t.text = Path.withoutDirectory( Path.withoutExtension(asset.file) );
+				t.textAlign = Center;
+				t.maxWidth = previewWidth - 8;
+				t.x = 4;
+				t.y = 4;
+				t.color = Vector.fromColor( getTypeColor(asset.file) );
+				t.dropShadow = { dx:1, dy : 1, color : 0, alpha : 1 };
+
+
+			case "bdef" | "audio":
 				asset.scene = new h2d.Scene();
 				var bmp = new Bitmap( hxd.Res.tools.config.toTile(), asset.scene );
 				bmp.width = previewWidth;

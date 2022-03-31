@@ -42,10 +42,10 @@ class LocalizationManager
 	public static function formatStr(token: String, ?subs: Array<String>)
 	{
 		var str = tokens.get(token);
-		Utils.assert(str != null, 'Token $token is missing for language $language');
 
 		if( str == null )
 		{
+			Utils.warning('Token $token is missing for language $language');
 			str = token;
 		}
 

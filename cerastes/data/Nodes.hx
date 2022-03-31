@@ -1,5 +1,6 @@
 package cerastes.data;
 
+import hxd.clipper.Clipper.NodeType;
 import haxe.Constraints;
 #if hlimgui
 import cerastes.tools.ImGuiNodes;
@@ -73,10 +74,31 @@ typedef PortId = Int;
 	public var editorData: EditorData = {};
 
 	public var label(get, never): String;
+	public var labelInfo(get, never): String;
+	public var width(get, never): Float;
+	public var kind(get, never): NodeKind;
 
 	function get_label()
 	{
 		return def.name;
+	}
+
+	function get_labelInfo()
+	{
+		return null;
+	}
+
+	function get_width()
+	{
+		if( def.width > 0 )
+			return def.width;
+
+		return 200;
+	}
+
+	function get_kind()
+	{
+		return def.kind;
 	}
 
 	function get_def()
@@ -133,8 +155,13 @@ typedef PortId = Int;
 		return null;
 	}
 
-	// Not a property for *reasons*
+	// https://github.com/HaxeFoundation/haxe/issues/10652
 	function setSize( newSize: ImVec2 )
+	{
+
+	}
+
+	function render()
 	{
 
 	}

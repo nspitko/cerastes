@@ -223,6 +223,16 @@ class FileNode extends FlowNode
 	};
 
 	override function get_def() { return d; }
+
+	override function get_labelInfo()
+	{
+		if( file != null )
+		{
+			var c = file.split("/");
+			return c[c.length - 1];
+		}
+		return null;
+	}
 	#end
 }
 
@@ -319,6 +329,11 @@ class LabelNode extends FlowNode
 	};
 
 	override function get_def()	{ return d;	}
+
+	override function get_labelInfo()
+	{
+		return labelId;
+	}
 	#end
 }
 
@@ -678,6 +693,29 @@ class FlowRunner
 		node.process( this );
 
 
+	}
+
+	public function jumpFile( file: String )
+	{
+		var hasExited = false;
+
+		if( file == null || !hxd.Res.loader.exists( file ) )
+		{
+			Utils.error('Tried to jump to invalid file ${file}!');
+			return;
+		}
+
+		var childRunner = hxd.Res.loader.loadCache( file, FlowResource ).toFlow( context );
+		childRunner.registerOnExit( this, (handled: Bool) -> {
+			if( hasExited )
+			{
+				Utils.error('File ${ file } has exited more than once!');
+				return handled;
+			}
+			hasExited = true;
+			return handled;
+		} );
+		childRunner.run();
 	}
 
 	function lookupNodeByPin( pinId: PinId )

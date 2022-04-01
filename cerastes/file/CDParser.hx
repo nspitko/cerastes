@@ -50,7 +50,12 @@ class CDParser {
 					{
 						cls =Type.resolveClass(assumeType);
 						if(cls==null) throw "Invalid class name - "+assumeType;
-						obj = Type.createEmptyInstance(cls);
+
+						if( assumeType == "haxe.ds.StringMap" || assumeType == "haxe.ds.IntMap")
+							obj = Type.createInstance(cls, []);
+						else
+							obj = Type.createEmptyInstance(cls);
+
 					}
 
 					var field = new StringBuf();
@@ -67,17 +72,17 @@ class CDParser {
 								if (field == null)
 									invalidChar();
 
-								var assumeType: String = null;
+								var newType: String = null;
 								if( cls != null )
 								{
 									var fstr = field.toString();
-									assumeType = getMetaForField( fstr, "serializeType",  cls );
+									newType = getMetaForField( fstr, "serializeType",  cls );
 								}
 
 								if( obj == null )
 									obj = {};
 
-								var rec: Dynamic = parseRec( assumeType );
+								var rec: Dynamic = parseRec( newType );
 
 								if( obj is haxe.ds.StringMap)
 									obj.set( field.toString(), rec );

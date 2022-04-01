@@ -67,6 +67,7 @@ typedef PortId = Int;
 {
 
 	public var id: NodeId = -1;
+	@serializeType("haxe.ds.IntMap")
 	public var pins: Map<PortId,PinId> = [];
 	#if hlimgui
 	var def(get, never): NodeDefinition;

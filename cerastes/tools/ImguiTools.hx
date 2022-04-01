@@ -269,17 +269,19 @@ class ImGuiTools {
 		return arrSingle1[0];
 	}
 
-	public static function textInput(label: String, value: String, ?textInputFlags: ImGuiInputTextFlags = 0, ?placeholder: String = null, ?length: Int = 1024): Null<String>
+	public static function textInput(label: String, value: String, ?textInputFlags: ImGuiInputTextFlags = 0, ?placeholder: String = null, ?length: Int = 2048): Null<String>
 	{
 		if( value == null ) value = "";
 
-		if( value.length * 1.2 > length )
-			length = Std.int( value.length * 1.2 );
+		var src = haxe.io.Bytes.ofString(value);
+
+		if( src.length + 1024 > length )
+			length = src.length + 1024;
 
 		var textBuf = new hl.Bytes(length);
-		var src = haxe.io.Bytes.ofString(value);
-		textBuf.blit(0,src,0,value.length);
-		textBuf.setUI8(value.length,0); // Null term
+
+		textBuf.blit(0,src,0,src.length);
+		textBuf.setUI8(src.length,0); // Null term
 
 		if( placeholder != null )
 		{
@@ -302,10 +304,16 @@ class ImGuiTools {
 	public static function textInputMultiline(label: String, value: String, ?size: ImVec2 = null, ?textInputFlags: ImGuiInputTextFlags = 0, ?length: Int = 10240 ): Null<String>
 	{
 		if( value == null ) value = "";
-		var textBuf = new hl.Bytes(length);
+
 		var src = haxe.io.Bytes.ofString(value);
-		textBuf.blit(0,src,0,value.length);
-		textBuf.setUI8(value.length,0); // Null term
+
+		if( src.length + 1024 > length )
+			length = src.length + 1024;
+
+		var textBuf = new hl.Bytes(length);
+
+		textBuf.blit(0,src,0,src.length);
+		textBuf.setUI8(src.length,0); // Null term
 
 			if (ImGui.inputTextMultiline(label, textBuf, length, size, textInputFlags)) {
 				return @:privateAccess String.fromUTF8(textBuf);

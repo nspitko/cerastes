@@ -202,9 +202,11 @@ class Controller<T:EnumValue> {
 	function waitForPad() {
 		pad = hxd.Pad.createDummy();
 		updateEnumMapping();
+		#if controller
 		hxd.Pad.wait( p->{
 			_onPadConnected( p );
 		});
+		#end
 	}
 
 

@@ -461,7 +461,6 @@ class FlowNode extends Node
 							var program = runner.context.parser.parseString(condition);
 
 							var result : Bool = runner.context.interp.execute(program);
-							trace('${condition} -> ${result}');
 							if( !result )
 							{
 								valid = false;
@@ -481,6 +480,53 @@ class FlowNode extends Node
 				target.process( runner );
 			}
 		}
+	}
+
+	/**
+	 * returns all nodes connected to this pin
+	 * @param pin
+	 * @param runner
+	 */
+	@:access(cerastes.flow.Flow.FlowRunner)
+	public function getOutputs( pin: PinId, runner: FlowRunner )
+	{
+		var out = [];
+		for( link in runner.links )
+		{
+			if( link.sourceId == pin )
+			{
+				// Check conditions, if any
+				if( link.conditions != null )
+				{
+					var valid = true;
+					for( condition in link.conditions )
+					{
+						try
+						{
+							var program = runner.context.parser.parseString(condition);
+
+							var result : Bool = runner.context.interp.execute(program);
+							if( !result )
+							{
+								valid = false;
+								break;
+							}
+
+						}
+						catch (e )
+						{
+							Utils.warning('Error:${e.message}\nWhile running conditions for link ${link.id}.\nCondition was ${condition}');
+						}
+					}
+					if( !valid )
+						continue;
+				}
+				var target = runner.lookupNodeByPin( link.destId );
+				out.push(target);
+			}
+		}
+
+		return out;
 	}
 
 
@@ -725,6 +771,17 @@ class FlowRunner
 			for( portId => otherPinId in n.pins )
 				if( otherPinId == pinId )
 					return n;
+		}
+
+		return null;
+	}
+
+	function lookupNodeById( nodeId: NodeId )
+	{
+		for( n in nodes )
+		{
+			if( n.id == nodeId )
+				return n;
 		}
 
 		return null;

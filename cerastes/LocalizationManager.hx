@@ -1,10 +1,19 @@
 package cerastes;
+import cerastes.file.CDParser;
 import haxe.Json;
 import cerastes.Utils.*;
 
 typedef JsonLocalizationFile = {
 	public var token: String;
 	public var en: String;
+}
+
+
+@:structInit
+class LocalizationFile
+{
+	public var version: Int = 1;
+	public var tokens: Map<String, String>;
 }
 
 class LocalizationManager
@@ -15,19 +24,13 @@ class LocalizationManager
 
 	public static function initialize( language: String )
 	{
-		LocalizationManager.language = language;
-		var rows: Array<JsonLocalizationFile> = Json.parse( hxd.Res.load("data/localization.json").toText() );
-		Utils.assert( rows != null && rows.length > 0, "Failed to parse localization file!" );
+		//LocalizationManager.language = language;
+		//var rows: Array<JsonLocalizationFile> = Json.parse( hxd.Res.load("data/localization.json").toText() );
+		//Utils.assert( rows != null && rows.length > 0, "Failed to parse localization file!" );
 
-		switch( language )
-		{
-			case "en":
-				for( row in rows )
-					tokens.set( row.token, row.en );
-			default:
-				Utils.error('Unsupported language $language');
+		var loc: LocalizationFile = CDParser.parse( hxd.Res.data.localization_english.entry.getText(), LocalizationFile );
 
-		}
+		tokens = loc.tokens;
 
 
 	}

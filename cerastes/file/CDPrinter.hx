@@ -141,7 +141,9 @@ class CDPrinter {
 
 	inline function mapString(v:Map<Any, Any>, assumeType: String) {
 
-		fieldsString(v, [ for(k in v.keys() ) k ], assumeType );
+		var keys:Array<String> = [ for(k in v.keys() ) k ];
+		keys.sort( Reflect.compare );
+		fieldsString(v, keys, assumeType );
 	}
 
 	inline function mapInt(v:haxe.ds.IntMap<Any>, assumeType: String)
@@ -241,6 +243,9 @@ class CDPrinter {
 							continue;
 					case TFloat:
 						if( value == 0.0 )
+							continue;
+					case TBool:
+						if( value == false )
 							continue;
 
 					default:

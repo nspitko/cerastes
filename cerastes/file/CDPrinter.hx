@@ -136,7 +136,7 @@ class CDPrinter {
 	}
 
 	function classString(v:Dynamic, assumeType: String) {
-		fieldsString(v, Type.getInstanceFields(Type.getClass(v)));
+		fieldsString(v, Type.getInstanceFields(Type.getClass(v)), assumeType);
 	}
 
 	inline function mapString(v:Map<Any, Any>, assumeType: String) {

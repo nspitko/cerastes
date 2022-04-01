@@ -31,9 +31,9 @@ class SoundCueItem
 	public var type: SoundCueItemType = Clip;
 	public var start: Float = 0;
 	public var end: Float = 0; // If zero, use clip length
+	public var loop: Bool = false; // Loop this cue
 
-	@serializeAlways
-	public var volume: Float = 1;
+	public var volume: Float = 0;
 	public var volumeVariance: Float = 0; // If set, choose a random volume between volume and volume + volumeVariance
 
 	public var pitch: Float = 0; // if zero, use default pitch, else float where 1.0 = default
@@ -119,7 +119,7 @@ class CueInstance
 					switch( item.type )
 					{
 						case Clip:
-							var channel = hxd.Res.loader.loadCache( item.name, Sound ).play(false, 1.0, channelGroup, soundGroup );
+							var channel = hxd.Res.loader.loadCache( item.name, Sound ).play(item.loop, 1.0, channelGroup, soundGroup );
 							if( item.pitch > 0 || item.pitchVariance > 0 )
 							{
 								var effect = new hxd.snd.effect.Pitch( ( item.pitch > 0 ? item.pitch : 1 ) + Math.random() * item.pitchVariance );

@@ -698,22 +698,26 @@ class AudioEditor extends ImguiTool
 				ImGui.text("Track");
 			case Item:
 				if( selectedItem != null )
-					{
+				{
 
-						ImGui.pushFont( ImguiToolManager.headingFont );
-						ImGui.text( selectedItem.name );
-						ImGui.popFont();
+					ImGui.pushFont( ImguiToolManager.headingFont );
+					ImGui.text( selectedItem.name );
+					ImGui.popFont();
 
-						IG.wref( ImGui.sliderDouble( "Volume", _, 0, 2 ), selectedItem.volume );
-						IG.wref( ImGui.sliderDouble( "Volume Variance", _, -1, 1 ), selectedItem.volumeVariance );
+					IG.wref( ImGui.sliderDouble( "Volume", _, 0, 2 ), selectedItem.volume );
+					IG.wref( ImGui.sliderDouble( "Volume Variance", _, -1, 1 ), selectedItem.volumeVariance );
 
-						IG.wref( ImGui.sliderDouble( "Pitch", _, 0, 2 ), selectedItem.pitch );
-						IG.wref( ImGui.sliderDouble( "Pitch Variance", _, -1, 1 ), selectedItem.pitchVariance );
+					IG.wref( ImGui.checkbox( "Loop", _ ), selectedItem.loop );
 
-						IG.wref( ImGui.sliderDouble( "Low Pass", _, 0, 1 ), selectedItem.lowpass );
-						IG.wref( ImGui.sliderDouble( "Low Pass Variance", _, -1, 1 ), selectedItem.lowpassVariance );
+					IG.wref( ImGui.sliderDouble( "Pitch", _, 0, 2 ), selectedItem.pitch );
+					IG.wref( ImGui.sliderDouble( "Pitch Variance", _, -1, 1 ), selectedItem.pitchVariance );
 
-					}
+					IG.wref( ImGui.sliderDouble( "Low Pass", _, 0, 1 ), selectedItem.lowpass );
+					IG.wref( ImGui.sliderDouble( "Low Pass Variance", _, -1, 1 ), selectedItem.lowpassVariance );
+
+
+
+				}
 
 
 		}

@@ -161,7 +161,9 @@ class CDParser {
 									obj.set( Std.parseInt( fstr ), rec );
 								else
 								{
+									#if hl
 									if( Reflect.hasField( obj, fstr ) )
+									#end
 										Reflect.setField(obj, fstr, rec );
 								}
 

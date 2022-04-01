@@ -63,8 +63,8 @@ class FlowResource extends Resource
 		if( cache )
 			data = d;
 
-		Utils.assert( d.version <= version, "Warning: Flow file generated with newer version than this parser supports" );
-		Utils.assert( d.version >= minVersion, "Warning: Flow file version newer than parser understands; parsing will probably fail!" );
+		Utils.assert( d.version <= version, 'Warning: Flow file generated with newer version than this parser supports (Have: ${d.version}, known: ${version})' );
+		Utils.assert( d.version >= minVersion, 'Warning: Flow file version newer than parser understands; parsing will probably fail!  (Have: ${d.version}, known: ${version})' );
 
 
 		return d;

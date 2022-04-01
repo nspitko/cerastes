@@ -1,9 +1,9 @@
 
 package cerastes.tools;
 
-import hl.Ref;
-#if hlimgui
 
+#if hlimgui
+import hl.Ref;
 import hl.Gc;
 import hxd.App;
 import hxd.System;

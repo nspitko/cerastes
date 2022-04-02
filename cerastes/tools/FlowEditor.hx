@@ -53,6 +53,8 @@ class FlowEditor extends ImguiTool
 
 	var context = new FlowContext(null);
 
+	var selectedNode: FlowNode;
+
 	public function new()
 	{
 		nodes = new ImGuiNodes();
@@ -114,6 +116,10 @@ class FlowEditor extends ImguiTool
 		commandPalette();
 		inspector();
 
+		if( selectedNode != null )
+		{
+			selectedNode.updatePreviewWindow( windowID() );
+		}
 
 
 		if( !isOpenRef.get() )
@@ -192,6 +198,7 @@ class FlowEditor extends ImguiTool
 		if( node != null )
 		{
 			node.renderProps();
+			selectedNode = node;
 		}
 		else if( link != null )
 		{
@@ -483,6 +490,15 @@ class FlowEditor extends ImguiTool
 	public override inline function windowID()
 	{
 		return 'flow${fileName != null ? fileName : ""+toolId}';
+	}
+
+	public override function render( e: h3d.Engine )
+	{
+
+		if( selectedNode != null )
+		{
+			selectedNode.renderPreviewWindow(e);
+		}
 	}
 
 }

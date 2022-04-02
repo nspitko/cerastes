@@ -3,9 +3,12 @@ import cerastes.file.CDParser;
 import haxe.Json;
 import cerastes.Utils.*;
 
-typedef JsonLocalizationFile = {
-	public var token: String;
-	public var en: String;
+
+abstract LocalizedString(String) from String to String
+{
+	inline public function new(i:String) {
+		this = LocalizationManager.localize(i);
+	}
 }
 
 

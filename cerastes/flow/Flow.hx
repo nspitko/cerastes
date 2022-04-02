@@ -409,6 +409,17 @@ class ExitNode extends FlowNode
 @:structInit
 class FlowNode extends Node
 {
+
+	inline function key( runner: FlowRunner )
+	{
+		return '${runner.file}-${runner.context.key}-${id}';
+	}
+
+	public function wasSeen( runner )
+	{
+		return GameState.seen.indexOf( key(runner) ) != -1;
+	}
+
 	/**
 	 * Basic processing function for nodes. If baseclass is called, will call next
 	 * on every pin.
@@ -453,6 +464,9 @@ class FlowNode extends Node
 				// Check conditions, if any
 				if( link.conditions != null )
 				{
+					var hash = '${runner.file}-${link.sourceId}-${link.destId}';
+					var seen = GameState.seen.indexOf( hash ) != -1;
+					runner.context.interp.variables.set("once", !seen);
 					var valid = true;
 					for( condition in link.conditions )
 					{
@@ -463,6 +477,7 @@ class FlowNode extends Node
 							var result : Bool = runner.context.interp.execute(program);
 							if( !result )
 							{
+								Utils.info('${condition} returned false; GS.yuki = ${GameState.yuki}, GS.room.exits = ${GameState.room.exits}');
 								valid = false;
 								break;
 							}
@@ -477,6 +492,7 @@ class FlowNode extends Node
 						continue;
 				}
 				var target = runner.lookupNodeByPin( link.destId );
+				GameState.seen.push( '${runner.file}-${link.sourceId}-${link.destId}' );
 				target.process( runner );
 			}
 		}
@@ -508,6 +524,7 @@ class FlowNode extends Node
 							var result : Bool = runner.context.interp.execute(program);
 							if( !result )
 							{
+								trace('${condition} returned false; GS.yuki == ${GameState.yuki}');
 								valid = false;
 								break;
 							}
@@ -536,6 +553,9 @@ class FlowNode extends Node
 	}
 
 	#if hlimgui
+
+	var inputCallback: ImGuiInputTextCallbackData = null;
+
 	function renderProps()
 	{
 		ImGui.pushID( '${id}' );
@@ -558,11 +578,15 @@ class FlowNode extends Node
 						if( ret != null )
 							Reflect.setField( this, field, ret );
 
+						onAfterProp(field);
+
 					case "StringMultiline" | "LocalizedStringMultiline":
 						var val = Reflect.getProperty(this,field);
-						var ret = IG.textInputMultiline(args[0],val,{x: -1, y: 300 * Utils.getDPIScaleFactor()},0,1024*8);
+						var ret = IG.textInputMultiline(args[0],val,{x: -1, y: 300 * Utils.getDPIScaleFactor()}, ImGuiInputTextFlags.Multiline | ImGuiInputTextFlags.CallbackAlways ,1024*8, inputCallback);
 						if( ret != null )
 							Reflect.setField( this, field, ret );
+
+						onAfterProp(field);
 
 					case "Tile":
 						var val = Reflect.getProperty(this,field);
@@ -570,11 +594,15 @@ class FlowNode extends Node
 						if( ret != null )
 							Reflect.setField( this, field, ret );
 
+						onAfterProp(field);
+
 					case "File":
 						var val = Reflect.getProperty(this,field);
 						var ret = IG.textInput(args[0],val);
 						if( ret != null )
 							Reflect.setField( this, field, ret );
+
+						onAfterProp(field);
 
 						if( ImGui.beginDragDropTarget( ) )
 						{
@@ -612,6 +640,7 @@ class FlowNode extends Node
 							}
 							ImGui.endCombo();
 						}
+						onAfterProp(field);
 
 
 					default:
@@ -626,6 +655,11 @@ class FlowNode extends Node
 		ImGui.popID();
 	}
 
+	function onAfterProp( field: String )
+	{
+
+	}
+
 	function customRender()
 	{
 		// Add your own magic here!
@@ -634,6 +668,16 @@ class FlowNode extends Node
 	function getOptions( field: String ) : Array<Dynamic>
 	{
 		return null;
+	}
+
+	function updatePreviewWindow( windowId: String )
+	{
+
+	}
+
+	function renderPreviewWindow(e: h3d.Engine)
+	{
+
 	}
 	#end
 
@@ -660,6 +704,9 @@ class FlowContext
 {
 	public var parser = new hscript.Parser();
 	public var interp = new hscript.Interp();
+
+	// Used to disambiguate dialogue seen states between rooms.
+	public var key: String;
 
 	var runner: FlowRunner;
 
@@ -701,6 +748,8 @@ class FlowRunner
 	var res: FlowResource;
 	var context: FlowContext;
 
+	var file: String;
+
 	/**
 	 * OnExit is called when a flow reaches it's exit node.
 	 * Mainly used for
@@ -715,6 +764,7 @@ class FlowRunner
 		this.res = res;
 		this.nodes = res.getData().nodes;
 		this.links = res.getData().links;
+		this.file = res.name;
 
 		context = ctx == null ? new FlowContext( this ) : ctx;
 

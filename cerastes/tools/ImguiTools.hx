@@ -301,7 +301,7 @@ class ImGuiTools {
 	}
 
 
-	public static function textInputMultiline(label: String, value: String, ?size: ImVec2 = null, ?textInputFlags: ImGuiInputTextFlags = 0, ?length: Int = 10240 ): Null<String>
+	public static function textInputMultiline(label: String, value: String, ?size: ImVec2 = null, ?textInputFlags: ImGuiInputTextFlags = 0, ?length: Int = 10240, ?callback: ImGuiInputTextCallbackData = null ): Null<String>
 	{
 		if( value == null ) value = "";
 
@@ -315,7 +315,7 @@ class ImGuiTools {
 		textBuf.blit(0,src,0,src.length);
 		textBuf.setUI8(src.length,0); // Null term
 
-			if (ImGui.inputTextMultiline(label, textBuf, length, size, textInputFlags)) {
+			if (ImGui.inputTextMultiline(label, textBuf, length, size, textInputFlags, callback)) {
 				return @:privateAccess String.fromUTF8(textBuf);
 			}
 		return null;

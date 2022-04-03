@@ -1,5 +1,6 @@
 package cerastes.tools;
 
+import cerastes.flow.Flow.FlowComment;
 #if hlimgui
 import cerastes.data.Nodes;
 import cerastes.data.Nodes;
@@ -205,15 +206,14 @@ class ImGuiNodes
 	function renderNode( node: Node )
 	{
 
+		node.onBeforeEditor( this );
+
 		switch( node.def.kind )
 		{
 			case Blueprint:
 				renderBlueprintNode(node);
 			case Comment:
 				renderCommentNode(node);
-
-				var size: ImVec2 = NodeEditor.getNodeSize( node.id );
-				node.setSize( size );
 			default:
 				Utils.assert(false, 'Unknown node kind ${node.def.kind}');
 		}
@@ -225,8 +225,19 @@ class ImGuiNodes
 
 			NodeEditor.setNodePosition( node.id, {x: node.editorData.x, y: node.editorData.y } );
 
+			if( node.def.kind == Comment )
+			{
+				NodeEditor.setGroupSize( node.id, node.size );
+			}
+
 			//if( node.id == 1 )
 			//	NodeEditor.centerNodeOnScreen( node.id );
+		}
+		else
+		{
+			var pos: ImVec2 = NodeEditor.getNodePosition(node.id );
+			node.editorData.x = pos.x;
+			node.editorData.y = pos.y;
 		}
 
 	}
@@ -256,12 +267,11 @@ class ImGuiNodes
 		{
 			//auto alpha   = static_cast<int>(commentAlpha * ImGui::GetStyle().Alpha * 255);
 			var bgAlpha = 0.3;
-
-
 			var min: ImVec2 = NodeEditor.getGroupMin();
 			//auto max = ed::GetGroupMax();
 
 			//min.x -= 8;
+
 			min.y -= ImGui.getTextLineHeightWithSpacing() + 4;
 			ImGui.setCursorScreenPos(min );// - ImVec2(-8, ImGui::GetTextLineHeightWithSpacing() + 4));
 			ImGui.beginGroup();
@@ -289,7 +299,22 @@ class ImGuiNodes
 				0x88FFFFFF, 4.0, ImDrawFlags.RoundCornersAll);
 
 			//ImGui.popStyleVar();
+
+			//var min: ImVec2 = NodeEditor.getGroupMin();
+			//var max: ImVec2 = NodeEditor.getGroupMax();
+			//var size: ImVec2 = {x: max.x - min.x, y: max.y - min.y};
+
+			var c = Std.downcast( node, FlowComment);
+
+			var size: ImVec2 = NodeEditor.getNodeSize( c.id );
+
+			node.setSize( size );
+
+
 		}
+
+
+
 		NodeEditor.endGroupHint();
 	}
 
@@ -331,7 +356,7 @@ class ImGuiNodes
 
 		for( portId => pinId in node.pins )
 		{
-			var def = node.def.pins[portId];
+			var def = node.getPinDefForPort(portId);
 			if( def.kind == Input )
 			{
 				NodeEditor.beginPin(pinId, PinKind.Input );
@@ -347,7 +372,7 @@ class ImGuiNodes
 
 		for( portId => pinId in node.pins )
 		{
-			var def = node.def.pins[portId];
+			var def = node.getPinDefForPort(portId);
 			if( def.kind == Output )
 			{
 				var size: ImVec2 = ImGui.calcTextSize(def.label);
@@ -550,18 +575,7 @@ class ImGuiNodes
 
 		//Handle node movement
 
-		var selectedNodes = NodeEditor.getSelectedNodes();
-		for( nodeId in selectedNodes )
-		{
-			// I have no idea why 0 can be a selected node but it can??
-			if( nodeId == 0 )
-				continue;
 
-			var node = getNode(nodeId);
-			var pos: ImVec2 = NodeEditor.getNodePosition(nodeId );
-			node.editorData.x = pos.x;
-			node.editorData.y = pos.y;
-		}
 
 		// Hover specifically deals with a single drag, which may not select.
 		var nodeId = NodeEditor.getHoveredNode();
@@ -573,6 +587,12 @@ class ImGuiNodes
 				var pos: ImVec2 = NodeEditor.getNodePosition(nodeId );
 				node.editorData.x = pos.x;
 				node.editorData.y = pos.y;
+
+				if( node.kind == Comment )
+				{
+					var size: ImVec2 = NodeEditor.getNodeSize( nodeId );
+					node.setSize( size );
+				}
 			}
 		}
 

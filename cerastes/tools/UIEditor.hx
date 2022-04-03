@@ -410,6 +410,13 @@ class UIEditor extends ImguiTool
 			}
 
 		}
+		else if( Std.downcast( selectedInspectorTree, CUIMask ) != null )
+		{
+			var mask: h2d.Mask = cast o;
+			selectedItemBorder.lineStyle(4,colBounds, 0.5);
+			selectedItemBorder.drawRect(bounds.xMin, bounds.yMin, mask.width, mask.height);
+
+		}
 		else
 		{
 			selectedItemBorder.lineStyle(4,colBounds, 0.5);
@@ -945,16 +952,16 @@ class UIEditor extends ImguiTool
 
 				IG.wref( ImGui.inputInt("Border Width",_,1,10), d.borderWidth );
 				IG.wref( ImGui.inputInt("Border Height",_,1,10), d.borderHeight );
-/*
+
 			case "h2d.Mask":
-				var t : h2d.Mask = cast obj;
+				var t : CUIMask = cast def;
 
 				IG.wref( ImGui.inputInt("Width",_,1,10), t.width );
 				IG.wref( ImGui.inputInt("Height",_,1,10), t.height );
 
 				IG.wref( ImGui.inputDouble("Scroll X",_,1,10,"%.2f"), t.scrollX );
 				IG.wref( ImGui.inputDouble("Scroll Y",_,1,10,"%.2f"), t.scrollY );
-*/
+
 
 
 			case "h2d.ScaleGrid":

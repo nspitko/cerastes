@@ -156,8 +156,9 @@ import hl.UI;
 	override function get_size() { return {x: commentWidth, y: commentHeight}; }
 	override function setSize(v: ImVec2)
 	{
-		commentWidth = v.x;
-		commentHeight = v.y;
+		// @bugbug What the fuck are these numbers
+		commentWidth = v.x - 16;
+		commentHeight = v.y - 43;
 	}
 	 #end
  }
@@ -477,7 +478,6 @@ class FlowNode extends Node
 							var result : Bool = runner.context.interp.execute(program);
 							if( !result )
 							{
-								Utils.info('${condition} returned false; GS.yuki = ${GameState.yuki}, GS.room.exits = ${GameState.room.exits}');
 								valid = false;
 								break;
 							}
@@ -486,6 +486,9 @@ class FlowNode extends Node
 						catch (e )
 						{
 							Utils.warning('Error:${e.message}\nWhile running conditions for link ${link.id}.\nCondition was ${condition}');
+							valid = false;
+							break;
+
 						}
 					}
 					if( !valid )
@@ -524,7 +527,6 @@ class FlowNode extends Node
 							var result : Bool = runner.context.interp.execute(program);
 							if( !result )
 							{
-								trace('${condition} returned false; GS.yuki == ${GameState.yuki}');
 								valid = false;
 								break;
 							}
@@ -570,82 +572,8 @@ class FlowNode extends Node
 			if( metadata.exists("editor") )
 			{
 				var args = metadata.get("editor");
-				switch( args[1] )
-				{
-					case "String" | "LocalizedString":
-						var val = Reflect.getProperty(this,field);
-						var ret = IG.textInput(args[0],val);
-						if( ret != null )
-							Reflect.setField( this, field, ret );
+				renderElement(field, args[1], args);
 
-						onAfterProp(field);
-
-					case "StringMultiline" | "LocalizedStringMultiline":
-						var val = Reflect.getProperty(this,field);
-						var ret = IG.textInputMultiline(args[0],val,{x: -1, y: 300 * Utils.getDPIScaleFactor()}, ImGuiInputTextFlags.Multiline | ImGuiInputTextFlags.CallbackAlways ,1024*8, inputCallback);
-						if( ret != null )
-							Reflect.setField( this, field, ret );
-
-						onAfterProp(field);
-
-					case "Tile":
-						var val = Reflect.getProperty(this,field);
-						var ret = IG.inputTile(args[0],val);
-						if( ret != null )
-							Reflect.setField( this, field, ret );
-
-						onAfterProp(field);
-
-					case "File":
-						var val = Reflect.getProperty(this,field);
-						var ret = IG.textInput(args[0],val);
-						if( ret != null )
-							Reflect.setField( this, field, ret );
-
-						onAfterProp(field);
-
-						if( ImGui.beginDragDropTarget( ) )
-						{
-							var payload = ImGui.acceptDragDropPayloadString("asset_name");
-							if( payload != null && StringTools.endsWith(payload, "flow") )
-							{
-								Reflect.setField( this, field, payload );
-							}
-						}
-
-
-						if( ImGui.button("Select...") )
-						{
-							var file = UI.loadFile({
-								title:"Select file",
-								filters:[
-								{name:"Cerastes flow files", exts:["flow"]},
-								],
-								filterIndex: 0
-							});
-							if( file != null )
-								Reflect.setField( this, field, file );
-						}
-
-					case "ComboString":
-						var val = Reflect.getProperty(this,field);
-						var opts = getOptions( field );
-						var idx = opts.indexOf( val );
-						if( ImGui.beginCombo( args[0], val ) )
-						{
-							for( opt in opts )
-							{
-								if( ImGui.selectable( opt, opt == val ) )
-									Reflect.setField( this, field, opt );
-							}
-							ImGui.endCombo();
-						}
-						onAfterProp(field);
-
-
-					default:
-						ImGui.text('UNHANDLED!!! ${field} -> ${args[0]} of type ${args[1]}');
-				}
 
 			}
 		}
@@ -653,6 +581,118 @@ class FlowNode extends Node
 		customRender();
 
 		ImGui.popID();
+	}
+
+	function renderElement( field: String, type: String, args: Array<String> )
+	{
+		switch( type )
+		{
+			case "String" | "LocalizedString":
+				var val = Reflect.getProperty(this,field);
+				var ret = IG.textInput(args[0],val);
+				if( ret != null )
+					Reflect.setField( this, field, ret );
+
+				onAfterProp(field);
+
+			case "StringMultiline" | "LocalizedStringMultiline":
+				var val = Reflect.getProperty(this,field);
+				var ret = IG.textInputMultiline(args[0],val,{x: -1, y: 300 * Utils.getDPIScaleFactor()}, ImGuiInputTextFlags.Multiline | ImGuiInputTextFlags.CallbackAlways ,1024*8, inputCallback);
+				if( ret != null )
+					Reflect.setField( this, field, ret );
+
+				onAfterProp(field);
+
+			case "Tile":
+				var val = Reflect.getProperty(this,field);
+				var ret = IG.inputTile(args[0],val);
+				if( ret != null )
+					Reflect.setField( this, field, ret );
+
+				onAfterProp(field);
+
+			case "File":
+				var val = Reflect.getProperty(this,field);
+				var ret = IG.textInput(args[0],val);
+				if( ret != null )
+					Reflect.setField( this, field, ret );
+
+				onAfterProp(field);
+
+				if( ImGui.beginDragDropTarget( ) )
+				{
+					var payload = ImGui.acceptDragDropPayloadString("asset_name");
+					if( payload != null && StringTools.endsWith(payload, "flow") )
+					{
+						Reflect.setField( this, field, payload );
+					}
+				}
+
+
+				if( ImGui.button("Select...") )
+				{
+					var file = UI.loadFile({
+						title:"Select file",
+						filters:[
+						{name:"Cerastes flow files", exts:["flow"]},
+						],
+						filterIndex: 0
+					});
+					if( file != null )
+						Reflect.setField( this, field, file );
+				}
+
+			case "ComboString":
+				var val = Reflect.getProperty(this,field);
+				var opts = getOptions( field );
+				var idx = opts.indexOf( val );
+				if( ImGui.beginCombo( args[0], val ) )
+				{
+					for( opt in opts )
+					{
+						if( ImGui.selectable( opt, opt == val ) )
+							Reflect.setField( this, field, opt );
+					}
+					ImGui.endCombo();
+				}
+				onAfterProp(field);
+
+			case "Array":
+				var val = Reflect.getProperty(this,field);
+				switch( args[2] )
+				{
+					case "String":
+						if( val != null )
+						{
+							for( idx in 0 ... val.length )
+							{
+								ImGui.pushID('idx${idx}');
+								var ret = IG.textInput( '${idx}', val[idx] );
+								if( ret != null )
+								{
+									val[idx] = ret;
+								}
+
+								if( ImGui.button("Del") )
+									val.splice(idx,1);
+
+								ImGui.popID();
+							}
+						}
+						if( ImGui.button("Add") )
+						{
+							if( val == null )
+								Reflect.setField( this, field, [""] );
+							else
+								val.push("");
+						}
+				}
+
+
+
+			default:
+				ImGui.text('UNHANDLED!!! ${field} -> ${args[0]} of type ${args[1]}');
+		}
 	}
 
 	function onAfterProp( field: String )
@@ -721,6 +761,10 @@ class FlowContext
 
 		interp.variables.set("set", GameState.set );
 		interp.variables.set("get", GameState.get );
+
+		interp.variables.set("hasItem", GameState.hasItem );
+		interp.variables.set("addItem", GameState.addItem );
+		interp.variables.set("removeItem", GameState.removeItem );
 		//interp.variables.set("seenNode", seenNode );
 
 	}
@@ -770,6 +814,11 @@ class FlowRunner
 
 		for( n in nodes )
 			n.register(this);
+	}
+
+	public function setVar( name: String, value: Dynamic )
+	{
+		context.interp.variables.set(name, value );
 	}
 
 	public function run()

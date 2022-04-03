@@ -75,6 +75,12 @@ class Button extends h2d.Flow
 
 	function set_state(v: ButtonState)
 	{
+		if( this.background  == null || this.backgroundTile == null )
+		{
+			state = v;
+			return v;
+		}
+
 		switch( v )
 		{
 			case Hover:

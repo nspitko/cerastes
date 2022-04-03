@@ -69,9 +69,11 @@ class Tween
 			completeFunc();
 	}
 
-	public function abort()
+	public function abort( ?fireCallback = false )
 	{
 		finished = true;
+		if( fireCallback && completeFunc != null )
+			completeFunc();
 	}
 
 

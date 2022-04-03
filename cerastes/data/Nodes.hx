@@ -27,7 +27,7 @@ typedef PortId = Int;
 	var Node 		= 0;	// Accepts an entire node as its input (Typically for logic flow)
 	var Numeric 	= 1;	// Accepts numeric values (int/float)
 	var Bool 		= 2;	// Accepts bool and numerics (where number > 0)
-	var String		= 3;	// Accepts a string as its input
+	var Text		= 3;	// Accepts a string as its input
 	var Texture		= 4;	// Textures
 }
 
@@ -79,6 +79,11 @@ typedef PortId = Int;
 	public var width(get, never): Float;
 	public var kind(get, never): NodeKind;
 
+	function onBeforeEditor( editor: ImGuiNodes )
+	{
+
+	}
+
 	function get_label()
 	{
 		return def.name;
@@ -126,13 +131,13 @@ typedef PortId = Int;
 		for( portId => otherPinId in pins )
 		{
 			if( pinId == otherPinId )
-				return def.pins[portId];
+				return getPinDefForPort( portId );
 		}
 
 		return null;
 	}
 
-	inline function getPinDefForPort( portId: Int )
+	function getPinDefForPort( portId: Int )
 	{
 		return def.pins[portId];
 	}

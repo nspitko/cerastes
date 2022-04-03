@@ -38,11 +38,11 @@ class LocalizationManager
 
 	}
 
-	public static function localize(token: String, ?subs: Array<String>) : String
+	public static function localize(token: String, ...rest: String) : String
 	{
 		//var str = ~/^[\t ]+|[\t ]+$/gm.replace( key, "");
 
-		return formatStr(token, subs);
+		return formatStr(token, rest.toArray());
 	}
 
 	public static function formatStr(token: String, ?subs: Array<String>)

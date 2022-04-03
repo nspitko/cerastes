@@ -303,6 +303,9 @@ class ImGuiTools {
 
 	public static function textInputMultiline(label: String, value: String, ?size: ImVec2 = null, ?textInputFlags: ImGuiInputTextFlags = 0, ?length: Int = 10240, ?callback: ImGuiInputTextCallbackData = null ): Null<String>
 	{
+		if( callback != null)
+			textInputFlags |= ImGuiInputTextFlags.CallbackAlways;
+
 		if( value == null ) value = "";
 
 		var src = haxe.io.Bytes.ofString(value);
@@ -315,9 +318,9 @@ class ImGuiTools {
 		textBuf.blit(0,src,0,src.length);
 		textBuf.setUI8(src.length,0); // Null term
 
-			if (ImGui.inputTextMultiline(label, textBuf, length, size, textInputFlags, callback)) {
-				return @:privateAccess String.fromUTF8(textBuf);
-			}
+		if (ImGui.inputTextMultiline(label, textBuf, length, size, textInputFlags, callback)) {
+			return @:privateAccess String.fromUTF8(textBuf);
+		}
 		return null;
 	}
 

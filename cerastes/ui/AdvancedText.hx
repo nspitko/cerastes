@@ -8,6 +8,7 @@ enum TextEffect {
 	Sine;
 }
 
+@:keep
 class AdvancedText extends h2d.Text
 {
 	var rebuildEveryFrame : Bool = false;

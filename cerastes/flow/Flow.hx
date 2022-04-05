@@ -45,7 +45,7 @@ import hl.UI;
 	 static final d: NodeDefinition = {
 		 name:"Instruction",
 		 kind: Blueprint,
-		 color: 0xFF222288,
+		 color: 0xFF555500,
 		 pins: [
 			 {
 				 id: 0,

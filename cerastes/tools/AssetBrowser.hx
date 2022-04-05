@@ -675,12 +675,12 @@ class AssetBrowser  extends  ImguiTool
 		return switch(ext)
 		{
 			case "wav" | "mp3" | "ogg": 0xFF88FF88;
-			case "ui": 0xFF8888FF;
-			case "atlas": 0xFFff8888;
+			case "ui": 0xFF2288FF;
+			case "atlas": 0xFFff0088;
 			case "csd": 0xFF88ffff;
 			case "fbx": 0xFFff88ff;
-			case "flow": 0xFF33ff88;
-			case "audio": 0xFF88FF88;
+			case "flow": 0xFFFF6688;
+			case "audio": 0xFF880088;
 			case "png" | "bmp" | "gif": 0xFFffff88;
 			default: 0xFFFFFFFF;
 		}
@@ -696,8 +696,12 @@ class AssetBrowser  extends  ImguiTool
 			case "ui": "UI Layout";
 			case "png" | "bmp" | "gif" | "jpg": "Image";
 			case "wav" | "ogg" | "mp3": "Sound";
+			#if butai
 			case "bdef": "Butai";
+			#end
+			#if flow
 			case "flow": "Flow";
+			#end
 			case "csd": "Sprite";
 			case "atlas": "Texture Atlas";
 			case "fbx": "Model";

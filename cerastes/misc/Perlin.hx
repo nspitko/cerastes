@@ -1,4 +1,4 @@
-package game.utils;
+package cerastes.misc;
 
 /**
  * A speed-improved perlin and simplex noise algorithms for 2D.

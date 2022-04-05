@@ -3,6 +3,7 @@ package cerastes.ui;
 import cerastes.fmt.CUIResource;
 import h2d.Object;
 
+@:keep
 class Reference extends h2d.Object
 {
 

@@ -308,7 +308,8 @@ class ImGuiNodes
 
 			var size: ImVec2 = NodeEditor.getNodeSize( c.id );
 
-			node.setSize( size );
+			if( size.x > 0 && size.y > 0)
+				node.setSize( size );
 
 
 		}

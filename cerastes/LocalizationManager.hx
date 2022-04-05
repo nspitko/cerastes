@@ -41,6 +41,9 @@ class LocalizationManager
 	public static function localize(token: String, ...rest: String) : String
 	{
 		//var str = ~/^[\t ]+|[\t ]+$/gm.replace( key, "");
+		if( Utils.assert( token != null, "Tried to localized null string as token!" ) )
+			return "null";
+
 
 		return formatStr(token, rest.toArray());
 	}

@@ -19,6 +19,7 @@ import hxd.res.Resource;
 
 
 // Cerastes UI
+@:keepSub
 @:structInit class CUIObject {
 
 	public var type: String = null;

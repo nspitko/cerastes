@@ -153,9 +153,6 @@ class CDParser {
 								//if( assumeType != null )
 								//	trace('Assumetype: ${fstr} -> ${assumeType}');
 
-								if( fstr == "items")
-									trace("???");
-
 								var rec: Dynamic = parseRec( assumeType );
 
 

@@ -118,7 +118,11 @@ class CueInstance
 				{
 					switch( item.type )
 					{
+						#if js
+						case Clip | null:
+						#else
 						case Clip:
+						#end
 							var channel = hxd.Res.loader.loadCache( item.name, Sound ).play(item.loop, 1.0, channelGroup, soundGroup );
 							if( item.pitch > 0 || item.pitchVariance > 0 )
 							{

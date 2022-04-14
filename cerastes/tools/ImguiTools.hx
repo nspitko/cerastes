@@ -301,7 +301,7 @@ class ImGuiTools {
 	}
 
 
-	public static function textInputMultiline(label: String, value: String, ?size: ImVec2 = null, ?textInputFlags: ImGuiInputTextFlags = 0, ?length: Int = 10240, ?callback: ImGuiInputTextCallbackData = null ): Null<String>
+	public static function textInputMultiline(label: String, value: String, ?size: ImVec2 = null, ?textInputFlags: ImGuiInputTextFlags = 0, ?length: Int = 10240, ?callback: ImGuiInputTextCallbackDataFunc = null ): Null<String>
 	{
 		if( callback != null)
 			textInputFlags |= ImGuiInputTextFlags.CallbackAlways;

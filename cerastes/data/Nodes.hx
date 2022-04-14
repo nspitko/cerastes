@@ -19,6 +19,7 @@ typedef LinkId = Int;
 @:enum abstract NodeKind(Int) from Int to Int {
 	var Blueprint = 0;
 	var Comment = 1;
+	var Micro = 2;
 }
 
 typedef PortId = Int;

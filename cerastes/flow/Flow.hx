@@ -19,7 +19,7 @@ import hl.UI;
  */
  class InstructionNode extends FlowNode
  {
-	 @editor("Condition","StringMultiline")
+	 @editor("Instruction","StringMultiline")
 	 public var instruction: String;
 
 	 public override function process( runner: FlowRunner )
@@ -99,27 +99,28 @@ import hl.UI;
 
 	 #if hlimgui
 	 static final d: NodeDefinition = {
-		 name:"Condition",
+		 name:"If",
 		 kind: Blueprint,
 		 color: 0xFF222288,
+		 //width: 75,
 		 pins: [
 			 {
 				 id: 0,
 				 kind: Input,
-				 label: "\uf04e Input",
+				 label: "\uf04e",
 				 dataType: Node,
 			 },
 			 {
 				 id: 1,
 				 kind: Output,
-				 label: "True \uf04b",
+				 label: "\uf04b",
 				 dataType: Node,
 				 color: 0xFF22AA22
 			 },
 			 {
 				 id: 2,
 				 kind: Output,
-				 label: "False \uf04b",
+				 label: "\uf04b",
 				 dataType: Node,
 				 color: 0xFFaa2222
 			 }
@@ -556,7 +557,7 @@ class FlowNode extends Node
 
 	#if hlimgui
 
-	var inputCallback: ImGuiInputTextCallbackData = null;
+	var inputCallback: ImGuiInputTextCallbackDataFunc = null;
 
 	function renderProps()
 	{

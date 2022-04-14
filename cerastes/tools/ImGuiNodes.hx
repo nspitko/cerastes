@@ -214,6 +214,8 @@ class ImGuiNodes
 				renderBlueprintNode(node);
 			case Comment:
 				renderCommentNode(node);
+			case Micro:
+				renderMicroNode(node);
 			default:
 				Utils.assert(false, 'Unknown node kind ${node.def.kind}');
 		}
@@ -403,6 +405,66 @@ class ImGuiNodes
 		var drawList: ImDrawList = NodeEditor.getNodeBackgroundDrawList( node.id );
 		drawList.addImageRounded( tile.getTexture(), headerStart, headerEnd, {x: 0, y: 0}, {x:1, y:1}, node.def.color, style.NodeRounding, ImDrawFlags.RoundCornersTop );
 		drawList.addLine( {x: headerStart.x + style.NodeBorderWidth - 1, y: headerEnd.y }, {x: headerEnd.x - style.NodeBorderWidth, y: headerEnd.y}, node.def.color, style.NodeBorderWidth / 2 );
+	}
+
+
+	function renderMicroNode( node: Node )
+	{
+		var width = node.width;
+
+		NodeEditor.beginNode( node.id );
+		ImGui.pushID( '${node.id}' );
+
+
+		node.render();
+
+		var pinStart: ImVec2 = ImGui.getCursorPos();
+
+
+		for( portId => pinId in node.pins )
+		{
+			var def = node.getPinDefForPort(portId);
+			if( def.kind == Input )
+			{
+				NodeEditor.beginPin(pinId, PinKind.Input );
+				NodeEditor.pinPivotAlignment({x:0.0,y:0.5});
+				ImGui.text( def.label );
+				NodeEditor.endPin();
+			}
+		}
+
+		var height =  ImGui.getCursorPosY() - pinStart.y;
+		ImGui.setCursorPos( pinStart );
+
+
+		for( portId => pinId in node.pins )
+		{
+			var def = node.getPinDefForPort(portId);
+			if( def.kind == Output )
+			{
+				var size: ImVec2 = ImGui.calcTextSize(def.label);
+				var posX: Int = cast (pinStart.x + width -  size.x  );
+				ImGui.setCursorPosX( posX );
+
+				NodeEditor.beginPin(pinId, PinKind.Output );
+				NodeEditor.pinPivotAlignment({x:1.0,y:0.5});
+				if( def.color != 0 )
+					ImGui.textColored( IG.colorToImVec4( def.color ), def.label );
+				else
+					ImGui.text( def.label );
+				NodeEditor.endPin();
+			}
+		}
+
+		var height2 =  ImGui.getCursorPosY() - pinStart.y;
+		var height = height > height2 ? height : height2;
+
+		ImGui.setCursorPos( pinStart );
+
+		ImGui.dummy({x: width, y: height});
+
+		ImGui.popID();
+		NodeEditor.endNode();
 	}
 
 	function findNode( nodeId: NodeId )

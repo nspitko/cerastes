@@ -72,34 +72,38 @@ import hl.UI;
  */
  class ConditionNode extends FlowNode
  {
-	 @editor("Condition","StringMultiline")
-	 public var condition: String;
+	 @editor("Condition","Array","String")
+	 public var conditions: Array<String>;
 
 	 public override function process( runner: FlowRunner )
 	 {
-
+		var idx = 0;
 		try
 		{
-			var program = runner.context.parser.parseString(condition);
+			while( idx < conditions.length )
+			{
+				var program = runner.context.parser.parseString(conditions[idx]);
 
-			var result : Bool = runner.context.interp.execute(program);
-			if( result )
-				next( pins[1], runner ); // true
-			else
-				next( pins[2], runner ); // false
+				var result : Bool = runner.context.interp.execute(program);
+				if( result )
+					next( pins[idx+1], runner ); // true
+
+				idx++;
+			}
+			next( pins[idx+1], runner ); // false
 
 
 		}
 		catch (e )
 		{
 			next( pins[2], runner ); // false
-			Utils.warning('Error:${e.message}\nWhile running conditions for node ${id}.\nInstruction was ${condition}');
+			Utils.warning('Error:${e.message}\nWhile running conditions for node ${id}.\nInstruction was ${conditions[idx]}');
 		}
 	 }
 
 	 #if hlimgui
 	 static final d: NodeDefinition = {
-		 name:"If",
+		 name:"Condition",
 		 kind: Blueprint,
 		 color: 0xFF222288,
 		 //width: 75,
@@ -107,7 +111,7 @@ import hl.UI;
 			 {
 				 id: 0,
 				 kind: Input,
-				 label: "\uf04e",
+				 label: "\uf04e Input",
 				 dataType: Node,
 			 },
 			 {
@@ -128,6 +132,56 @@ import hl.UI;
 	 };
 
 	 override function get_def() { return d; }
+
+	 override function onBeforeEditor( editor: ImGuiNodes )
+	{
+		if( conditions != null )
+		{
+			var desiredPins = conditions.length + 1;
+			for( i in 0 ... desiredPins )
+			{
+				if( !pins.exists(i+1) )
+				{
+					pins.set(i+1, editor.getNextId() );
+				}
+			}
+
+			if( pins.exists( desiredPins + 1 ) )
+				pins.remove( desiredPins + 1 );
+
+
+		}
+	}
+
+	override function getPinDefForPort( portId: PortId ) : NodePinDefinition
+	{
+		if( portId > 0 )
+		{
+			if( portId == conditions.length + 1)
+			{
+				return {
+					id: portId,
+					kind: Output,
+					label: '\uf04e False',
+					dataType: Node,
+					color: 0xFFaa2222
+				}
+			}
+			else
+			{
+				return {
+					id: portId,
+					kind: Output,
+					label: '\uf04e True ${portId}',
+					dataType: Node,
+					color: 0xFF22AA22
+				}
+			}
+
+		}
+
+		return super.getPinDefForPort( portId );
+	}
 	 #end
  }
 

@@ -363,40 +363,6 @@ class ImGuiTools {
 
 	}
 
-	public static inline function scaleVec2( vec: ImVec2, scale: Float )
-	{
-		vec.x = Math.floor( vec.x * scale );
-		vec.y = Math.floor( vec.y * scale );
-		return vec;
-	}
-
-	public static function scaleAllStyle( style: ImGuiStyle, scale: Float )
-	{
-		style.WindowPadding = scaleVec2( style.WindowPadding, scale );
-		style.WindowRounding = Math.floor( style.WindowRounding * scale );
-		style.WindowMinSize = scaleVec2( style.WindowMinSize, scale );
-		style.ChildRounding = Math.floor( style.ChildRounding * scale );
-		style.PopupRounding = Math.floor( style.PopupRounding * scale );
-		style.FramePadding = scaleVec2( style.FramePadding, scale );
-		style.FrameRounding = Math.floor( style.FrameRounding * scale );
-		style.ItemSpacing = scaleVec2( style.ItemSpacing, scale );
-		style.ItemInnerSpacing = scaleVec2( style.ItemInnerSpacing, scale );
-		style.TouchExtraPadding = scaleVec2( style.TouchExtraPadding, scale );
-		style.IndentSpacing = Math.floor( style.IndentSpacing* scale );
-		style.ColumnsMinSpacing = Math.floor( style.ColumnsMinSpacing * scale );
-		style.ScrollbarSize = Math.floor( style.ScrollbarSize* scale );
-		style.ScrollbarRounding = Math.floor( style.ScrollbarRounding * scale );
-		style.GrabMinSize = Math.floor( style.GrabMinSize * scale );
-		style.GrabRounding = Math.floor( style.GrabRounding * scale );
-		//style.LogSliderDeadzone = scaleVec2( style.LogSliderDeadzone, scale );
-		style.TabRounding = Math.floor( style.TabRounding * scale );
-		style.TabMinWidthForCloseButton = style.TabMinWidthForCloseButton < 5000 ? Math.floor( style.TabRounding * scale ) : style.TabMinWidthForCloseButton;
-		style.DisplayWindowPadding = scaleVec2( style.DisplayWindowPadding, scale );
-		style.DisplaySafeAreaPadding = scaleVec2( style.DisplaySafeAreaPadding, scale );
-		style.MouseCursorScale = Math.floor( style.MouseCursorScale * scale );
-
-	}
-
 	public static function inputColorInt( nColor: Int ): Int
 	{
 		var c = Vector.fromColor(nColor);

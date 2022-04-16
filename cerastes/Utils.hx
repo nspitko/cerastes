@@ -287,9 +287,8 @@ class Utils
 		}
 	}
 
-	public static function getDPIScaleFactor()
+	public static function getDPIScaleFactor() : Float
 	{
-
 		var scale: Float = 1;
 		#if hlsdl
 		if( Sdl.getScreenHeight() > 1200 )

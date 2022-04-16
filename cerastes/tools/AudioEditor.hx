@@ -205,7 +205,7 @@ class AudioEditor extends ImguiTool
 		}
 
 		var trackWidth = getTrackAreaWidth( selectedCue );
-		var contentWidth = ImGui.getWindowContentRegionWidth();
+		var contentWidth = ImGui.getContentRegionAvail().x;
 		if( trackWidth > contentWidth  )
 			contentWidth = trackWidth;
 
@@ -298,7 +298,7 @@ class AudioEditor extends ImguiTool
 
 		if( cueInstance != null && cueInstance.time > 0 && !cueInstance.isFinished )
 		{
-			var contentWidth = ImGui.getWindowContentRegionWidth();
+			var contentWidth = ImGui.getContentRegionAvail().x;
 
 
 			var cursorPos = sToPixel( cueInstance.time );

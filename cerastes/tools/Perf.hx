@@ -170,7 +170,7 @@ class Perf extends ImguiTool
 
 			var min = m.begin;
 			var max = m.end;
-			var width = ImGui.getWindowContentRegionWidth() * flameScale;
+			var width = ImGui.getContentRegionAvail().x * flameScale;
 
 			renderChartTask( m, 0, min, max, width );
 

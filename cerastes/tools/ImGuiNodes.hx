@@ -799,8 +799,8 @@ class ImGuiNodes
 
 		var style = ImGui.getStyle();
 
-		var padding: ImVec2 = style != null ? style.FramePadding : {x: 2, y: 2};
-		var spacing: ImVec2 = style != null ? style.ItemSpacing : {x: 2, y: 2};
+		var padding: ImVec2 = style != null ? {x: style.FramePadding.x, y: style.FramePadding.y } : {x: 2, y: 2};
+		var spacing: ImVec2 = style != null ? {x: style.ItemSpacing.x, y: style.ItemSpacing.y } : {x: 2, y: 2};
 
 		var cursorPos: ImVec2 = ImGui.getCursorPos();
 		ImGui.setCursorPos({x: cursorPos.x + spacing.x, y: cursorPos.y - spacing.y });

@@ -149,7 +149,6 @@ import hl.UI;
 			if( pins.exists( desiredPins + 1 ) )
 				pins.remove( desiredPins + 1 );
 
-
 		}
 	}
 
@@ -713,7 +712,7 @@ class FlowNode extends Node
 				onAfterProp(field);
 
 			case "Array":
-				var val = Reflect.getProperty(this,field);
+				var val:Array<String> = Reflect.getProperty(this,field);
 				switch( args[2] )
 				{
 					case "String":
@@ -722,11 +721,7 @@ class FlowNode extends Node
 							for( idx in 0 ... val.length )
 							{
 								ImGui.pushID('idx${idx}');
-								var ret = IG.textInput( '${idx}', val[idx] );
-								if( ret != null )
-								{
-									val[idx] = ret;
-								}
+								IG.wref( ImGui.inputText( '${idx}', _), val[idx] );
 
 								if( ImGui.button("Del") )
 									val.splice(idx,1);

@@ -285,21 +285,20 @@ class ImGuiTools {
 
 		if( placeholder != null )
 		{
-			if (ImGui.inputTextWithHint(label, placeholder, textBuf, length, textInputFlags)) {
+			if (ImGui.inputTextWithHintBuf(label, placeholder, textBuf, length, textInputFlags)) {
 				return @:privateAccess String.fromUTF8(textBuf);
 			}
 		}
 		else
 		{
 
-			if (ImGui.inputText(label, textBuf, length, textInputFlags)) {
+			if (ImGui.inputTextBuf(label, textBuf, length, textInputFlags)) {
 				return @:privateAccess String.fromUTF8(textBuf);
 			}
 		}
 
 		return null;
 	}
-
 
 	public static function textInputMultiline(label: String, value: String, ?size: ImVec2 = null, ?textInputFlags: ImGuiInputTextFlags = 0, ?length: Int = 10240, ?callback: ImGuiInputTextCallbackDataFunc = null ): Null<String>
 	{
@@ -318,7 +317,7 @@ class ImGuiTools {
 		textBuf.blit(0,src,0,src.length);
 		textBuf.setUI8(src.length,0); // Null term
 
-		if (ImGui.inputTextMultiline(label, textBuf, length, size, textInputFlags, callback)) {
+		if (ImGui.inputTextMultilineBuf(label, textBuf, length, size, textInputFlags, callback)) {
 			return @:privateAccess String.fromUTF8(textBuf);
 		}
 		return null;
@@ -562,7 +561,7 @@ class ImGuiTools {
 		textBuf.blit(0,src,0,buffer.length);
 		textBuf.setUI8(buffer.length,0); // Null term
 
-		var ret = ImGui.inputText(id, textBuf, length, ImGuiInputTextFlags.AutoSelectAll | ImGuiInputTextFlags.EnterReturnsTrue  );
+		var ret = ImGui.inputTextBuf(id, textBuf, length, ImGuiInputTextFlags.AutoSelectAll | ImGuiInputTextFlags.EnterReturnsTrue  );
 
 		buffer = @:privateAccess String.fromUTF8(textBuf);
 

@@ -1,5 +1,6 @@
 package cerastes.tools;
 
+import haxe.ds.ArraySort;
 import cerastes.flow.Flow.FlowComment;
 #if hlimgui
 import cerastes.data.Nodes;
@@ -356,9 +357,13 @@ class ImGuiNodes
 		//ImGui.setCursorPos( pinStart );
 		ImGui.setCursorPosY( pinStart.y );
 
+		var ports = [ for (k in node.pins.keys()) k ];
+		ports.sort( Reflect.compare );
 
-		for( portId => pinId in node.pins )
+
+		for( portId in ports )
 		{
+			var pinId = node.pins[portId];
 			var def = node.getPinDefForPort(portId);
 			if( def.kind == Input )
 			{
@@ -373,8 +378,9 @@ class ImGuiNodes
 		ImGui.setCursorPos( pinStart );
 
 
-		for( portId => pinId in node.pins )
+		for( portId in ports )
 		{
+			var pinId = node.pins[portId];
 			var def = node.getPinDefForPort(portId);
 			if( def.kind == Output )
 			{

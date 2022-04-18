@@ -676,8 +676,8 @@ class ImGuiNodes
 		{
 			if( ImGui.menuItem( 'Delete Node') )
 			{
-				trace('Delete ${contextNodeId}');
-				trace( NodeEditor.deleteNode( contextNodeId ) );
+				var ret = NodeEditor.deleteNode( contextNodeId );
+				Utils.info('Delete ${contextNodeId} -> ${ret}');
 			}
 
 			ImGui.endPopup();
@@ -687,8 +687,8 @@ class ImGuiNodes
 		{
 			if( ImGui.menuItem( 'Delete Link') )
 			{
-				trace('Delete ${contextLinkId}');
-				trace( NodeEditor.deleteLink( contextLinkId ) );
+				var ret = NodeEditor.deleteLink( contextLinkId );
+				Utils.info('Delete ${contextLinkId} -> ${ret}');
 			}
 
 			ImGui.endPopup();

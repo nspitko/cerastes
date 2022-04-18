@@ -606,7 +606,7 @@ class AssetBrowser  extends  ImguiTool
 
 			if( ImGui.imageButton( t, {x: previewWidth, y: previewHeight}, null, 2 ) )
 			{
-				trace('Asset select: ${preview.file}');
+				Utils.info('Asset select: ${preview.file}');
 			}
 			if( ImGui.isItemVisible() )
 			{
@@ -618,7 +618,7 @@ class AssetBrowser  extends  ImguiTool
 				onItemHover(preview);
 				if( ImGui.isMouseDoubleClicked( ImGuiMouseButton.Left ) )
 				{
-					trace('Asset open: ${preview.file}');
+					Utils.info('Asset open: ${preview.file}');
 					openAssetEditor( preview );
 				}
 			}

@@ -32,6 +32,15 @@ abstract Spew(Int) {
 	var NEVER = 7;
 }
 
+@:structInit
+class LogLine
+{
+	public var level: Spew;
+	public var pos: haxe.PosInfos;
+	public var line: String;
+	public var time: Float;
+}
+
 class Utils
 {
 	public static var BREAK_ON_ASSERT = true;
@@ -48,7 +57,12 @@ class Utils
 
 	private static var startTime : Float = 0;
 
-	public inline static function writeLog(str: String, ?pos:haxe.PosInfos )
+	#if hlimgui
+	private static var log: Array<LogLine> = [];
+	private static var logStart: Float = -1;
+	#end
+
+	public inline static function writeLog(str: String, ?level: Spew, ?pos:haxe.PosInfos )
 	{
 		//str = ( Main.host.isAuth ? "[S]" : "[C]" ) + str;
 		#if hl
@@ -65,6 +79,18 @@ class Utils
 		}
 		#end
 
+		#if hlimgui
+
+		if( logStart == -1 )
+			logStart = haxe.Timer.stamp();
+
+		log.push( {
+			line: str,
+			level: level,
+			pos: pos,
+			time: haxe.Timer.stamp() - logStart
+		} );
+		#end
 
 
 		haxe.Log.trace( str, pos );
@@ -81,7 +107,7 @@ class Utils
 		#if debug
 		if( !condition )
 		{
-			writeLog('Assertion failed: ${pos.fileName}:${pos.lineNumber}: ${msg} ', pos);
+			writeLog('Assertion failed: ${pos.fileName}:${pos.lineNumber}: ${msg} ', ASSERT, pos);
 
 			#if ( butai && hl )
 			var json = Json.stringify({
@@ -117,7 +143,7 @@ class Utils
 	{
 		if( !condition )
 		{
-			writeLog('Assertion failed: ${pos.fileName}:${pos.lineNumber}: ${msg} ', pos);
+			writeLog('Assertion failed: ${pos.fileName}:${pos.lineNumber}: ${msg} ', ASSERT, pos);
 
 			#if ( butai && hl )
 			var json = Json.stringify({
@@ -148,7 +174,7 @@ class Utils
 
 	public static function warning( msg: String, ?pos:haxe.PosInfos )
 	{
-		writeLog('Warning: ${pos.fileName}:${pos.lineNumber}: ${msg} ', pos);
+		writeLog('Warning: ${pos.fileName}:${pos.lineNumber}: ${msg} ', WARNING, pos);
 		#if hl
 		if( WRITE_LOG )
 			logFile.flush();
@@ -179,7 +205,7 @@ class Utils
 
 	public static function error( msg: String, ?pos:haxe.PosInfos )
 	{
-		writeLog('ERROR: ${pos.fileName}:${pos.lineNumber}: ${msg} ', pos);
+		writeLog('ERROR: ${pos.fileName}:${pos.lineNumber}: ${msg} ', ERROR, pos);
 		#if hl
 		if( WRITE_LOG )
 			logFile.flush();
@@ -225,12 +251,17 @@ class Utils
 		Debug.debugWrite("log",json);
 		#end
 
-		writeLog('INFO: ${msg} ', pos);
+		writeLog('INFO: ${msg} ', INFO, pos);
 	}
 
+	/**
+	 * Notices always show, but aren't considered errors.
+	 * @param msg
+	 * @param pos
+	 */
 	public static function notice( msg: String, ?pos:haxe.PosInfos )
 	{
-		writeLog('NOTICE: ${pos.fileName}:${pos.lineNumber}: ${msg} ', pos);
+		writeLog('NOTICE: ${pos.fileName}:${pos.lineNumber}: ${msg} ', ALWAYS, pos);
 		#if hl
 		if( WRITE_LOG )
 			logFile.flush();

@@ -154,6 +154,9 @@ import hl.UI;
 
 	override function getPinDefForPort( portId: PortId ) : NodePinDefinition
 	{
+		if( conditions == null )
+			conditions = [];
+
 		if( portId > 0 )
 		{
 			if( portId == conditions.length + 1)
@@ -954,7 +957,7 @@ class FlowRunner
 							var program = context.parser.parseString(condition);
 
 							var result : Bool = context.interp.execute(program);
-							trace('${program} -> ${result}');
+							Utils.info('${program} -> ${result}');
 							if( !result )
 							{
 								valid = false;

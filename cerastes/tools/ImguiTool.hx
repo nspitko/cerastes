@@ -49,6 +49,7 @@ class ImguiToolManager
 
 	public static var defaultFont: ImFont;
 	public static var headingFont: ImFont;
+	public static var consoleFont: ImFont;
 
 	public static var scaleFactor = Utils.getDPIScaleFactor();
 

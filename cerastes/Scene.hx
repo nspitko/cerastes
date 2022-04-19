@@ -43,9 +43,16 @@ class Scene
     public function enter()
     {
         #if hlimgui
-        if( !Main.instance.showTools)
+        if( Main.instance.showTools)
+        {
+            Main.instance.previewEvents.addScene( s2d );
+            Main.instance.previewEvents.addScene( s3d );
+        }
+        else
         #end
+        {
             enableEvents();
+        }
 
         GlobalConsole.instance.currentScene = this;
 
@@ -113,6 +120,14 @@ class Scene
 
         app.sevents.removeScene(this.s3d);
         app.sevents.removeScene(this.s2d);
+
+        #if hlimgui
+        if( Main.instance.showTools)
+        {
+            Main.instance.previewEvents.removeScene( s2d );
+            Main.instance.previewEvents.removeScene( s3d );
+        }
+        #end
 
         s2d.dispose();
         s3d.dispose();

@@ -13,6 +13,20 @@ class CerastesConsole extends h2d.Console
 
 	}
 
+	#if hlimgui
+
+	public function externalLog( text, ?color ) {
+		super.log(text, color);
+	}
+
+	public override function log( text : String, ?color ) {
+
+		super.log(text, color);
+		Utils.writeLog( text, ALWAYS );
+	}
+
+	#end
+
 
 }
 

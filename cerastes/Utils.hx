@@ -107,7 +107,7 @@ class Utils
 		#if debug
 		if( !condition )
 		{
-			writeLog('Assertion failed: ${pos.fileName}:${pos.lineNumber}: ${msg} ', ASSERT, pos);
+			writeLog('Assertion failed: ${msg} ', ASSERT, pos);
 
 			#if ( butai && hl )
 			var json = Json.stringify({
@@ -143,7 +143,7 @@ class Utils
 	{
 		if( !condition )
 		{
-			writeLog('Assertion failed: ${pos.fileName}:${pos.lineNumber}: ${msg} ', ASSERT, pos);
+			writeLog('Assertion failed: ${msg} ', ASSERT, pos);
 
 			#if ( butai && hl )
 			var json = Json.stringify({
@@ -174,7 +174,7 @@ class Utils
 
 	public static function warning( msg: String, ?pos:haxe.PosInfos )
 	{
-		writeLog('Warning: ${pos.fileName}:${pos.lineNumber}: ${msg} ', WARNING, pos);
+		writeLog('Warning: ${msg} ', WARNING, pos);
 		#if hl
 		if( WRITE_LOG )
 			logFile.flush();
@@ -198,14 +198,14 @@ class Utils
 		}
 		#if debug
 		#if client
-		GlobalConsole.instance.console.log("Warning: " + msg, 0xFFFF00);
+		GlobalConsole.instance.console.externalLog("Warning: " + msg, 0xFFFF00);
 		#end
 		#end
 	}
 
 	public static function error( msg: String, ?pos:haxe.PosInfos )
 	{
-		writeLog('ERROR: ${pos.fileName}:${pos.lineNumber}: ${msg} ', ERROR, pos);
+		writeLog('ERROR: ${msg} ', ERROR, pos);
 		#if hl
 		if( WRITE_LOG )
 			logFile.flush();
@@ -228,7 +228,7 @@ class Utils
 			#end
 		}
 		#if client
-		GlobalConsole.instance.console.log("Error: " + msg, 0xFF0000);
+		GlobalConsole.instance.console.externalLog("Error: " + msg, 0xFF0000);
 		#end
 
 	}
@@ -251,7 +251,7 @@ class Utils
 		Debug.debugWrite("log",json);
 		#end
 
-		writeLog('INFO: ${msg} ', INFO, pos);
+		writeLog('${msg} ', INFO, pos);
 	}
 
 	/**
@@ -261,7 +261,7 @@ class Utils
 	 */
 	public static function notice( msg: String, ?pos:haxe.PosInfos )
 	{
-		writeLog('NOTICE: ${pos.fileName}:${pos.lineNumber}: ${msg} ', ALWAYS, pos);
+		writeLog('NOTICE: ${msg} ', ALWAYS, pos);
 		#if hl
 		if( WRITE_LOG )
 			logFile.flush();
@@ -269,7 +269,7 @@ class Utils
 		#if client
 		#if debug
 		if( GlobalConsole.instance != null &&  GlobalConsole.instance.console != null )
-			GlobalConsole.instance.console.log(msg, 0xFFFFFF);
+			GlobalConsole.instance.console.externalLog(msg, 0xFFFFFF);
 		#end
 		#end
 	}

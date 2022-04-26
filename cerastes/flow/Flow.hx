@@ -874,9 +874,15 @@ class FlowRunner
 		context.interp.variables.set(name, value );
 	}
 
-	public function run()
+	public function run( ?nodeId: NodeId = 0 )
 	{
-		root.process(this);
+		if( nodeId != 0 )
+		{
+			var target = lookupNodeById( nodeId );
+			target.process(this);
+		}
+		else
+			root.process(this);
 	}
 
 	public function jump( id: String )
@@ -893,7 +899,7 @@ class FlowRunner
 
 	}
 
-	public function jumpFile( file: String )
+	public function jumpFile( file: String, ?nodeId = 0 )
 	{
 		var hasExited = false;
 
@@ -913,7 +919,7 @@ class FlowRunner
 			hasExited = true;
 			return handled;
 		} );
-		childRunner.run();
+		childRunner.run(nodeId);
 	}
 
 	function lookupNodeByPin( pinId: PinId )

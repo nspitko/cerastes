@@ -73,7 +73,11 @@ class ImGuiNodes
 
 	var iconWidth: Float = 0;
 
+	public var onContext: ( nodeId: NodeId, pinId: PinId, linkId: LinkId ) -> Void = null;
 	public var createLink: (sourceId: PinId, destId: PinId, id: Int) -> Link = (sourceId: PinId, destId: PinId, id: Int) -> { var l: Link = { sourceId: sourceId, destId: destId, id: id }; return l; };
+
+	public var shouldNavigateToContent = false;
+	public var canSuspend = false;
 
 	public function new()
 	{
@@ -191,6 +195,8 @@ class ImGuiNodes
 		handleEvents();
 
 		NodeEditor.end();
+
+		canSuspend = true;
 	}
 
 	function getNode(nodeId: NodeId )
@@ -241,6 +247,12 @@ class ImGuiNodes
 			var pos: ImVec2 = NodeEditor.getNodePosition(node.id );
 			node.editorData.x = pos.x;
 			node.editorData.y = pos.y;
+		}
+
+		if( shouldNavigateToContent )
+		{
+			//NodeEditor.navigateToContent();
+			//shouldNavigateToContent = false;
 		}
 
 	}
@@ -617,30 +629,32 @@ class ImGuiNodes
 		NodeEditor.endDelete();
 
 
-
-		if( IG.wref( NodeEditor.showNodeContextMenu( _ ), contextNodeId ) )
+		if( canSuspend )
 		{
 			NodeEditor.suspend();
-			ImGui.openPopup("node_rc");
+			if( IG.wref( NodeEditor.showNodeContextMenu( _ ), contextNodeId ) )
+			{
+				//NodeEditor.suspend();
+				ImGui.openPopup("node_rc");
+				//NodeEditor.resume();
+			}
+
+			if( IG.wref( NodeEditor.showLinkContextMenu( _ ), contextLinkId ) )
+			{
+				//NodeEditor.suspend();
+				ImGui.openPopup("link_rc");
+				//NodeEditor.resume();
+			}
+
+			if( IG.wref( NodeEditor.showPinContextMenu( _ ), contextPinId ) )
+			{
+				//NodeEditor.suspend();
+				ImGui.openPopup("pin_rc");
+				//NodeEditor.resume();
+			}
+
 			NodeEditor.resume();
 		}
-
-		if( IG.wref( NodeEditor.showLinkContextMenu( _ ), contextLinkId ) )
-		{
-			NodeEditor.suspend();
-			ImGui.openPopup("link_rc");
-			NodeEditor.resume();
-		}
-
-		if( IG.wref( NodeEditor.showPinContextMenu( _ ), contextPinId ) )
-		{
-			NodeEditor.suspend();
-			ImGui.openPopup("pin_rc");
-			NodeEditor.resume();
-		}
-
-
-		popups();
 
 		//Handle node movement
 
@@ -665,6 +679,15 @@ class ImGuiNodes
 			}
 		}
 
+
+		if( canSuspend )
+		{
+			NodeEditor.suspend();
+			popups();
+			NodeEditor.resume();
+		}
+
+
 	}
 
 	var state: ComboFilterState = {};
@@ -674,6 +697,9 @@ class ImGuiNodes
 	{
 		if( ImGui.beginPopup("node_rc") )
 		{
+			if( onContext != null )
+				onContext( contextNodeId, 0, 0 );
+
 			if( ImGui.menuItem( 'Delete Node') )
 			{
 				var ret = NodeEditor.deleteNode( contextNodeId );
@@ -685,6 +711,9 @@ class ImGuiNodes
 
 		if( ImGui.beginPopup("link_rc") )
 		{
+			if( onContext != null )
+				onContext( 0, 0, contextLinkId );
+
 			if( ImGui.menuItem( 'Delete Link') )
 			{
 				var ret = NodeEditor.deleteLink( contextLinkId );
@@ -696,6 +725,9 @@ class ImGuiNodes
 
 		if( ImGui.beginPopup("pin_rc") )
 		{
+			//if( onContext != null )
+			//	onContext( 0, contextPinId, 0  );
+
 			if( ImGui.menuItem( 'Disconnect All') )
 			{
 

@@ -63,6 +63,7 @@ class FlowEditor extends ImguiTool
 		// TEST
 		var t: EntryNode = {};
 		nodes.addNode(t, 25, 25);
+		nodes.onContext = onContext;
 
 		for( label => cls in cerastes.Config.flowEditorNodes )
 		{
@@ -74,6 +75,17 @@ class FlowEditor extends ImguiTool
 		windowHeight = dimensions.height;
 
 		//openFile( "data/nested_test.flow" );
+	}
+
+	function onContext( nodeId: NodeId, pinId: PinId, linkId: LinkId )
+	{
+		if( nodeId != 0 )
+		{
+			if( fileName != null && ImGui.menuItem( 'Live Jump') )
+			{
+				GameState.flow.jumpFile( fileName, nodeId );
+			}
+		}
 	}
 
 
@@ -371,6 +383,8 @@ class FlowEditor extends ImguiTool
 		// Decorate links
 		for( link in nodes.links )
 			decorateLink( cast link );
+
+		nodes.shouldNavigateToContent = true;
 
 	}
 

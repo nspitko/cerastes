@@ -9,12 +9,11 @@ import cerastes.tools.ImguiTools.ImVec2Impl;
 import imgui.ImGui;
 import cerastes.tools.ImguiTools.IG;
 import hl.UI;
-#else
-typedef NodeId = Int;
-typedef PinId = Int;
-typedef LinkId = Int;
 #end
 
+abstract NodeId32(Int) from NodeId to NodeId {}
+abstract PinId32(Int) from PinId to PinId {}
+abstract LinkId32(Int) from LinkId to LinkId {}
 
 @:enum abstract NodeKind(Int) from Int to Int {
 	var Blueprint = 0;
@@ -66,10 +65,9 @@ typedef PortId = Int;
 @:allow(cerastes.tools.ImGuiNodes)
 @:structInit class Node
 {
-
-	public var id: NodeId = -1;
+	public var id: NodeId32 = -1;
 	@serializeType("haxe.ds.IntMap")
-	public var pins: Map<PortId,PinId> = [];
+	public var pins: Map<PortId,PinId32> = [];
 	#if hlimgui
 	var def(get, never): NodeDefinition;
 	@serializeType("cerastes.data.EditorData")
@@ -127,11 +125,11 @@ typedef PortId = Int;
 		}
 	}
 
-	function getPinDefForPin( pinId: PinId )
+	function getPinDefForPin( pinId: PinId32 )
 	{
-		for( portId => otherPinId in pins )
+		for( portId => otherPinId32 in pins )
 		{
-			if( pinId == otherPinId )
+			if( pinId == otherPinId32 )
 				return getPinDefForPort( portId );
 		}
 
@@ -143,7 +141,7 @@ typedef PortId = Int;
 		return def.pins[portId];
 	}
 
-	function getDefaultInputPinId(): PinId
+	function getDefaultInputPinId32(): PinId32
 	{
 		for( portId => pinId in pins )
 		{
@@ -179,9 +177,9 @@ typedef PortId = Int;
 
 @:structInit class Link
 {
-	public var id: LinkId;
-	public var sourceId: PinId;
-	public var destId: PinId;
+	public var id: LinkId32;
+	public var sourceId: PinId32;
+	public var destId: PinId32;
 	#if hlimgui
 	@noSerialize
 	public var color: ImVec4 = null;

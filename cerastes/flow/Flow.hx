@@ -1,9 +1,9 @@
 package cerastes.flow;
 
+#if hlimgui
+import imgui.ImGuiMacro.wref;
 import game.GameState;
 import cerastes.fmt.FlowResource;
-import cerastes.data.Nodes;
-#if hlimgui
 import haxe.rtti.Meta;
 import cerastes.tools.ImGuiNodes;
 import cerastes.tools.ImguiTool;
@@ -12,6 +12,7 @@ import imgui.NodeEditor;
 import imgui.ImGui;
 import cerastes.tools.ImguiTools.IG;
 import hl.UI;
+import cerastes.data.Nodes;
 #end
 
 /**
@@ -513,7 +514,7 @@ class FlowNode extends Node
 	 * @param runner
 	 */
 	@:access(cerastes.flow.Flow.FlowRunner)
-	public function next( pin: PinId, runner: FlowRunner )
+	public function next( pin: PinId32, runner: FlowRunner )
 	{
 		for( link in runner.links )
 		{
@@ -564,7 +565,7 @@ class FlowNode extends Node
 	 * @param runner
 	 */
 	@:access(cerastes.flow.Flow.FlowRunner)
-	public function getOutputs( pin: PinId, runner: FlowRunner )
+	public function getOutputs( pin: PinId32, runner: FlowRunner )
 	{
 		var out = [];
 		for( link in runner.links )
@@ -724,7 +725,7 @@ class FlowNode extends Node
 							for( idx in 0 ... val.length )
 							{
 								ImGui.pushID('idx${idx}');
-								IG.wref( ImGui.inputText( '${idx}', _), val[idx] );
+								wref( ImGui.inputText( '${idx}', _), val[idx] );
 
 								if( ImGui.button("Del") )
 									val.splice(idx,1);
@@ -874,7 +875,7 @@ class FlowRunner
 		context.interp.variables.set(name, value );
 	}
 
-	public function run( ?nodeId: NodeId = 0 )
+	public function run( nodeId: NodeId32 = 0 )
 	{
 		if( nodeId != 0 )
 		{
@@ -899,7 +900,7 @@ class FlowRunner
 
 	}
 
-	public function jumpFile( file: String, ?nodeId = 0 )
+	public function jumpFile( file: String, nodeId = 0 )
 	{
 		var hasExited = false;
 
@@ -922,19 +923,19 @@ class FlowRunner
 		childRunner.run(nodeId);
 	}
 
-	function lookupNodeByPin( pinId: PinId )
+	function lookupNodeByPin( pinId: PinId32 )
 	{
 		for( n in nodes )
 		{
-			for( portId => otherPinId in n.pins )
-				if( otherPinId == pinId )
+			for( portId => otherPinId32 in n.pins )
+				if( otherPinId32 == pinId )
 					return n;
 		}
 
 		return null;
 	}
 
-	function lookupNodeById( nodeId: NodeId )
+	function lookupNodeById( nodeId: NodeId32 )
 	{
 		for( n in nodes )
 		{
@@ -945,7 +946,7 @@ class FlowRunner
 		return null;
 	}
 
-	public function getOutputs( node: FlowNode, pinId: PinId) : Array<FlowNode>
+	public function getOutputs( node: FlowNode, pinId: PinId32) : Array<FlowNode>
 	{
 		var out = [];
 		for( l in links )

@@ -241,7 +241,7 @@ class CDParser {
 				case '"'.code:
 					return parseString();
 				case '0'.code, '1'.code, '2'.code, '3'.code, '4'.code, '5'.code, '6'.code, '7'.code, '8'.code, '9'.code, '-'.code:
-					return parseNumber(c);
+					return parseNumber(c, assumeType);
 				default:
 					invalidChar();
 			}
@@ -399,10 +399,14 @@ class CDParser {
 		}
 	}
 
-	inline function parseNumber(c:Int):Dynamic {
+	inline function parseNumber(c:Int, ?assumeType: String):Dynamic {
 		var start = pos - 1;
 		var minus = c == '-'.code, digit = !minus, zero = c == '0'.code;
 		var point = false, e = false, pm = false, end = false;
+
+		if( assumeType != null )
+			trace( assumeType );
+
 		while (true) {
 			c = nextChar();
 			switch (c) {
@@ -444,6 +448,14 @@ class CDParser {
 			}
 			if (end)
 				break;
+		}
+
+		if( assumeType == "hl.I64" )
+		{
+			var inull = Std.parseInt( str.substr(start, pos - start) );
+			var i: Int = inull != null ? inull : 0;
+			var i64: hl.I64 = i;
+			return i64;
 		}
 
 		var f = Std.parseFloat(str.substr(start, pos - start));

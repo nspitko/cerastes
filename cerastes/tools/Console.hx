@@ -207,11 +207,11 @@ class Console extends ImguiTool
 
 		//ImGui.tableSetColumnEnabled( 0, showTime );
 		ImGui.tableSetupColumn("Timestamp", ImGuiTableColumnFlags.WidthFixed, 50 * scaleFactor );
-		var flags = ImGui.tableGetColumnFlags();
+		//var flags = ImGui.tableGetColumnFlags();
 
 		//ImGui.tableSetColumnEnabled( 1, showPos );
 		ImGui.tableSetupColumn("Pos", ImGuiTableColumnFlags.WidthFixed | ImGuiTableColumnFlags.DefaultHide , 175 * scaleFactor );
-		var flags = ImGui.tableGetColumnFlags();
+		//var flags = ImGui.tableGetColumnFlags();
 
 		ImGui.tableSetupColumn("Text", ImGuiTableColumnFlags.WidthStretch );
 

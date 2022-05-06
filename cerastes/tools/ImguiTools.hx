@@ -660,6 +660,11 @@ class ImGuiTools {
         return false;
     }
 
+	static function addFont( ttf: String, addGlyphs: Bool )
+	{
+		var atlas = ImGui.getFontAtlas();
+	}
+
 	#end
 }
 #end

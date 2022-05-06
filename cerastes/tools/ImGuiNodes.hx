@@ -73,8 +73,8 @@ class ImGuiNodes
 
 	var iconWidth: Float = 0;
 
-	public var onContext: ( nodeId: NodeId, pinId: PinId, linkId: LinkId ) -> Void = null;
-	public var createLink: (sourceId: PinId, destId: PinId, id: Int) -> Link = (sourceId: PinId, destId: PinId, id: Int) -> { var l: Link = { sourceId: sourceId, destId: destId, id: id }; return l; };
+	public var onContext: ( nodeId: NodeId32, pinId: PinId32, linkId: LinkId32 ) -> Void = null;
+	public var createLink: (sourceId: PinId32, destId: PinId32, id: Int) -> Link = (sourceId: PinId32, destId: PinId32, id: Int) -> { var l: Link = { sourceId: sourceId, destId: destId, id: id }; return l; };
 
 	public var shouldNavigateToContent = false;
 	public var canSuspend = false;
@@ -89,10 +89,10 @@ class ImGuiNodes
 	{
 		for( l in links )
 		{
-			var startPinId = l.sourceId;
-			var startNode = queryPin( startPinId );
+			var startPinId32 = l.sourceId;
+			var startNode = queryPin( startPinId32 );
 
-			var startPinDef = startNode.getPinDefForPin(startPinId);
+			var startPinDef = startNode.getPinDefForPin(startPinId32);
 
 			if( startPinDef.color != 0 )
 				l.color = IG.colorToImVec4( startPinDef.color );
@@ -135,7 +135,7 @@ class ImGuiNodes
 	}
 
 
-	function idExists(id: NodeId  )
+	function idExists(id: NodeId32  )
 	{
 		for( n in nodes )
 			if( n.id == id)
@@ -144,7 +144,7 @@ class ImGuiNodes
 		return false;
 	}
 
-	function queryPin( pinId: PinId ) : Node
+	function queryPin( pinId: PinId32 ) : Node
 	{
 		for( node in nodes )
 		{
@@ -199,7 +199,7 @@ class ImGuiNodes
 		canSuspend = true;
 	}
 
-	function getNode(nodeId: NodeId )
+	function getNode(nodeId: NodeId32 )
 	{
 		for( n in nodes )
 		{
@@ -346,6 +346,7 @@ class ImGuiNodes
 
 
 		var headerStart: ImVec2 = ImGui.getCursorPos();
+		var headerStartS: ImVec2S = { x: headerStart.x, y: headerStart.y };
 
 		headerStart.x -= style.NodePadding.x;
 		headerStart.y -= style.NodePadding.y;
@@ -358,6 +359,7 @@ class ImGuiNodes
 		}
 
 		var headerEnd: ImVec2 = ImGui.getCursorPos();
+		var headerEndS: ImVec2S = { x: headerEnd.x, y: headerEnd.y };
 		headerEnd.x = headerStart.x + width  + style.NodePadding.z;
 
 		ImGui.setCursorPosY( headerEnd.y + style.NodeBorderWidth * 8 );
@@ -375,7 +377,7 @@ class ImGuiNodes
 
 		for( portId in ports )
 		{
-			var pinId = node.pins[portId];
+			var pinId: Int = node.pins[portId];
 			var def = node.getPinDefForPort(portId);
 			if( def.kind == Input )
 			{
@@ -392,7 +394,7 @@ class ImGuiNodes
 
 		for( portId in ports )
 		{
-			var pinId = node.pins[portId];
+			var pinId: Int = node.pins[portId] == null ? 0 : node.pins[portId];
 			var def = node.getPinDefForPort(portId);
 			if( def.kind == Output )
 			{
@@ -421,7 +423,7 @@ class ImGuiNodes
 		NodeEditor.endNode();
 
 		var drawList: ImDrawList = NodeEditor.getNodeBackgroundDrawList( node.id );
-		drawList.addImageRounded( tile.getTexture(), headerStart, headerEnd, {x: 0, y: 0}, {x:1, y:1}, node.def.color, style.NodeRounding, ImDrawFlags.RoundCornersTop );
+		drawList.addImageRounded( tile.getTexture(), headerStartS, headerEndS, {x: 0, y: 0}, {x:1, y:1}, node.def.color, style.NodeRounding, ImDrawFlags.RoundCornersTop );
 		drawList.addLine( {x: headerStart.x + style.NodeBorderWidth - 1, y: headerEnd.y }, {x: headerEnd.x - style.NodeBorderWidth, y: headerEnd.y}, node.def.color, style.NodeBorderWidth / 2 );
 	}
 
@@ -485,7 +487,7 @@ class ImGuiNodes
 		NodeEditor.endNode();
 	}
 
-	function findNode( nodeId: NodeId )
+	function findNode( nodeId: NodeId32 )
 	{
 		for( n in nodes )
 		{
@@ -496,7 +498,7 @@ class ImGuiNodes
 		return null;
 	}
 
-	function findLink( linkId: LinkId )
+	function findLink( linkId: LinkId32 )
 	{
 		for( l in links )
 		{
@@ -512,8 +514,10 @@ class ImGuiNodes
 		if( NodeEditor.beginCreate() )
 		{
 
-			var endPinId: PinId = -1;
+
 			var startPinId: PinId = -1;
+			var endPinId: PinId = -1;
+
 
 			var startRef = new hl.Ref(startPinId);
 			var endRef = new hl.Ref(endPinId);
@@ -567,7 +571,6 @@ class ImGuiNodes
 
 			if( NodeEditor.queryNewNode( startRef ) )
 			{
-
 				var startNode = queryPin( startPinId );
 				var startPinDef = startNode.getPinDefForPin(startPinId);
 
@@ -726,7 +729,7 @@ class ImGuiNodes
 		if( ImGui.beginPopup("pin_rc") )
 		{
 			//if( onContext != null )
-			//	onContext( 0, contextPinId, 0  );
+			//	onContext( 0, contextPinId32, 0  );
 
 			if( ImGui.menuItem( 'Disconnect All') )
 			{
@@ -759,10 +762,10 @@ class ImGuiNodes
 
 					addNode( n, pos.x, pos.y );
 
-					var targetPinId = n.getDefaultInputPinId();
-					if( targetPinId != -1 )
+					var targetPinId32 = n.getDefaultInputPinId32();
+					if( targetPinId32 != -1 )
 					{
-						var link = createLink(queryPinId, targetPinId, getNextId());
+						var link = createLink(queryPinId, targetPinId32, getNextId());
 
 						var startNode = queryPin( queryPinId );
 
@@ -848,9 +851,12 @@ class ImGuiNodes
 		var rectMin: ImVec2 = {x: screenPos.x - padding.x, y: screenPos.y - padding.y };
 		var rectMax: ImVec2 = {x: screenPos.x + size.x + padding.x, y: screenPos.y + size.y + padding.y };
 
+		var rectMinS: ImVec2S = {x: rectMin.x, y: rectMin.y}
+		var rectMaxS: ImVec2S = {x: rectMax.x, y: rectMax.y}
+
 
 		var drawList = ImGui.getWindowDrawList();
-		drawList.addRectFilled(rectMin, rectMax, color, size.y * 0.15);
+		drawList.addRectFilled(rectMinS, rectMaxS, color, size.y * 0.15);
 		ImGui.text(label);
 	};
 }

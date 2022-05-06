@@ -23,6 +23,8 @@ import hl.UI;
 import cerastes.tools.ImguiTools.IG;
 import cerastes.tools.ImGuiNodes;
 
+import cerastes.data.Nodes;
+
 enum FlowEditorMode {
 	Select;
 	AddNode;
@@ -58,7 +60,7 @@ class FlowEditor extends ImguiTool
 	public function new()
 	{
 		nodes = new ImGuiNodes();
-		nodes.createLink = (sourceId: PinId, destId: PinId, id: Int)  -> { var l: FlowLink = { sourceId: sourceId, destId: destId, id: id }; return l; };
+		nodes.createLink = (sourceId: PinId32, destId: PinId32, id: Int)  -> { var l: FlowLink = { sourceId: sourceId, destId: destId, id: id }; return l; };
 
 		// TEST
 		var t: EntryNode = {};
@@ -77,7 +79,7 @@ class FlowEditor extends ImguiTool
 		//openFile( "data/nested_test.flow" );
 	}
 
-	function onContext( nodeId: NodeId, pinId: PinId, linkId: LinkId )
+	function onContext( nodeId: NodeId32, pinId: PinId32, linkId: LinkId32 )
 	{
 		if( nodeId != 0 )
 		{

@@ -13,6 +13,7 @@ import imgui.ImGui;
 import cerastes.tools.ImguiTools.IG;
 import hl.UI;
 import cerastes.data.Nodes;
+import cerastes.tools.FlowDebugger;
 #end
 
 /**
@@ -554,6 +555,11 @@ class FlowNode extends Node
 				}
 				var target = runner.lookupNodeByPin( link.destId );
 				GameState.seen.push( '${runner.file}-${link.sourceId}-${link.destId}' );
+
+				#if hlimgui
+				FlowDebugger.addHistory(runner, this, target, pin);
+				#end
+
 				target.process( runner );
 			}
 		}

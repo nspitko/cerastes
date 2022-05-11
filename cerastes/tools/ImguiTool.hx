@@ -1,6 +1,8 @@
 
 package cerastes.tools;
 
+import h3d.mat.Texture;
+import imgui.types.ImFontAtlas.ImFontTexData;
 #if hlimgui
 import imgui.ImGui;
 
@@ -191,6 +193,81 @@ class ImguiToolManager
 		for( t in tools )
 			t.render( e );
 		Metrics.end();
+	}
+
+	public static function addFont( file: String, size: Float, includeGlyphs: Bool = false )
+	{
+		var dpiScale = Utils.getDPIScaleFactor();
+		Utils.info('Add font: ${file} ${size*dpiScale}px');
+
+		var atlas = ImGui.getFontAtlas();
+		//atlas.addFontDefault();
+		var font = atlas.addFontFromFileTTF(file, size * dpiScale);
+
+		var facfg = new ImFontConfig();
+
+		#if imjp
+		var ranges = new hl.NativeArray<hl.UI16>(11);
+		// fa
+		ranges[0] = 0xf000;
+		ranges[1] = 0xf6ff;
+		// hira
+		ranges[2] = 0x3040;
+		ranges[3] = 0x309f;
+		// kata
+		ranges[4] = 0x30A0;
+		ranges[5] = 0x30FF;
+		// Half
+		ranges[6] = 0xFF00;
+		ranges[7] = 0xFFEF;
+		// CJK
+		ranges[8] = 0x4e00;
+		ranges[9] = 0x9FAF;
+		ranges[10] = 0;
+
+		var jpcfg : ImFontConfig  = {
+			MergeMode: true
+		};
+		#else
+		var ranges = new hl.NativeArray<hl.UI16>(3);
+		// fa
+		ranges[0] = 0xf000;
+		ranges[1] = 0xf6ff;
+		ranges[2] = 0;
+		#end
+
+		#if imjp
+		atlas.addFontFromFileTTF("res/tools/NotoSansJP-Regular.otf",  size * dpiScale, jpcfg, ranges);
+		#end
+
+		if( includeGlyphs )
+		{
+			facfg.MergeMode = true;
+			facfg.GlyphMinAdvanceX = 18 * dpiScale;
+			atlas.addFontFromFileTTF("res/tools/fa-regular-400.ttf",  size * dpiScale * 0.8, facfg, ranges);
+			atlas.addFontFromFileTTF("res/tools/fa-solid-900.ttf",  size * dpiScale * 0.8, facfg, ranges);
+		}
+		atlas.build();
+
+		return font;
+	}
+
+	public static function buildFonts()
+	{
+		var fontInfo: ImFontTexData = new ImFontTexData();
+		var atlas = ImGui.getFontAtlas();
+		atlas.getTexDataAsRGBA32( fontInfo );
+
+		// create font texture
+		var textureSize = fontInfo.width * fontInfo.height * 4;
+		var fontTexture = Texture.fromPixels(new hxd.Pixels(
+			fontInfo.width,
+			fontInfo.height,
+			fontInfo.buffer.toBytes(textureSize),
+			hxd.PixelFormat.RGBA));
+
+		atlas.setTexId( fontTexture );
+		Utils.info('Font atlas built: ${fontInfo.width}x${fontInfo.height}');
 	}
 }
 

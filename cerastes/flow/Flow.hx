@@ -248,6 +248,7 @@ class FileNode extends FlowNode
 		}
 
 		childRunner = hxd.Res.loader.loadCache( file, FlowResource ).toFlow( runner.context );
+		childRunner.parent = runner;
 		childRunner.registerOnExit( this, (handled: Bool) -> {
 			if( hasExited )
 			{
@@ -854,6 +855,9 @@ class FlowRunner
 
 	var file: String;
 
+	// If set, points to the runner that created this one
+	public var parent: FlowRunner = null;
+
 	/**
 	 * OnExit is called when a flow reaches it's exit node.
 	 * Mainly used for
@@ -917,6 +921,7 @@ class FlowRunner
 		}
 
 		var childRunner = hxd.Res.loader.loadCache( file, FlowResource ).toFlow( context );
+		childRunner.parent = this;
 		childRunner.registerOnExit( this, (handled: Bool) -> {
 			if( hasExited )
 			{

@@ -470,37 +470,6 @@ class FlowEditor extends ImguiTool
 			}
 			ImGui.endMenuBar();
 		}
-
-		if( ImGui.beginMenuBar() )
-		{
-			if( ImGui.beginMenu("File", true) )
-			{
-				if ( fileName != null && ImGui.menuItem("Save", "Ctrl+S"))
-				{
-					save();
-				}
-				if (ImGui.menuItem("Save As..."))
-				{
-					saveAs();
-				}
-				ImGui.separator();
-				if( ImGui.menuItem("Load"))
-				{
-					Utils.error("STUB!");
-				}
-
-				ImGui.endMenu();
-			}
-			if( ImGui.beginMenu("View", true) )
-			{
-				if (ImGui.menuItem("Reset docking"))
-				{
-					dockCond = ImGuiCond.Always;
-				}
-				ImGui.endMenu();
-			}
-			ImGui.endMenuBar();
-		}
 	}
 
 	public override inline function windowID()

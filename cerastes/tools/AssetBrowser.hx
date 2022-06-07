@@ -15,7 +15,6 @@ import cerastes.tools.ImguiTool.ImguiToolManager;
 import h2d.Text;
 import h2d.Font;
 import cerastes.tools.ImguiTools.IG;
-import cerastes.tools.ImguiTools.ImVec2Impl;
 import imgui.ImGuiDrawable.ImGuiDrawableBuffers;
 import h3d.mat.Texture;
 import h2d.Bitmap;

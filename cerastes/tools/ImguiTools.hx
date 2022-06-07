@@ -18,44 +18,13 @@ import h3d.Vector;
 import h2d.col.Point;
 import h2d.Tile;
 
-class ImVec2Impl {
-	public var x:Single;
-	public var y:Single;
 
-	public function new() { x = 0; y = 0; }
-	public function set(x:Float, y:Float) {
-		this.x = x;
-		this.y = y;
-	}
-}
 
 // https://github.com/ocornut/imgui/issues/1658#issuecomment-427426154
 @:structInit class ComboFilterState {
 	public var activeIdx: Int = 0;				// Index of currently 'active' item by use of up/down keys
 	public var selectionChanged: Bool = false;	// Flag to help focus the correct item when selecting active item
 	public var lastInput: String = "";			// Tracks the last human input so we know whether to re-run the suggestion filter
-}
-
-private class ImVec4Impl {
-
-	public var x:Single;
-	public var y:Single;
-	public var z:Single;
-	public var w:Single;
-
-	public function new() { x = 0; y = 0; z = 0; w = 0; }
-	public function set(x:Float, y:Float, z:Float, w:Float) {
-		this.x = x;
-		this.y = y;
-		this.z = z;
-		this.w = w;
-	}
-	public function setColor(c:Int) {
-		this.x = (c >> 16 & 0xff) / 0xff;
-		this.y = (c >> 8  & 0xff) / 0xff;
-		this.z = (c       & 0xff) / 0xff;
-		this.w = (c >> 24 & 0xff) / 0xff;
-	}
 }
 
 @:structInit
@@ -117,11 +86,11 @@ class ImGuiTools {
 
 	#if !macro
 
-	public static var point:ImVec2Impl = new ImVec2Impl();
-	public static var point2:ImVec2Impl = new ImVec2Impl();
-	public static var point3:ImVec2Impl = new ImVec2Impl();
-	public static var vec:ImVec4Impl = new ImVec4Impl();
-	public static var vec2:ImVec4Impl = new ImVec4Impl();
+	public static var point:ImVec2 = {};
+	public static var point2:ImVec2 = {};
+	public static var point3:ImVec2 = {};
+	public static var vec:ImVec4 = {};
+	public static var vec2:ImVec4 = {};
 	public static var textures:Map<h3d.mat.Texture, Int> = [];
 
 	public static function image(tile:Tile, ?scale: ImVec2, ?tint:Int, ?borderColor:Int) @:privateAccess {

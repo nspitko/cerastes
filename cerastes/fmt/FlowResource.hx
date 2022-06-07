@@ -28,11 +28,11 @@ class FlowResource extends Resource
 	static var version = 1;
 
 
-	public function toFlow( ?context: FlowContext )
+	public function toFlow( ?context: FlowContext, ?pos:haxe.PosInfos )
 	{
 		var data = getData();
 
-		return new FlowRunner( this, context );
+		return new FlowRunner( this, context, pos );
 	}
 
 

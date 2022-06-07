@@ -9,7 +9,6 @@ import haxe.Constraints;
 import cerastes.tools.ImguiTools.ComboFilterState;
 import cerastes.tools.ImguiTools.IG;
 import imgui.NodeEditor;
-import cerastes.tools.ImguiTools.ImVec2Impl;
 import imgui.ImGui;
 
 @:structInit

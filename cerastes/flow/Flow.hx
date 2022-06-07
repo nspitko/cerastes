@@ -212,7 +212,7 @@ import cerastes.tools.FlowDebugger;
 
 	override function get_def() { return d; }
 	override function get_label() { return comment; }
-	override function get_size() { return {x: commentWidth, y: commentHeight}; }
+	override function get_size(): ImVec2 { return {x: commentWidth, y: commentHeight}; }
 	override function setSize(v: ImVec2)
 	{
 		// @bugbug What the fuck are these numbers
@@ -855,6 +855,12 @@ class FlowRunner
 
 	var file: String;
 
+	static var runnerIdx = 0;
+	public var runnerId(default, null): Int = 0;
+
+	// If set, indicates what created us
+	public var instigator(default, null): haxe.PosInfos;
+
 	// If set, points to the runner that created this one
 	public var parent: FlowRunner = null;
 
@@ -867,8 +873,10 @@ class FlowRunner
 	public function onExit(): Bool;
 
 
-	public function new( res: FlowResource, ?ctx: FlowContext )
+	public function new( res: FlowResource, ?ctx: FlowContext, ?pos:haxe.PosInfos )
 	{
+		runnerId = runnerIdx++;
+		this.instigator = pos;
 		this.res = res;
 		this.nodes = res.getData().nodes;
 		this.links = res.getData().links;

@@ -440,7 +440,7 @@ class AudioEditor extends ImguiTool
 		ImGui.popStyleVar();
 	}
 
-	var dragLast = -1;
+	var dragLast: Float = -1;
 	var dragItem: SoundCueItem = null;
 
 	function renderItem( item: SoundCueItem, height: Float, pos: ImVec2)

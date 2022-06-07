@@ -225,9 +225,8 @@ class ImguiToolManager
 		ranges[9] = 0x9FAF;
 		ranges[10] = 0;
 
-		var jpcfg : ImFontConfig  = {
-			MergeMode: true
-		};
+		var jpcfg = new ImFontConfig();
+		jpcfg.MergeMode = true;
 		#else
 		var ranges = new hl.NativeArray<hl.UI16>(3);
 		// fa

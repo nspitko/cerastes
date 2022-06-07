@@ -1,6 +1,7 @@
 
 package cerastes.tools;
 
+import haxe.rtti.Meta;
 import haxe.crypto.Md5;
 #if hlimgui
 
@@ -27,6 +28,8 @@ class FlowHistoryElement
 	public var fromNode: FlowNode;
 	public var toNode: FlowNode;
 	public var fromPin: PinId32;
+	public var runnerId: Int;
+	public var pos: haxe.PosInfos;
 }
 
 @:keep
@@ -48,6 +51,8 @@ class FlowDebugger extends ImguiTool
 	var windowHeight: Float = 0;
 
 	static var stackChanged = true;
+
+	var selectedItem: FlowHistoryElement = null;
 
 
 	public function new()
@@ -129,27 +134,38 @@ class FlowDebugger extends ImguiTool
 
 		for( h in flowHistory)
 		{
-			var checksum = Md5.encode( '${h.file}-${h.toNode.id}' );
-			checksum = checksum.substr(-5);
-
-			var y: Float = windowPos.y + h.depth * nodeHeight;
-			var n = h.toNode;
-			var pos: ImVec2S = { x: x, y: y };
-			d.addRectFilled(pos, { x: x + nodeWidth, y: y + nodeWidth }, @:privateAccess n.def.color, style.TabRounding, ImDrawFlags.RoundCornersAll  );
-			d.addText( { x: pos.x + style.FramePadding.x + 2, y: pos.y + style.FramePadding.y + 2 }, 0xFF000000, checksum );
-			d.addText( { x: pos.x + style.FramePadding.x, y: pos.y + style.FramePadding.y }, 0xFFFFFFFF, checksum );
-
-
-			x += nodeWidth + nodePadding;
+			ImGui.textColored( toImVec4ButBrighter( @:privateAccess h.toNode.def.color ),'${h.file}::${h.toNode.label}/${h.toNode.id}');
+			if( ImGui.isItemHovered() )
+			{
+				ImGui.beginTooltip();
+				ImGui.textColored( toImVec4ButBrighter( @:privateAccess h.fromNode.def.color ) ,'From ${h.fromNode.label}/${h.fromNode.id}');
+				ImGui.text('In file ${h.file}');
+				ImGui.text('With runner ${h.runnerId} (D=${h.depth})');
+				ImGui.endTooltip();
+			}
+			if( ImGui.isItemClicked() )
+			{
+				selectedItem = h;
+			}
 		}
-
-		ImGui.dummy({x: x - windowPos.x + scrollPosX, y: nodeHeight * 4});
 
 		if( stackChanged )
 		{
 			stackChanged = false;
-			ImGui.setScrollX( ImGui.getScrollMaxX() + nodeWidth + nodePadding );
+			ImGui.setScrollY( ImGui.getScrollMaxY());
 		}
+	}
+
+	function toImVec4ButBrighter( col: ImU32 )
+	{
+		var vec = ImVec4.getColor( col );
+
+		vec.r *= 1.8;
+		vec.g *= 1.8;
+		vec.b *= 1.8;
+
+
+		return vec;
 	}
 
 	function handleShortcuts()
@@ -175,7 +191,9 @@ class FlowDebugger extends ImguiTool
 			fromNode: from,
 			toNode: to,
 			fromPin: fromPin,
-			depth: depth
+			depth: depth,
+			pos: runner.instigator,
+			runnerId: runner.runnerId,
 		});
 
 		stackChanged = true;
@@ -212,11 +230,54 @@ class FlowDebugger extends ImguiTool
 	}
 
 
+	@:access(cerastes.data.Node)
 	function inspector()
 	{
 		ImGui.setNextWindowDockId( dockspaceIdRight, dockCond );
 		ImGui.begin('Inspector##${windowID()}');
 		handleShortcuts();
+
+		if(selectedItem == null)
+		{
+			ImGui.end();
+			return;
+		}
+
+		ImGui.pushFont( ImguiToolManager.headingFont );
+		ImGui.textColored(toImVec4ButBrighter( selectedItem.toNode.def.color ), '${selectedItem.toNode.label}');
+		ImGui.popFont();
+
+
+		var textSize = ImGui.calcTextSize("test");
+		var style = ImGui.getStyle();
+
+		var meta: haxe.DynamicAccess<Dynamic> = Meta.getFields( Type.getClass( selectedItem.toNode ) );
+
+		for( field => data in meta )
+		{
+			ImGui.columns(2);
+			ImGui.setColumnWidth(0,100);
+
+			var metadata: haxe.DynamicAccess<Dynamic> = data;
+			if( metadata.exists("editor") )
+			{
+				var args = metadata.get("editor");
+				var val = Reflect.getProperty(selectedItem.toNode, field );
+				ImGui.text(args[0]);
+				ImGui.nextColumn();
+
+				ImGui.text(val.toString());
+			}
+
+			ImGui.columns(1);
+		}
+
+		ImGui.textColored( toImVec4ButBrighter( selectedItem.fromNode.def.color ) ,'From ${selectedItem.fromNode.label}/${selectedItem.fromNode.id}');
+		ImGui.text('In file ${selectedItem.file}');
+		ImGui.text('With runner ${selectedItem.runnerId}, Depth ${selectedItem.depth}');
+		ImGui.text('');
+		ImGui.text('Called from ${selectedItem.pos.fileName}');
+		ImGui.text('${selectedItem.pos.className}::${selectedItem.pos.methodName}():${selectedItem.pos.lineNumber}');
 
 
 		ImGui.end();
@@ -245,7 +306,7 @@ class FlowDebugger extends ImguiTool
 
 			var idOut: hl.Ref<ImGuiID> = dockspaceId;
 
-			dockspaceIdRight = ImGui.dockBuilderSplitNode(idOut.get(), ImGuiDir.Right, 0.3, null, idOut);
+			dockspaceIdRight = ImGui.dockBuilderSplitNode(idOut.get(), ImGuiDir.Right, 0.5, null, idOut);
 			dockspaceIdCenter = idOut.get();
 
 

@@ -138,7 +138,7 @@ class FlowEditor extends ImguiTool
 
 		if( !isOpenRef.get() )
 		{
-			ImguiToolManager.closeTool( this );
+			ImGuiToolManager.closeTool( this );
 		}
 
 
@@ -430,7 +430,7 @@ class FlowEditor extends ImguiTool
 
 		sys.io.File.saveContent( file, CDPrinter.print( obj ) );
 
-		ImguiToolManager.showPopup("File saved",'Wrote ${file} successfully.', Info);
+		ImGuiToolManager.showPopup("File saved",'Wrote ${file} successfully.', Info);
 	}
 
 	function handleShortcuts()

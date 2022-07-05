@@ -1,5 +1,6 @@
 package cerastes;
 
+import cerastes.tools.ImguiTool.ImGuiToolManager;
 import cerastes.macros.Callbacks.ClassKey;
 import cerastes.ui.Console.GlobalConsole;
 import hxd.fmt.fbx.BaseLibrary.TmpObject;
@@ -45,8 +46,8 @@ class Scene
         #if hlimgui
         if( Main.instance.showTools)
         {
-            Main.instance.previewEvents.addScene( s2d );
-            Main.instance.previewEvents.addScene( s3d );
+            Main.instance.sceneEvents.removeScene( s2d );
+            Main.instance.sceneEvents.removeScene( s3d );
         }
         else
         #end
@@ -124,8 +125,8 @@ class Scene
         #if hlimgui
         if( Main.instance.showTools)
         {
-            Main.instance.previewEvents.removeScene( s2d );
-            Main.instance.previewEvents.removeScene( s3d );
+            Main.instance.sceneEvents.removeScene( s2d );
+            Main.instance.sceneEvents.removeScene( s3d );
         }
         #end
 

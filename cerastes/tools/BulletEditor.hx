@@ -9,7 +9,7 @@ import hxd.Key;
 import cerastes.macros.Metrics;
 import org.si.cml.CMLObject;
 import org.si.cml.CMLFiber;
-import cerastes.tools.ImguiTool.ImguiToolManager;
+import cerastes.tools.ImguiTool.ImGuiToolManager;
 import hl.UI;
 import haxe.Json;
 import cerastes.tools.ImguiTools.IG;
@@ -248,7 +248,7 @@ class BulletEditor extends ImguiTool
 
 		if( !isOpenRef.get() )
 		{
-			ImguiToolManager.closeTool( this );
+			ImGuiToolManager.closeTool( this );
 		}
 
 		ImGui.popID();
@@ -263,7 +263,7 @@ class BulletEditor extends ImguiTool
 			{
 				if (ImGui.menuItem("Open", "Ctrl+O"))
 				{
-					//ImguiToolManager.showTool("Perf");
+					//ImGuiToolManager.showTool("Perf");
 				}
 				if (fileName != "" && ImGui.menuItem("Save", "Ctrl+S"))
 				{
@@ -298,7 +298,7 @@ class BulletEditor extends ImguiTool
 
 						cerastes.tools.AssetBrowser.needsReload = true;
 					}
-					//ImguiToolManager.showTool("UIEditor");
+					//ImGuiToolManager.showTool("UIEditor");
 				}
 
 				ImGui.endMenu();

@@ -4,7 +4,7 @@ package cerastes.tools;
 
 import h2d.Tile;
 import hxd.res.Atlas;
-import cerastes.tools.ImguiTool.ImguiToolManager;
+import cerastes.tools.ImguiTool.ImGuiToolManager;
 import h2d.Text;
 import h2d.Font;
 import cerastes.tools.ImguiTools.IG;
@@ -100,7 +100,7 @@ class AtlasBrowser  extends  ImguiTool
 
 		if( !isOpenRef.get() )
 		{
-			ImguiToolManager.closeTool( this );
+			ImGuiToolManager.closeTool( this );
 		}
 	}
 

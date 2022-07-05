@@ -16,7 +16,7 @@ import cerastes.file.CDPrinter;
 import cerastes.flow.Flow;
 import haxe.rtti.Meta;
 import haxe.rtti.Rtti;
-import cerastes.tools.ImguiTool.ImguiToolManager;
+import cerastes.tools.ImguiTool.ImGuiToolManager;
 import cerastes.tools.ImguiTools.ComboFilterState;
 import cerastes.tools.ImguiTools.ImGuiTools;
 
@@ -136,7 +136,7 @@ class AudioEditor extends ImguiTool
 
 		if( !isOpenRef.get() )
 		{
-			ImguiToolManager.closeTool( this );
+			ImGuiToolManager.closeTool( this );
 		}
 
 
@@ -689,7 +689,7 @@ class AudioEditor extends ImguiTool
 			case Cue:
 				if( selectedCue != null )
 				{
-					ImGui.pushFont( ImguiToolManager.headingFont );
+					ImGui.pushFont( ImGuiToolManager.headingFont );
 					ImGui.text( selectedTreeCue );
 					ImGui.popFont();
 				}
@@ -700,7 +700,7 @@ class AudioEditor extends ImguiTool
 				if( selectedItem != null )
 				{
 
-					ImGui.pushFont( ImguiToolManager.headingFont );
+					ImGui.pushFont( ImGuiToolManager.headingFont );
 					ImGui.text( selectedItem.name );
 					ImGui.popFont();
 
@@ -804,7 +804,7 @@ class AudioEditor extends ImguiTool
 		sys.io.File.saveContent( Utils.fixWritePath(fileName,"audio"), CDPrinter.print( obj ) );
 
 
-		ImguiToolManager.showPopup("File saved",'Wrote ${fileName} successfully.', Info);
+		ImGuiToolManager.showPopup("File saved",'Wrote ${fileName} successfully.', Info);
 	}
 
 	function handleShortcuts()

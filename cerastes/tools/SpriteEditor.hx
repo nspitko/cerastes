@@ -12,7 +12,7 @@ import hxd.res.Atlas;
 import cerastes.Sprite.SpriteCache;
 import hxd.Key;
 import cerastes.fmt.SpriteResource;
-import cerastes.tools.ImguiTool.ImguiToolManager;
+import cerastes.tools.ImguiTool.ImGuiToolManager;
 import hl.UI;
 import haxe.Json;
 import cerastes.tools.ImguiTools.IG;
@@ -401,7 +401,7 @@ class SpriteEditor extends ImguiTool
 
 		if( !isOpenRef.get() )
 		{
-			ImguiToolManager.closeTool( this );
+			ImGuiToolManager.closeTool( this );
 		}
 		ImGui.popID();
 		Metrics.end();

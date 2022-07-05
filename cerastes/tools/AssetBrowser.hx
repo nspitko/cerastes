@@ -11,7 +11,7 @@ import cerastes.macros.Metrics;
 
 import cerastes.fmt.SpriteResource;
 import hxd.res.Atlas;
-import cerastes.tools.ImguiTool.ImguiToolManager;
+import cerastes.tools.ImguiTool.ImGuiToolManager;
 import h2d.Text;
 import h2d.Font;
 import cerastes.tools.ImguiTools.IG;
@@ -64,6 +64,7 @@ class AssetBrowser  extends  ImguiTool
 		"Flow" => true,
 		"UI Layout" => true,
 		"Texture Atlas" => true,
+		"Material" => true,
 		"Others" => false,
 	];
 
@@ -340,7 +341,7 @@ class AssetBrowser  extends  ImguiTool
 				t.color = Vector.fromColor( getTypeColor(asset.file) );
 				t.dropShadow = { dx:1, dy : 1, color : 0, alpha : 1 };
 
-			case "fbx":
+			case "fbx_disabled":
 				asset.scene3d = new h3d.scene.Scene();
 				var cache = new h3d.prim.ModelCache();
 				var newObject = cache.loadModel( hxd.Res.loader.load( asset.file ).toModel() );
@@ -520,7 +521,7 @@ class AssetBrowser  extends  ImguiTool
 
 		if( !isOpenRef.get() )
 		{
-			ImguiToolManager.closeTool( this );
+			ImGuiToolManager.closeTool( this );
 		}
 
 		Metrics.end();
@@ -560,26 +561,29 @@ class AssetBrowser  extends  ImguiTool
 		{
 			#if cannonml
 			case "cml":
-				var t: BulletEditor = cast ImguiToolManager.showTool("BulletEditor");
+				var t: BulletEditor = cast ImGuiToolManager.showTool("BulletEditor");
 				t.openFile( asset.file );
 			case "cbl":
-				var t: BulletLevelEditor = cast ImguiToolManager.showTool("BulletLevelEditor");
+				var t: BulletLevelEditor = cast ImGuiToolManager.showTool("BulletLevelEditor");
 				t.openFile( asset.file );
 			#end
 			case "ui":
-				var t: UIEditor = cast ImguiToolManager.showTool("UIEditor");
+				var t: UIEditor = cast ImGuiToolManager.showTool("UIEditor");
 				t.openFile( asset.file );
 			case "csd":
-				var t: SpriteEditor = cast ImguiToolManager.showTool("SpriteEditor");
+				var t: SpriteEditor = cast ImGuiToolManager.showTool("SpriteEditor");
 				t.openFile( asset.file );
 			case "atlas":
-				var t: AtlasBrowser = cast ImguiToolManager.showTool("AtlasBrowser");
+				var t: AtlasBrowser = cast ImGuiToolManager.showTool("AtlasBrowser");
 				t.openFile( asset.file );
 			case "flow":
-				var t: FlowEditor = cast ImguiToolManager.showTool("FlowEditor");
+				var t: FlowEditor = cast ImGuiToolManager.showTool("FlowEditor");
 				t.openFile( asset.file );
 			case "audio":
-				var t: AudioEditor = cast ImguiToolManager.showTool("AudioEditor");
+				var t: AudioEditor = cast ImGuiToolManager.showTool("AudioEditor");
+				t.openFile( asset.file );
+			case "material":
+				var t: MaterialEditor = cast ImGuiToolManager.showTool("MaterialEditor");
 				t.openFile( asset.file );
 			case "wav" | "ogg" | "mp3":
 				hxd.Res.load( asset.file ).toSound().play();
@@ -681,6 +685,7 @@ class AssetBrowser  extends  ImguiTool
 			case "flow": 0xFFFF6688;
 			case "audio": 0xFF880088;
 			case "png" | "bmp" | "gif": 0xFFffff88;
+			case "material" | "mat": 0xFFff8888;
 			default: 0xFFFFFFFF;
 		}
 	}
@@ -695,6 +700,7 @@ class AssetBrowser  extends  ImguiTool
 			case "ui": "UI Layout";
 			case "png" | "bmp" | "gif" | "jpg": "Image";
 			case "wav" | "ogg" | "mp3": "Sound";
+			case "material" | "mat": "Material";
 			#if butai
 			case "bdef": "Butai";
 			#end

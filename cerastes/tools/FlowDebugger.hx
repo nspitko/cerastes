@@ -11,7 +11,7 @@ import hxd.Key;
 import h2d.Tile;
 import cerastes.macros.Metrics;
 import cerastes.tools.ImguiTools.IG;
-import cerastes.tools.ImguiTool.ImguiToolManager;
+import cerastes.tools.ImguiTool.ImGuiToolManager;
 import hl.Gc;
 import hxd.App;
 import hxd.System;
@@ -107,7 +107,7 @@ class FlowDebugger extends ImguiTool
 
 		if( !isOpenRef.get() )
 		{
-			ImguiToolManager.closeTool( this );
+			ImGuiToolManager.closeTool( this );
 		}
 
 	}
@@ -243,7 +243,7 @@ class FlowDebugger extends ImguiTool
 			return;
 		}
 
-		ImGui.pushFont( ImguiToolManager.headingFont );
+		ImGui.pushFont( ImGuiToolManager.headingFont );
 		ImGui.textColored(toImVec4ButBrighter( selectedItem.toNode.def.color ), '${selectedItem.toNode.label}');
 		ImGui.popFont();
 

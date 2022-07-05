@@ -7,7 +7,7 @@ import hxd.Key;
 import h2d.Tile;
 import cerastes.macros.Metrics;
 import cerastes.tools.ImguiTools.IG;
-import cerastes.tools.ImguiTool.ImguiToolManager;
+import cerastes.tools.ImguiTool.ImGuiToolManager;
 import hl.Gc;
 import hxd.App;
 import hxd.System;
@@ -225,7 +225,7 @@ class Perf extends ImguiTool
 		{
 			var precision = 1000;
 			ImGui.beginTooltip();
-			ImGui.pushFont( ImguiToolManager.headingFont );
+			ImGui.pushFont( ImGuiToolManager.headingFont );
 			ImGui.text('${task.label}');//${task.duration * 1000}
 			ImGui.popFont();
 			ImGui.separator();

@@ -1,9 +1,13 @@
 
 package cerastes.tools;
 
+import hxd.Key;
+import hxd.SceneEvents;
+#if hlimgui
+import cerastes.tools.ImguiTools.IG;
+import h3d.Engine;
 import h3d.mat.Texture;
 import imgui.types.ImFontAtlas.ImFontTexData;
-#if hlimgui
 import imgui.ImGui;
 
 import imgui.ImGui.ImFont;
@@ -45,7 +49,7 @@ class ImGuiPopup
 	public var duration: Float = 5;
 }
 
-class ImguiToolManager
+class ImGuiToolManager
 {
 	static var tools = new Array<ImguiTool>();
 
@@ -98,6 +102,26 @@ class ImguiToolManager
 	{
 		t.destroy();
 		tools.remove(t);
+	}
+
+	public static function init()
+	{
+		ImGui.setConfigFlags( DockingEnable );
+
+		var dpiScale = Utils.getDPIScaleFactor();
+		if( dpiScale > 1 )
+		{
+			var style: ImGuiStyle = ImGui.getStyle();
+			style.scaleAllSizes( dpiScale );
+		}
+
+		// Default font
+		ImGuiToolManager.defaultFont = ImGuiToolManager.addFont("res/tools/Ruda-Bold.ttf", 14, true);
+		ImGuiToolManager.headingFont = ImGuiToolManager.addFont("res/tools/Ruda-Bold.ttf", 21, true);
+		ImGuiToolManager.consoleFont = ImGuiToolManager.defaultFont; //ImGuiToolManager.addFont("res/tools/console.ttf", 14);
+		ImGuiToolManager.buildFonts();
+
+
 	}
 
 	public static function update( delta: Float )
@@ -267,6 +291,76 @@ class ImguiToolManager
 
 		atlas.setTexId( fontTexture );
 		Utils.info('Font atlas built: ${fontInfo.width}x${fontInfo.height}');
+	}
+
+
+	public static function updatePreviewEvents( startPos: ImVec2, previewEvents: SceneEvents )
+	{
+		#if hlimgui
+		var hovered = ImGui.isItemHovered();
+
+		//InputManager.enabled = hovered;
+		if( !hovered )
+			return;
+
+		var endPos: ImVec2 = ImGui.getCursorScreenPos();
+		var mousePos: ImVec2 = ImGui.getMousePos();
+
+		var height = endPos.y - startPos.y ;
+
+		var mouseScenePos = {x: ( mousePos.x - endPos.x), y: ( mousePos.y - endPos.y + height ) };
+
+		// rescale to engine size
+
+		var viewportDimensions = IG.getViewportDimensions();
+		var viewportWidth = viewportDimensions.width;
+		var viewportHeight = viewportDimensions.height;
+
+		var engine = Engine.getCurrent();
+		var sx: Single = engine.width / viewportWidth;
+		var sy: Single = engine.height / viewportHeight;
+		mouseScenePos.x *= sx;
+		mouseScenePos.y *= sy;
+
+		var event = new hxd.Event(EMove, mouseScenePos.x, mouseScenePos.y);
+
+		if( ImGui.isMouseClicked( ImGuiMouseButton.Left ) )
+		{
+			event.kind = EPush;
+			event.button = 0;
+		}
+		else if( ImGui.isMouseClicked( ImGuiMouseButton.Right ) )
+		{
+			event.kind = EPush;
+			event.button = 1;
+		}
+		else if( ImGui.isMouseReleased( ImGuiMouseButton.Left ) )
+		{
+			event.kind = ERelease;
+			event.button = 0;
+		}
+		else if( ImGui.isMouseReleased( ImGuiMouseButton.Right ) )
+		{
+			event.kind = ERelease;
+			event.button = 1;
+		}
+		if( Key.isPressed( Key.MOUSE_WHEEL_DOWN ) )
+		{
+			event.kind = EWheel;
+			event.wheelDelta = -1;
+		}
+		else if( Key.isPressed( Key.MOUSE_WHEEL_UP ) )
+		{
+			event.kind = EWheel;
+			event.wheelDelta = 1;
+		}
+
+
+		@:privateAccess previewEvents.emitEvent( event );
+
+		//preview.dispatchListeners( event );
+
+		#end
 	}
 }
 

@@ -5,12 +5,11 @@ import hxd.SceneEvents;
 import bullet.Point;
 import h3d.col.Bounds;
 import cerastes.c3d.Prefab.PrefabDef;
-import dx.Driver;
 import h3d.impl.DirectXDriver;
 import h3d.Camera;
 import h3d.scene.Graphics;
 import hxd.Key;
-import cerastes.tools.ImguiTool.ImguiToolManager;
+import cerastes.tools.ImguiTool.ImGuiToolManager;
 import h3d.Vector;
 import h3d.mat.Texture;
 import cerastes.c3d.World;
@@ -303,7 +302,7 @@ class WorldEditor extends ImguiTool
 
 		if( !isOpenRef.get() )
 		{
-			ImguiToolManager.closeTool( this );
+			ImGuiToolManager.closeTool( this );
 		}
 
 

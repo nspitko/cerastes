@@ -2,13 +2,16 @@ package cerastes.tools;
 
 
 
-import h3d.Engine;
 #if hlimgui
 
 #if macro
 import haxe.macro.Expr;
 using haxe.macro.Tools;
 #else
+import hxd.fs.LocalFileSystem;
+import hl.UI;
+import h3d.Engine;
+import cerastes.tools.ImguiTool.ImGuiToolManager;
 import imgui.ImGui;
 import hl.NativeArray;
 import cerastes.fmt.CUIResource;
@@ -331,6 +334,7 @@ class ImGuiTools {
 
 	}
 
+
 	public static function inputColorInt( nColor: Int ): Int
 	{
 		var c = Vector.fromColor(nColor);
@@ -394,7 +398,7 @@ class ImGuiTools {
 
 	public static function inputTile(title: String, tile: String): Null<String>
 	{
-		var newTile = IG.textInput( "Background Tile", tile );
+		var newTile = IG.textInput( title, tile );
 
 		if( ImGui.isItemHovered() && tile != null && tile.length > 0 )
 		{
@@ -424,6 +428,139 @@ class ImGuiTools {
 
 		return null;
 	}
+
+	public static function inputTexture(title: String, texture: String, path: String = "tex"): Null<String>
+	{
+		var newTexture = IG.textInput( title, texture );
+
+		if( ImGui.isItemHovered() && texture != null && texture.length > 0 )
+		{
+			var t = CUIResource.getTile(texture);
+			ImGui.beginTooltip();
+
+			var scale = ( 256 * ImGuiToolManager.scaleFactor ) / t.width;
+
+			ImGuiTools.image(t,{x:scale, y:scale});
+			ImGui.endTooltip();
+		}
+
+		if( newTexture != null && Utils.isValidTexture( newTexture ) )
+			return newTexture;
+
+		if( ImGui.beginDragDropTarget() )
+		{
+			// Non-atlased bitmaps
+			var payload = ImGui.acceptDragDropPayloadString("asset_name");
+			if( payload != null && hxd.Res.loader.exists( payload ) )
+				return payload;
+
+			ImGui.endDragDropTarget();
+		}
+
+		// Add file picker
+		ImGui.sameLine();
+		if( ImGui.button( '\uf07c##${title}' ) )
+		{
+			var fs: LocalFileSystem = cast hxd.Res.loader.fs;
+
+			if( texture != null && hxd.Res.loader.fs.exists( texture ) )
+			{
+				path = '${fs.baseDir}${hxd.Res.loader.fs.get(texture).directory}';
+			}
+			else
+			{
+				path = '${fs.baseDir}${path}';
+			}
+
+			var openFile = UI.loadFile({
+				title:"Select texture",
+				fileName: path,
+				filters:[
+					{name:"Textures", exts:["png","jpg","bmp","tga"]}
+				]
+			});
+			if( openFile != null )
+			{
+				return Utils.toLocalFile( openFile );
+			}
+		}
+
+		// Clear texture button
+		ImGui.sameLine();
+		if( ImGui.button( '\uf2ed##${title}' ) )
+		{
+			return "";
+		}
+
+		return null;
+	}
+
+	public static function inputMaterial(title: String, material: String, path: String = "mat"): Null<String>
+	{
+		var newMaterial = IG.textInput( title, material );
+
+		if( false && ImGui.isItemHovered() && material != null && material.length > 0 )
+		{
+			var t = CUIResource.getTile(material);
+			ImGui.beginTooltip();
+
+			var scale = ( 256 * ImGuiToolManager.scaleFactor ) / t.width;
+
+			ImGuiTools.image(t,{x:scale, y:scale});
+			ImGui.endTooltip();
+		}
+
+		if( newMaterial != null && Utils.isValidTexture( newMaterial ) )
+			return newMaterial;
+
+		if( ImGui.beginDragDropTarget() )
+		{
+			// Non-atlased bitmaps
+			var payload = ImGui.acceptDragDropPayloadString("asset_name");
+			if( payload != null && hxd.Res.loader.exists( payload ) )
+				return payload;
+
+			ImGui.endDragDropTarget();
+		}
+
+		// Add file picker
+		ImGui.sameLine();
+		if( ImGui.button( '\uf07c##${title}' ) )
+		{
+			var fs: LocalFileSystem = cast hxd.Res.loader.fs;
+
+			if( material != null && hxd.Res.loader.fs.exists( material ) )
+			{
+				path = '${fs.baseDir}${hxd.Res.loader.fs.get(material).directory}';
+			}
+			else
+			{
+				path = '${fs.baseDir}${path}';
+			}
+
+			var openFile = UI.loadFile({
+				title:"Select Material",
+				fileName: path,
+				filters:[
+					{name:"Material", exts:["material","mat"]}
+				]
+			});
+			if( openFile != null )
+			{
+				return Utils.toLocalFile( openFile );
+			}
+		}
+
+		// Clear texture button
+		ImGui.sameLine();
+		if( ImGui.button( '\uf2ed##${title}' ) )
+		{
+			return "";
+		}
+
+		return null;
+	}
+
 
 	static function comboFilterDrawPopup( state: ComboFilterState, start: Int, entries: Array<String> )
 	{

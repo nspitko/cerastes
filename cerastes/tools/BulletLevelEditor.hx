@@ -12,7 +12,7 @@ import cerastes.macros.Metrics;
 
 import org.si.cml.CMLObject;
 import org.si.cml.CMLFiber;
-import cerastes.tools.ImguiTool.ImguiToolManager;
+import cerastes.tools.ImguiTool.ImGuiToolManager;
 import hl.UI;
 import haxe.Json;
 import cerastes.tools.ImguiTools.IG;
@@ -329,7 +329,7 @@ class BulletLevelEditor extends ImguiTool
 
 		if( !isOpenRef.get() )
 		{
-			ImguiToolManager.closeTool( this );
+			ImGuiToolManager.closeTool( this );
 		}
 
 		ImGui.popID();

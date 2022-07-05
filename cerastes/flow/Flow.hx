@@ -1,5 +1,6 @@
 package cerastes.flow;
 
+import cerastes.GameState.FlowState;
 #if hlimgui
 import imgui.ImGuiMacro.wref;
 import game.GameState;
@@ -478,7 +479,7 @@ class FlowNode extends Node
 
 	public function wasSeen( runner )
 	{
-		return GameState.seen.indexOf( key(runner) ) != -1;
+		return FlowState.seen.indexOf( key(runner) ) != -1;
 	}
 
 	/**
@@ -526,7 +527,7 @@ class FlowNode extends Node
 				if( link.conditions != null )
 				{
 					var hash = '${runner.file}-${link.sourceId}-${link.destId}';
-					var seen = GameState.seen.indexOf( hash ) != -1;
+					var seen = FlowState.seen.indexOf( hash ) != -1;
 					runner.context.interp.variables.set("once", !seen);
 					var valid = true;
 					for( condition in link.conditions )
@@ -555,7 +556,7 @@ class FlowNode extends Node
 						continue;
 				}
 				var target = runner.lookupNodeByPin( link.destId );
-				GameState.seen.push( '${runner.file}-${link.sourceId}-${link.destId}' );
+				FlowState.seen.push( '${runner.file}-${link.sourceId}-${link.destId}' );
 
 				#if hlimgui
 				FlowDebugger.addHistory(runner, this, target, pin);
@@ -626,7 +627,7 @@ class FlowNode extends Node
 	function renderProps()
 	{
 		ImGui.pushID( '${id}' );
-		ImGui.pushFont( ImguiToolManager.headingFont );
+		ImGui.pushFont( ImGuiToolManager.headingFont );
 		ImGui.text( def.name );
 		ImGui.popFont();
 

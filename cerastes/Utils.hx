@@ -1,6 +1,7 @@
 package cerastes;
 
 
+import h3d.mat.Texture;
 import hxd.fmt.pak.FileSystem;
 #if hldx
 import dx.Driver.ResourceBind;
@@ -371,6 +372,9 @@ class Utils
 
 	public static function toLocalFile( file: String )
 	{
+		// Fixup cursed windows bullshit
+		file = StringTools.replace(file, "\\", "/");
+
 		var resDir : String = haxe.macro.Compiler.getDefine("resourcesPath");
 		if( resDir == null ) resDir = "res";
 		var idx =  file.indexOf(resDir);
@@ -407,5 +411,52 @@ class Utils
 		Utils.warning("Trying to fix write path on non-sys target???");
 		return path;
 		#end
+	}
+
+	private static var missingTexture: Texture;
+
+	static function invalidTexture()
+	{
+		if( missingTexture == null )
+			missingTexture = Texture.fromColor(0xFF00FF);
+
+		return missingTexture;
+	}
+
+	public static function resolveTexture( file: String ): Texture
+	{
+		if( file == null || file == "")
+			return invalidTexture();
+
+		if(file.charAt(0) == "#" )
+		{
+			return Texture.fromColor( Std.parseInt( '0x${file.substr(1)}' ) );
+		}
+		else
+		{
+			if( !hxd.Res.loader.exists(file) )
+				return invalidTexture();
+
+			var res = hxd.Res.loader.loadCache( file, hxd.res.Image );
+			if( res == null )
+				return invalidTexture();
+
+			return res.toTexture();
+		}
+
+	}
+
+	public static function isValidTexture( file: String ): Bool
+	{
+		if( file == null || file == "")
+			return false;
+
+		if(file.charAt(0) == "#" && file.length >= 7 )
+			return true;
+
+		if( hxd.Res.loader.exists( file ) )
+			return true;
+
+		return false;
 	}
 }

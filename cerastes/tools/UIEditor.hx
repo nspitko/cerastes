@@ -9,7 +9,7 @@ import h3d.Vector;
 import h2d.col.Point;
 import h2d.Graphics;
 import hl.UI;
-import cerastes.tools.ImguiTool.ImguiToolManager;
+import cerastes.tools.ImguiTool.ImGuiToolManager;
 import haxe.EnumTools;
 import haxe.io.Bytes;
 import hxd.BytesBuffer;
@@ -222,7 +222,7 @@ class UIEditor extends ImguiTool
 
 			cerastes.tools.AssetBrowser.needsReload = true;
 			lastSaved = Sys.time() * 1000;
-			ImguiToolManager.showPopup("File saved",'Wrote ${fileName} successfully.', Info);
+			ImGuiToolManager.showPopup("File saved",'Wrote ${fileName} successfully.', Info);
 		}
 	}
 
@@ -237,7 +237,7 @@ class UIEditor extends ImguiTool
 		CUIResource.writeObject(rootDef,preview,fileName);
 
 		lastSaved = Sys.time() * 1000;
-		ImguiToolManager.showPopup("File saved",'Wrote ${fileName} successfully.', Info);
+		ImGuiToolManager.showPopup("File saved",'Wrote ${fileName} successfully.', Info);
 	}
 
 	function handleShortcuts()
@@ -362,7 +362,7 @@ class UIEditor extends ImguiTool
 
 		if( !isOpenRef.get() )
 		{
-			ImguiToolManager.closeTool( this );
+			ImGuiToolManager.closeTool( this );
 		}
 
 		processSceneMouse( delta );
@@ -751,7 +751,7 @@ class UIEditor extends ImguiTool
 	function populateEditor()
 	{
 		var def = selectedInspectorTree;
-		ImGui.pushFont( ImguiToolManager.headingFont );
+		ImGui.pushFont( ImGuiToolManager.headingFont );
 		ImGui.text(def.type);
 		ImGui.popFont();
 

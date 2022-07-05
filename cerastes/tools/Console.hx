@@ -10,7 +10,7 @@ import hxd.Key;
 import h2d.Tile;
 import cerastes.macros.Metrics;
 import cerastes.tools.ImguiTools.IG;
-import cerastes.tools.ImguiTool.ImguiToolManager;
+import cerastes.tools.ImguiTool.ImGuiToolManager;
 import hl.Gc;
 import hxd.App;
 import hxd.System;
@@ -202,7 +202,7 @@ class Console extends ImguiTool
 		var first = true;
 		var precision: Float = 10000;
 
-		ImGui.pushFont( ImguiToolManager.consoleFont );
+		ImGui.pushFont( ImGuiToolManager.consoleFont );
 
 
 		//ImGui.tableSetColumnEnabled( 0, showTime );

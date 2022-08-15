@@ -1,7 +1,6 @@
 
 package cerastes.c3d;
 
-import bullet.Body;
 import h3d.scene.Object;
 import cerastes.Entity;
 

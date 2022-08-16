@@ -30,7 +30,7 @@ class EntityManager
 		var i = entities.length;
 		while( i-- > 0 )
 		{
-			if( !entities[i].isAlive() )
+			if( entities[i].isDestroyed() )
 				entities.splice(i,1);
 			else
 				entities[i].tick(delta);
@@ -102,7 +102,8 @@ interface Entity {
 	public function tick( delta: Float ): Void;
 	public function destroy(): Void;
 
-	public function isAlive(): Bool;
+	// Whether or not this entity is "alive". This is not about HP
+	public function isDestroyed(): Bool;
 }
 
 @:keep
@@ -150,9 +151,9 @@ class BaseEntity #if network implements Replicated #end implements Entity
 	{
 	}
 
-	public function isAlive()
+	public function isDestroyed()
 	{
-		return true;
+		return false;
 	}
 
 	public function toString(): String

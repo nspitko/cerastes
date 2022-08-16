@@ -205,54 +205,8 @@ class QMap extends Object
 		// Add entity spawns
 		for( e in data.entities )
 		{
-			if( e.spawnType == EST_ENTITY )
-			{
-				var g = new Graphics(this);
-
-				var origin = e.getProperty('origin');
-				var bits = origin.split(" ");
-				g.setPosition(
-					-Std.parseFloat(bits[0]),
-					Std.parseFloat(bits[1]),
-					Std.parseFloat(bits[2])
-				 );
-
-
-				g.material.mainPass.setPassName("overlay");
-				g.material.mainPass.depthTest = Always;
-
-				var lineSize = 25;
-				var arrowSize = 10;
-
-				// X (Red)
-				g.lineStyle(1, 0xFF0000, 1);
-				g.drawLine(new Point(-lineSize,0,0), new Point(lineSize,0,0));
-				g.drawLine(new Point(lineSize,arrowSize,0), new Point(lineSize,-arrowSize,0));
-
-				// Y (Green)
-				g.lineStyle(1, 0x00FF00, 1);
-				g.drawLine(new Point(0,-lineSize,0), new Point(0,lineSize,0));
-				g.drawLine(new Point(arrowSize,lineSize,0), new Point(-arrowSize,lineSize,0));
-
-				// Z (Blue)
-				g.lineStyle(1, 0x0000FF, 1);
-				g.drawLine(new Point(0,0,-lineSize), new Point(0,0,lineSize));
-				g.drawLine(new Point(arrowSize,0,lineSize), new Point(-arrowSize,0,lineSize));
-			}
+			cerastes.c3d.Entity.createEntity( e, this );
 		}
-
-/*
-		for( e in 0 ... data.entityGeo.length )
-		{
-			var entity = data.entities[e];
-			var entityGeo = data.entityGeo[e];
-			for( b in entityGeo.brushes )
-			{
-				var brush =  new QBrush(entity, b, materials, this );
-			}
-		}
-*/
-
 	}
 
 

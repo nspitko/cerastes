@@ -1,6 +1,7 @@
 
 package cerastes.c3d;
 
+import h3d.scene.RenderContext;
 import haxe.rtti.Meta;
 import cerastes.c3d.map.Data.Property;
 import h3d.scene.Object;
@@ -12,6 +13,7 @@ import cerastes.Entity;
  */
 
 @:keepSub
+@:keepInit
 @qClass(
 	// Define base types we're going to need later.
 	{
@@ -63,34 +65,40 @@ import cerastes.Entity;
 		}*/
 	}
 )
-class Entity extends Object implements cerastes.Entity
+class QEntity extends Object implements cerastes.Entity
 {
 	public var lookupId: String;
 
 	var destroyed = false;
+	public var world(get, null): cerastes.c3d.QWorld;
+	public var body: cerastes.c3d.BulletBody = null;
 
-	public function new( ?parent: Object )
+	public function get_world() : cerastes.c3d.QWorld
 	{
-		super( parent );
+		return world;
 	}
 
 	public function isDestroyed() { return destroyed; }
 
 	public function destroy() {
+
+		if( body != null )
+			body.remove();
+
 		destroyed = true;
 	}
 
 	public function tick( delta: Float )
 	{
+		// Slam position with body position
+		if( body != null )
+			body.sync();
 	}
 
-	// Called automatically when our world changes.
-	public function setWorld( newWorld: World )
+	function create( def: cerastes.c3d.map.Data.Entity, qworld: QWorld )
 	{
-	}
+		world = qworld;
 
-	function create( def: cerastes.c3d.map.Data.Entity )
-	{
 		if( def.spawnType == EST_ENTITY )
 		{
 			var origin = def.getProperty('origin');
@@ -104,6 +112,13 @@ class Entity extends Object implements cerastes.Entity
 		}
 
 		onCreated(def.properties);
+
+		if( body != null )
+		{
+			body.setTransform( new bullet.Point( x, y, z ) );
+		}
+		world.entityManager.register(this);
+
 	}
 
 	// Called when an entity is created, override this to define entity specific
@@ -117,7 +132,7 @@ class Entity extends Object implements cerastes.Entity
 	static var classMap: Map<String, Class<Dynamic>>;
 
 	// ------------------------------------------------------------------------------------
-	public static function createEntity( def: cerastes.c3d.map.Data.Entity, ?parent: Object  )  : Entity
+	public static function createEntity( def: cerastes.c3d.map.Data.Entity, world: QWorld  )  : Entity
 	{
 		ensureClassMap();
 
@@ -132,14 +147,14 @@ class Entity extends Object implements cerastes.Entity
 
 		if( cls != null )
 		{
-			var entity: Entity = Type.createInstance(cls,[]);
-			entity.create(def);
-			parent.addChild(entity);
+			var entity: QEntity = Type.createInstance(cls,[]);
+			entity.create(def, world);
+			world.addChild(entity);
 
 			return entity;
 		}
 
-		Utils.warning('Could not fine class def for ${className}');
+		Utils.warning('Could not find class def for ${className}');
 		return null;
 	}
 

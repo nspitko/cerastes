@@ -22,7 +22,7 @@ class EntityManager
 
 	var scheduledFunctions: Array<ScheduledFunction> = [];
 
-	private function new () {}  // private constructor
+	public function new () {} 
 
 	public function tick( delta: Float )
 	{

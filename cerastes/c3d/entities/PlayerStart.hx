@@ -3,7 +3,7 @@ package cerastes.c3d.entities;
 import h3d.col.Point;
 import h3d.scene.Graphics;
 import cerastes.c3d.map.Data.Property;
-import cerastes.c3d.Entity;
+import cerastes.c3d.QEntity;
 
 @qClass(
 	{
@@ -13,7 +13,7 @@ import cerastes.c3d.Entity;
 		base: ["PlayerClass", "Angle"],
 	}
 )
-class PlayerStart extends Entity
+class PlayerStart extends QEntity
 {
 	override function onCreated( props: Array<Property> )
 	{
@@ -41,5 +41,23 @@ class PlayerStart extends Entity
 		g.lineStyle(1, 0x0000FF, 1);
 		g.drawLine(new Point(0,0,-lineSize), new Point(0,0,lineSize));
 		g.drawLine(new Point(arrowSize,0,lineSize), new Point(-arrowSize,0,lineSize));
+
+		// physics test
+		var radius = 16;
+		var sp = new h3d.prim.Sphere(radius, 8, 6);
+		sp.addNormals();
+		sp.addUVs();
+		sp.addTangents();
+
+		var tex = hxd.Res.spr.placeholder.toTexture();
+		var mat = h3d.mat.Material.create(tex);
+		var mesh = new h3d.scene.Mesh(sp, mat, this );
+		mesh.material.shadows = true;
+
+		body = new BulletBody( new bullet.Native.SphereShape(radius), 50, world.physics );
+		body.object = this;
+
+		body.applyImpulse(Math.random() * 2000 - 1000,Math.random() * 2000 - 1000,0);
+		body.setRollingFriction(100.0);
 	}
 }

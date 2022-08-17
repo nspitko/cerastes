@@ -157,10 +157,16 @@ class QSurface extends Mesh
 class QMap extends Object
 {
 	var data: MapData;
+	var world: QWorld;
 
-	public function new( file: String, ?parent: Object )
+	var bodies: Array<BulletBody>;
+
+	public function new( file: String, world: QWorld, ?parent: Object )
 	{
+		this.world = world;
+
 		super( parent );
+
 		//var entry = hxd.Loader.load(file);
 
 		var parser = new cerastes.c3d.map.MapParser();
@@ -189,9 +195,8 @@ class QMap extends Object
 
 		}
 
-		var surfaceGatherer = new cerastes.c3d.map.SurfaceGatherer();
-		surfaceGatherer.setSplitType( SST_ENTITY );
-		surfaceGatherer.run( data );
+		var surfaceGatherer = new cerastes.c3d.map.SurfaceGatherer( data );
+		surfaceGatherer.gatherTextureSurfaces();
 
 		for( s in 0 ... surfaceGatherer.surfaces.length )
 		{
@@ -205,11 +210,55 @@ class QMap extends Object
 		// Add entity spawns
 		for( e in data.entities )
 		{
-			cerastes.c3d.Entity.createEntity( e, this );
+			QEntity.createEntity( e, world );
 		}
+
+		createStaticCollision( surfaceGatherer );
 	}
 
+	function createStaticCollision( surfaceGatherer: SurfaceGatherer )
+	{
+		bodies = [];
+		surfaceGatherer.gatherConvexCollisionSurfaces();
+		var surfaces = surfaceGatherer.surfaces;
+
+		for( s in surfaces )
+		{
+			var iface = new bullet.Native.TriangleMesh();
+			var i = 0;
+			if( s.indices.length < 3 )
+				continue;
+
+			while( i < s.indices.length )
+			{
+				iface.addTriangle(
+					new bullet.Native.Vector3(
+						s.vertices[ s.indices[ i + 0 ] ].vertex.x,
+						s.vertices[ s.indices[ i + 0 ] ].vertex.y,
+						s.vertices[ s.indices[ i + 0 ] ].vertex.z
+					 ),
+					 new bullet.Native.Vector3(
+						s.vertices[ s.indices[ i + 1 ] ].vertex.x,
+						s.vertices[ s.indices[ i + 1 ] ].vertex.y,
+						s.vertices[ s.indices[ i + 1 ] ].vertex.z
+					 ),
+					 new bullet.Native.Vector3(
+						s.vertices[ s.indices[ i + 2 ] ].vertex.x,
+						s.vertices[ s.indices[ i + 2 ] ].vertex.y,
+						s.vertices[ s.indices[ i + 2 ] ].vertex.z
+					 ),
+					 true
+				 );
+				 i+=3;
+			}
+
+			var shape = new bullet.Native.ConvexTriangleMeshShape(iface, true );
+
+			var b = new cerastes.c3d.BulletBody( shape, 0, world.physics, CollisionObject );
+			b.mesh = iface;
+			bodies.push(b);
 
 
-
+		}
+	}
 }

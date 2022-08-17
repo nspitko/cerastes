@@ -20,7 +20,20 @@ class SurfaceGatherer
 
 	var data: MapData;
 
-	public function new( ) {}
+	public function new( d: MapData )
+	{
+		data = d;
+	}
+
+	public function resetParams()
+	{
+		splitType = SST_NONE;
+		entityFilterIdx = -1;
+		textureFilterIdx = -1;
+		brushFilterTextureIdx = -1;
+		faceFilterTextureIdx = -1;
+		filterWorldspawnLayers = true;
+	}
 
 
 	public function setSplitType( type: SurfaceSplitType )
@@ -41,6 +54,11 @@ class SurfaceGatherer
 	public function setBrushFilterTexture( name: String )
 	{
 		brushFilterTextureIdx = data.findTexture( name );
+	}
+
+	public function setFaceFilterTexture( name: String )
+	{
+		faceFilterTextureIdx = data.findTexture( name );
 	}
 
 	public function setWorldspawnLayerFilter( filter: Bool )
@@ -127,9 +145,8 @@ class SurfaceGatherer
 
 
 
-	public function run( d: MapData )
+	public function run( )
 	{
-		data = d;
 		resetState();
 
 		var indexOffset = 0;
@@ -224,5 +241,38 @@ class SurfaceGatherer
 		surfaces.push(surface);
 
 		return surface;
+	}
+
+	// public accessors
+	public function gatherConvexCollisionSurfaces( entityFilter: Int = -1, filterLayers: Bool = false )
+	{
+		resetParams();
+		setSplitType(SST_BRUSH);
+		setEntityIndexFilter( entityFilter );
+		setWorldspawnLayerFilter(filterLayers);
+
+		run();
+	}
+
+	public function gatherConcaveCollisionSurfaces( entityFilter: Int = -1, filterLayers: Bool = false )
+	{
+		resetParams();
+		setSplitType(SST_NONE);
+		setEntityIndexFilter( entityFilter );
+		setWorldspawnLayerFilter(filterLayers);
+
+		run();
+	}
+
+	public function gatherTextureSurfaces( textureName: String = null, brushFilter: String = null, faceFilter: String = null, filterLayers = false )
+	{
+		resetParams();
+		setSplitType( SST_ENTITY );
+		setTextureFilter( textureName );
+		setBrushFilterTexture( brushFilter );
+		setFaceFilterTexture( faceFilter );
+		setWorldspawnLayerFilter( filterLayers );
+
+		run();
 	}
 }

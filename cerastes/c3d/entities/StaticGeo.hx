@@ -1,13 +1,8 @@
 package cerastes.c3d.entities;
 
-import cerastes.c3d.Entity;
+import cerastes.c3d.QEntity;
 
 @qClass(
-	{
-		name: "worldspawn",
-		desc: "World Entity",
-		type: "SolidClass",
-	},
 	{
 		name: "func_group",
 		desc: "Group (used internally by some map editors)",
@@ -34,7 +29,7 @@ import cerastes.c3d.Entity;
 		type: "SolidClass",
 	}
 )
-class StaticGeo extends Entity
+class StaticGeo extends QEntity
 {
 
 }

@@ -43,6 +43,8 @@ class Scene
      */
     public function enter()
     {
+        cerastes.c3d.DebugDraw.tick(0); // Hack
+        s3d.addChild( cerastes.c3d.DebugDraw.g );
         #if hlimgui
         if( Main.instance.showTools)
         {

@@ -1,5 +1,6 @@
 package cerastes.c3d.map;
 import h3d.Vector;
+import h3d.col.Point;
 
 // Ref https://github.com/QodotPlugin/libmap
 
@@ -11,9 +12,9 @@ typedef QTextureId = Int;
 @:structInit
 class FacePoints
 {
-	public var v0: Vector = new Vector();
-	public var v1: Vector = new Vector();
-	public var v2: Vector = new Vector();
+	public var v0: Point = new Point();
+	public var v1: Point = new Point();
+	public var v2: Point = new Point();
 }
 
 @:structInit
@@ -26,7 +27,7 @@ class StandardUV
 @:structInit
 class ValveTextureAxis
 {
-	public var axis: Vector = new Vector();
+	public var axis: Point = new Point();
 	public var offset: Float = 0;
 }
 
@@ -49,7 +50,7 @@ class FaceUVExtra
 class Face
 {
 	public var planePoints: FacePoints = {};
-	public var planeNormal: Vector = new Vector();
+	public var planeNormal: Point = new Point();
 	public var planeDist: Float = 0;
 
 	public var textureIdx: Int = -1;
@@ -68,7 +69,7 @@ class Face
 class Brush
 {
 	public var faces: Array<Face> = [];
-	public var center: Vector = new Vector();
+	public var center: Point = new Point();
 }
 
 //
@@ -98,8 +99,10 @@ class Entity
 	public var properties: Array<Property> = [];
 	public var brushes: Array<Brush> = [];
 
-	public var center: Vector = new Vector();
+	public var center: Point = new Point();
 	public var spawnType: EntitySpawnType = EST_WORLDSPAWN;
+
+	public var index: Int = -1;
 
 	public function getProperty(key: String )
 	{
@@ -126,10 +129,10 @@ class VertexUV
 @:structInit
 class FaceVertex
 {
-	public var vertex: Vector;
-	public var normal: Vector;
+	public var vertex: Point;
+	public var normal: Point;
 	public var uv: VertexUV;
-	public var tangent: Vector;
+	public var tangent: Point;
 }
 
 
@@ -222,9 +225,17 @@ class MapData
 
 		t.name = name;
 
-		// @todo: Actually find the heckin texture
-		t.width = 32;
-		t.height = 32;
+		var actualTexture = hxd.Res.loader.load( 'textures/${name}.png' ).toTexture();
+		if( actualTexture == null )
+		{
+			Utils.warning('Could not find referenced texture ${name}');
+		}
+		else
+		{
+			t.width = actualTexture.width;
+			t.height = actualTexture.height;
+		}
+
 
 		return textures.length - 1;
 	}

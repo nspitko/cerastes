@@ -1,4 +1,5 @@
 package cerastes.c3d.map;
+import h3d.col.Point;
 import h3d.Vector;
 import hxd.snd.Data.SampleFormat;
 import h3d.mat.PbrMaterial.PbrStencilCompare;
@@ -34,6 +35,8 @@ class MapParser
 	var componentIdx = -1;
 	var currentProperty: StringBuf = null;
 	var valveUVs = false;
+
+	var parseError = false;
 
 	var currentFace: Face = {};
 	var currentBrush: Brush = {};
@@ -93,7 +96,7 @@ class MapParser
 		var buff = haxe.io.Bytes.alloc( 1024 );
 		var buffHead = 0;
 
-		var parseError = false;
+		parseError = false;
 
 		while( cur < mapBytes.length )
 		{
@@ -116,6 +119,9 @@ class MapParser
 				buff.set(buffHead++, c);
 			}
 		}
+
+		if( parseError )
+			return null;
 
 		return mapData;
 	}
@@ -294,9 +300,11 @@ class MapParser
 				setScope( PS_ROT );
 
 			case PS_VALVE_U:
+				parseError = true;
 				Utils.error("STUB :: Valve UVs");
 
 			case PS_VALVE_V:
+				parseError = true;
 				Utils.error("STUB :: Valve UVs");
 
 			case PS_ROT:
@@ -334,6 +342,7 @@ class MapParser
 	function commitEntity()
 	{
 		currentEntity.spawnType = EST_ENTITY;
+		currentEntity.index = mapData.entities.length;
 		mapData.entities.push( currentEntity );
 		resetCurrentEntity();
 	}
@@ -349,8 +358,8 @@ class MapParser
 
 	function commitFace( )
 	{
-		var v0v1: Vector = currentFace.planePoints.v1.sub( currentFace.planePoints.v0 );
-		var v1v2: Vector = currentFace.planePoints.v2.sub( currentFace.planePoints.v1 );
+		var v0v1: Point = currentFace.planePoints.v1.sub( currentFace.planePoints.v0 );
+		var v1v2: Point = currentFace.planePoints.v2.sub( currentFace.planePoints.v1 );
 
 		currentFace.planeNormal = v1v2.cross( v0v1 ).normalized();
 		currentFace.planeDist = currentFace.planeNormal.dot( currentFace.planePoints.v0 );

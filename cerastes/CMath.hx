@@ -5,7 +5,9 @@
  */
  package cerastes;
 
- import haxe.macro.Expr;
+ import h3d.col.Point;
+import h3d.Vector;
+import haxe.macro.Expr;
 
  class CMath {
 	 /**
@@ -970,6 +972,12 @@
 
 	 public static inline function rotateY(x:Float, y:Float, rotCenterX:Float, rotCenterY:Float, ang:Float) {
 		 return rotCenterY  -  (x-rotCenterX) * Math.sin(ang)  +  (y-rotCenterY) * Math.cos(ang);
+	 }
+
+
+	 public static inline function pointMultiply( a: Point, b: Point ): Point
+	 {
+		 return new Point( a.x * b.x, a.y * b.y, a.z * b.z );
 	 }
 
 	}

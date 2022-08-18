@@ -72,7 +72,7 @@ class SurfaceGatherer
 		var ent = ents[entityIdx];
 
 		// omit filtered entity indices
-		if( entityFilterIdx != -1 && entityIdx == entityFilterIdx )
+		if( entityFilterIdx != -1 && entityIdx != entityFilterIdx )
 		{
 			return true;
 		}
@@ -264,7 +264,7 @@ class SurfaceGatherer
 		run();
 	}
 
-	public function gatherTextureSurfaces( textureName: String = null, brushFilter: String = null, faceFilter: String = null, filterLayers = false )
+	public function gatherTextureSurfaces( textureName: String = null, entityIndexFilter = -1, brushFilter: String = null, faceFilter: String = null, filterLayers = true )
 	{
 		resetParams();
 		setSplitType( SST_ENTITY );
@@ -272,7 +272,13 @@ class SurfaceGatherer
 		setBrushFilterTexture( brushFilter );
 		setFaceFilterTexture( faceFilter );
 		setWorldspawnLayerFilter( filterLayers );
+		setEntityIndexFilter( entityIndexFilter );
 
 		run();
+	}
+
+	public function gatherWorldspawnSurfaces( textureName: String = null, brushFilter: String = null, faceFilter: String = null, filterLayers = false )
+	{
+		gatherTextureSurfaces( textureName, brushFilter, faceFilter, false );
 	}
 }

@@ -1,5 +1,6 @@
 package cerastes.c3d.map;
 
+import h3d.Vector;
 import cerastes.c3d.map.Data.FaceVertex;
 import h3d.Matrix;
 import cerastes.c3d.map.Data.FaceUVExtra;
@@ -10,13 +11,13 @@ import cerastes.c3d.map.Data.FaceGeometry;
 import cerastes.c3d.map.Data.BrushGeometry;
 import cerastes.c3d.map.Data.EntityGeometry;
 import cerastes.c3d.map.Data.MapData;
-import h3d.Vector;
+import h3d.col.Point;
 
 class GeoGenerator
 {
-	static final vUp = new Vector(0,0,1);
-	static final vRight = new Vector(0,1,0);
-	static final vForward = new Vector(1,0,0);
+	static final vUp = new Point(0,0,1);
+	static final vRight = new Point(0,1,0);
+	static final vForward = new Point(1,0,0);
 
 	static final EPSILON = 0.00001;
 
@@ -26,23 +27,23 @@ class GeoGenerator
 	var windBrushIdx = 0;
 	var windFaceIdx = 0;
 
-	var windFaceCenter: Vector = new Vector();
-	var windFaceBasis: Vector = new Vector();
-	var windFaceNormal: Vector = new Vector();
+	var windFaceCenter: Point = new Point();
+	var windFaceBasis: Point = new Point();
+	var windFaceNormal: Point = new Point();
 
 	var data: MapData;
 
 	public function new(){}
 
-	inline function vectorDivide( input: Vector, denom: Float)
+	inline function PointDivide( input: Point, denom: Float)
 	{
-		return new Vector( input.x / denom, input.y / denom, input.z / denom );
+		return new Point( input.x / denom, input.y / denom, input.z / denom );
 	}
 
-	inline function vectorRotate( input: Vector, axis: Vector, angle: Float)
+	inline function PointRotate( input: Point, axis: Point, angle: Float)
 	{
 		var mat = new Matrix();
-		mat.initRotationAxis(axis, angle);
+		mat.initRotationAxis(axis.toVector(), angle);
 
 		return input.transformed( mat );
 	}
@@ -85,13 +86,13 @@ class GeoGenerator
 		for( e in 0 ... data.entities.length )
 		{
 			var entity = data.entities[e];
-			entity.center = new Vector(0,0,0);
+			entity.center = new Point(0,0,0);
 			for( b in 0 ... entity.brushes.length )
 			{
 				var brush = entity.brushes[b];
 				var brushGeo = data.entityGeo[e].brushes[b];
 				var vertexCount = 0;
-				brush.center = new Vector(0,0,0);
+				brush.center = new Point(0,0,0);
 
 				generateBrushVertices(e, b);
 
@@ -111,7 +112,7 @@ class GeoGenerator
 
 				if( vertexCount > 0 )
 				{
-					brush.center = vectorDivide(brush.center, vertexCount );
+					brush.center = PointDivide(brush.center, vertexCount );
 				}
 
 				trace('Brush ${b} center -> ${brush.center}');
@@ -122,7 +123,7 @@ class GeoGenerator
 
 			if( entity.brushes.length > 0 )
 			{
-				entity.center = vectorDivide( entity.center, entity.brushes.length );
+				entity.center = PointDivide( entity.center, entity.brushes.length );
 				trace('Center -> ${entity.center}');
 			}
 		}
@@ -150,7 +151,7 @@ class GeoGenerator
 					windFaceIdx = f;
 
 					windFaceBasis = faceGeo.vertices[1].vertex.sub( faceGeo.vertices[0].vertex );
-					windFaceCenter = new Vector();
+					windFaceCenter = new Point();
 					windFaceNormal = face.planeNormal;
 
 					for( v in 0 ... faceGeo.vertices.length )
@@ -158,7 +159,7 @@ class GeoGenerator
 						windFaceCenter = windFaceCenter.add( faceGeo.vertices[v].vertex );
 					}
 
-					windFaceCenter = vectorDivide( windFaceCenter, faceGeo.vertices.length );
+					windFaceCenter = PointDivide( windFaceCenter, faceGeo.vertices.length );
 
 					faceGeo.vertices.sort( sortVerticesByWinding );
 					windEntityIdx = 0;
@@ -214,7 +215,7 @@ class GeoGenerator
 			{
 				for( f2 in 0 ... brush.faces.length)
 				{
-					var vertex = new Vector();
+					var vertex = new Point();
 					if( intersectFaces( brush.faces[f0], brush.faces[f1], brush.faces[f2], vertex ) )
 					{
 						if( vertexInHull( brush.faces, vertex ) )
@@ -222,7 +223,7 @@ class GeoGenerator
 							var face = data.entities[entityIdx].brushes[brushIdx].faces[f0];
 							var faceGeo = data.entityGeo[entityIdx].brushes[brushIdx].faces[f0];
 
-							var normal = new Vector();
+							var normal = new Point();
 
 							var phongProp = entity.getProperty("_phong");
 							var phong = phongProp == "1";
@@ -259,7 +260,7 @@ class GeoGenerator
 							else
 								uv = getStandardUV( vertex, face, tex.width, tex.height );
 
-							var tangent: Vector;
+							var tangent: Point;
 							if( face.isValveUV )
 								tangent = getValveTangent(face);
 							else
@@ -327,16 +328,16 @@ class GeoGenerator
 		return null;
 	}
 
-	function getValveUV( vertex: Vector, face: Face, width: Int, height: Int  )
+	function getValveUV( vertex: Point, face: Face, width: Int, height: Int  )
 	{
 		Utils.error("STUB");
 
 		return null;
 	}
 
-	function getStandardTangent( face: Face)
+	function getStandardTangent( face: Face) : Point
 	{
-		var tangentOut: Vector = new Vector();
+		var tangentOut: Point = new Point();
 
 		var du = face.planeNormal.dot( vUp );
 		var dr = face.planeNormal.dot( vRight );
@@ -346,7 +347,7 @@ class GeoGenerator
 		var dra = Math.abs( dr );
 		var dfa = Math.abs( df );
 
-		var uAxis: Vector = new Vector();
+		var uAxis: Point = new Point();
 		var vSign: Float = 0;
 		if( dua >= dra && dua >= dfa )
 		{
@@ -364,18 +365,18 @@ class GeoGenerator
 			vSign = sign(df);
 		}
 
-		vSign *= sign( face.uvExtra.scaleY);
-		uAxis = vectorRotate( uAxis, face.planeNormal, -face.uvExtra.rot * vSign );
+		vSign *= sign( face.uvExtra.scaleY );
+		uAxis = uAxis.multiply(vSign);
+		uAxis = PointRotate( uAxis, face.planeNormal, -face.uvExtra.rot * vSign );
 
 		tangentOut.x = uAxis.x;
 		tangentOut.y = uAxis.y;
 		tangentOut.z = uAxis.z;
-		tangentOut.w = vSign;
 
 		return tangentOut;
 	}
 
-	function getStandardUV( vertex: Vector, face: Face, width: Int, height: Int )
+	function getStandardUV( vertex: Point, face: Face, width: Int, height: Int )
 	{
 		var uvOut: VertexUV = {};
 
@@ -409,7 +410,7 @@ class GeoGenerator
 		return uvOut;
 	}
 
-	function intersectFaces( f0: Face, f1: Face, f2: Face, out: Vector)
+	function intersectFaces( f0: Face, f1: Face, f2: Face, out: Point)
 	{
 		var normal0 = f0.planeNormal;
 		var normal1 = f1.planeNormal;
@@ -428,8 +429,8 @@ class GeoGenerator
 			var cd2 = normal0.cross(normal1).multiply( f2.planeDist);
 
 			// @todo this could be more efficient probably?
-			var sum: Vector = cd0.add(cd1.add(cd2));
-			var result = vectorDivide(sum, denom);
+			var sum: Point = cd0.add(cd1.add(cd2));
+			var result = PointDivide(sum, denom);
 
 			out.set( result.x, result.y, result.z );
 		}
@@ -437,7 +438,7 @@ class GeoGenerator
 		return true;
 	}
 
-	function vertexInHull( faces: Array<Face>, out: Vector )
+	function vertexInHull( faces: Array<Face>, out: Point )
 	{
 		for( f in 0 ... faces.length )
 		{

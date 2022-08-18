@@ -1,10 +1,14 @@
 package cerastes.c3d;
+import bullet.Constants.CollisionFlags;
+import cerastes.c3d.BulletWorld.BulletCollisionFilterMask;
+import cerastes.c3d.BulletWorld.BulletCollisionFilterGroup;
 import h3d.col.ObjectCollider;
 import bullet.*;
 
 enum BulletBodyType {
 	RigidBody;
 	CollisionObject;
+	GhostObject;
 }
 
 class BulletBody {
@@ -37,7 +41,7 @@ class BulletBody {
 	// HACK: Hold on to a handle to any used mesh so we GC it properly
 	public var mesh: Native.StridingMeshInterface;
 
-	public function new( shape : Native.CollisionShape, mass : Float, ?world : BulletWorld, ?type: BulletBodyType = RigidBody ) {
+	public function new( shape : Native.CollisionShape, mass : Float, ?type: BulletBodyType = RigidBody ) {
 
 		this.type = type;
 		state = new Native.DefaultMotionState();
@@ -58,6 +62,11 @@ class BulletBody {
 			case CollisionObject:
 				inst = new Native.CollisionObject();
 				inst.setCollisionShape( shape );
+
+			case GhostObject:
+				inst = new Native.GhostObject();
+				inst.setCollisionFlags( inst.getCollisionFlags() ^ CollisionFlags.CF_NO_CONTACT_RESPONSE );
+				inst.setCollisionShape( shape );
 		}
 
 
@@ -65,7 +74,6 @@ class BulletBody {
 		this.shape = shape;
 
 		_tmp[6] = 0.;
-		if( world != null ) addTo(world);
 	}
 
 	function set_alwaysActive(b) {
@@ -80,9 +88,9 @@ class BulletBody {
 		return o;
 	}
 
-	public function addTo( world : BulletWorld ) {
+	public function addTo( world : BulletWorld, group: BulletCollisionFilterGroup, mask: BulletCollisionFilterMask ) {
 		if( this.world != null ) remove();
-		@:privateAccess world.addBody(this);
+		@:privateAccess world.addBody(this, group, mask);
 	}
 
 	public function remove() {
@@ -121,7 +129,7 @@ class BulletBody {
 				var inst: Native.RigidBody = cast inst;
 				t = inst.getCenterOfMassTransform();
 
-			case CollisionObject:
+			case CollisionObject | GhostObject:
 				t = inst.getWorldTransform();
 		}
 
@@ -140,7 +148,7 @@ class BulletBody {
 				var inst: Native.RigidBody = cast inst;
 				inst.setCenterOfMassTransform(t);
 
-			case CollisionObject:
+			case CollisionObject | GhostObject:
 				inst.setWorldTransform(t);
 		}
 
@@ -156,7 +164,7 @@ class BulletBody {
 				var inst: Native.RigidBody = cast inst;
 				inst.setAngularVelocity(zero);
 				inst.setLinearVelocity(zero);
-			case CollisionObject:
+			case CollisionObject | GhostObject:
 		}
 		_vel.set(0,0,0);
 		_avel.set(0,0,0);
@@ -193,7 +201,7 @@ class BulletBody {
 				var inst: Native.RigidBody = cast inst;
 				t = inst.getCenterOfMassTransform();
 
-			case CollisionObject:
+			case CollisionObject | GhostObject:
 				t = inst.getWorldTransform();
 		}
 
@@ -214,7 +222,7 @@ class BulletBody {
 				var inst: Native.RigidBody = cast inst;
 				t = inst.getCenterOfMassTransform();
 
-			case CollisionObject:
+			case CollisionObject | GhostObject:
 				t = inst.getWorldTransform();
 		}
 
@@ -234,7 +242,7 @@ class BulletBody {
 				_vel.assign(v);
 				return _vel;
 
-			case CollisionObject:
+			case CollisionObject | GhostObject:
 				return new Point();
 		}
 
@@ -250,7 +258,7 @@ class BulletBody {
 				var rp = new Native.Vector3(relx, rely, relz);
 				inst.applyImpulse( p, rp );
 				p.delete();
-			case CollisionObject:
+			case CollisionObject | GhostObject:
 		}
 	}
 
@@ -266,7 +274,7 @@ class BulletBody {
 				p.delete();
 				return v;
 
-			case CollisionObject:
+			case CollisionObject | GhostObject:
 				return v;
 		}
 
@@ -281,7 +289,7 @@ class BulletBody {
 				_avel.assign(v);
 				return _avel;
 
-			case CollisionObject:
+			case CollisionObject | GhostObject:
 				return new Point();
 		}
 	}
@@ -299,7 +307,7 @@ class BulletBody {
 				p.delete();
 				return v;
 
-			case CollisionObject:
+			case CollisionObject | GhostObject:
 				return v;
 		}
 	}

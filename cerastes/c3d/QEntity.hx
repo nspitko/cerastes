@@ -102,28 +102,32 @@ class QEntity extends Object implements cerastes.Entity
 		if( def.spawnType == EST_ENTITY )
 		{
 			var origin = def.getProperty('origin');
-			var bits = origin.split(" ");
+			if( origin != null )
+			{
+				var bits = origin.split(" ");
 
-			setPosition(
-				-Std.parseFloat(bits[0]),
-				Std.parseFloat(bits[1]),
-				Std.parseFloat(bits[2])
-			);
+				setPosition(
+					-Std.parseFloat(bits[0]),
+					Std.parseFloat(bits[1]),
+					Std.parseFloat(bits[2])
+				);
+			}
 		}
 
-		onCreated(def.properties);
+		onCreated(def);
 
 		if( body != null )
 		{
 			body.setTransform( new bullet.Point( x, y, z ) );
 		}
+
 		world.entityManager.register(this);
 
 	}
 
 	// Called when an entity is created, override this to define entity specific
 	// behaviors
-	function onCreated( props: Array<Property> ) { }
+	function onCreated( def: cerastes.c3d.map.Data.Entity ) { }
 
 	// ====================================================================================
 	// Static helpers
@@ -139,7 +143,7 @@ class QEntity extends Object implements cerastes.Entity
 		var className = def.getProperty("classname");
 		if( className == null )
 		{
-			Utils.warning('Entity def missing classname!!!');
+		Utils.warning('Entity def missing classname!!!');
 			return null;
 		}
 

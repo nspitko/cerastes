@@ -86,6 +86,9 @@ class FGDGenerator
 											line += '\n\t${f.name}(${f.type})';
 											if( f.desc != null )
 												line += ' : "${f.desc}"';
+
+											if( f.def != null )
+												line += ' : "${f.def}"';
 										}
 										line += "\n]";
 									}

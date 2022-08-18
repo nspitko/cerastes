@@ -70,8 +70,14 @@ class MaterialDef
 		var mat = @:privateAccess new PbrMaterial( tex );
 		mat.props = getProps();
 
+		mat.mainPass.enableLights = true;
+		mat.shadows = true;
+
 		if( normal != null )
+		{
 			mat.normalMap = Utils.resolveTexture( normal );
+			mat.normalMap.wrap = textureWrap ? Repeat : Clamp;
+		}
 
 		// If we have a pbr map, use that.
 		if( pbr != null )
@@ -87,6 +93,7 @@ class MaterialDef
 				props.texture = Utils.resolveTexture( pbr );
 			}
 
+			props.texture.wrap = textureWrap ? Repeat : Clamp;
 			props.emissiveValue = emissive;
 
 			var oldProps = mat.mainPass.getShader( h3d.shader.pbr.PropsValues );
@@ -143,7 +150,7 @@ class MaterialDef
 			props.parallax = parallax;
 
 		if( textureWrap )
-			props.textureWrap = true;
+			props.textureWrap = textureWrap;
 
 		// @todo: optional stencil ops
 
@@ -155,6 +162,14 @@ class MaterialDef
 		if( file == null || !hxd.Res.loader.exists( file ))
 		{
 			var mat: MaterialDef = {};
+			return mat.toMaterial();
+		}
+
+		// If it's not a material, load the texture and jam it into the default material
+		if( !StringTools.endsWith(file, ".material") )
+		{
+			var mat: MaterialDef = {};
+			mat.albedo = file;
 			return mat.toMaterial();
 		}
 

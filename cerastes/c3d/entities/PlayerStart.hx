@@ -1,5 +1,6 @@
 package cerastes.c3d.entities;
 
+import format.swf.Data.PlaceObject;
 import h3d.col.Point;
 import h3d.scene.Graphics;
 import cerastes.c3d.map.Data.Property;
@@ -15,9 +16,9 @@ import cerastes.c3d.QEntity;
 )
 class PlayerStart extends QEntity
 {
-	override function onCreated( props: Array<Property> )
+	override function onCreated( def: cerastes.c3d.map.Data.Entity )
 	{
-		super.onCreated( props );
+		super.onCreated( def );
 
 		var g = new Graphics(this);
 
@@ -26,7 +27,7 @@ class PlayerStart extends QEntity
 
 		var lineSize = 25;
 		var arrowSize = 10;
-
+/*
 		// X (Red)
 		g.lineStyle(1, 0xFF0000, 1);
 		g.drawLine(new Point(-lineSize,0,0), new Point(lineSize,0,0));
@@ -41,7 +42,7 @@ class PlayerStart extends QEntity
 		g.lineStyle(1, 0x0000FF, 1);
 		g.drawLine(new Point(0,0,-lineSize), new Point(0,0,lineSize));
 		g.drawLine(new Point(arrowSize,0,lineSize), new Point(-arrowSize,0,lineSize));
-
+*/
 		// physics test
 		var radius = 16;
 		var sp = new h3d.prim.Sphere(radius, 8, 6);
@@ -54,10 +55,11 @@ class PlayerStart extends QEntity
 		var mesh = new h3d.scene.Mesh(sp, mat, this );
 		mesh.material.shadows = true;
 
-		body = new BulletBody( new bullet.Native.SphereShape(radius), 50, world.physics );
+		body = new BulletBody( new bullet.Native.SphereShape(radius), 50, RigidBody );
 		body.object = this;
+		world.physics.addBody( body, NPC, MASK_NPC );
 
-		body.applyImpulse(Math.random() * 2000 - 1000,Math.random() * 2000 - 1000,0);
-		body.setRollingFriction(100.0);
+		//body.applyImpulse(Math.random() * 2000 - 1000,Math.random() * 2000 - 1000,0);
+		//body.setRollingFriction(100.0);
 	}
 }

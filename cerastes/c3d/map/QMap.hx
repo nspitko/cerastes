@@ -17,149 +17,18 @@ import h3d.scene.MultiMaterial;
 import cerastes.c3d.Material.MaterialDef;
 import cerastes.c3d.map.Data.MapData;
 import h3d.scene.Object;
-
-class QBrushPrim extends h3d.prim.Polygon
-{
-	var brushGeo: BrushGeometry;
-	var entity: Entity;
-
-	public function new( e: Entity, bGeo: BrushGeometry )
-	{
-		super(null);
-		this.entity = e;
-		this.brushGeo = bGeo;
-	}
-
-	override function alloc( engine: h3d.Engine )
-	{
-		dispose();
-
-		var stride = 11;
-		var names = ["position", "normal", "tangent", "uv"];
-		var positions = [0, 3, 6, 9];
-
-		var buf = new hxd.FloatBuffer();
-
-		var idx = new IndexBuffer();
-
-		for( f in brushGeo.faces )
-		{
-			if( f.indices == null )
-				continue;
-
-			for( v in f.vertices )
-			{
-				buf.push(v.vertex.x);
-				buf.push(v.vertex.y);
-				buf.push(v.vertex.z);
-
-				buf.push(v.normal.x);
-				buf.push(v.normal.y);
-				buf.push(v.normal.z);
-
-				buf.push(v.tangent.x);
-				buf.push(v.tangent.y);
-				buf.push(v.tangent.z);
-
-				buf.push(v.uv.u);
-				buf.push(v.uv.v);
-			}
-
-			for( i in f.indices )
-				idx.push(i);
-		}
-
-		if( idx.length == 0 )
-			return;
-
-		buffer = h3d.Buffer.ofFloats(buf, stride, [ Triangles, RawFormat ]);
-		indexes = h3d.Indexes.alloc(idx);
-
-		for( i in 0...names.length )
-			addBuffer(names[i], buffer, positions[i]);
-	}
-
-}
-
-class QBrush extends MultiMaterial
-{
-	public function new( e: Entity, brush: BrushGeometry, materials, parent: Object )
-	{
-		var prim = new QBrushPrim( e, brush );
-		super(prim, materials, parent);
-
-	}
-}
+import cerastes.c3d.DebugDraw;
 
 
-class QSurfacePrim extends h3d.prim.Polygon
-{
-	var surface: Surface;
 
-	public function new( s: Surface )
-	{
-		super(null);
-		this.surface = s;
-	}
-
-	override function alloc( engine: h3d.Engine )
-	{
-		dispose();
-
-		var stride = 11;
-		var names = ["position", "normal", "tangent", "uv"];
-		var positions = [0, 3, 6, 9];
-
-		var buf = new hxd.FloatBuffer();
-
-		var idx = new IndexBuffer();
-
-		for( v in surface.vertices )
-		{
-			buf.push(v.vertex.x);
-			buf.push(v.vertex.y);
-			buf.push(v.vertex.z);
-
-			buf.push(v.normal.x);
-			buf.push(v.normal.y);
-			buf.push(v.normal.z);
-
-			buf.push(v.tangent.x);
-			buf.push(v.tangent.y);
-			buf.push(v.tangent.z);
-
-			buf.push(v.uv.u);
-			buf.push(v.uv.v);
-		}
-
-		for( i in surface.indices )
-			idx.push(i);
-
-
-		buffer = h3d.Buffer.ofFloats(buf, stride, [ Triangles, RawFormat ]);
-		indexes = h3d.Indexes.alloc(idx);
-
-		for( i in 0...names.length )
-			addBuffer(names[i], buffer, positions[i]);
-	}
-
-}
-
-class QSurface extends Mesh
-{
-	public function new( surface: Surface, material: h3d.mat.Material, parent: Object )
-	{
-		var prim = new QSurfacePrim( surface );
-		super(prim, material, parent);
-	}
-}
 
 class QMap extends Object
 {
-	var data: MapData;
+	public var data: MapData; // gross hack
 	var world: QWorld;
 
 	var bodies: Array<BulletBody>;
+
 
 	public function new( file: String, world: QWorld, ?parent: Object )
 	{
@@ -170,42 +39,24 @@ class QMap extends Object
 		//var entry = hxd.Loader.load(file);
 
 		var parser = new cerastes.c3d.map.MapParser();
-		data = parser.load( hxd.Res.map.test1.entry );
+		data = parser.load( hxd.Res.loader.load( file ).entry );
 
 		data.setSpawnTypeByClassName("worldspawn", EST_WORLDSPAWN);
-		data.setSpawnTypeByClassName("func_group", EST_WORLDSPAWN);
+		// worldspawn mergers
+		data.setSpawnTypeByClassName("func_group", EST_MERGE_WORLDSPAWN);
+		data.setSpawnTypeByClassName("func_detail", EST_MERGE_WORLDSPAWN);
+		//data.setSpawnTypeByClassName("func_detail_illusory", EST_BRUSH);
+		data.setSpawnTypeByClassName("func_detail_wall", EST_MERGE_WORLDSPAWN);
+		//data.setSpawnTypeByClassName("func_illusory", EST_BRUSH);
 
 		var generator = new cerastes.c3d.map.GeoGenerator();
 		generator.run( data );
 
-		init();
+
 	}
 
-	function init()
+	public function init()
 	{
-		var materials = new Array<h3d.mat.Material>();
-		// @todo
-		for( t in data.textures )
-		{
-			var mat = MaterialDef.loadMaterial( "mat/__TB_empty.material" );
-			mat.name = t.name;
-			mat.shadows = true;
-
-			materials.push(mat);
-
-		}
-
-		var surfaceGatherer = new cerastes.c3d.map.SurfaceGatherer( data );
-		surfaceGatherer.gatherTextureSurfaces();
-
-		for( s in 0 ... surfaceGatherer.surfaces.length )
-		{
-			var s = surfaceGatherer.surfaces[s];
-			if( s.vertices.length == 0 )
-				continue;
-
-			new QSurface(s, materials[0], this);
-		}
 
 		// Add entity spawns
 		for( e in data.entities )
@@ -213,52 +64,42 @@ class QMap extends Object
 			QEntity.createEntity( e, world );
 		}
 
-		createStaticCollision( surfaceGatherer );
 	}
 
-	function createStaticCollision( surfaceGatherer: SurfaceGatherer )
+
+
+	function debugDrawSurfaceDetails( s: Surface, drawFaces = false, drawNormals = false, drawTangents = false )
 	{
-		bodies = [];
-		surfaceGatherer.gatherConvexCollisionSurfaces();
-		var surfaces = surfaceGatherer.surfaces;
 
-		for( s in surfaces )
+		if( s.indices.length < 3 )
+			return;
+
+		// Draw triangles
+		var i = 0;
+		if( drawFaces )
 		{
-			var iface = new bullet.Native.TriangleMesh();
-			var i = 0;
-			if( s.indices.length < 3 )
-				continue;
-
 			while( i < s.indices.length )
 			{
-				iface.addTriangle(
-					new bullet.Native.Vector3(
-						s.vertices[ s.indices[ i + 0 ] ].vertex.x,
-						s.vertices[ s.indices[ i + 0 ] ].vertex.y,
-						s.vertices[ s.indices[ i + 0 ] ].vertex.z
-					 ),
-					 new bullet.Native.Vector3(
-						s.vertices[ s.indices[ i + 1 ] ].vertex.x,
-						s.vertices[ s.indices[ i + 1 ] ].vertex.y,
-						s.vertices[ s.indices[ i + 1 ] ].vertex.z
-					 ),
-					 new bullet.Native.Vector3(
-						s.vertices[ s.indices[ i + 2 ] ].vertex.x,
-						s.vertices[ s.indices[ i + 2 ] ].vertex.y,
-						s.vertices[ s.indices[ i + 2 ] ].vertex.z
-					 ),
-					 true
-				 );
-				 i+=3;
+				var idx =  s.indices[i];
+				var idxn =  s.indices[i+1];
+				DebugDraw.line( s.vertices[idx].vertex, s.vertices[idxn].vertex, 0x00FF00, -1, 0.25 );
+				i++;
+				if( i % 3 == 2 ) i++;
 			}
+		}
 
-			var shape = new bullet.Native.ConvexTriangleMeshShape(iface, true );
+		// Draw normal/tangent
+		var i = 0;
+		var scale: Float = 8;
+		while( i < s.vertices.length )
+		{
+			var vtx = s.vertices[i];
+			if( drawNormals )
+				DebugDraw.line( vtx.vertex, vtx.vertex.add( vtx.normal.multiply(scale) ), 0x0000FF,-1 );
+			if( drawTangents )
+				DebugDraw.line( vtx.vertex, vtx.vertex.add( vtx.tangent.multiply(scale) ), 0xFF0000,-1 );
 
-			var b = new cerastes.c3d.BulletBody( shape, 0, world.physics, CollisionObject );
-			b.mesh = iface;
-			bodies.push(b);
-
-
+			i++;
 		}
 	}
 }

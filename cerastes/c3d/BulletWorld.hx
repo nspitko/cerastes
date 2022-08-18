@@ -2,6 +2,25 @@ package cerastes.c3d;
 
 import bullet.*;
 
+@:enum
+abstract BulletCollisionFilterGroup(Int) from Int to Int
+{
+	public var WORLD		= (1 << 0 );
+	public var NPC			= (1 << 1 );
+	public var PLAYER		= (1 << 2 );
+	public var PROP			= (1 << 3 );
+}
+
+@:enum
+abstract BulletCollisionFilterMask(Int) from Int to Int
+{
+	public var MASK_ALL						= WORLD | NPC | PLAYER | PROP;
+	public var MASK_WORLD					= NPC | PLAYER | PROP; // I'm the world, I collide with things that are not the world
+	public var MASK_PLAYER					= WORLD | NPC | PROP;
+	public var MASK_NPC						= WORLD | PLAYER; // NPCs ignore props for pathings reasons that may exist some day
+}
+
+
 class BulletWorld {
 
 	var config : Native.DefaultCollisionConfiguration;
@@ -32,6 +51,21 @@ class BulletWorld {
 		inst.stepSimulation(time, iterations);
 	}
 
+	public function checkCollisions()
+	{
+		var numManifolds = dispatch.getNumManifolds();
+		for( i in 0 ... numManifolds )
+		{
+			var manifold = dispatch.getManifoldByIndexInternal( i );
+			var bodyA = bodies[ manifold.getBody0().getUserIndex() ];
+			var bodyB = bodies[ manifold.getBody1().getUserIndex() ];
+
+			//DebugDraw.line( bodyA.position, bodyB.position, 0xFF0000 );
+		}
+
+
+	}
+
 	public function sync() {
 		for( b in bodies )
 			if( b.object != null )
@@ -42,24 +76,51 @@ class BulletWorld {
 		pcache.cleanProxyFromPairs(@:privateAccess b.inst.getBroadphaseHandle(),dispatch);
 	}
 
-	function addBody( b : BulletBody ) {
+	public function addBody( b : BulletBody, group: BulletCollisionFilterGroup, mask: BulletCollisionFilterMask )
+	{
 		if( b.world != null ) throw "Body already in world";
-		bodies.push(b);
+
+		var found = false;
+		for(idx in 0 ... bodies.length )
+		{
+			if( bodies[idx] == null )
+			{
+				bodies[idx] = b;
+				@:privateAccess b.inst.setUserIndex( idx );
+				found = true;
+				break;
+			}
+		}
+
+		if( !found )
+		{
+			@:privateAccess b.inst.setUserIndex( bodies.length );
+			bodies.push(b);
+		}
+
 		@:privateAccess b.world = this;
 		switch( b.type )
 		{
 			case RigidBody:
-				inst.addRigidBody(@:privateAccess cast b.inst,1,1);
-			case CollisionObject:
-				inst.addCollisionObject( @:privateAccess cast b.inst, 1, 1);
+				inst.addRigidBody(@:privateAccess cast b.inst,group,mask);
+			case CollisionObject | GhostObject:
+				inst.addCollisionObject( @:privateAccess cast b.inst,group,mask);
 
 		}
 
-		if( b.object != null && parent != null && b.object.parent == null ) parent.addChild(b.object);
+		if( b.object != null && parent != null && b.object.parent == null )
+			parent.addChild(b.object);
+
 	}
 
-	function removeBody( b : BulletBody ) {
-		if( !bodies.remove(b) ) return;
+	function removeBody( b : BulletBody )
+	{
+		// Never remove items from the array, just null them out so we can retain indices
+		var idx = bodies.indexOf(b);
+		if( idx == -1 )
+			return;
+		bodies[idx] = null;
+
 		@:privateAccess b.world = null;
 
 		inst.removeRigidBody(@:privateAccess cast b.inst);
@@ -67,9 +128,8 @@ class BulletWorld {
 		{
 			case RigidBody:
 				inst.removeRigidBody(@:privateAccess cast b.inst);
-			case CollisionObject:
+			case CollisionObject | GhostObject:
 				inst.removeCollisionObject( @:privateAccess cast b.inst);
-
 		}
 
 		if( b.object != null && b.object.parent == parent ) b.object.remove();

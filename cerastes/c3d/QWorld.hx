@@ -45,12 +45,14 @@ class QWorld extends Object
 	public function loadMap(file: String)
 	{
 		map = new cerastes.c3d.map.QMap(file, this, this);
+		map.init();
 	}
 
 	public function tick(delta: Float)
 	{
 		#if bullet
 		physics.stepSimulation( delta, physicsMaxSubSteps);
+		physics.checkCollisions();
 		#end
 		entityManager.tick(delta);
 	}

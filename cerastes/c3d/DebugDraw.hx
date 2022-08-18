@@ -45,7 +45,7 @@ class DebugDraw
 		while( i >= 0 )
 		{
 			var line = lines[i];
-			if( line.time < hxd.Timer.lastTimeStamp )
+			if( line.time >= 0 && line.time < hxd.Timer.lastTimeStamp )
 			{
 				lines.splice(i,1);
 				dirty = true;
@@ -67,19 +67,19 @@ class DebugDraw
 		}
 	}
 
-	public static function line(source: Vector, target: Vector, color: Int, duration: Float = 0, alpha: Float = 1, thickness: Float = 1 )
+	public static function line(source: Point, target: Point, color: Int, duration: Float = 0, alpha: Float = 1, thickness: Float = 1 )
 	{
 		addLine( source, target, color, duration, thickness );
 	}
 
-	public static function box( position: Vector, size: Float = 15, color: Int = 0xFFFFFF, duration: Float = 0, alpha: Float = 1, thickness: Float = 1 )
+	public static function box( position: Point, size: Float = 15, color: Int = 0xFFFFFF, duration: Float = 0, alpha: Float = 1, thickness: Float = 1 )
 	{
-		polygon(cube, new Point( position.x, position.y, position.z), size, color, duration, alpha, thickness );
+		polygon(cube, position, size, color, duration, alpha, thickness );
 	}
 
-	public static function sphere( position: Vector, size: Float = 15, color: Int = 0xFFFFFF, duration: Float = 0, alpha: Float = 1, thickness: Float = 1 )
+	public static function sphere( position: Point, size: Float = 15, color: Int = 0xFFFFFF, duration: Float = 0, alpha: Float = 1, thickness: Float = 1 )
 	{
-		polygon(ball, new Point( position.x, position.y, position.z), size, color, duration, alpha, thickness );
+		polygon(ball, position, size, color, duration, alpha, thickness );
 	}
 
 	public static function polygon( polygon: Polygon, position: Point, size, color: Int, duration: Float = 0, alpha: Float = 1, thickness: Float = 1 )
@@ -89,7 +89,7 @@ class DebugDraw
 		{
 			var idx = polygon.idx[i];
 			var idxn = polygon.idx[i+1];
-			addLinePoint( polygon.points[idx].multiply(size).add( position ), polygon.points[idxn].multiply(size).add( position ), color, duration, alpha, thickness );
+			addLine( polygon.points[idx].multiply(size).add( position ), polygon.points[idxn].multiply(size).add( position ), color, duration, alpha, thickness );
 			i++;
 			if( i % 3 == 2 ) i++;
 		}
@@ -101,40 +101,27 @@ class DebugDraw
 		var arrowSize = size * 0.25;
 
 		// x (Red)
-		addLinePoint(new Point( position.x + -lineSize, position.y + 0, position.z + 0), new Point( position.x + lineSize, position.y + 0, position.z + 0),0xFF0000, duration);
-		addLinePoint(new Point( position.x + lineSize, position.y + arrowSize, position.z + 0), new Point( position.x + lineSize, position.y + -arrowSize, position.z + 0),0xFF0000, duration);
+		addLine(new Point( position.x + -lineSize, position.y + 0, position.z + 0), new Point( position.x + lineSize, position.y + 0, position.z + 0),0xFF0000, duration);
+		addLine(new Point( position.x + lineSize, position.y + arrowSize, position.z + 0), new Point( position.x + lineSize, position.y + -arrowSize, position.z + 0),0xFF0000, duration);
 
 		// Y (Green)
-		addLinePoint(new Point( position.x + 0, position.y + -lineSize, position.z + 0), new Point( position.x + 0, position.y + lineSize, position.z + 0),0x00FF00, duration);
-		addLinePoint(new Point( position.x + arrowSize,lineSize, position.z + 0), new Point( position.x + -arrowSize,lineSize, position.z + 0),0x00FF00, duration);
+		addLine(new Point( position.x + 0, position.y + -lineSize, position.z + 0), new Point( position.x + 0, position.y + lineSize, position.z + 0),0x00FF00, duration);
+		addLine(new Point( position.x + arrowSize,lineSize, position.z + 0), new Point( position.x + -arrowSize,lineSize, position.z + 0),0x00FF00, duration);
 
 		// Z (Blue)
-		addLinePoint(new Point( position.x + 0, position.y + 0, position.z + -lineSize), new Point( position.x + 0, position.y + 0, position.z + lineSize),0x0000FF, duration);
-		addLinePoint(new Point( position.x + arrowSize, position.y + 0, position.z + lineSize), new Point( position.x + -arrowSize, position.y + 0, position.z + lineSize),0x0000FF, duration);
+		addLine(new Point( position.x + 0, position.y + 0, position.z + -lineSize), new Point( position.x + 0, position.y + 0, position.z + lineSize),0x0000FF, duration);
+		addLine(new Point( position.x + arrowSize, position.y + 0, position.z + lineSize), new Point( position.x + -arrowSize, position.y + 0, position.z + lineSize),0x0000FF, duration);
 
 	}
 
-	static function addLine( source: Vector, target: Vector, color: Int, duration: Float = 0, alpha: Float = 1, thickness: Float = 1 )
-	{
-		dirty = true;
-		lines.push({
-			start: new Point( source.x, source.y, source.z),
-			end: new Point( target.x, target.y, target.z),
-			color: color,
-			time: hxd.Timer.lastTimeStamp + duration,
-			thickness: thickness,
-			alpha: alpha
-		});
-	}
-
-	static function addLinePoint( source: Point, target: Point, color: Int, duration: Float = 0, alpha: Float = 1, thickness: Float = 1 )
+	static function addLine( source: Point, target: Point, color: Int, duration: Float = 0, alpha: Float = 1, thickness: Float = 1 )
 	{
 		dirty = true;
 		lines.push({
 			start: source,
 			end: target,
 			color: color,
-			time: hxd.Timer.lastTimeStamp + duration,
+			time: duration >= 0 ? hxd.Timer.lastTimeStamp + duration : duration,
 			thickness: thickness,
 			alpha: alpha
 		});

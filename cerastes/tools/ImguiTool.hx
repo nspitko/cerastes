@@ -228,6 +228,7 @@ class ImGuiToolManager
 		//atlas.addFontDefault();
 		var font = atlas.addFontFromFileTTF(file, size * dpiScale);
 
+
 		var facfg = new ImFontConfig();
 
 		#if imjp

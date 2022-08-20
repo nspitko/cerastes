@@ -36,7 +36,9 @@ import imgui.ImGuiDrawable.ImGuiDrawableBuffers;
 import imgui.ImGui;
 import cerastes.data.Nodes;
 
+#if imguizmo
 import imgui.ImGuizmo;
+#end
 
 
 enum MESelectedObjectType {
@@ -545,7 +547,9 @@ class ModelEditor extends ImguiTool
 
 		ImGui.setNextWindowDockId( dockspaceIdCenter, dockCond );
 		ImGui.begin('Preview##${windowID()}');
+		#if imguizmo
 		ImGuizmo.setDrawlist();
+		#end
 		handleShortcuts();
 
 		var size = ImGui.getWindowSize();
@@ -554,8 +558,9 @@ class ModelEditor extends ImguiTool
 		//var windowPos: ImVec2 = ImGui.getWindowPos();
 		ImGui.imageButton(sceneRT, { x: size.x , y: size.x }, null, null, 0 );
 		ImGuiToolManager.updatePreviewEvents( startPos, events );
-
+		#if imguizmo
 		ImGuizmo.setRect(startPos.x, startPos.y, size.x, size.x);
+		#end
 		//ImGuizmo.setRect(0, 0, 1920, 1080);
 		var gizmoWindowFlags = ImGui.isItemHovered() ? ImGuiWindowFlags.NoMove : 0;
 
@@ -588,8 +593,9 @@ class ModelEditor extends ImguiTool
 				var jointMatrix = new hl.NativeArray<Single>(16);
 				copyMatrix(jm, jointMatrix);
 
-
+				#if imguizmo
 				ImGuizmo.manipulate( cameraView, cameraProject, TRANSLATE, WORLD, jointMatrix );
+				#end
 
 
 			default:

@@ -104,7 +104,7 @@ class Entity
 
 	public var index: Int = -1;
 
-	public function getProperty(key: String )
+	public function getProperty(key: String, defaultVal: String = null )
 	{
 		for( p in properties )
 		{
@@ -112,7 +112,61 @@ class Entity
 				return p.value;
 		}
 
-		return null;
+		return defaultVal;
+	}
+
+	public function getPropertyInt(key: String, defaultVal: Int = 0 )
+	{
+		for( p in properties )
+		{
+			if( p.key == key )
+				return Std.parseInt( p.value );
+		}
+
+		return defaultVal;
+	}
+
+	public function getPropertyFloat(key: String, defaultVal: Float = 0 )
+	{
+		for( p in properties )
+		{
+			if( p.key == key )
+				return Std.parseFloat( p.value );
+		}
+
+		return defaultVal;
+	}
+
+	public function getPropertyPoint(key: String, defaultVal: Point = null )
+	{
+		for( p in properties )
+		{
+			if( p.key == key )
+			{
+				var bits = p.value.split(" ");
+				return new h3d.col.Point(
+					Std.parseFloat(bits[0]),
+					Std.parseFloat(bits[1]),
+					Std.parseFloat(bits[2])
+				);
+			}
+		}
+
+		return defaultVal;
+	}
+
+	public function setProperty( key: String, value: String )
+	{
+		for( p in properties )
+		{
+			if( p.key == key )
+			{
+				p.value = value;
+				return;
+			}
+		}
+
+		properties.push( { key: key, value: value } );
 	}
 }
 
@@ -211,6 +265,27 @@ class MapData
 		layer.buildVisuals = buildVisuals;
 	}
 
+	public static function resolveTextureName( name: String )
+	{
+		if(name == "__TB_empty")
+			name = "editor/__TB_empty";
+
+		if(  hxd.Res.loader.exists( 'textures/${name}.material' ) )
+			return 'textures/${name}.material';
+
+		if(  hxd.Res.loader.exists( 'textures/${name}.png' ) )
+			return 'textures/${name}.png';
+
+		// HACK FALLBACK
+		var fname = 'textures/quake/${name.toLowerCase()}.png';
+
+		if( hxd.Res.loader.exists( fname ) )
+			return fname;
+
+		return null;
+
+	}
+
 	// ----------------------------------------------------------------------------
 	public function registerTexture( name: String )
 	{
@@ -225,15 +300,20 @@ class MapData
 
 		t.name = name;
 
-		var actualTexture = hxd.Res.loader.load( 'textures/${name}.png' ).toTexture();
-		if( actualTexture == null )
+		var file = resolveTextureName( name );
+
+		if( file != null && hxd.Res.loader.exists( file ) )
 		{
-			Utils.warning('Could not find referenced texture ${name}');
+			var actualTexture = hxd.Res.loader.load( file ).toTexture();
+
+			t.width = actualTexture.width;
+			t.height = actualTexture.height;
 		}
 		else
 		{
-			t.width = actualTexture.width;
-			t.height = actualTexture.height;
+			Utils.warning('Could not find referenced texture ${name}');
+			t.width = 32;
+			t.height = 32;
 		}
 
 

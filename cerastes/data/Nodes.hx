@@ -10,9 +10,15 @@ import cerastes.tools.ImguiTools.IG;
 import hl.UI;
 #end
 
+#if hlimgui
 abstract NodeId32(Int) from NodeId to NodeId {}
 abstract PinId32(Int) from PinId to PinId {}
 abstract LinkId32(Int) from LinkId to LinkId {}
+#else
+abstract NodeId32(Int) from Int to Int {}
+abstract PinId32(Int) from Int to Int {}
+abstract LinkId32(Int) from Int to Int {}
+#end
 
 @:enum abstract NodeKind(Int) from Int to Int {
 	var Blueprint = 0;

@@ -1,4 +1,5 @@
 package cerastes.c3d;
+import cerastes.collision.Colliders.CollisionObject;
 import bullet.Constants.CollisionFlags;
 import cerastes.c3d.BulletWorld.BulletCollisionFilterMask;
 import cerastes.c3d.BulletWorld.BulletCollisionFilterGroup;
@@ -9,6 +10,7 @@ enum BulletBodyType {
 	RigidBody;
 	CollisionObject;
 	GhostObject;
+	PairCachingGhostObject;
 }
 
 class BulletBody {
@@ -25,6 +27,9 @@ class BulletBody {
 	var _q = new h3d.Quat();
 	var _tmp = new Array<Float>();
 
+	public var slamPosition = true;
+	public var slamRotation = true;
+
 	public var world(default,null) : BulletWorld;
 
 	public var shape(default,null) : Native.CollisionShape;
@@ -35,11 +40,13 @@ class BulletBody {
 	public var rotation(get,never) : h3d.Quat;
 	public var object(default,set) : h3d.scene.Object;
 	public var alwaysActive(default,set) = false;
+	public var collisionFlags(get,set) : CollisionFlags;
+	public var body(get,never) : bullet.Native.CollisionObject;
 
 	public var type(default,null): BulletBodyType;
 
 	// HACK: Hold on to a handle to any used mesh so we GC it properly
-	public var mesh: Native.StridingMeshInterface;
+	var mesh: Native.StridingMeshInterface;
 
 	public function new( shape : Native.CollisionShape, mass : Float, ?type: BulletBodyType = RigidBody ) {
 
@@ -67,6 +74,11 @@ class BulletBody {
 				inst = new Native.GhostObject();
 				inst.setCollisionFlags( inst.getCollisionFlags() ^ CollisionFlags.CF_NO_CONTACT_RESPONSE );
 				inst.setCollisionShape( shape );
+
+			case PairCachingGhostObject:
+				inst = new Native.PairCachingGhostObject();
+				//inst.setCollisionFlags( inst.getCollisionFlags() ^ CollisionFlags.CF_NO_CONTACT_RESPONSE );
+				inst.setCollisionShape( shape );
 		}
 
 
@@ -74,6 +86,22 @@ class BulletBody {
 		this.shape = shape;
 
 		_tmp[6] = 0.;
+	}
+
+	function get_collisionFlags()
+	{
+		return inst.getCollisionFlags();
+	}
+
+	function set_collisionFlags( v: CollisionFlags )
+	{
+		inst.setCollisionFlags( v );
+		return v;
+	}
+
+	function get_body()
+	{
+		return inst;
 	}
 
 	function set_alwaysActive(b) {
@@ -129,7 +157,7 @@ class BulletBody {
 				var inst: Native.RigidBody = cast inst;
 				t = inst.getCenterOfMassTransform();
 
-			case CollisionObject | GhostObject:
+			case CollisionObject | GhostObject | PairCachingGhostObject:
 				t = inst.getWorldTransform();
 		}
 
@@ -148,7 +176,7 @@ class BulletBody {
 				var inst: Native.RigidBody = cast inst;
 				inst.setCenterOfMassTransform(t);
 
-			case CollisionObject | GhostObject:
+			case CollisionObject | GhostObject | PairCachingGhostObject:
 				inst.setWorldTransform(t);
 		}
 
@@ -164,7 +192,7 @@ class BulletBody {
 				var inst: Native.RigidBody = cast inst;
 				inst.setAngularVelocity(zero);
 				inst.setLinearVelocity(zero);
-			case CollisionObject | GhostObject:
+			case CollisionObject | GhostObject | PairCachingGhostObject:
 		}
 		_vel.set(0,0,0);
 		_avel.set(0,0,0);
@@ -201,7 +229,7 @@ class BulletBody {
 				var inst: Native.RigidBody = cast inst;
 				t = inst.getCenterOfMassTransform();
 
-			case CollisionObject | GhostObject:
+			case CollisionObject | GhostObject | PairCachingGhostObject:
 				t = inst.getWorldTransform();
 		}
 
@@ -222,7 +250,7 @@ class BulletBody {
 				var inst: Native.RigidBody = cast inst;
 				t = inst.getCenterOfMassTransform();
 
-			case CollisionObject | GhostObject:
+			case CollisionObject | GhostObject | PairCachingGhostObject:
 				t = inst.getWorldTransform();
 		}
 
@@ -242,7 +270,7 @@ class BulletBody {
 				_vel.assign(v);
 				return _vel;
 
-			case CollisionObject | GhostObject:
+			case CollisionObject | GhostObject | PairCachingGhostObject:
 				return new Point();
 		}
 
@@ -258,7 +286,7 @@ class BulletBody {
 				var rp = new Native.Vector3(relx, rely, relz);
 				inst.applyImpulse( p, rp );
 				p.delete();
-			case CollisionObject | GhostObject:
+			case CollisionObject | GhostObject | PairCachingGhostObject:
 		}
 	}
 
@@ -274,7 +302,7 @@ class BulletBody {
 				p.delete();
 				return v;
 
-			case CollisionObject | GhostObject:
+			case CollisionObject | GhostObject | PairCachingGhostObject:
 				return v;
 		}
 
@@ -289,7 +317,7 @@ class BulletBody {
 				_avel.assign(v);
 				return _avel;
 
-			case CollisionObject | GhostObject:
+			case CollisionObject | GhostObject | PairCachingGhostObject:
 				return new Point();
 		}
 	}
@@ -307,7 +335,7 @@ class BulletBody {
 				p.delete();
 				return v;
 
-			case CollisionObject | GhostObject:
+			case CollisionObject | GhostObject | PairCachingGhostObject:
 				return v;
 		}
 	}
@@ -319,12 +347,18 @@ class BulletBody {
 	**/
 	public function sync() {
 		if( object == null ) return;
-		var pos = position;
-		object.x = pos.x;
-		object.y = pos.y;
-		object.z = pos.z;
-		var q = rotation;
-		object.getRotationQuat().load(q); // don't share reference
+		if( slamPosition )
+		{
+			var pos = position;
+			object.x = pos.x;
+			object.y = pos.y;
+			object.z = pos.z;
+		}
+		if( slamRotation )
+		{
+			var q = rotation;
+			object.getRotationQuat().load(q); // don't share reference
+		}
 	}
 
 }

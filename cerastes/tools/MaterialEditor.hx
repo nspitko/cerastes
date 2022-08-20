@@ -1,6 +1,7 @@
 
 package cerastes.tools;
 
+#if hlimgui
 import hl.UI;
 import imgui.ImGuiMacro.wref;
 import cerastes.file.CDParser;
@@ -12,7 +13,7 @@ import cerastes.c3d.Material.MaterialDef;
 import h3d.prim.Sphere;
 import haxe.rtti.Meta;
 import haxe.crypto.Md5;
-#if hlimgui
+
 
 import cerastes.flow.Flow;
 import h3d.Engine;

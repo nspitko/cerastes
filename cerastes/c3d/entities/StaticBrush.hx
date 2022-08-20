@@ -20,6 +20,11 @@ import cerastes.c3d.BulletWorld.BulletCollisionFilterMask;
 		name: "func_detail_wall",
 		desc: "Back compat; don't use",
 		type: "SolidClass",
+	},
+	{
+		name: "func_wall", // https://quakewiki.org/wiki/func_wall
+		desc: "Back compat; don't use",
+		type: "SolidClass",
 	}
 )
 class StaticBrush extends Brush
@@ -64,31 +69,3 @@ class IllusoryBrush extends Brush
 		]
 	}
 )
-class FuncMoverTest extends Brush
-{
-	var startingHeight:Float = 0;
-	var maxHeight:Float = 0;
-	var dir: Float = 1;
-
-	override function onCreated( def: cerastes.c3d.map.Data.Entity )
-	{
-		maxHeight = Std.parseFloat( def.getProperty("height") );
-		startingHeight = z;
-	}
-
-	public override function tick( delta: Float )
-	{
-		var body = bodies[0];
-		z = body.position.z;
-		if( dir > 0 && z >= startingHeight + maxHeight )
-			dir = -1;
-		else if( dir < 0 && z <= startingHeight )
-			dir = 1;
-
-		// @todo unfuck this
-		z += dir * delta * 100;
-
-		body.setTransform(new h3d.col.Point( body.position.x, body.position.y, z ) );
-
-	}
-}

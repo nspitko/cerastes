@@ -1,6 +1,5 @@
 package cerastes;
 
-import cerastes.tools.ImguiTool.ImGuiToolManager;
 import cerastes.macros.Callbacks.ClassKey;
 import cerastes.ui.Console.GlobalConsole;
 import hxd.fmt.fbx.BaseLibrary.TmpObject;
@@ -45,6 +44,7 @@ class Scene
     {
         cerastes.c3d.DebugDraw.tick(0); // Hack
         s3d.addChild( cerastes.c3d.DebugDraw.g );
+        s2d.addChild( cerastes.c3d.DebugDraw.t );
         #if hlimgui
         if( Main.instance.showTools)
         {

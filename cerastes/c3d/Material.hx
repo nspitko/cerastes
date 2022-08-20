@@ -5,8 +5,6 @@ import h3d.shader.pbr.PropsValues;
 import hl.UI;
 import cerastes.data.Nodes.NodeDefinition;
 import cerastes.data.Nodes.Link;
-import imgui.ImGuiMacro.wref;
-import imgui.ImGui;
 import cerastes.data.Nodes.Node;
 import h3d.mat.PbrMaterial;
 import h3d.mat.PbrMaterial.PbrProps;
@@ -17,7 +15,6 @@ import h3d.mat.PbrMaterial.PbrDepthTest;
 import h3d.mat.PbrMaterial.PbrMode;
 import h3d.mat.PbrMaterial.PbrBlend;
 import h3d.mat.PbrMaterial.PbrCullingMode;
-import cerastes.tools.ImguiTools.IG;
 
 import cerastes.Utils;
 
@@ -71,7 +68,8 @@ class MaterialDef
 		mat.props = getProps();
 
 		mat.mainPass.enableLights = true;
-		mat.shadows = true;
+		mat.staticShadows = true;
+
 
 		if( normal != null )
 		{

@@ -1,10 +1,11 @@
 package cerastes.flow;
 
+import cerastes.data.Nodes;
 import cerastes.GameState.FlowState;
-#if hlimgui
-import imgui.ImGuiMacro.wref;
 import game.GameState;
 import cerastes.fmt.FlowResource;
+#if hlimgui
+import imgui.ImGuiMacro.wref;
 import haxe.rtti.Meta;
 import cerastes.tools.ImGuiNodes;
 import cerastes.tools.ImguiTool;
@@ -13,7 +14,6 @@ import imgui.NodeEditor;
 import imgui.ImGui;
 import cerastes.tools.ImguiTools.IG;
 import hl.UI;
-import cerastes.data.Nodes;
 import cerastes.tools.FlowDebugger;
 #end
 

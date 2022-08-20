@@ -1,6 +1,7 @@
 
 package cerastes.c3d;
 
+import cerastes.c3d.QEntity.QEntityManager;
 import cerastes.c3d.map.QMap;
 #if bullet
 import bullet.Native;
@@ -14,7 +15,6 @@ import h3d.Vector;
 import h3d.Quat;
 import h3d.scene.World;
 import h3d.scene.Object;
-import cerastes.Entity.EntityManager;
 
 class QWorld extends Object
 {
@@ -29,7 +29,7 @@ class QWorld extends Object
 
 	public static var physicsMaxSubSteps = 1;
 
-	public var entityManager: EntityManager;
+	public var entityManager: QEntityManager;
 
 	public function new( ?parent: Object )
 	{
@@ -39,7 +39,7 @@ class QWorld extends Object
 		physics.setGravity(0,0,-9.8 * METERS_TO_QU);
 		#end
 
-		entityManager = new EntityManager();
+		entityManager = new QEntityManager();
 	}
 
 	public function loadMap(file: String)

@@ -9,15 +9,30 @@ abstract BulletCollisionFilterGroup(Int) from Int to Int
 	public var NPC			= (1 << 1 );
 	public var PLAYER		= (1 << 2 );
 	public var PROP			= (1 << 3 );
+	public var TRIGGER		= (1 << 4 );
 }
 
 @:enum
 abstract BulletCollisionFilterMask(Int) from Int to Int
 {
-	public var MASK_ALL						= WORLD | NPC | PLAYER | PROP;
+	public var MASK_ALL						= WORLD | NPC | PLAYER | PROP | TRIGGER;
 	public var MASK_WORLD					= NPC | PLAYER | PROP; // I'm the world, I collide with things that are not the world
-	public var MASK_PLAYER					= WORLD | NPC | PROP;
-	public var MASK_NPC						= WORLD | PLAYER; // NPCs ignore props for pathings reasons that may exist some day
+	public var MASK_PLAYER					= WORLD | NPC | PROP | TRIGGER;
+	public var MASK_NPC						= WORLD | PLAYER | TRIGGER; // NPCs ignore props for pathings reasons that may exist some day
+	public var MASK_TRIGGER					= PLAYER | NPC | PROP; // triggers look for point entities only
+}
+
+@:structInit
+class BulletContactManifold
+{
+	public var appliedImpulse: Float;
+	public var distance: Float;
+	public var localPointSelf: bullet.Native.Vector3;
+	public var localPointOther: bullet.Native.Vector3;
+	public var worldPointSelf: bullet.Native.Vector3;
+	public var worldPointOther: bullet.Native.Vector3;
+	public var normalOnWorld: bullet.Native.Vector3;
+
 }
 
 
@@ -61,6 +76,15 @@ class BulletWorld {
 			var bodyB = bodies[ manifold.getBody1().getUserIndex() ];
 
 			//DebugDraw.line( bodyA.position, bodyB.position, 0xFF0000 );
+			var entA = Std.downcast( bodyA.object, QEntity );
+			var entB = Std.downcast( bodyB.object, QEntity );
+
+			if( entA != null )
+				@:privateAccess entA.collide(manifold, bodyA, entB, bodyB);
+
+			if( entB != null )
+				@:privateAccess entB.collide(manifold, bodyB, entA, bodyA );
+
 		}
 
 
@@ -103,7 +127,7 @@ class BulletWorld {
 		{
 			case RigidBody:
 				inst.addRigidBody(@:privateAccess cast b.inst,group,mask);
-			case CollisionObject | GhostObject:
+			case CollisionObject | GhostObject | PairCachingGhostObject:
 				inst.addCollisionObject( @:privateAccess cast b.inst,group,mask);
 
 		}
@@ -128,7 +152,7 @@ class BulletWorld {
 		{
 			case RigidBody:
 				inst.removeRigidBody(@:privateAccess cast b.inst);
-			case CollisionObject | GhostObject:
+			case CollisionObject | GhostObject | PairCachingGhostObject:
 				inst.removeCollisionObject( @:privateAccess cast b.inst);
 		}
 

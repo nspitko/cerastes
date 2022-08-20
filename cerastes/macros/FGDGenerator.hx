@@ -31,6 +31,8 @@ class FGDGenerator
 // !! DO NOT EDIT !!
 // This file is automatically regenerated on compile.
 //
+
+@include \"base.fgd\"
 ";
 
 	macro public static function build():Array<Field>
@@ -83,12 +85,37 @@ class FGDGenerator
 										var arr: Array<Dynamic> = cast d.fields;
 										for( f in arr )
 										{
+
 											line += '\n\t${f.name}(${f.type})';
 											if( f.desc != null )
 												line += ' : "${f.desc}"';
 
 											if( f.def != null )
 												line += ' : "${f.def}"';
+
+											switch( f.type )
+											{
+												case "flags":
+													line += " = [";
+													var opts: Array<Dynamic> = cast f.opts;
+													for( opt in opts)
+													{
+														line += '\n\t\t${opt.f} : "${opt.d}" : ${opt.v}';
+													}
+
+													line += "\n\t]";
+												case "choices":
+													line += " = [";
+													var opts: Array<Dynamic> = cast f.opts;
+													for( opt in opts)
+													{
+														line += '\n\t\t${opt.v} : "${opt.d}"';
+													}
+
+													line += "\n\t]";
+
+												default:
+											}
 										}
 										line += "\n]";
 									}

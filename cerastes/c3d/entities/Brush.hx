@@ -1,5 +1,6 @@
 package cerastes.c3d.entities;
 
+import cerastes.c3d.map.Data.MapData;
 import cerastes.c3d.BulletWorld.BulletCollisionFilterGroup;
 import cerastes.c3d.BulletWorld.BulletCollisionFilterMask;
 
@@ -31,11 +32,19 @@ class QBrushPrim extends h3d.prim.Polygon
 	var idxOffset = 0;
 	var idxCount = 0;
 
+	var bounds: h3d.col.Bounds;
+
 
 	public function new( )
 	{
 		super(null);
 		idx = new IndexBuffer();
+		bounds = new h3d.col.Bounds();
+	}
+
+	override function getBounds()
+	{
+		return bounds;
 	}
 
 	public function cutMaterial()
@@ -47,13 +56,14 @@ class QBrushPrim extends h3d.prim.Polygon
 
 	public function addSurface(surface: Surface)
 	{
-
 		// @todo: Remove duplicates
 		for( v in surface.vertices )
 		{
 			buf.push(v.vertex.x);
 			buf.push(v.vertex.y);
 			buf.push(v.vertex.z);
+
+			bounds.addPoint(new h3d.col.Point(v.vertex.x, v.vertex.y, v.vertex.z));
 
 			buf.push(-v.normal.x);
 			buf.push(v.normal.y);
@@ -162,8 +172,9 @@ class Brush extends QEntity
 	{
 		if( def.spawnType == EST_ENTITY )
 		{
-			Utils.assert(def.brushes.length == 1, "Entity type brush is a group, this is unsupported!" );
-			setPosition( -def.brushes[0].center.x, def.brushes[0].center.y, def.brushes[0].center.z );
+
+			//setPosition( -def.brushes[0].center.x, def.brushes[0].center.y, def.brushes[0].center.z );
+			setPosition( -def.center.x, def.center.y, def.center.z );
 		}
 		world = qworld;
 		var surfaceGatherer = new cerastes.c3d.map.SurfaceGatherer( world.map.data );
@@ -175,6 +186,15 @@ class Brush extends QEntity
 		for( b in bodies )
 		{
 			b.setTransform( new bullet.Point( x, y, z ) );
+		}
+	}
+
+	public override function setAbsOrigin( x : Float, y : Float, z : Float )
+	{
+		super.setAbsOrigin(x,y,z);
+		for( b in bodies )
+		{
+			b.setTransform( new bullet.Point(x,y,z) );
 		}
 	}
 
@@ -229,15 +249,7 @@ class Brush extends QEntity
 
 	function getBrushMaterial( t: TextureData )
 	{
-		var file = t.name;
-
-		if(t.name == "__TB_empty")
-			file = "editor/__TB_empty";
-
-		if( hxd.Res.loader.exists( 'textures/${file}.material' ) )
-			file = 'textures/${file}.material';
-		else
-			file = 'textures/${file}.png';
+		var file = MapData.resolveTextureName( t.name );
 
 		var mat = MaterialDef.loadMaterial( file );
 		mat.name = t.name;
@@ -297,7 +309,7 @@ class Brush extends QEntity
 			var shape = new bullet.Native.ConvexTriangleMeshShape(iface, true );
 			var b = createBody( shape );
 
-			b.mesh = iface;
+			@:privateAccess b.mesh = iface;
 			bodies.push(b);
 
 

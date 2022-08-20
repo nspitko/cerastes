@@ -115,7 +115,7 @@ class GeoGenerator
 					brush.center = PointDivide(brush.center, vertexCount );
 				}
 
-				trace('Brush ${b} center -> ${brush.center}');
+				//trace('Brush ${b} center -> ${brush.center}');
 
 				entity.center = entity.center.add( brush.center );
 
@@ -124,7 +124,7 @@ class GeoGenerator
 			if( entity.brushes.length > 0 )
 			{
 				entity.center = PointDivide( entity.center, entity.brushes.length );
-				trace('Center -> ${entity.center}');
+				//trace('Center -> ${entity.center}');
 			}
 		}
 

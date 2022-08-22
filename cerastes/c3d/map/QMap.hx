@@ -1,21 +1,17 @@
 package cerastes.c3d.map;
 
+import cerastes.c3d.map.SerializedMap.MapFile;
 import h3d.scene.Graphics;
 import h3d.scene.Mesh;
-import cerastes.c3d.map.Data.Surface;
-import cerastes.c3d.map.Data.Entity;
 import hxd.IndexBuffer;
 import h3d.Indexes;
 import hxd.fmt.hmd.Data.Material;
 import h3d.prim.UV;
 import h3d.col.Point;
-import cerastes.c3d.map.Data.BrushGeometry;
-import cerastes.c3d.map.Data.Brush;
 import h3d.prim.MeshPrimitive;
 import h3d.prim.Primitive;
 import h3d.scene.MultiMaterial;
 import cerastes.c3d.Material.MaterialDef;
-import cerastes.c3d.map.Data.MapData;
 import h3d.scene.Object;
 import cerastes.c3d.DebugDraw;
 
@@ -24,7 +20,7 @@ import cerastes.c3d.DebugDraw;
 
 class QMap extends Object
 {
-	public var data: MapData; // gross hack
+	public var data: MapFile;
 	var world: QWorld;
 
 	var bodies: Array<BulletBody>;
@@ -34,24 +30,10 @@ class QMap extends Object
 	{
 		this.world = world;
 
+		var entry = hxd.Res.loader.load( file ).entry;
+		data = (new hxbitmini.Serializer()).unserialize(entry.getBytes(), MapFile );
+
 		super( parent );
-
-		//var entry = hxd.Loader.load(file);
-
-		var parser = new cerastes.c3d.map.MapParser();
-		data = parser.load( hxd.Res.loader.load( file ).entry );
-
-		data.setSpawnTypeByClassName("worldspawn", EST_WORLDSPAWN);
-		// worldspawn mergers
-		data.setSpawnTypeByClassName("func_group", EST_MERGE_WORLDSPAWN);
-		data.setSpawnTypeByClassName("func_detail", EST_MERGE_WORLDSPAWN);
-		//data.setSpawnTypeByClassName("func_detail_illusory", EST_BRUSH);
-		data.setSpawnTypeByClassName("func_detail_wall", EST_MERGE_WORLDSPAWN);
-		//data.setSpawnTypeByClassName("func_illusory", EST_BRUSH);
-
-		var generator = new cerastes.c3d.map.GeoGenerator();
-		generator.run( data );
-
 
 	}
 
@@ -66,7 +48,7 @@ class QMap extends Object
 
 	}
 
-
+/*
 
 	function debugDrawSurfaceDetails( s: Surface, drawFaces = false, drawNormals = false, drawTangents = false )
 	{
@@ -102,4 +84,5 @@ class QMap extends Object
 			i++;
 		}
 	}
+	*/
 }

@@ -1,9 +1,19 @@
 package cerastes.c3d.map;
+import sys.io.File;
 import h3d.Vector;
 import h3d.col.Point;
 
-// Ref https://github.com/QodotPlugin/libmap
+@:enum
+abstract EntitySpawnType(Int) from Int to Int
+{
+	public var EST_WORLDSPAWN			= 0;
+	public var EST_MERGE_WORLDSPAWN		= 1;
+	public var EST_ENTITY				= 2;
+	public var EST_GROUP				= 3;
+}
 
+// Ref https://github.com/QodotPlugin/libmap
+#if mapcompiler
 typedef QTextureId = Int;
 
 //
@@ -83,14 +93,7 @@ class Property
 	public var value: String = null;
 }
 
-@:enum
-abstract EntitySpawnType(Int) from Int to Int
-{
-	public var EST_WORLDSPAWN			= 0;
-	public var EST_MERGE_WORLDSPAWN		= 1;
-	public var EST_ENTITY				= 2;
-	public var EST_GROUP				= 3;
-}
+
 
 
 @:structInit
@@ -270,16 +273,13 @@ class MapData
 		if(name == "__TB_empty")
 			name = "editor/__TB_empty";
 
-		if(  hxd.Res.loader.exists( 'textures/${name}.material' ) )
-			return 'textures/${name}.material';
-
-		if(  hxd.Res.loader.exists( 'textures/${name}.png' ) )
-			return 'textures/${name}.png';
+		if( sys.FileSystem.exists( 'res/textures/${name}.png' ) )
+			return 'res/textures/${name}.png';
 
 		// HACK FALLBACK
-		var fname = 'textures/quake/${name.toLowerCase()}.png';
+		var fname = 'res/textures/quake/${name.toLowerCase()}.png';
 
-		if( hxd.Res.loader.exists( fname ) )
+		if(sys.FileSystem.exists( fname ) )
 			return fname;
 
 		return null;
@@ -299,6 +299,33 @@ class MapData
 		textures.push(t);
 
 		t.name = name;
+
+		#if mapcompiler
+		// @todo: Get proper dims, we need this for UV calcs!
+
+		var file = resolveTextureName( name );
+
+		if( file != null )
+		{
+
+			var i = sys.io.File.read(file,true);
+			var data = new format.png.Reader(i).read();
+			var h = format.png.Tools.getHeader(data);
+
+			t.width = h.width;
+			t.height = h.height;
+
+
+		}
+		else
+		{
+			Sys.println('Warning: Could not resolve path for ${name}; texcoord scale may be incorrect!');
+			t.width = 32;
+			t.height = 32;
+		}
+		return textures.length - 1;
+		#end
+
 
 		var file = resolveTextureName( name );
 
@@ -386,3 +413,5 @@ class MapData
 		}
 	}
 }
+
+#end

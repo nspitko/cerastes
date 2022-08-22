@@ -1,9 +1,9 @@
 package cerastes.c3d.entities;
 
+import cerastes.c3d.map.SerializedMap.EntityDef;
 import h3d.Vector;
 import bullet.Point;
 import cerastes.c3d.QEntity.QTarget;
-import cerastes.c3d.map.SurfaceGatherer;
 
 import cerastes.c3d.BulletWorld.BulletCollisionFilterGroup;
 import cerastes.c3d.BulletWorld.BulletCollisionFilterMask;
@@ -64,7 +64,7 @@ class FuncMoverTest extends MovingBrush
 	var maxHeight:Float = 0;
 	var dir: Float = 1;
 
-	override function onCreated( def: cerastes.c3d.map.Data.Entity )
+	override function onCreated( def: EntityDef )
 	{
 		maxHeight = Std.parseFloat( def.getProperty("height") );
 		startingHeight = z;
@@ -169,7 +169,7 @@ class FuncDoor extends MovingBrush
 	 * onCreated
 	 * @param def
 	 */
-	override function onCreated( def: cerastes.c3d.map.Data.Entity )
+	override function onCreated( def: EntityDef )
 	{
 		super.onCreated( def );
 
@@ -341,7 +341,7 @@ class FuncDoor extends MovingBrush
 class FuncButton extends FuncDoor
 {
 	var triggerDelay: Float;
-	override function onCreated( def: cerastes.c3d.map.Data.Entity )
+	override function onCreated( def: EntityDef )
 	{
 		super.onCreated( def );
 

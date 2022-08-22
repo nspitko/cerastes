@@ -1,6 +1,6 @@
 package cerastes.c3d.entities;
 
-import cerastes.c3d.map.SurfaceGatherer;
+import cerastes.c3d.map.SerializedMap.EntityDef;
 import cerastes.c3d.QEntity.QTarget;
 
 
@@ -15,7 +15,7 @@ class Trigger extends Brush
 {
 	var target: QTarget;
 
-	override function onCreated( def: cerastes.c3d.map.Data.Entity )
+	override function onCreated( def: EntityDef )
 	{
 		target = def.getProperty("target");
 		super.onCreated( def );
@@ -30,7 +30,7 @@ class Trigger extends Brush
 		return b;
 	}
 
-	override function buildBrush( surfaceGatherer: SurfaceGatherer, def: cerastes.c3d.map.Data.Entity )
+	override function buildBrush( def: EntityDef )
 	{
 		// Don't.
 	}
@@ -96,7 +96,7 @@ class TriggerCounter extends Trigger
 	var count: Int;
 	var triggerCount: Int;
 
-	override function onCreated( def: cerastes.c3d.map.Data.Entity )
+	override function onCreated( def: EntityDef )
 	{
 		count = def.getPropertyInt("count");
 		super.onCreated( def );

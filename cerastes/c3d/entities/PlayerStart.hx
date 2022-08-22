@@ -1,10 +1,10 @@
 package cerastes.c3d.entities;
 
+import cerastes.c3d.map.SerializedMap.EntityDef;
 import cerastes.Entity.EntityManager;
 import format.swf.Data.PlaceObject;
 import h3d.col.Point;
 import h3d.scene.Graphics;
-import cerastes.c3d.map.Data.Property;
 import cerastes.c3d.QEntity;
 
 @qClass(
@@ -26,7 +26,7 @@ import cerastes.c3d.QEntity;
 )
 class PlayerStart extends QEntity
 {
-	override function onCreated( def: cerastes.c3d.map.Data.Entity )
+	override function onCreated( def: EntityDef )
 	{
 		super.onCreated( def );
 

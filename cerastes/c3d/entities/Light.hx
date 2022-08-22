@@ -1,7 +1,7 @@
 package cerastes.c3d.entities;
 
+import cerastes.c3d.map.SerializedMap.EntityDef;
 import h3d.pass.Shadows.ShadowSamplingKind;
-import cerastes.c3d.map.SurfaceGatherer;
 
 import cerastes.c3d.BulletWorld.BulletCollisionFilterGroup;
 import cerastes.c3d.BulletWorld.BulletCollisionFilterMask;
@@ -10,7 +10,7 @@ class Light extends QEntity
 {
 	var light: h3d.scene.Light;
 
-	override function create( def: cerastes.c3d.map.Data.Entity, qworld: QWorld )
+	override function create( def: EntityDef, qworld: QWorld )
 	{
 		super.create(def, qworld);
 
@@ -30,7 +30,7 @@ class Light extends QEntity
 
 	}
 
-	public function createLight(def: cerastes.c3d.map.Data.Entity)
+	public function createLight(def: EntityDef)
 	{
 	}
 }
@@ -79,12 +79,12 @@ class Light extends QEntity
 )
 class PointLight extends Light
 {
-	override function createLight(def: cerastes.c3d.map.Data.Entity)
+	override function createLight(def: EntityDef)
 	{
 		var l = new h3d.scene.pbr.PointLight( this );
 		light = l;
 		l.shadows.mode = Static;
-		l.shadows.samplingKind = ShadowSamplingKind.ESM;
+		l.shadows.samplingKind = ShadowSamplingKind.PCF;
 		l.shadows.pcfScale = QWorld.METERS_TO_QU;
 		l.shadows.bias = 1 * QWorld.METERS_TO_QU;
 //		l.shadows.
@@ -107,6 +107,9 @@ class PointLight extends Light
 		{
 			l.visible = false;
 		}
+
+		// DEBUG
+		l.visible = false;
 	}
 
 	public override function onInput( source: QEntity, port: String )

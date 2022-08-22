@@ -1,5 +1,5 @@
 package cerastes.c3d.map;
-
+#if mapcompiler
 import cerastes.c3d.map.Data.FaceVertex;
 import cerastes.c3d.map.Data.WorldspawnLayer;
 import cerastes.c3d.map.Data.MapData;
@@ -218,7 +218,7 @@ class SurfaceGatherer
 							vertex.vertex = vertex.vertex.sub( entity.center );
 
 						// @todo hackhack invert X
-						vertex.vertex.x = -vertex.vertex.x;
+						//vertex.vertex.x = -vertex.vertex.x;
 
 						surface.vertices.push(vertex);
 					}
@@ -282,3 +282,4 @@ class SurfaceGatherer
 		gatherTextureSurfaces( textureName, brushFilter, faceFilter, false );
 	}
 }
+#end

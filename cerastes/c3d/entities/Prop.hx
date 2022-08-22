@@ -2,15 +2,13 @@ package cerastes.c3d.entities;
 
 
 
+import cerastes.c3d.map.SerializedMap.EntityDef;
 import cerastes.c3d.Material.MaterialDef;
 import h3d.prim.ModelCache;
 import h3d.col.Point;
 import h3d.scene.Graphics;
-import cerastes.c3d.map.Data.Property;
 import cerastes.c3d.QEntity;
 
-
-import cerastes.c3d.map.SurfaceGatherer;
 
 import cerastes.c3d.BulletWorld.BulletCollisionFilterGroup;
 import cerastes.c3d.BulletWorld.BulletCollisionFilterMask;
@@ -31,7 +29,7 @@ class PropPhysics extends Prop
 {
 	static var modelCache: ModelCache;
 
-	override function onCreated( def: cerastes.c3d.map.Data.Entity )
+	override function onCreated( def: EntityDef )
 	{
 		super.onCreated( def );
 
@@ -62,7 +60,7 @@ class PropPhysics extends Prop
 )
 class PropTest extends QEntity
 {
-	override function onCreated( def: cerastes.c3d.map.Data.Entity )
+	override function onCreated( def: EntityDef )
 	{
 		super.onCreated( def );
 

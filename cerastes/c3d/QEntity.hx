@@ -1,10 +1,10 @@
 
 package cerastes.c3d;
 
+import cerastes.c3d.map.SerializedMap.EntityDef;
 import cerastes.collision.Colliders.Point;
 import h3d.scene.RenderContext;
 import haxe.rtti.Meta;
-import cerastes.c3d.map.Data.Property;
 import h3d.scene.Object;
 import cerastes.Entity;
 
@@ -79,7 +79,7 @@ class QEntity extends Object implements cerastes.Entity
 			body.sync();
 	}
 
-	function create( def: cerastes.c3d.map.Data.Entity, qworld: QWorld )
+	function create( def: EntityDef, qworld: QWorld )
 	{
 		world = qworld;
 
@@ -194,7 +194,7 @@ class QEntity extends Object implements cerastes.Entity
 
 	// Called when an entity is created, override this to define entity specific
 	// behaviors
-	function onCreated( def: cerastes.c3d.map.Data.Entity ) { }
+	function onCreated( def: EntityDef ) { }
 	function onCollide( manifold: bullet.Native.PersistentManifold, body: BulletBody, other: QEntity, otherBody: BulletBody ) {}
 	function onInput( source: QEntity, port: String ) {}
 
@@ -205,7 +205,7 @@ class QEntity extends Object implements cerastes.Entity
 	static var classMap: Map<String, Class<Dynamic>>;
 
 	// ------------------------------------------------------------------------------------
-	public static function createEntity( def: cerastes.c3d.map.Data.Entity, world: QWorld  )  : Entity
+	public static function createEntity( def: EntityDef, world: QWorld  )  : Entity
 	{
 		ensureClassMap();
 
@@ -238,7 +238,7 @@ class QEntity extends Object implements cerastes.Entity
 	 * @param cls
 	 * @param world
 	 */
-	public static function createEntityClass( cls: Class<Dynamic>, world: QWorld, def: cerastes.c3d.map.Data.Entity = null ): QEntity
+	public static function createEntityClass( cls: Class<Dynamic>, world: QWorld, def: EntityDef = null ): QEntity
 	{
 		if( cls != null )
 		{

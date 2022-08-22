@@ -1,91 +1,57 @@
 package cerastes.c3d.entities;
 
-import cerastes.c3d.map.Data.MapData;
+import cerastes.c3d.map.SerializedMap.BrushDef;
+import cerastes.c3d.map.SerializedMap.TextureDef;
+import cerastes.c3d.map.SerializedMap.EntityDef;
 import cerastes.c3d.BulletWorld.BulletCollisionFilterGroup;
 import cerastes.c3d.BulletWorld.BulletCollisionFilterMask;
 
 import cerastes.c3d.BulletWorld.BulletCollisionFilterGroup;
 import h3d.mat.Material;
 import h3d.scene.RenderContext;
-import cerastes.c3d.map.SurfaceGatherer;
 import cerastes.c3d.Material.MaterialDef;
 import hxd.IndexBuffer;
-import cerastes.c3d.map.Data.Surface;
 import h3d.scene.Object;
 import h3d.scene.MultiMaterial;
 import bullet.Body;
-import cerastes.c3d.map.Data.TextureData;
 import cerastes.c3d.QEntity;
 
 class QBrushPrim extends h3d.prim.Polygon
 {
-	var surfaces: Array<Surface> = [];
 
 	var indexCounts: Array<Int> = [];
-	var indexOffsets: Array<Int> = [0];
+	var indexOffsets: Array<Int> = [];
 
 	var currentMaterial = 0;
 
 
 	var buf = new hxd.FloatBuffer();
-	var vertOffset = 0;
-	var idxOffset = 0;
-	var idxCount = 0;
-
 	var bounds: h3d.col.Bounds;
 
+	public var data: BrushDef;
 
-	public function new( )
+
+	public function new( d: BrushDef )
 	{
 		super(null);
 		idx = new IndexBuffer();
+
+		data = d;
+
 		bounds = new h3d.col.Bounds();
+
+		bounds.xMin = data.bounds.xMin;
+		bounds.xMax = data.bounds.xMax;
+		bounds.yMin = data.bounds.yMin;
+		bounds.yMax = data.bounds.yMax;
+		bounds.zMin = data.bounds.zMin;
+		bounds.zMax = data.bounds.zMax;
+
 	}
 
 	override function getBounds()
 	{
 		return bounds;
-	}
-
-	public function cutMaterial()
-	{
-		indexCounts.push( idxCount );
-		indexOffsets.push( idxOffset );
-		idxCount = 0;
-	}
-
-	public function addSurface(surface: Surface)
-	{
-		// @todo: Remove duplicates
-		for( v in surface.vertices )
-		{
-			buf.push(v.vertex.x);
-			buf.push(v.vertex.y);
-			buf.push(v.vertex.z);
-
-			bounds.addPoint(new h3d.col.Point(v.vertex.x, v.vertex.y, v.vertex.z));
-
-			buf.push(-v.normal.x);
-			buf.push(v.normal.y);
-			buf.push(v.normal.z);
-
-			buf.push(v.tangent.x);
-			buf.push(v.tangent.y);
-			buf.push(v.tangent.z);
-
-			buf.push(v.uv.u);
-			buf.push(v.uv.v);
-		}
-
-		for( i in surface.indices )
-			idx.push(vertOffset + i);
-
-		idxOffset += surface.indices.length;
-		vertOffset += surface.vertices.length;
-		idxCount += surface.indices.length;
-
-
-
 	}
 
 	override function selectMaterial( i : Int )
@@ -97,19 +63,35 @@ class QBrushPrim extends h3d.prim.Polygon
 	{
 		dispose();
 
-		var stride = 11;
-		var names = ["position", "normal", "tangent", "uv"];
-		var positions = [0, 3, 6, 9];
 
+
+		var stride = 13;
+		var names = ["position", "normal", "tangent", "uv", "lightmapuv" ];
+		var positions = [0, 3, 6, 11, 9];
+
+		// @todo optimize
+
+		buf.resize( data.buf.length );
+
+		for( f in 0 ... data.buf.length )
+			buf[f] = data.buf[f];
+
+		var ib = new IndexBuffer( data.indexes.length );
+		var i = 0;
+		for( i in 0 ... data.indexes.length )
+			ib[i] = data.indexes[i];
 
 		buffer = h3d.Buffer.ofFloats(buf, stride, [ Triangles, RawFormat ]);
-		indexes = h3d.Indexes.alloc(idx);
+		indexes = h3d.Indexes.alloc(ib);
 
 		for( i in 0...names.length )
 			addBuffer(names[i], buffer, positions[i]);
 
-		//buf = null;
-		//idx = null;
+		indexCounts = data.indexCounts.copy();
+		indexOffsets = data.indexOffsets.copy();
+
+		buf = null;
+		idx = null;
 	}
 
 	override function render( engine : h3d.Engine )
@@ -138,22 +120,49 @@ class QBrush extends MultiMaterial
 {
 	var prim: QBrushPrim;
 
-	public function new( parent: Object )
+	public function new( parent: Object, b: BrushDef )
 	{
-		prim = new QBrushPrim();
+		prim = new QBrushPrim(b);
 		super(prim, [], parent);
+
+		build( b );
 	}
 
-	public function addSurface( surface: Surface )
+	public function build( b: BrushDef )
 	{
-
-		prim.addSurface(surface);
+		for( tex in b.textures )
+		{
+			var m = MaterialDef.loadMaterial( findTexture(tex.name ) );
+			materials.push( m );
+		}
 	}
 
-	public function setCurrentMaterial( material: Material )
+	function findTexture( t: String )
 	{
-		materials.push(material);
-		prim.cutMaterial();
+		var out = tryExt(t);
+		if( out != null ) return out;
+
+		out = tryExt('textures/${t}');
+		if( out != null ) return out;
+
+		// quake hack
+		out = tryExt('textures/quake/${t.toLowerCase()}');
+		if( out != null ) return out;
+
+		return 'textures/editor/__TB_empty.png';
+	}
+
+	function tryExt( t: String )
+	{
+		return "textures/lightmap.png";
+		if( hxd.Res.loader.exists( t ) )
+			return t;
+		if( hxd.Res.loader.exists( '${t}.material' ) )
+			return '${t}.material';
+		if( hxd.Res.loader.exists( '${t}.png' ) )
+			return '${t}.png';
+
+		return null;
 	}
 
 	override function draw( ctx : RenderContext ) {
@@ -168,7 +177,7 @@ class Brush extends QEntity
 	var bodies: Array<BulletBody> = [];
 	var brush: QBrush;
 
-	public override function create( def: cerastes.c3d.map.Data.Entity, qworld: QWorld  )
+	public override function create( def: EntityDef, qworld: QWorld  )
 	{
 		if( def.spawnType == EST_ENTITY )
 		{
@@ -177,9 +186,9 @@ class Brush extends QEntity
 			setPosition( -def.center.x, def.center.y, def.center.z );
 		}
 		world = qworld;
-		var surfaceGatherer = new cerastes.c3d.map.SurfaceGatherer( world.map.data );
-		buildBrush( surfaceGatherer, def );
-		createStaticCollision( surfaceGatherer, def );
+
+		buildBrush( def );
+		createStaticCollision( def );
 
 		super.create(def, qworld );
 
@@ -203,107 +212,42 @@ class Brush extends QEntity
 
 	}
 
-	public function buildBrush( surfaceGatherer: SurfaceGatherer, def: cerastes.c3d.map.Data.Entity )
+	public function buildBrush( def: EntityDef )
 	{
-		brush = new QBrush(this);
+		brush = new QBrush(this, def.brush);
 
-		var textures = [];
-
-		for( b in  0 ... def.brushes.length )
-		{
-			for( f in 0 ... def.brushes[b].faces.length )
-			{
-				var textureId = def.brushes[b].faces[f].textureIdx;
-				if( !textures.contains(textureId ) )
-					textures.push( textureId );
-			}
-		}
-
-		for( t in 0 ... textures.length )
-		{
-			// Worldspawn may get brushes merged down into it, so check every texture.
-			var tex = world.map.data.getTexture( textures[t] );
-			surfaceGatherer.surfaces = [];
-			surfaceGatherer.setEntityIndexFilter( def.index );
-			surfaceGatherer.gatherTextureSurfaces( tex.name, def.index );
-
-			var foundSurfaces = false;
-
-			for( s in 0 ... surfaceGatherer.surfaces.length )
-			{
-				var s = surfaceGatherer.surfaces[s];
-				if( s.vertices.length == 0 )
-					continue;
-
-				foundSurfaces = true;
-				brush.addSurface( s );
-			}
-
-			if( foundSurfaces )
-				brush.setCurrentMaterial( getBrushMaterial( tex )  );
-
-		}
 
 
 	}
 
-	function getBrushMaterial( t: TextureData )
+	function createStaticCollision( def: EntityDef )
 	{
-		var file = MapData.resolveTextureName( t.name );
 
-		var mat = MaterialDef.loadMaterial( file );
-		mat.name = t.name;
-		mat.texture.filter = Nearest;
-
-		return mat;
-
-	}
-
-	function createStaticCollision( surfaceGatherer: SurfaceGatherer,  def: cerastes.c3d.map.Data.Entity )
-	{
-		var surfaceGatherer = new SurfaceGatherer( world.map.data );
-
-		bodies = [];
-		surfaceGatherer.gatherConvexCollisionSurfaces(def.index);
-		var surfaces = surfaceGatherer.surfaces;
-
-		for( s in surfaces )
+		for( s in def.collisionBodies )
 		{
 			var iface = new bullet.Native.TriangleMesh();
 			var i = 0;
-			if( s.indices.length < 3 )
-				continue;
-
-			//if( def.spawnType == EST_ENTITY )
-			//	debugDrawSurfaceDetails( s, true, false, false );
-
-
-			while( i < s.indices.length )
+			while( i < s.vertices.length )
 			{
 				iface.addTriangle(
 					new bullet.Native.Vector3(
-						s.vertices[ s.indices[ i + 0 ] ].vertex.x,
-						s.vertices[ s.indices[ i + 0 ] ].vertex.y,
-						s.vertices[ s.indices[ i + 0 ] ].vertex.z
-						),
-						new bullet.Native.Vector3(
-						s.vertices[ s.indices[ i + 1 ] ].vertex.x,
-						s.vertices[ s.indices[ i + 1 ] ].vertex.y,
-						s.vertices[ s.indices[ i + 1 ] ].vertex.z
-						),
-						new bullet.Native.Vector3(
-						s.vertices[ s.indices[ i + 2 ] ].vertex.x,
-						s.vertices[ s.indices[ i + 2 ] ].vertex.y,
-						s.vertices[ s.indices[ i + 2 ] ].vertex.z
-						),
-						true
-					);
-
-					// DEBUG: Draw normal/tangent vectors
-
-
-					i+=3;
-
+						s.vertices[ s.indices[ i + 0 ] * 3 + 0 ],
+						s.vertices[ s.indices[ i + 0 ] * 3 + 1 ],
+						s.vertices[ s.indices[ i + 0 ] * 3 + 2 ]
+					),
+					new bullet.Native.Vector3(
+						s.vertices[ s.indices[ i + 1 ] * 3 + 0 ],
+						s.vertices[ s.indices[ i + 1 ] * 3 + 1 ],
+						s.vertices[ s.indices[ i + 1 ] * 3 + 2 ]
+					),
+					new bullet.Native.Vector3(
+						s.vertices[ s.indices[ i + 2 ] * 3 + 0 ],
+						s.vertices[ s.indices[ i + 2 ] * 3 + 1 ],
+						s.vertices[ s.indices[ i + 2 ] * 3 + 2 ]
+					),
+					true
+				);
+				i+=3;
 			}
 
 			var shape = new bullet.Native.ConvexTriangleMeshShape(iface, true );
@@ -324,7 +268,7 @@ class Brush extends QEntity
 		return b;
 	}
 
-
+/*
 	function debugDrawSurfaceDetails( s: Surface, drawFaces = false, drawNormals = false, drawTangents = false )
 	{
 
@@ -358,5 +302,5 @@ class Brush extends QEntity
 
 			i++;
 		}
-	}
+	}*/
 }

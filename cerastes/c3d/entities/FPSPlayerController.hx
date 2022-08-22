@@ -1,5 +1,6 @@
 package cerastes.c3d.entities;
 
+import cerastes.c3d.map.SerializedMap.EntityDef;
 import h3d.col.Point;
 import h3d.Quat;
 import h3d.Vector;
@@ -22,7 +23,7 @@ class FPSPlayerController extends Controller
 
 	var controller: bullet.Native.KinematicCharacterController;
 
-	public override function onCreated( def: cerastes.c3d.map.Data.Entity )
+	public override function onCreated( def:  EntityDef )
 	{
 		super.onCreated( def );
 		world.getScene().camera.setFovX(90,16/9);

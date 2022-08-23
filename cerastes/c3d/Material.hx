@@ -68,8 +68,6 @@ class MaterialDef
 		mat.props = getProps();
 
 		mat.mainPass.enableLights = true;
-		mat.staticShadows = true;
-
 
 		if( normal != null )
 		{

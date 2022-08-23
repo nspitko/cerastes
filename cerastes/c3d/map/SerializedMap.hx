@@ -57,6 +57,7 @@ class BrushDef implements hxbitmini.Serializable
 	@:s public var indexCounts: Array<Int> = [];
 	@:s public var bounds: BoundsDef = {};
 	@:s public var textures: Array<TextureDef> = [];
+	@:s public var center: Vector3Def = {};
 
 	@:s var idxOffset = 0;
 	@:s var vertOffset = 0;
@@ -209,7 +210,7 @@ class EntityDef implements hxbitmini.Serializable
 		var textures = [];
 
 		spawnType = def.spawnType;
-		center.x = def.center.x;
+		center.x = -def.center.x;
 		center.y = def.center.y;
 		center.z = def.center.z;
 
@@ -244,6 +245,16 @@ class EntityDef implements hxbitmini.Serializable
 
 			brush.addSurfaces(surfaceGatherer.surfaces, tex );
 
+		}
+
+		// Hack??
+		if( def.brushes.length > 0 )
+		{
+			brush.center = {
+				x: -def.brushes[0].center.x,
+				y: def.brushes[0].center.y,
+				z: def.brushes[0].center.z
+			};
 		}
 
 

@@ -67,7 +67,7 @@ class QBrushPrim extends h3d.prim.Polygon
 
 		var stride = 13;
 		var names = ["position", "normal", "tangent", "uv", "lightmapuv" ];
-		var positions = [0, 3, 6, 11, 9];
+		var positions = [0, 3, 6, 9, 11];
 
 		// @todo optimize
 
@@ -130,9 +130,14 @@ class QBrush extends MultiMaterial
 
 	public function build( b: BrushDef )
 	{
+		var lmt = hxd.Res.textures.lightmap.toTexture();
 		for( tex in b.textures )
 		{
 			var m = MaterialDef.loadMaterial( findTexture(tex.name ) );
+			m.staticShadows = true;
+
+			//var lm = new cerastes.shaders.LightMap(lmt);
+			//m.mainPass.addShader( lm );
 			materials.push( m );
 		}
 	}
@@ -154,7 +159,7 @@ class QBrush extends MultiMaterial
 
 	function tryExt( t: String )
 	{
-		return "textures/lightmap.png";
+		//return "textures/lightmap.png";
 		if( hxd.Res.loader.exists( t ) )
 			return t;
 		if( hxd.Res.loader.exists( '${t}.material' ) )
@@ -183,7 +188,7 @@ class Brush extends QEntity
 		{
 
 			//setPosition( -def.brushes[0].center.x, def.brushes[0].center.y, def.brushes[0].center.z );
-			setPosition( -def.center.x, def.center.y, def.center.z );
+			setPosition( def.center.x, def.center.y, def.center.z );
 		}
 		world = qworld;
 

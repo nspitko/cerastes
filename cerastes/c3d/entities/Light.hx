@@ -1,5 +1,7 @@
 package cerastes.c3d.entities;
 
+import bullet.Point;
+import h3d.pass.Blur;
 import cerastes.c3d.map.SerializedMap.EntityDef;
 import h3d.pass.Shadows.ShadowSamplingKind;
 
@@ -83,10 +85,15 @@ class PointLight extends Light
 	{
 		var l = new h3d.scene.pbr.PointLight( this );
 		light = l;
-		l.shadows.mode = Static;
+		l.shadows.mode = Mixed;
 		l.shadows.samplingKind = ShadowSamplingKind.PCF;
-		l.shadows.pcfScale = QWorld.METERS_TO_QU;
-		l.shadows.bias = 1 * QWorld.METERS_TO_QU;
+		//l.shadows.pcfScale = 1;
+		l.shadows.bias = 0.05;
+		l.shadows.pcfQuality = 2;
+
+		l.shadows.blur = new Blur(10);
+		l.shadows.blur.quality = 0.5;
+		//l.shadows.blur.shader.isDepth = l.shadows.format == h3d.mat.Texture.nativeFormat;
 //		l.shadows.
 
 		// @todo we should load defaults from qclass decl here!
@@ -94,7 +101,9 @@ class PointLight extends Light
 		if( range != null )
 			l.range = Std.parseInt( range );
 		else
-			l.range = 200;
+			l.range = 350;
+
+		//l.shadows.
 
 		var power = def.getProperty("power");
 		if( power != null )
@@ -102,14 +111,25 @@ class PointLight extends Light
 		else
 			l.power = 10;
 
+		var ql = def.getPropertyFloat("light", 0);
+		if( ql != 0 )
+		{
+			// Quake light!
+			l.range = ql;
+		}
+
 
 		if( spawnFlags & 1 == 1 )
 		{
 			l.visible = false;
 		}
 
+
+
 		// DEBUG
-		l.visible = false;
+		//l.visible = false;
+
+		//DebugDraw.sphere(new Point(x,y,z),15,0xFF0000,-1);
 	}
 
 	public override function onInput( source: QEntity, port: String )

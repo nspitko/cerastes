@@ -2,7 +2,7 @@ package cerastes.c3d.entities;
 
 import cerastes.c3d.map.SerializedMap.EntityDef;
 import h3d.Vector;
-import bullet.Point;
+import h3d.col.Point;
 import cerastes.c3d.QEntity.QTarget;
 
 import cerastes.c3d.BulletWorld.BulletCollisionFilterGroup;
@@ -27,10 +27,31 @@ class MovingBrush extends Brush
 		if( dist.length() < move.length() )
 		{
 			setAbsOrigin( target.x, target.y, target.z );
+			rebakeLights();
 			return true;
 		}
 
+		rebakeLights();
+
 		return false;
+	}
+
+	function rebakeLights()
+	{
+		return;
+
+		for( e in world.entityManager.entities )
+		{
+			if( Std.isOfType( e, Light ) )
+			{
+				var l: Light = cast e;
+				var pl: h3d.scene.pbr.PointLight = @:privateAccess cast l.light;
+				var dist = new h3d.col.Point(l.x,l.y,l.z).distance( new Point(x,y,z) );
+
+				// @todo
+
+			}
+		}
 	}
 }
 

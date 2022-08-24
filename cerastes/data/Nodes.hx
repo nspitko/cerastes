@@ -36,6 +36,7 @@ typedef PortId = Int;
 	var Texture		= 4;	// Textures
 }
 
+@:keep
 @:structInit class NodePinDefinition
 {
 	#if hlimgui
@@ -47,6 +48,7 @@ typedef PortId = Int;
 	#end
 }
 
+@:keep
 @:structInit class NodeDefinition
 {
 	#if hlimgui
@@ -58,12 +60,15 @@ typedef PortId = Int;
 	#end
 }
 
+@:keep
 @:structInit class EditorData
 {
+	#if hlimgui
 	public var x: Float = 0;
 	public var y: Float = 0;
 	@noSerialize
 	public var hasRendered = false;
+	#end
 }
 
 @:keepSub

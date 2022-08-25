@@ -25,7 +25,7 @@ class Light extends QEntity
 			{
 				// @todo make this a function this
 				var bits = color.split(" ");
-				light.color.set( Std.parseFloat( bits[0] ), Std.parseFloat( bits[1] ), Std.parseFloat( bits[2] ) );
+				light.color.set( Std.parseFloat( bits[0] )/255, Std.parseFloat( bits[1] )/255, Std.parseFloat( bits[2] )/255 );
 			}
 
 		}
@@ -89,7 +89,7 @@ class PointLight extends Light
 		l.shadows.samplingKind = ShadowSamplingKind.PCF;
 		//l.shadows.pcfScale = 1;
 		l.shadows.bias = 0.05;
-		l.shadows.pcfQuality = 2;
+		l.shadows.pcfQuality = 1;
 
 		l.shadows.blur = new Blur(10);
 		l.shadows.blur.quality = 0.5;
@@ -127,7 +127,7 @@ class PointLight extends Light
 
 
 		// DEBUG
-		//l.visible = false;
+		l.visible = false;
 
 		//DebugDraw.sphere(new Point(x,y,z),15,0xFF0000,-1);
 	}

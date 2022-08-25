@@ -11,7 +11,7 @@ import cerastes.c3d.map.Data.Surface;
 #end
 
 @:structInit
-class Vector3Def implements hxbitmini.Serializable
+class Vector3Def implements hxbit.Serializable
 {
 	@:s public var x: Float = 0;
 	@:s public var y: Float = 0;
@@ -19,7 +19,7 @@ class Vector3Def implements hxbitmini.Serializable
 }
 
 @:structInit
-class TextureDef implements hxbitmini.Serializable
+class TextureDef implements hxbit.Serializable
 {
 	@:s public var name: String;
 	@:s public var width: Int;
@@ -27,7 +27,7 @@ class TextureDef implements hxbitmini.Serializable
 }
 
 @:structInit
-class BoundsDef implements hxbitmini.Serializable
+class BoundsDef implements hxbit.Serializable
 {
 	@:s public var xMin : Float = 1e20;
 	@:s public var xMax : Float = -1e20;
@@ -49,7 +49,7 @@ class BoundsDef implements hxbitmini.Serializable
 
 
 @:structInit
-class BrushDef implements hxbitmini.Serializable
+class BrushDef implements hxbit.Serializable
 {
 	@:s public var buf: Array<Float> = [];
 	@:s public var indexes: Array<Int> = [];
@@ -123,7 +123,7 @@ class BrushDef implements hxbitmini.Serializable
 }
 
 @:structInit
-class BrushCollisionDef implements hxbitmini.Serializable
+class BrushCollisionDef implements hxbit.Serializable
 {
 	@:s public var vertices: Array<Float> = [];
 	@:s public var indices: Array<Int> = [];
@@ -157,7 +157,7 @@ class BrushCollisionDef implements hxbitmini.Serializable
 }
 
 @:structInit
-class EntityDef implements hxbitmini.Serializable
+class EntityDef implements hxbit.Serializable
 {
 	@:s public var props: Map<String, String> = [];
 	@:s public var brush: BrushDef = {};
@@ -280,7 +280,7 @@ class EntityDef implements hxbitmini.Serializable
 }
 
 @:structInit
-class MapFile implements hxbitmini.Serializable
+class MapFile implements hxbit.Serializable
 {
 	@:s public var version: Int = 1;
 	@:s public var entities: Array<EntityDef> = [];

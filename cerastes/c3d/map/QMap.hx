@@ -31,7 +31,7 @@ class QMap extends Object
 		this.world = world;
 
 		var entry = hxd.Res.loader.load( file ).entry;
-		data = (new hxbitmini.Serializer()).unserialize(entry.getBytes(), MapFile );
+		data = (new hxbit.Serializer()).unserialize(entry.getBytes(), MapFile );
 
 		super( parent );
 

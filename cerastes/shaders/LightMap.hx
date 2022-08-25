@@ -1,5 +1,7 @@
 package cerastes.shaders;
 
+import h3d.shader.pbr.Light;
+
 class LightMap extends hxsl.Shader {
 
 	static var SRC = {
@@ -7,13 +9,12 @@ class LightMap extends hxsl.Shader {
 			var lightmapuv : Vec2;
 		};
 
+
 		@param var lightmap : Sampler2D;
 
-		var lightColor : Vec3;
-		var lightPixelColor : Vec3;
-		var pixelColor : Vec4;
-
 		var calculatedLMUV : Vec2;
+
+		var pixelColor : Vec4;
 
 
 		function vertex() {
@@ -22,8 +23,9 @@ class LightMap extends hxsl.Shader {
 
 		function fragment() {
 			var intensity = lightmap.get(calculatedLMUV);
-			intensity += 0.4;
-			pixelColor.rgb = saturate( pixelColor.rgb* intensity.r );
+			//intensity += 0.4;
+
+			pixelColor.rgb *= intensity.rgb;
 		}
 
 	}

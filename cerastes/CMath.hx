@@ -155,6 +155,11 @@ import haxe.macro.Expr;
 	 inline public static var EPS = 1e-6;
 
 	 /**
+	  * Quake unit scale epsilon
+	  */
+	 inline public static var QEPSILON = 0.00001;
+
+	 /**
 	  * The square root of 2.
 	  */
 	 inline public static var SQRT2 = 1.414213562373095;
@@ -980,4 +985,9 @@ import haxe.macro.Expr;
 		 return new Point( a.x * b.x, a.y * b.y, a.z * b.z );
 	 }
 
+	public static inline function dividePoint( input: Point, denom: Float)
+	{
+		return new Point( input.x / denom, input.y / denom, input.z / denom );
 	}
+
+}

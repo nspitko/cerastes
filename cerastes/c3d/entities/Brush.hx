@@ -135,9 +135,12 @@ class QBrush extends MultiMaterial
 		{
 			var m = MaterialDef.loadMaterial( findTexture(tex.name ) );
 			m.staticShadows = true;
+			m.texture.filter = Nearest;
+			m.mainPass.enableLights = false;
+			//m.shadows = false;
 
-			//var lm = new cerastes.shaders.LightMap(lmt);
-			//m.mainPass.addShader( lm );
+			var lm = new cerastes.shaders.LightMap(lmt);
+			m.mainPass.addShader( lm );
 			materials.push( m );
 		}
 	}

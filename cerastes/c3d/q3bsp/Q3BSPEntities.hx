@@ -1,4 +1,4 @@
-package cerastes.c3d.bsp;
+package cerastes.c3d.q3bsp;
 
 import haxe.rtti.Meta;
 import cerastes.c3d.map.SerializedMap.EntityDef;
@@ -12,50 +12,46 @@ enum ParseScope {
 	Value;
 }
 
-class BSPEntities
+class Q3BSPEntities
 {
-	var bsp: BSPFileDef;
+	static var bsp: BSPFileDef;
 
 
-	var curEntity: EntityDef;
-	var entities: Array<EntityDef> = [];
+	static var curEntity: Q3BSPEntityData;
+	static var entities: Array<Q3BSPEntityData> = [];
 
-	var buf: Bytes;
+	static var buf: Bytes;
 
-	var cur = 0;
+	static var cur = 0;
 
-	var world: BSPMap;
+	static var world: World;
 
 	static var classMap: Map<String, Class<Dynamic>>;
 
-	public function new( map: BSPMap, bsp: BSPFileDef )
+	static function spawnEntities( bsp: BSPFileDef, world: World )
 	{
 		this.bsp = bsp;
-		world = map;
+		this.world = world;
 		buf = haxe.io.Bytes.ofString( bsp.entities );
 
 		parse();
 
 		spawnEntities();
 
-	}
-
-	function spawnEntities()
-	{
 		for( e in entities )
 		{
 			spawnEntity(e);
 		}
 	}
 
-	public static function spawnEntity( def: EntityDef )
+	public static function spawnEntity( def: Q3BSPEntityData )
 	{
 		ensureClassMap();
 
 		var className = def.getProperty("classname");
 		if( className == null )
 		{
-		Utils.warning('Entity def missing classname!!!');
+			Utils.warning('Entity def missing classname!!!');
 			return null;
 		}
 
@@ -69,8 +65,8 @@ class BSPEntities
 		if( cls != null )
 		{
 			var entity: QEntity = Type.createInstance(cls,[]);
-			//@:privateAccess entity.create(def, world);
-			//world.addChild(entity);
+			@:privateAccess entity.create(def, world);
+			world.addChild(entity);
 
 
 
@@ -81,7 +77,7 @@ class BSPEntities
 		return null;
 	}
 
-	function parse()
+	static function parse()
 	{
 
 		var c: Int;
@@ -124,7 +120,7 @@ class BSPEntities
 		}
 	}
 
-	function readToken()
+	static function readToken()
 	{
 		var out = new StringBuf();
 		var end = false;
@@ -143,7 +139,7 @@ class BSPEntities
 	}
 
 	// ----------------------------------------------------------------------------
-	inline function isSpace(code: Int)
+	static inline function isSpace(code: Int)
 	{
 		return code == ' '.code || code == '\t'.code || code == '\r'.code || code == '\n'.code;
 	}

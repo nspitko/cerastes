@@ -1,12 +1,12 @@
-package cerastes.c3d.bsp;
+package cerastes.c3d.q3bsp;
 
 import cerastes.c3d.Material.MaterialDef;
 import h3d.shader.pbr.PropsValues;
 import hxd.IndexBuffer;
-import cerastes.c3d.bsp.BSPFile.DBrushSide_t;
-import cerastes.c3d.bsp.BSPFile.DBrush_t;
-import cerastes.c3d.bsp.BSPFile.DPlane_t;
-import cerastes.c3d.bsp.BSPFile.MapSurfaceType_t;
+import cerastes.c3d.q3bsp.Q3BSPFile.DBrushSide_t;
+import cerastes.c3d.q3bsp.Q3BSPFile.DBrush_t;
+import cerastes.c3d.q3bsp.Q3BSPFile.DPlane_t;
+import cerastes.c3d.q3bsp.Q3BSPFile.MapSurfaceType_t;
 import hxd.PixelFormat;
 import hxd.Pixels;
 import haxe.io.Bytes;
@@ -25,29 +25,12 @@ import h3d.Buffer;
 import h3d.scene.RenderContext;
 import h3d.Camera;
 import h3d.scene.Object;
-import cerastes.c3d.bsp.BSPFile.BSPFileDef;
+import cerastes.c3d.q3bsp.Q3BSPFile.BSPFileDef;
 import h3d.Vector;
 import hxd.Math;
 
 
-typedef BSPTraceResult = {
-	var allSolid: Bool;
-	var startSolid: Bool;
-	var fraction: Float;
-	var endPos: Vector;
-	var plane: DPlane_t;
-	var ?surfaceFlags: Int;
-	var ?contents: Int;
-	var ?entityNum: Int;
-}
-
-enum TraceType {
-	RAY;
-	SPHERE;
-	BOX;
-}
-
-class BSPMap extends Object
+class Q3BSPMap extends Object
 {
 	var visibleFaces: haxe.ds.Vector<Array<Int>>;
 	var visibleMaterials = new Array<Int>();
@@ -80,7 +63,7 @@ class BSPMap extends Object
 
 
 
-	public function new(bspFile: BSPFile, ?parent: Object )
+	public function new(bspFile: Q3BSPFile, ?parent: Object )
 	{
 		super(parent);
 
@@ -94,10 +77,10 @@ class BSPMap extends Object
 		loadMaterials();
 		loadBuffers();
 
-		var col = new cerastes.c3d.bsp.BSPCollision();
+		var col = new cerastes.c3d.q3bsp.Q3BSPCollision();
 		col.createCollision(bsp );
 
-		var e = new cerastes.c3d.bsp.BSPEntities( this, bsp );
+		var e = new cerastes.c3d.q3bsp.Q3BSPEntities( this, bsp );
 	}
 
 
@@ -290,7 +273,7 @@ class BSPMap extends Object
 
 
 
-			var shader = new cerastes.c3d.bsp.shaders.Q3PBRLightmapShader();
+			var shader = new cerastes.c3d.q3bsp.shaders.Q3PBRLightmapShader();
 			//mat.mainPass.removeShader( mat.textureShader );
 			mat.mainPass.addShader( shader );
 			mat.texture.filter = Nearest;

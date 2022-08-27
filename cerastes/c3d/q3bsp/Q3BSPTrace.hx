@@ -1,14 +1,30 @@
-package cerastes.c3d.bsp;
+package cerastes.c3d.q3bsp;
 
-import cerastes.c3d.q3bsp.Q3BSPFile.BSPTextureDef;
-import cerastes.c3d.q3bsp.Q3BSPFile.BSPBrushSideDef;
-import cerastes.c3d.q3bsp.Q3BSPFile.BSPFileDef;
-import cerastes.c3d.q3bsp.Q3BSPMap.BSPPatchDef;
-import cerastes.c3d.q3bsp.Q3BSPFile.BSPBrushDef;
-import cerastes.c3d.q3bsp.Q3BSPFile.BSPLeafDef;
-import cerastes.c3d.q3bsp.Q3BSPFile.BSPPlaneDef;
+import cerastes.c3d.q3bsp.BSPFile.BSPTextureDef;
+import cerastes.c3d.q3bsp.BSPFile.BSPBrushSideDef;
+import cerastes.c3d.q3bsp.BSPFile.BSPFileDef;
+import cerastes.c3d.q3bsp.BSPMap.BSPPatchDef;
+import cerastes.c3d.q3bsp.BSPFile.BSPBrushDef;
+import cerastes.c3d.q3bsp.BSPFile.BSPLeafDef;
+import cerastes.c3d.q3bsp.BSPFile.BSPPlaneDef;
 import h3d.Vector;
 
+typedef BSPTraceResult = {
+	var allSolid: Bool;
+	var startSolid: Bool;
+	var fraction: Float;
+	var endPos: Vector;
+	var plane: DPlane_t;
+	var ?surfaceFlags: Int;
+	var ?contents: Int;
+	var ?entityNum: Int;
+}
+
+enum TraceType {
+	RAY;
+	SPHERE;
+	BOX;
+}
 
 // CM_trace.c
 typedef Trace_t = {

@@ -1,6 +1,7 @@
 package cerastes.c3d.map;
 
 
+import cerastes.c3d.Entity.EntityData;
 import h3d.col.Point;
 import cerastes.c3d.map.Data.EntitySpawnType;
 import h3d.col.Bounds;
@@ -157,48 +158,12 @@ class BrushCollisionDef implements hxbit.Serializable
 }
 
 @:structInit
-class EntityDef implements hxbit.Serializable
+class MapEntityData extends cerastes.c3d.Entity.EntityData implements hxbit.Serializable
 {
-	@:s public var props: Map<String, String> = [];
 	@:s public var brush: BrushDef = {};
 	@:s public var collisionBodies: Array<BrushCollisionDef> = [];
 	@:s public var spawnType: EntitySpawnType = EST_ENTITY;
 	@:s public var center: Vector3Def = {};
-
-	public function getProperty( key: String, defaultVal: String = null )
-	{
-		if( props.exists( key ) )
-			return props[key];
-		return defaultVal;
-	}
-
-	public function getPropertyInt(key: String, defaultVal: Int = 0 )
-	{
-		if( props.exists( key ) )
-			return Std.parseInt( props[key] );
-		return defaultVal;
-	}
-
-	public function getPropertyFloat(key: String, defaultVal: Float = 0 )
-	{
-		if( props.exists( key ) )
-			return Std.parseFloat( props[key] );
-		return defaultVal;
-	}
-
-	public function getPropertyPoint(key: String, defaultVal: Point = null )
-	{
-		if( props.exists( key ) )
-		{
-			var bits = props[key].split(" ");
-			return new h3d.col.Point(
-				Std.parseFloat(bits[0]),
-				Std.parseFloat(bits[1]),
-				Std.parseFloat(bits[2])
-			);
-		}
-		return defaultVal;
-	}
 
 	#if mapcompiler
 
@@ -283,5 +248,5 @@ class EntityDef implements hxbit.Serializable
 class MapFile implements hxbit.Serializable
 {
 	@:s public var version: Int = 1;
-	@:s public var entities: Array<EntityDef> = [];
+	@:s public var entities: Array<MapEntityData> = [];
 }

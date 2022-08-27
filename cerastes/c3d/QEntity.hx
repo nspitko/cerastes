@@ -1,7 +1,8 @@
 
 package cerastes.c3d;
 
-import cerastes.c3d.map.SerializedMap.EntityDef;
+import cerastes.c3d.Entity.EntityData;
+import cerastes.c3d.map.SerializedMap.MapEntityData;
 import cerastes.collision.Colliders.Point;
 import h3d.scene.RenderContext;
 import haxe.rtti.Meta;
@@ -14,15 +15,6 @@ import cerastes.Entity;
  */
 
 
-abstract QTarget(String) from String
-{
-	inline public function new( s: String )
-	{
-		this = s;
-	}
-}
-
-
 class QEntityManager extends EntityManager
 {
 	@:access( cerastes.c3d.QEntity )
@@ -31,7 +23,7 @@ class QEntityManager extends EntityManager
 		for( e in entities )
 		{
 			var q: QEntity = cast e;
-			if( q.targetName == targetName )
+			if( q.name == targetName )
 				return q;
 		}
 		return null;
@@ -43,46 +35,16 @@ class QEntityManager extends EntityManager
 
 @:keepSub
 @:keepInit
-class QEntity extends Object implements cerastes.Entity
+class QEntity extends cerastes.c3d.Entity.BaseEntity
 {
-	// used by networking only
-	public var lookupId: String;
-
-	var destroyed = false;
-	public var world(get, null): cerastes.c3d.QWorld;
-	public var body: cerastes.c3d.BulletBody = null;
-
 	// Common properties all entities might have
-	var targetName: String = null;
 	var spawnFlags: Int = 0;
 	var angle: Float;
 
-	public function get_world() : cerastes.c3d.QWorld
+
+	override function create( d: EntityData, qworld: World )
 	{
-		return world;
-	}
-
-	public function isDestroyed() { return destroyed; }
-
-	public function destroy() {
-
-		if( body != null )
-			body.remove();
-
-		destroyed = true;
-	}
-
-	public function tick( delta: Float )
-	{
-		// Slam position with body position
-		if( body != null )
-			body.sync();
-	}
-
-	function create( def: EntityDef, qworld: QWorld )
-	{
-		world = qworld;
-
+		var def: MapEntityData = cast d;
 		if( def.spawnType == EST_ENTITY )
 		{
 			var origin = def.getPropertyPoint('origin');
@@ -95,108 +57,15 @@ class QEntity extends Object implements cerastes.Entity
 				);
 			}
 			// Common properties
-			targetName = def.getProperty("targetname");
+			name = def.getProperty("targetname");
 			angle = def.getPropertyFloat("angle");
 			spawnFlags = def.getPropertyInt("spawnflags");
 		}
 
-		onCreated(def);
+		super.create(def, world);
 
-		initializeBody();
-
-		world.entityManager.register(this);
 
 	}
-
-	function initializeBody()
-	{
-		if( body != null )
-		{
-			body.setTransform( new bullet.Point( x, y, z ) );
-		}
-	}
-
-	function collide( manifold: bullet.Native.PersistentManifold, body: BulletBody, other: QEntity, otherBody: BulletBody )
-	{
-		onCollide( manifold, body, other, otherBody );
-	}
-
-	public function setAbsOrigin( x : Float, y : Float, z : Float )
-	{
-		setPosition(x,y,z);
-		if( body != null )
-		{
-			body.setTransform( new bullet.Point(x,y,z) );
-		}
-	}
-
-	@:access( cerastes.c3d.BulletBody )
-	public function debugDrawBody( body: BulletBody, duration: Float = 0, color = 0xFF0000, alpha = 0.25, thickness=1.0 )
-	{
-		var shape = body.inst.getCollisionShape();
-		var t = body.inst.getWorldTransform();
-		var min = new bullet.Native.Vector3();
-		var max = new bullet.Native.Vector3();
-		shape.getAabb(t,min,max);
-
-
-		// make points
-		var p = [
-			new h3d.col.Point(min.x(), min.y(), min.z()),
-			new h3d.col.Point(max.x(), min.y(), min.z()),
-			new h3d.col.Point(min.x(), max.y(), min.z()),
-			new h3d.col.Point(min.x(), min.y(), max.z()),
-			new h3d.col.Point(max.x(), max.y(), min.z()),
-			new h3d.col.Point(max.x(), min.y(), max.z()),
-			new h3d.col.Point(min.x(), max.y(), max.z()),
-			new h3d.col.Point(max.x(), max.y(), max.z()),
-		];
-		var idx = new Array<Int>();
-		idx.push(0); idx.push(1); idx.push(5);
-		idx.push(0); idx.push(5); idx.push(3);
-		idx.push(1); idx.push(4); idx.push(7);
-		idx.push(1); idx.push(7); idx.push(5);
-		idx.push(3); idx.push(5); idx.push(7);
-		idx.push(3); idx.push(7); idx.push(6);
-		idx.push(0); idx.push(6); idx.push(2);
-		idx.push(0); idx.push(3); idx.push(6);
-		idx.push(2); idx.push(7); idx.push(4);
-		idx.push(2); idx.push(6); idx.push(7);
-		idx.push(0); idx.push(4); idx.push(1);
-		idx.push(0); idx.push(2); idx.push(4);
-
-		var i =0;
-		while( i < idx.length )
-		{
-			var index =  idx[i];
-			var indexNext =  idx[i+1];
-			DebugDraw.line( p[ index ] , p[ indexNext ], color, duration, alpha );
-			i++;
-			if( i % 3 == 2 ) i++;
-		}
-	}
-
-	// entity IO
-	function fireOutput( target: QTarget, port: String )
-	{
-		for( e in world.entityManager.entities )
-		{
-			var q: QEntity = cast e;
-			if( q.targetName == target )
-				q.fireInput( this, port );
-		}
-	}
-
-	public function fireInput( source: QEntity, port: String )
-	{
-		onInput( source, port );
-	}
-
-	// Called when an entity is created, override this to define entity specific
-	// behaviors
-	function onCreated( def: EntityDef ) { }
-	function onCollide( manifold: bullet.Native.PersistentManifold, body: BulletBody, other: QEntity, otherBody: BulletBody ) {}
-	function onInput( source: QEntity, port: String ) {}
 
 	// ====================================================================================
 	// Static helpers
@@ -205,7 +74,7 @@ class QEntity extends Object implements cerastes.Entity
 	static var classMap: Map<String, Class<Dynamic>>;
 
 	// ------------------------------------------------------------------------------------
-	public static function createEntity( def: EntityDef, world: QWorld  )  : Entity
+	public static function createEntity( def: MapEntityData, world: World  )  : Entity
 	{
 		ensureClassMap();
 
@@ -238,7 +107,7 @@ class QEntity extends Object implements cerastes.Entity
 	 * @param cls
 	 * @param world
 	 */
-	public static function createEntityClass( cls: Class<Dynamic>, world: QWorld, def: EntityDef = null ): QEntity
+	public static function createEntityClass( cls: Class<Dynamic>, world: World, def: MapEntityData = null ): QEntity
 	{
 		if( cls != null )
 		{

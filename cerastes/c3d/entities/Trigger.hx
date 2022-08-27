@@ -1,7 +1,7 @@
 package cerastes.c3d.entities;
 
-import cerastes.c3d.map.SerializedMap.EntityDef;
-import cerastes.c3d.QEntity.QTarget;
+import cerastes.c3d.Entity.EntityData;
+import cerastes.c3d.map.SerializedMap.MapEntityData;
 
 
 @qClass(
@@ -13,9 +13,9 @@ import cerastes.c3d.QEntity.QTarget;
 )
 class Trigger extends Brush
 {
-	var target: QTarget;
+	var target: String;
 
-	override function onCreated( def: EntityDef )
+	override function onCreated( def: EntityData )
 	{
 		target = def.getProperty("target");
 		super.onCreated( def );
@@ -30,17 +30,17 @@ class Trigger extends Brush
 		return b;
 	}
 
-	override function buildBrush( def: EntityDef )
+	override function buildBrush( def: MapEntityData )
 	{
 		// Don't.
 	}
 
-	override function onCollide( manifold: bullet.Native.PersistentManifold, body: BulletBody, other: QEntity, otherBody: BulletBody )
+	override function onCollide( manifold: bullet.Native.PersistentManifold, body: BulletBody, other: Entity, otherBody: BulletBody )
 	{
 		fireInput(other, "trigger");
 	}
 
-	override function onInput( source: QEntity, port: String )
+	override function onInput( source: Entity, port: String )
 	{
 		if( target != null )
 			fireOutput(target, port );
@@ -65,7 +65,7 @@ class TriggerOnce extends Trigger
 	var hasTriggered = false;
 
 
-	override function onInput( source: QEntity, port: String )
+	override function onInput( source: Entity, port: String )
 	{
 		if( hasTriggered )
 			return;
@@ -96,13 +96,13 @@ class TriggerCounter extends Trigger
 	var count: Int;
 	var triggerCount: Int;
 
-	override function onCreated( def: EntityDef )
+	override function onCreated( def: EntityData )
 	{
 		count = def.getPropertyInt("count");
 		super.onCreated( def );
 	}
 
-	override function onInput( source: QEntity, port: String )
+	override function onInput( source: Entity, port: String )
 	{
 		triggerCount++;
 

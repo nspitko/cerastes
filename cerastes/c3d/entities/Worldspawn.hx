@@ -1,6 +1,5 @@
 package cerastes.c3d.entities;
 
-import cerastes.c3d.entities.Brush.QBrush;
 import cerastes.c3d.QEntity;
 
 /**

@@ -35,10 +35,7 @@ class GeoGenerator
 
 	public function new(){}
 
-	inline function PointDivide( input: Point, denom: Float)
-	{
-		return new Point( input.x / denom, input.y / denom, input.z / denom );
-	}
+
 
 	inline function PointRotate( input: Point, axis: Point, angle: Float)
 	{
@@ -112,7 +109,7 @@ class GeoGenerator
 
 				if( vertexCount > 0 )
 				{
-					brush.center = PointDivide(brush.center, vertexCount );
+					brush.center = CMath.dividePoint(brush.center, vertexCount );
 				}
 
 				//trace('Brush ${b} center -> ${brush.center}');
@@ -123,7 +120,7 @@ class GeoGenerator
 
 			if( entity.brushes.length > 0 )
 			{
-				entity.center = PointDivide( entity.center, entity.brushes.length );
+				entity.center = CMath.dividePoint( entity.center, entity.brushes.length );
 				//trace('Center -> ${entity.center}');
 			}
 		}
@@ -159,7 +156,7 @@ class GeoGenerator
 						windFaceCenter = windFaceCenter.add( faceGeo.vertices[v].vertex );
 					}
 
-					windFaceCenter = PointDivide( windFaceCenter, faceGeo.vertices.length );
+					windFaceCenter = CMath.dividePoint( windFaceCenter, faceGeo.vertices.length );
 
 					faceGeo.vertices.sort( sortVerticesByWinding );
 					windEntityIdx = 0;
@@ -430,7 +427,7 @@ class GeoGenerator
 
 			// @todo this could be more efficient probably?
 			var sum: Point = cd0.add(cd1.add(cd2));
-			var result = PointDivide(sum, denom);
+			var result = CMath.dividePoint(sum, denom);
 
 			out.set( result.x, result.y, result.z );
 		}

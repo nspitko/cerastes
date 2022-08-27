@@ -1,8 +1,8 @@
 package cerastes.c3d.entities;
 
+import cerastes.c3d.Entity.EntityData;
 import bullet.Point;
 import h3d.pass.Blur;
-import cerastes.c3d.map.SerializedMap.EntityDef;
 import h3d.pass.Shadows.ShadowSamplingKind;
 
 import cerastes.c3d.BulletWorld.BulletCollisionFilterGroup;
@@ -12,7 +12,7 @@ class Light extends QEntity
 {
 	var light: h3d.scene.Light;
 
-	override function create( def: EntityDef, qworld: QWorld )
+	override function create( def: EntityData, qworld: World )
 	{
 		super.create(def, qworld);
 
@@ -32,7 +32,7 @@ class Light extends QEntity
 
 	}
 
-	public function createLight(def: EntityDef)
+	public function createLight(def: EntityData)
 	{
 	}
 }
@@ -81,7 +81,7 @@ class Light extends QEntity
 )
 class PointLight extends Light
 {
-	override function createLight(def: EntityDef)
+	override function createLight(def: EntityData)
 	{
 		var l = new h3d.scene.pbr.PointLight( this );
 		light = l;
@@ -132,7 +132,7 @@ class PointLight extends Light
 		//DebugDraw.sphere(new Point(x,y,z),15,0xFF0000,-1);
 	}
 
-	public override function onInput( source: QEntity, port: String )
+	public override function onInput( source: Entity, port: String )
 	{
 		if( port == "trigger" )
 			light.visible = !light.visible;

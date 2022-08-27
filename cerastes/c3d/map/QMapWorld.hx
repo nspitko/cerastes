@@ -16,17 +16,31 @@ import h3d.Quat;
 import h3d.scene.World;
 import h3d.scene.Object;
 
-class QWorld extends World
+class QWorld extends Object
 {
 	#if bullet
 	public var physics: BulletWorld;
 	#end
 
-	var map: QMap;
+	public var map: QMap;
 
 	public static final QU_TO_METERS = 1.7 / 64;
 	public static final METERS_TO_QU = 64 / 1.7;
 
+	public static var physicsMaxSubSteps = 1;
+
+	public var entityManager: QEntityManager;
+
+	public function new( ?parent: Object )
+	{
+		super( parent );
+		#if bullet
+		physics = new BulletWorld(this);
+		physics.setGravity(0,0,-9.8 * METERS_TO_QU);
+		#end
+
+		entityManager = new QEntityManager();
+	}
 
 	public function loadMap(file: String)
 	{
@@ -34,7 +48,14 @@ class QWorld extends World
 		map.init();
 	}
 
-
+	public function tick(delta: Float)
+	{
+		#if bullet
+		physics.stepSimulation( delta, physicsMaxSubSteps);
+		physics.checkCollisions();
+		#end
+		entityManager.tick(delta);
+	}
 
 
 }

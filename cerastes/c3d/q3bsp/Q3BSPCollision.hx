@@ -1,4 +1,4 @@
-package cerastes.c3d.bsp;
+package cerastes.c3d.q3bsp;
 
 import cerastes.c3d.q3bsp.Q3BSPFile.DBrush_t;
 import h3d.col.Point;
@@ -17,7 +17,7 @@ import cerastes.c3d.q3bsp.Q3BSPFile.BSPFileDef;
 	public var faces: Array<CollisionFace> = [];
 }
 
-class BSPCollision
+class Q3BSPCollision
 {
 	var brushInfo: Array<CollisionBrush> = [];
 

@@ -1,4 +1,4 @@
-package cerastes.c3d.bsp;
+package cerastes.c3d.q3bsp;
 
 import hxd.PixelFormat;
 import hxd.Pixels;
@@ -231,7 +231,7 @@ abstract MapSurfaceType_t(Int) from Int to Int {
 }
 
 
-class BSPFile
+class Q3BSPFile
 {
 	var fileName: String;
 	var bytes: Bytes;

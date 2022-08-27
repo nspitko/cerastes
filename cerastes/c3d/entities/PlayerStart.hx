@@ -1,6 +1,6 @@
 package cerastes.c3d.entities;
 
-import cerastes.c3d.map.SerializedMap.EntityDef;
+import cerastes.c3d.Entity.EntityData;
 import cerastes.Entity.EntityManager;
 import format.swf.Data.PlaceObject;
 import h3d.col.Point;
@@ -24,9 +24,9 @@ import cerastes.c3d.QEntity;
 		]
 	}
 )
-class PlayerStart extends QEntity
+class PlayerStart extends Entity
 {
-	override function onCreated( def: EntityDef )
+	override function onCreated( def: EntityData )
 	{
 		super.onCreated( def );
 
@@ -34,9 +34,10 @@ class PlayerStart extends QEntity
 
 		switch( playerType )
 		{
-			case 0:
-				var p = QEntity.createEntityClass( FPSPlayer, world, def );
-				var pos = new bullet.Point(x,y,z);
+			//case 0:
+				// @todo
+				//var p = QEntity.createEntityClass( FPSPlayer, world, def );
+				//var pos = new bullet.Point(x,y,z);
 
 			default:
 				Utils.error('info_player_start has invalid player type ${playerType}; no player will spawn!');

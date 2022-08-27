@@ -1,6 +1,6 @@
 package cerastes.c3d.entities;
 
-import cerastes.c3d.map.SerializedMap.EntityDef;
+import cerastes.c3d.Entity.EntityData;
 import h3d.Vector;
 import h3d.col.Point;
 import cerastes.c3d.QEntity.QTarget;
@@ -85,7 +85,7 @@ class FuncMoverTest extends MovingBrush
 	var maxHeight:Float = 0;
 	var dir: Float = 1;
 
-	override function onCreated( def: EntityDef )
+	override function onCreated( def: EntityData )
 	{
 		maxHeight = Std.parseFloat( def.getProperty("height") );
 		startingHeight = z;
@@ -159,8 +159,8 @@ class FuncMoverTest extends MovingBrush
 )
 class FuncDoor extends MovingBrush
 {
-	var target: QTarget;
-	var killTarget: QTarget;
+	var target: String;
+	var killTarget: String;
 
 	var speed: Float;
 	var wait: Float;
@@ -190,7 +190,7 @@ class FuncDoor extends MovingBrush
 	 * onCreated
 	 * @param def
 	 */
-	override function onCreated( def: EntityDef )
+	override function onCreated( def: EntityData )
 	{
 		super.onCreated( def );
 
@@ -213,7 +213,7 @@ class FuncDoor extends MovingBrush
 
 		openPos = new Point( closedPos.x + offset.x, closedPos.y + offset.y, closedPos.z );
 
-		if( targetName == null )
+		if( name == null )
 		{
 			createSensor();
 		}
@@ -235,7 +235,7 @@ class FuncDoor extends MovingBrush
 		//debugDrawBody( sensor, -1, 0xFF0000 );
 	}
 
-	override function onCollide( manifold: bullet.Native.PersistentManifold, body: BulletBody, other: QEntity, otherBody: BulletBody )
+	override function onCollide( manifold: bullet.Native.PersistentManifold, body: BulletBody, other: Entity, otherBody: BulletBody )
 	{
 		if( body != sensor )
 			return;
@@ -243,7 +243,7 @@ class FuncDoor extends MovingBrush
 		fireInput( other, "trigger" );
 	}
 
-	public override function onInput( source: QEntity, port: String )
+	public override function onInput( source: Entity, port: String )
 	{
 		if( port == "trigger")
 			open();
@@ -362,7 +362,7 @@ class FuncDoor extends MovingBrush
 class FuncButton extends FuncDoor
 {
 	var triggerDelay: Float;
-	override function onCreated( def: EntityDef )
+	override function onCreated( def: EntityData )
 	{
 		super.onCreated( def );
 
@@ -370,7 +370,7 @@ class FuncButton extends FuncDoor
 
 	}
 
-	public override function onInput( source: QEntity, port: String )
+	public override function onInput( source: Entity, port: String )
 	{
 		if( state != CLOSED )
 			return;

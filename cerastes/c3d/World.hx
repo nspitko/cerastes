@@ -1,8 +1,11 @@
 
 package cerastes.c3d;
 
+import cerastes.Entity.EntityManager;
+#if bullet
 import bullet.Native;
 import bullet.Shape;
+#end
 import h3d.Matrix;
 import cerastes.file.CDParser;
 import cerastes.file.CDPrinter;
@@ -49,115 +52,34 @@ class WorldDef
 	}
 }
 
-// The megaclass.
 class World extends Object
 {
-	public var physics: bullet.World;
-	public var geo: h3d.scene.World;
-
-	var geoPhysics: Map<Int, Shape> = [];
-
+	#if bullet
+	public var physics: BulletWorld;
 	public static var physicsMaxSubSteps = 1;
 
-	var entities: Array<Entity> = [];
+	#end
+
+	public var entityManager: EntityManager;
 
 	public function new( ?parent: Object )
 	{
 		super( parent );
-		physics = new bullet.World(this);
+		#if bullet
+		physics = new BulletWorld(this);
 		physics.setGravity(0,0,-9.8);
-		geo = new h3d.scene.World(64, this);
-	}
+		#end
 
-	public function load( def: WorldDef )
-	{
-		if( def.prefabs != null )
-		{
-			for( entry in def.prefabs )
-			{
-				var def = PrefabDef.load( entry.file );
-				var prefab = new Prefab(this);
-				prefab.load(def);
-				prefab.setPosition ( entry.x, entry.y, entry.z );
-				prefab.setRotationQuat( entry.rotation.clone() ); // Clone here to avoid holding on to the whole worlddef
-			}
-		}
-
-		if( def.geo != null )
-		{
-			// @todo cache!!
-			var modelCache = new Map<String, WorldModel>();
-			for( entry in def.geo )
-			{
-				var worldModel: WorldModel = modelCache.get(entry.file);
-				if( worldModel == null )
-				{
-					var model = hxd.Res.loader.loadCache( entry.file, hxd.res.Model );
-					worldModel = geo.loadModel( model );
-					modelCache.set(entry.file, worldModel );
-				}
-
-				geo.addTransform( worldModel, entry.transform );
-
-
-			}
-		}
-
-	}
-
-	@:access(h3d.scene.World)
-	public function generateChunkPhysics()
-	{
-		/*
-		for(idx => chunk in geo.chunks)
-		{
-			if( chunk.initialized && !geoPhysics.exists(idx) )
-			{
-
-				var shapes = new Array<BvhTriangleMeshShape>();
-
-
-				for( buffer in chunk.buffers )
-				{
-					var triangleArray = new bullet.Native.TriangleMesh(false,false);
-					var prim = buffer.primitive;
-					for( bufferIdx in 0 ... prim.indexes.count )
-					{
-						var vert = prim.buffer.buffer[bufferIdx];
-						triangleArray.addTriangle( vert.x, vert.y, vert.z, true );
-					}
-					var shape = new bullet.Native.BvhTriangleMeshShape(triangleArray, true, true);
-				}
-
-
-
-				//int.
-				//var p = new BvhTriangleMeshShape()
-			}
-
-
-
-			//var triangleShape = new Native.BvhTriangleMeshShape(  )
-		}
-
-			*/
-	}
-
-	public function add( e: Entity )
-	{
-		e.setWorld( this );
-		entities.push( e );
+		entityManager = new EntityManager();
 	}
 
 	public function tick(delta: Float)
 	{
-		// Scans world chunks for any we might not have generated geo for yet
-		generateChunkPhysics();
-
-		physics.stepSimulation( delta,physicsMaxSubSteps);
-		for( e in entities )
-			e.tick(delta);
+		#if bullet
+		physics.stepSimulation( delta, physicsMaxSubSteps);
+		physics.checkCollisions();
+		#end
+		entityManager.tick(delta);
 	}
-
 
 }

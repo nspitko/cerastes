@@ -76,8 +76,8 @@ class BulletWorld {
 			var bodyB = bodies[ manifold.getBody1().getUserIndex() ];
 
 			//DebugDraw.line( bodyA.position, bodyB.position, 0xFF0000 );
-			var entA = Std.downcast( bodyA.object, QEntity );
-			var entB = Std.downcast( bodyB.object, QEntity );
+			var entA = Std.downcast( bodyA.object, Entity );
+			var entB = Std.downcast( bodyB.object, Entity );
 
 			if( entA != null )
 				@:privateAccess entA.collide(manifold, bodyA, entB, bodyB);

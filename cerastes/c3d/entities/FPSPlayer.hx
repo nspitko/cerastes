@@ -1,7 +1,7 @@
 package cerastes.c3d.entities;
 
 
-import cerastes.c3d.map.SerializedMap.EntityDef;
+import cerastes.c3d.Entity.EntityData;
 import bullet.Constants.CollisionFlags;
 import h3d.Vector;
 import h3d.scene.RenderContext;
@@ -20,7 +20,7 @@ class FPSPlayer extends Actor
 		controller.initialize(this);
 	}
 
-	public override function onCreated(  def: EntityDef )
+	public override function onCreated(  def: EntityData )
 	{
 		super.onCreated( def );
 

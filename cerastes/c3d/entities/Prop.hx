@@ -2,7 +2,7 @@ package cerastes.c3d.entities;
 
 
 
-import cerastes.c3d.map.SerializedMap.EntityDef;
+import cerastes.c3d.Entity.EntityData;
 import cerastes.c3d.Material.MaterialDef;
 import h3d.prim.ModelCache;
 import h3d.col.Point;
@@ -29,7 +29,7 @@ class PropPhysics extends Prop
 {
 	static var modelCache: ModelCache;
 
-	override function onCreated( def: EntityDef )
+	override function onCreated( def: EntityData )
 	{
 		super.onCreated( def );
 
@@ -60,7 +60,7 @@ class PropPhysics extends Prop
 )
 class PropTest extends QEntity
 {
-	override function onCreated( def: EntityDef )
+	override function onCreated( def: EntityData )
 	{
 		super.onCreated( def );
 

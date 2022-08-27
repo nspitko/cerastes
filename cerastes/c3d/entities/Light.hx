@@ -127,7 +127,7 @@ class PointLight extends Light
 
 
 		// DEBUG
-		l.visible = false;
+		//l.visible = false;
 
 		//DebugDraw.sphere(new Point(x,y,z),15,0xFF0000,-1);
 	}

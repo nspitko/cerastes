@@ -1,5 +1,8 @@
 package cerastes.c3d.bsp;
 
+import cerastes.c3d.Material.MaterialDef;
+import h3d.shader.pbr.PropsValues;
+import hxd.IndexBuffer;
 import cerastes.c3d.bsp.BSPFile.DBrushSide_t;
 import cerastes.c3d.bsp.BSPFile.DBrush_t;
 import cerastes.c3d.bsp.BSPFile.DPlane_t;
@@ -73,6 +76,8 @@ class BSPMap extends Object
 
 	var lightMapMegaTexture : Texture;
 
+	var enableVis: Bool = false;
+
 
 
 	public function new(bspFile: BSPFile, ?parent: Object )
@@ -83,7 +88,7 @@ class BSPMap extends Object
 
 		idxBuffer = new Indexes(bsp.meshVerts.length,true);
 
-		idxBytes = Bytes.alloc(bsp.meshVerts.length*4);
+		idxBytes = Bytes.alloc(bsp.meshVerts.length*10); // was 4 HACK HACK
 
 		loadLightMaps();
 		loadMaterials();
@@ -156,11 +161,17 @@ class BSPMap extends Object
 			var lmIdx = mapVertexToLightMap[i];
 			if( lmIdx != null && lmIdx != -1 )
 			{
+				#if biglightmaps
+				var lmX =  v.lightmap[0];
+				var lmY =  v.lightmap[1];
+				#else
 				var lmOffsetX = ( lmIdx % 16 ) / 16;
 				var lmOffsetY = Math.floor( lmIdx / 16 ) / 16;
 
 				var lmX =  ( ( v.lightmap[0] ) / 16 ) + lmOffsetX;
 				var lmY =  ( ( v.lightmap[1] ) / 16 ) + lmOffsetY ;
+				#end
+
 
 				vertexBytes.setFloat(pos + 32, lmX );
 				vertexBytes.setFloat(pos + 36, lmY  );
@@ -187,12 +198,6 @@ class BSPMap extends Object
 		for( i in 0...bufferNames.length )
 			addBuffer(bufferNames[i], vertexBuffer, bufferPositions[i]);
 
-		#if resample16
-		vertexIndices = new h3d.Indexes(bsp.meshVerts.length);
-		#else
-		vertexIndices = new h3d.Indexes(bsp.meshVerts.length, true);
-		#end
-		vertexIndices.uploadBytes(bsp.meshVertsRaw,0,bsp.meshVerts.length);
 	}
 
 	function addBuffer( name : String, buf, offset = 0 )
@@ -257,32 +262,50 @@ class BSPMap extends Object
 	{
 		for( matInfo in bsp.shaders )
 		{
-			var matPath = 'bsp/${matInfo.shader}';
-			var tex;
-			// search order: tga -> jpg
-			if( hxd.Res.loader.exists('$matPath.tga') )
-				tex = hxd.Res.loader.load('$matPath.tga').toTexture();
-			else if( hxd.Res.loader.exists('$matPath.jpg') )
-				tex = hxd.Res.loader.load('$matPath.jpg').toTexture();
+			var matPath = '${matInfo.shader}';
+			var tex = null;
+			if( hxd.Res.loader.exists('$matPath.png') )
+				matPath = '$matPath.png';
 			else
 			{
-				Utils.warning('Missing texture: $matPath');
-				tex = Texture.fromColor(0xFFFF00FF);
+				matPath = 'bsp/${matInfo.shader}';
+
+				// search order: tga -> jpg
+				if( hxd.Res.loader.exists('$matPath.tga') )
+					tex = hxd.Res.loader.load('$matPath.tga').toTexture();
+				else if( hxd.Res.loader.exists('$matPath.jpg') )
+					tex = hxd.Res.loader.load('$matPath.jpg').toTexture();
+				else
+				{
+					Utils.warning('Missing texture: $matPath');
+					tex = Texture.fromColor(0xFFFF00FF);
+				}
 			}
-			tex.wrap = Wrap.Repeat;
-			var mat = Material.create(tex);
+			//tex.wrap = Wrap.Repeat;
+			//var mat = Material.create(tex);
+			var mat = MaterialDef.loadMaterial(matPath);
+
 
 			trace('Loaded: ${matInfo.shader}');
 
-			var shader = new cerastes.c3d.bsp.shaders.Q3Shader();
-			mat.mainPass.removeShader( mat.textureShader );
-			mat.mainPass.addShader( shader );
 
-			shader.texture = mat.texture;
-			shader.lightMapTexture = lightMapMegaTexture;
+
+			var shader = new cerastes.c3d.bsp.shaders.Q3PBRLightmapShader();
+			//mat.mainPass.removeShader( mat.textureShader );
+			mat.mainPass.addShader( shader );
+			mat.texture.filter = Nearest;
+
+
+			var lmTex = hxd.Res.maps.bsp2_compile.lm_0000_png.toTexture();
+			shader.texture = lmTex;
+
+			//shader.lightMapTexture = lmTex;
+
+
 
 			mat.name = matInfo.shader;
 			mat.mainPass.culling = Face.Front;
+			//mat.mainPass.
 			materialMap.set(matInfo.shader, mat);
 			materials.push(mat);
 
@@ -402,8 +425,9 @@ class BSPMap extends Object
 		for( leaf in bsp.leafs )
 		{
 
-			//if( leaf.cluster != rootLeaf.cluster && !isClusterVisible( rootLeaf.cluster, leaf.cluster ) )
-			//	continue;
+			// Vis check.
+			if( enableVis && leaf.cluster != rootLeaf.cluster && !isClusterVisible( rootLeaf.cluster, leaf.cluster ) )
+				continue;
 
 			for(i in 0 ... leaf.numLeafSurfaces )
 			{
@@ -455,8 +479,34 @@ class BSPMap extends Object
 		var textureIdx = emittedMaterials[ctx.drawPass.index];
 		//return;
 		// first pass: How many verts do we have?
-		var verts = 0;
+		var indices = 0;
 		var idx = 0;
+
+		var size = 0;
+		var indexTotal = 0;
+
+		// Quick scan to determine our alloc size
+		for( faceIdx in visibleFaces[textureIdx] )
+		{
+			var face = bsp.surfaces[faceIdx];
+
+			if( face.surfaceType != MST_PLANAR && face.surfaceType != MST_TRIANGLE_SOUP)
+				continue;
+
+			indexTotal += face.numIndexes;
+
+		}
+
+		size = indexTotal * 4;
+
+
+		if( idxBytes.length < size )
+		{
+			idxBytes = Bytes.alloc( size );
+			idxBuffer = new Indexes( indexTotal, true);
+		}
+
+
 
 		for( faceIdx in visibleFaces[textureIdx] )
 		//for( face in bsp.faces )
@@ -469,29 +519,67 @@ class BSPMap extends Object
 
 			Utils.assert( face.firstIndex % 3 == 0 && face.numIndexes % 3 == 0, "Invalid meshvert offset" );
 
-			verts += face.numIndexes;
+			indices += face.numIndexes;
 
 			for( i in 0 ... face.numIndexes )
 			{
-
-				idxBytes.setInt32(idx, face.firstVertex  + bsp.meshVerts[i + face.firstIndex ]);
+				var index = face.firstVertex  + bsp.meshVerts[i + face.firstIndex ];
+				idxBytes.setInt32(idx, index );
 				idx+=4;
 			}
 		}
 
+		// indices OK
 		//var v = 256;
 		//if( verts > v )
 		//	trace('buffer sample: ${idxAccess[ 4*v ]},${idxAccess[ 4*v+1 ]},${idxAccess[ 4*v+2 ]},${idxAccess[ 4*v+3 ]}');
 
-		idxBuffer.uploadBytes(idxBytes,0,verts);
+		Utils.assert( indices == size / 4, "????" );
+
+		idxBuffer.uploadBytes(idxBytes.sub(0,size),0,indices);
 
 		var bufs = getBuffers(ctx.engine);
 
-		ctx.engine.renderMultiBuffers(bufs,idxBuffer,0,cast verts/3 );
+		//ctx.engine.renderIndexed(vertexBuffer,idxBuffer,0 );
+		ctx.engine.renderMultiBuffers(bufs,idxBuffer,0, CMath.floor( indices / 3 ) );
 
 		//idxBuffer.dispose();
 
 		//trace( ctx.engine.drawCalls - ds );
+
+		// DBG
+
+		/*
+		for( faceIdx in visibleFaces[textureIdx] )
+		//for( face in bsp.faces )
+		{
+			var face = bsp.surfaces[faceIdx];
+
+			if( face.surfaceType != MST_PLANAR && face.surfaceType != MST_TRIANGLE_SOUP)
+				continue;
+
+			var i=0;
+			var col = 0x00FF00;
+			while( i < face.numIndexes )
+			{
+				var vi1 = face.firstVertex  + bsp.meshVerts[i + face.firstIndex ];
+				var vi2 = face.firstVertex  + bsp.meshVerts[i + 1 + face.firstIndex ];
+				var vi3 = face.firstVertex  + bsp.meshVerts[i + 2 + face.firstIndex ];
+				var vtx1 = bsp.vertices[ vi1 ];
+				var vtx2 = bsp.vertices[ vi2 ];
+				var vtx3 = bsp.vertices[ vi3 ];
+
+				DebugDraw.line( new Point( vtx1.xyz[0], vtx1.xyz[1], vtx1.xyz[2] ), new Point( vtx2.xyz[0], vtx2.xyz[1], vtx2.xyz[2] ), col );
+				DebugDraw.line( new Point( vtx2.xyz[0], vtx2.xyz[1], vtx2.xyz[2] ), new Point( vtx3.xyz[0], vtx3.xyz[1], vtx3.xyz[2] ), col );
+				DebugDraw.line( new Point( vtx1.xyz[0], vtx1.xyz[1], vtx1.xyz[2] ), new Point( vtx3.xyz[0], vtx3.xyz[1], vtx3.xyz[2] ), col );
+
+
+				i+=3;
+
+			}
+		}
+*/
+
 	}
 
 

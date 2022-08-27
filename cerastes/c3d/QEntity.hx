@@ -212,8 +212,8 @@ class QEntity extends Object implements cerastes.Entity
 		var className = def.getProperty("classname");
 		if( className == null )
 		{
-		Utils.warning('Entity def missing classname!!!');
-			return null;
+			Utils.warning('Entity def missing classname!!!');
+				return null;
 		}
 
 		var cls: Class<Dynamic> = classMap.get( className );

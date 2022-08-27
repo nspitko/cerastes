@@ -24,7 +24,7 @@ class MaterialDef
 	public var version: Int = 1;
 	// PBR
 	public var metalness: Float = 0;
-	public var roughness: Float = 0;
+	public var roughness: Float = 1;
 	public var occlusion: Float = 1;
 	public var emissive: Float = 1;
 

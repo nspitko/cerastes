@@ -1,7 +1,7 @@
 package cerastes.c3d.bsp.shaders;
 
 
-class Q3Shader extends hxsl.Shader {
+class Q3PBRLightmapShader extends hxsl.Shader {
     static var SRC = {
 
 		@const var additive : Bool;
@@ -14,7 +14,9 @@ class Q3Shader extends hxsl.Shader {
 
 
 		@param var texture : Sampler2D;
-		@param var lightMapTexture : Sampler2D;
+		//@param var lightMapTexture : Sampler2D;
+
+		//var pbrLightColor : Vec3;
 
 
         @input var input : {
@@ -27,22 +29,18 @@ class Q3Shader extends hxsl.Shader {
 
 			function vertex()
 			{
-				calculatedUV = input.uv;
 				calculatedLMUV = input.uvlm;
 			}
 
 			function fragment()
 			{
-				var c = texture.get( vec2( calculatedUV.x, calculatedUV.y ) );
-				var clm = lightMapTexture.get( vec2( calculatedLMUV.x, calculatedLMUV.y ) ) ;
-#if biglightmaps
+
+				var clm = texture.get( vec2( calculatedLMUV.x, calculatedLMUV.y ) ) ;
+
 				clm.rgb *= vec3(4.0477);
-#end
+
 				//if( killAlpha && c.a - killAlphaThreshold < 0 ) discard;
-				if( additive )
-					pixelColor += c * clm;
-				else
-					pixelColor *= c * clm;
+				pixelColor.rgb *= clm.rgb;
 			}
     };
 

@@ -162,7 +162,7 @@ class BSPCollision
 		}
 
 
-		debugDrawCollision();
+		//debugDrawCollision();
 
 
 	}

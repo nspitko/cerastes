@@ -16,7 +16,8 @@ class FPSPlayer extends Actor
 
 	override function initializeBody()
 	{
-		controller = cast QEntity.createEntityClass( FPSPlayerController, world );
+		var d: EntityData = {};
+		controller = cast world.createEntityClass( FPSPlayerController, d );
 		controller.initialize(this);
 	}
 

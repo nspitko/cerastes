@@ -3,7 +3,6 @@ package cerastes.c3d.entities;
 import cerastes.c3d.Entity.EntityData;
 import h3d.Vector;
 import h3d.col.Point;
-import cerastes.c3d.QEntity.QTarget;
 
 import cerastes.c3d.BulletWorld.BulletCollisionFilterGroup;
 import cerastes.c3d.BulletWorld.BulletCollisionFilterMask;
@@ -93,17 +92,6 @@ class FuncMoverTest extends MovingBrush
 
 	public override function tick( delta: Float )
 	{
-		var body = bodies[0];
-		z = body.position.z;
-		if( dir > 0 && z >= startingHeight + maxHeight )
-			dir = -1;
-		else if( dir < 0 && z <= startingHeight )
-			dir = 1;
-
-		// @todo unfuck this
-		z += dir * delta * 100;
-
-		body.setTransform(new h3d.col.Point( body.position.x, body.position.y, z ) );
 
 	}
 }
@@ -173,6 +161,7 @@ class FuncDoor extends MovingBrush
 	var openTime: Float;
 
 	var sensor: BulletBody;
+	var angle: Float;
 
 	/**
 	 *  https://cdn.discordapp.com/attachments/891006540943867924/1010272786721288302/unknown.png
@@ -197,6 +186,7 @@ class FuncDoor extends MovingBrush
 		target = def.getProperty("target");
 		killTarget = def.getProperty("target");
 
+		angle = def.getPropertyFloat("angle");
 		speed = def.getPropertyFloat("speed", 100);
 		wait = def.getPropertyFloat("wait", 3);
 		var lip = def.getPropertyFloat("lip", 0);
@@ -206,7 +196,7 @@ class FuncDoor extends MovingBrush
 		// Calculate open position
 		var dir = new Point( Math.cos( angle * ( Math.PI / 180 ) ), Math.sin( angle * ( Math.PI / 180 ) ), 0 );
 		dir.normalize();
-		var bounds = brush.getBounds();
+		var bounds = null;//brush.getBounds(); @todo
 		var dist = Math.abs( bounds.getSize().dot( dir ) ) + lip;
 
 		var offset = dir.multiply(dist);
@@ -249,7 +239,7 @@ class FuncDoor extends MovingBrush
 			open();
 
 		if( state == OPEN && target != null )
-			fireOutput( targetName, "trigger" );
+			fireOutput( name, "trigger" );
 
 	}
 
@@ -274,6 +264,8 @@ class FuncDoor extends MovingBrush
 
 	public override function tick( delta: Float )
 	{
+		/*
+		@todo
 		var body = bodies[0];
 		z = body.position.z;
 
@@ -299,7 +291,7 @@ class FuncDoor extends MovingBrush
 		}
 
 		//body.setTransform(new h3d.col.Point( body.position.x, body.position.y, z ) );
-
+*/
 	}
 }
 

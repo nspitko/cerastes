@@ -454,8 +454,13 @@ class CDParser {
 		{
 			var inull = Std.parseInt( str.substr(start, pos - start) );
 			var i: Int = inull != null ? inull : 0;
+			#if hl
 			var i64: hl.I64 = i;
 			return i64;
+			#else
+			Utils.error("Unhandled i64 support");
+			return 0;
+			#end
 		}
 
 		var f = Std.parseFloat(str.substr(start, pos - start));

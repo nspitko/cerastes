@@ -3,8 +3,19 @@ package cerastes.c3d;
 import h3d.col.Point;
 import h3d.scene.Object;
 
+// Shim
+#if q3bsp
+@:structInit class EntityData extends cerastes.c3d.q3bsp.Q3BSPEntity.Q3BSPEntityData {}
+#else #if q3map
+@:structInit class EntityData extends QEntityData {}
+#else
+@:structInit class EntityData extends EntityDataBase {}
+#end #end
+
+
+
 @:structInit
-class EntityData #if hxbit implements hxbit.Serializable #end
+class EntityDataBase #if hxbit implements hxbit.Serializable #end
 {
 	@:s public var props: Map<String, String> = [];
 
@@ -59,6 +70,8 @@ class BaseEntity extends Object implements cerastes.Entity
 {
 	public var lookupId: String;
 
+	var spawnFlags : Int;
+
 	var destroyed = false;
 	public var world(get, null): cerastes.c3d.World;
 	public var body: cerastes.c3d.BulletBody = null;
@@ -97,6 +110,7 @@ class BaseEntity extends Object implements cerastes.Entity
 	function create( def: EntityData, w: World )
 	{
 		world = w;
+		createBody(def);
 /*
 		if( def.spawnType == EST_ENTITY )
 		{
@@ -115,6 +129,8 @@ class BaseEntity extends Object implements cerastes.Entity
 			spawnFlags = def.getPropertyInt("spawnflags");
 		}
 */
+
+
 		onCreated(def);
 
 		initializeBody();
@@ -147,6 +163,15 @@ class BaseEntity extends Object implements cerastes.Entity
 	#if bullet
 	function onCollide( manifold: bullet.Native.PersistentManifold, body: BulletBody, other: Entity, otherBody: BulletBody ) {}
 
+	/**
+	 * Called during create.
+	 * @param def
+	 */
+	function createBody( def: EntityData ) {}
+
+	/**
+	 * Called during create, after createBody. Useful for body agnostic setup like moving the body.
+	 */
 	function initializeBody()
 	{
 		if( body != null )

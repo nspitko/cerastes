@@ -40,8 +40,11 @@ class Q3PBRLightmapShader extends hxsl.Shader {
 				// q3a lightmaps only
 				//clm.rgb *= vec3(4.0477);
 
+				// 20% overbright
+				clm.rgb *= vec3(2);
+
 				//if( killAlpha && c.a - killAlphaThreshold < 0 ) discard;
-				pixelColor.rgb *= clm.rgb;
+				pixelColor.rgb *=clm.rgb;
 			}
     };
 

@@ -1,7 +1,6 @@
 package cerastes.c3d.entities;
 
 import cerastes.c3d.Entity.EntityData;
-import cerastes.c3d.map.SerializedMap.MapEntityData;
 
 
 @qClass(
@@ -20,7 +19,7 @@ class Trigger extends Brush
 		target = def.getProperty("target");
 		super.onCreated( def );
 	}
-
+/*
 	override function createBody(shape: bullet.Native.ConvexTriangleMeshShape )
 	{
 		//debugDrawSurfaceDetails
@@ -34,7 +33,7 @@ class Trigger extends Brush
 	{
 		// Don't.
 	}
-
+*/
 	override function onCollide( manifold: bullet.Native.PersistentManifold, body: BulletBody, other: Entity, otherBody: BulletBody )
 	{
 		fireInput(other, "trigger");

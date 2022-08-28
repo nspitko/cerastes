@@ -147,7 +147,7 @@ class SpriteResource extends Resource
 
 	var cache: SpriteCache = null;
 
-	public function toSprite( ?parent: Object, ?localCache: SpriteCache = null )
+	public function toSprite( ?parent: Object, ?localCache: SpriteCache = null ) : Sprite
 	{
 		var data = getData();
 

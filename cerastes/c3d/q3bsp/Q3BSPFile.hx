@@ -112,7 +112,7 @@ import haxe.io.Bytes;
 {
 	public var shaderNum: Int;
 	public var fogNum: Int;
-	public var surfaceType: Int;
+	public var surfaceType: MapSurfaceType_t;
 	public var firstVertex: Int;
 	public var numVertices: Int;
 	public var firstIndex: Int;
@@ -240,6 +240,11 @@ class Q3BSPFile
 	public function new( fileName: String )
 	{
 		this.fileName = fileName;
+	}
+
+	public function addToWorld( world: World )
+	{
+		Q3BSPEntities.spawnEntities( file, world );
 	}
 
 	public function load()

@@ -2,7 +2,6 @@
 package cerastes.c3d;
 
 import cerastes.c3d.Entity.EntityData;
-import cerastes.c3d.map.SerializedMap.MapEntityData;
 import cerastes.collision.Colliders.Point;
 import h3d.scene.RenderContext;
 import haxe.rtti.Meta;

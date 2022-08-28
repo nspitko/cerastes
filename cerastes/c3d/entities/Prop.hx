@@ -7,13 +7,13 @@ import cerastes.c3d.Material.MaterialDef;
 import h3d.prim.ModelCache;
 import h3d.col.Point;
 import h3d.scene.Graphics;
-import cerastes.c3d.QEntity;
+import cerastes.c3d.Entity;
 
 
 import cerastes.c3d.BulletWorld.BulletCollisionFilterGroup;
 import cerastes.c3d.BulletWorld.BulletCollisionFilterMask;
 
-class Prop extends QEntity
+class Prop extends Entity
 {
 }
 
@@ -58,11 +58,12 @@ class PropPhysics extends Prop
 		base: ["Angle"],
 	}
 )
-class PropTest extends QEntity
+class PropTest extends Entity
 {
 	override function onCreated( def: EntityData )
 	{
 		super.onCreated( def );
+		//return;
 
 		var g = new Graphics(this);
 
@@ -101,7 +102,8 @@ class PropTest extends QEntity
 
 		body = new BulletBody( new bullet.Native.SphereShape(radius), 50, RigidBody );
 		body.object = this;
-		world.physics.addBody( body, NPC, MASK_NPC );
+		body.addTo(world.physics, NPC, MASK_NPC);
+		//world.physics.addBody( body, NPC, MASK_NPC );
 
 
 		//body.applyImpulse(Math.random() * 2000 - 1000,Math.random() * 2000 - 1000,0);

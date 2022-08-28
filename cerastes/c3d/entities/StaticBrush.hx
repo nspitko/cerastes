@@ -1,6 +1,5 @@
 package cerastes.c3d.entities;
 
-import cerastes.c3d.map.SurfaceGatherer;
 
 import cerastes.c3d.BulletWorld.BulletCollisionFilterGroup;
 import cerastes.c3d.BulletWorld.BulletCollisionFilterMask;
@@ -45,6 +44,8 @@ class StaticBrush extends Brush
 )
 class IllusoryBrush extends Brush
 {
+	/*
+	@todo
 	override function createBody(shape: bullet.Native.ConvexTriangleMeshShape )
 	{
 		var b = new cerastes.c3d.BulletBody( shape, 0, GhostObject );
@@ -52,6 +53,7 @@ class IllusoryBrush extends Brush
 		b.object = this;
 		return b;
 	}
+	*/
 }
 
 

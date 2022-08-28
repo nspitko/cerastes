@@ -1,7 +1,8 @@
 package cerastes.c3d.q3bsp;
 
+import cerastes.c3d.Entity.EntityData;
+import cerastes.c3d.q3bsp.Q3BSPEntity.Q3BSPEntityData;
 import haxe.rtti.Meta;
-import cerastes.c3d.map.SerializedMap.EntityDef;
 import haxe.io.Bytes;
 import cerastes.c3d.q3bsp.Q3BSPFile.BSPEffectDef;
 import cerastes.c3d.q3bsp.Q3BSPFile.BSPFileDef;
@@ -17,8 +18,8 @@ class Q3BSPEntities
 	static var bsp: BSPFileDef;
 
 
-	static var curEntity: Q3BSPEntityData;
-	static var entities: Array<Q3BSPEntityData> = [];
+	static var curEntity: EntityData;
+	static var entities: Array<EntityData> = [];
 
 	static var buf: Bytes;
 
@@ -28,23 +29,25 @@ class Q3BSPEntities
 
 	static var classMap: Map<String, Class<Dynamic>>;
 
-	static function spawnEntities( bsp: BSPFileDef, world: World )
+	public static function spawnEntities( b: BSPFileDef, w: World )
 	{
-		this.bsp = bsp;
-		this.world = world;
+		bsp = b;
+		world = w;
 		buf = haxe.io.Bytes.ofString( bsp.entities );
 
 		parse();
-
-		spawnEntities();
 
 		for( e in entities )
 		{
 			spawnEntity(e);
 		}
+
+		entities = null;
+		bsp = null;
+		world = null;
 	}
 
-	public static function spawnEntity( def: Q3BSPEntityData )
+	public static function spawnEntity( def: EntityData )
 	{
 		ensureClassMap();
 
@@ -55,16 +58,15 @@ class Q3BSPEntities
 			return null;
 		}
 
-		if( className.indexOf("world") != -1 )
-		{
-			trace(className);
-		}
+
+		trace('found entity ${className}');
+
 
 		var cls: Class<Dynamic> = classMap.get( className );
 
 		if( cls != null )
 		{
-			var entity: QEntity = Type.createInstance(cls,[]);
+			var entity: Entity = Type.createInstance(cls,[]);
 			@:privateAccess entity.create(def, world);
 			world.addChild(entity);
 
@@ -73,7 +75,7 @@ class Q3BSPEntities
 			return entity;
 		}
 
-		//Utils.warning('Could not find class def for ${className}');
+		Utils.warning('Could not find class def for ${className}');
 		return null;
 	}
 
@@ -95,7 +97,9 @@ class Q3BSPEntities
 
 			if( c == '{'.code )
 			{
-				curEntity = {};
+				curEntity = {
+					bsp: bsp
+				};
 				scope = Key;
 			} else if( c == '}'.code )
 			{

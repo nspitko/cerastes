@@ -1,6 +1,7 @@
 
 package cerastes.c3d;
 
+import cerastes.c3d.Entity.EntityData;
 import cerastes.Entity.EntityManager;
 #if bullet
 import bullet.Native;
@@ -43,7 +44,11 @@ class WorldDef
 	public function save(file: String)
 	{
 		var kv = CDPrinter.print(this);
+		#if sys
 		sys.io.File.saveContent( Utils.fixWritePath(file,"world"),kv);
+		#else
+		Utils.error("Unhandled save on non-sys target");
+		#end
 	}
 
 	public static function load( file: String )
@@ -52,22 +57,51 @@ class WorldDef
 	}
 }
 
-class World extends Object
+// Shim
+#if q3bsp
+class World extends cerastes.c3d.q3bsp.Q3BSPWorld {}
+#else #if q3map
+class World extends QWorld {}
+#else
+class World extends BaseWorld {}
+#end #end
+
+
+class BaseWorld extends Object
 {
 	#if bullet
 	public var physics: BulletWorld;
 	public static var physicsMaxSubSteps = 1;
+	#end
 
+	#if ( q3bsp || q3map )
+	public static final WORLD_TO_METERS = 1.7 / 64;
+	public static final METERS_TO_WORLD = 64 / 1.7;
+	#else
+	public static final WORLD_TO_METERS = 1;
+	public static final METERS_TO_WORLD = 1;
 	#end
 
 	public var entityManager: EntityManager;
+
+	public function createEntity( def: EntityData ) : Entity
+	{
+		//
+		return null;
+	}
+
+	public function createEntityClass( cls: Class<Object>, def: EntityData ) : Entity
+	{
+		//
+		return null;
+	}
 
 	public function new( ?parent: Object )
 	{
 		super( parent );
 		#if bullet
 		physics = new BulletWorld(this);
-		physics.setGravity(0,0,-9.8);
+		physics.setGravity(0,0,-9.8 * METERS_TO_WORLD);
 		#end
 
 		entityManager = new EntityManager();

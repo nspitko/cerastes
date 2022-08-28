@@ -2,7 +2,6 @@ package cerastes.c3d;
 
 import h3d.mat.MaterialDatabase;
 import h3d.shader.pbr.PropsValues;
-import hl.UI;
 import cerastes.data.Nodes.NodeDefinition;
 import cerastes.data.Nodes.Link;
 import cerastes.data.Nodes.Node;
@@ -25,8 +24,8 @@ class MaterialDef
 	// PBR
 	public var metalness: Float = 0;
 	public var roughness: Float = 1;
-	public var occlusion: Float = 1;
-	public var emissive: Float = 1;
+	public var occlusion: Float = 0;
+	public var emissive: Float = 0;
 
 	// Props
 	public var mode: PbrMode = PBR;
@@ -61,9 +60,11 @@ class MaterialDef
 	public var utilB: String = null;
 	public var utilC: String = null;
 
-	public function toMaterial()
+	public function toMaterial() : h3d.mat.Material
 	{
+
 		var tex = Utils.resolveTexture( albedo );
+#if pbr
 		var mat = @:privateAccess new PbrMaterial( tex );
 		mat.props = getProps();
 
@@ -117,6 +118,20 @@ class MaterialDef
 			if( oldProps != null )
 				mat.mainPass.removeShader( oldProps );
 		}
+#else
+
+		// fwd
+		var mat = @:privateAccess new h3d.mat.Material( tex );
+		tex.wrap = textureWrap ? Repeat : Clamp;
+
+		mat.mainPass.enableLights = true;
+
+		if( normal != null )
+		{
+			mat.normalMap = Utils.resolveTexture( normal );
+			mat.normalMap.wrap = textureWrap ? Repeat : Clamp;
+		}
+#end
 		return mat;
 	}
 

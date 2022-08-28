@@ -5,7 +5,7 @@ import cerastes.Entity.EntityManager;
 import format.swf.Data.PlaceObject;
 import h3d.col.Point;
 import h3d.scene.Graphics;
-import cerastes.c3d.QEntity;
+import cerastes.c3d.Entity;
 
 @qClass(
 	{

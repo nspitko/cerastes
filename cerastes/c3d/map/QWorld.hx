@@ -27,14 +27,14 @@ class QWorld extends World
 	public static final QU_TO_METERS = 1.7 / 64;
 	public static final METERS_TO_QU = 64 / 1.7;
 
-
+/*
 	public function loadMap(file: String)
 	{
 		map = new cerastes.c3d.map.QMap(file, this, this);
 		map.init();
 	}
 
-
+*/
 
 
 }

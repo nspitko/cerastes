@@ -41,8 +41,9 @@ class FPSPlayerController extends Controller
 		player = p;
 		controller = new bullet.Native.KinematicCharacterController(cast @:privateAccess p.body.inst, cast @:privateAccess p.body.shape, 32, new bullet.Native.Vector3(0,0,1) );
 
-		controller.setFallSpeed(9.8 * QWorld.METERS_TO_QU );
-		controller.setGravity( new bullet.Native.Vector3(0,0, -9.8 * QWorld.METERS_TO_QU) );
+		// @todo
+		//controller.setFallSpeed(9.8 * QWorld.METERS_TO_QU );
+		//controller.setGravity( new bullet.Native.Vector3(0,0, -9.8 * QWorld.METERS_TO_QU) );
 		controller.warp( new bullet.Native.Vector3( p.x, p.y, p.z ) );
 		controller.setUseGhostSweepTest(false);
 

@@ -37,6 +37,7 @@ class QMap extends Object
 
 	}
 
+/*
 	public function init()
 	{
 
@@ -48,7 +49,6 @@ class QMap extends Object
 
 	}
 
-/*
 
 	function debugDrawSurfaceDetails( s: Surface, drawFaces = false, drawNormals = false, drawTangents = false )
 	{

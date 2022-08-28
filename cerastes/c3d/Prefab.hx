@@ -53,7 +53,11 @@ class PrefabDef
 	public function save(file: String)
 	{
 		var kv = CDPrinter.print(this);
+		#if sys
 		sys.io.File.saveContent( Utils.fixWritePath(file,"prefab"),kv);
+		#else
+		Utils.error("Unhandled save on non-sys target");
+		#end
 	}
 
 	public static function load( file: String )
@@ -75,6 +79,6 @@ class Prefab extends h3d.scene.Object
 		}
 	}
 
-	
+
 
 }

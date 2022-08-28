@@ -19,7 +19,6 @@ import cerastes.c3d.q3bsp.Q3BSPFile.BSPFileDef;
 
 class Q3BSPCollision
 {
-	var brushInfo: Array<CollisionBrush> = [];
 
 	var bsp: BSPFileDef;
 
@@ -33,133 +32,112 @@ class Q3BSPCollision
 
 	public function new() {}
 
-	public function createCollision(filedef: BSPFileDef )
+	public function createCollision(brushIdx: Int, filedef: BSPFileDef )
 	{
 		bsp = filedef;
-		brushInfo.resize( bsp.brushes.length);
-		// Build vertex list
-		for( brushIdx in 0 ... bsp.brushes.length )
+
+		var brush = bsp.brushes[brushIdx];
+		var brushInfo: CollisionBrush = {};
+
+
+		brushInfo.faces.resize( brush.numSides );
+		for( i in 0 ... brush.numSides )
 		{
-			var brush = bsp.brushes[brushIdx];
+			brushInfo.faces[i] = {};
+		}
 
-			var cbrush: CollisionBrush = {};
-			brushInfo[brushIdx] = cbrush;
 
-			cbrush.faces.resize( brush.numSides );
-			for( i in 0 ... brush.numSides )
+		for( f0 in 0 ... brush.numSides)
+		{
+			for( f1 in 0 ... brush.numSides)
 			{
-				cbrush.faces[i] = {};
-			}
-
-
-			for( f0 in 0 ... brush.numSides)
-			{
-				for( f1 in 0 ... brush.numSides)
+				for( f2 in 0 ... brush.numSides)
 				{
-					for( f2 in 0 ... brush.numSides)
+					var vertex = new Point();
+					if( intersectSides( bsp.brushSides[ brush.firstSide + f0 ], bsp.brushSides[ brush.firstSide + f1 ], bsp.brushSides[ brush.firstSide + f2 ], vertex ) )
 					{
-						var vertex = new Point();
-						if( intersectSides( bsp.brushSides[ brush.firstSide + f0 ], bsp.brushSides[ brush.firstSide + f1 ], bsp.brushSides[ brush.firstSide + f2 ], vertex ) )
+						if( vertexInHull( brush, vertex ) )
 						{
-							if( vertexInHull( brush, vertex ) )
+							var face = brushInfo.faces[f0];
+							var uniqueVertex = true;
+							for( v in  0 ... face.vertices.length )
 							{
-								var face = cbrush.faces[f0];
-								var uniqueVertex = true;
-								for( v in  0 ... face.vertices.length )
+								var compVertex = face.vertices[v];
+								if( vertex.sub( compVertex ).lengthSq() < CMath.QEPSILON )
 								{
-									var compVertex = face.vertices[v];
-									if( vertex.sub( compVertex ).lengthSq() < CMath.QEPSILON )
-									{
-										uniqueVertex = false;
-										//duplicateIndex = v;
-										//trace("Culling dupe vert");
-										break;
-									}
+									uniqueVertex = false;
+									//duplicateIndex = v;
+									//trace("Culling dupe vert");
+									break;
 								}
-
-								if( uniqueVertex )
-									face.vertices.push(vertex);
 							}
+
+							if( uniqueVertex )
+								face.vertices.push(vertex);
 						}
 					}
 				}
 			}
-
-
-
-			//trace(verts);
 		}
 
 
-
-		// wind face vertices. Die a little more inside.
-		for( b in 0 ... bsp.brushes.length )
+		for( f in  0 ... brush.numSides )
 		{
+			var faceGeo = brushInfo.faces[f];
+			var face = bsp.planes[ bsp.brushSides[brush.firstSide + f].planeNum ];
 
-			var brush = bsp.brushes[b];
-			var brushInfo = brushInfo[b];
+			if( faceGeo.vertices.length < 3 )
+				continue;
 
-			for( f in  0 ... brush.numSides )
+			//windEntityIdx = e;
+			windBrushIdx = brushIdx;
+			windFaceIdx = f;
+
+			var planeNormal = new Point( face.normal[0], face.normal[1], face.normal[2] );
+
+			windFaceBasis = faceGeo.vertices[1].sub( faceGeo.vertices[0] );
+			windFaceCenter = new Point();
+			windFaceNormal = planeNormal;
+
+			for( v in 0 ... faceGeo.vertices.length )
 			{
-				var faceGeo = brushInfo.faces[f];
-				var face = bsp.planes[ bsp.brushSides[brush.firstSide + f].planeNum ];
-
-				if( faceGeo.vertices.length < 3 )
-					continue;
-
-				//windEntityIdx = e;
-				windBrushIdx = b;
-				windFaceIdx = f;
-
-				var planeNormal = new Point( face.normal[0], face.normal[1], face.normal[2] );
-
-				windFaceBasis = faceGeo.vertices[1].sub( faceGeo.vertices[0] );
-				windFaceCenter = new Point();
-				windFaceNormal = planeNormal;
-
-				for( v in 0 ... faceGeo.vertices.length )
-				{
-					windFaceCenter = windFaceCenter.add( faceGeo.vertices[v] );
-				}
-
-				windFaceCenter = CMath.dividePoint( windFaceCenter, faceGeo.vertices.length );
-
-				faceGeo.vertices.sort( sortVerticesByWinding );
-				//windEntityIdx = 0;
-
-
+				windFaceCenter = windFaceCenter.add( faceGeo.vertices[v] );
 			}
 
+			windFaceCenter = CMath.dividePoint( windFaceCenter, faceGeo.vertices.length );
+
+			faceGeo.vertices.sort( sortVerticesByWinding );
+			//windEntityIdx = 0;
+
+
 		}
+
 
 		// index face vertices: we're like almost done so it's cool right? ....right?
-
-		for( b in 0 ... bsp.brushes.length )
+		
+		for( f in  0 ... brushInfo.faces.length )
 		{
-			var brush = bsp.brushes[b];
-			var brushGeo = brushInfo[b];
+			var faceGeo = brushInfo.faces[f];
 
-			for( f in  0 ... brushGeo.faces.length )
+			if( faceGeo.vertices.length < 3 )
+				continue;
+
+			faceGeo.indices = new haxe.ds.Vector<Int>( ( faceGeo.vertices.length - 2 ) * 3 );
+			for( i in  0 ... faceGeo.vertices.length - 2 )
 			{
-				var faceGeo = brushGeo.faces[f];
-
-				if( faceGeo.vertices.length < 3 )
-					continue;
-
-				faceGeo.indices = new haxe.ds.Vector<Int>( ( faceGeo.vertices.length - 2 ) * 3 );
-				for( i in  0 ... faceGeo.vertices.length - 2 )
-				{
-					var idx = i*3;
-					faceGeo.indices[idx + 0] = 0;
-					faceGeo.indices[idx + 1] = i + 1;
-					faceGeo.indices[idx + 2] = i + 2;
-				}
-
-				if( faceGeo.indices.length < 3)
-					trace(' !! Brush $b Face $f has ${faceGeo.indices.length} indices');
-
+				var idx = i*3;
+				faceGeo.indices[idx + 0] = 0;
+				faceGeo.indices[idx + 1] = i + 1;
+				faceGeo.indices[idx + 2] = i + 2;
 			}
+
+			if( faceGeo.indices.length < 3)
+				trace(' !! Brush $brushIdx Face $f has ${faceGeo.indices.length} indices');
+
 		}
+
+		return brushInfo;
+
 
 
 		//debugDrawCollision();
@@ -242,6 +220,7 @@ class Q3BSPCollision
 	function debugDrawCollision()
 	{
 		var count = 0;
+		/*
 		for( i in 0 ... brushInfo.length )
 		{
 			var col = Std.random(0xFFFFFF);
@@ -273,5 +252,6 @@ class Q3BSPCollision
 		}
 
 		brushInfo = null;
+		*/
 	}
 }

@@ -1,7 +1,10 @@
 package cerastes.c3d.map;
-import sys.io.File;
 import h3d.Vector;
 import h3d.col.Point;
+
+#if mapcompiler
+import sys.io.File;
+#end
 
 @:enum
 abstract EntitySpawnType(Int) from Int to Int
@@ -268,6 +271,7 @@ class MapData
 		layer.buildVisuals = buildVisuals;
 	}
 
+	#if mapcompiler
 	public static function resolveTextureName( name: String )
 	{
 		if(name == "__TB_empty")
@@ -285,6 +289,7 @@ class MapData
 		return null;
 
 	}
+	#end
 
 	// ----------------------------------------------------------------------------
 	public function registerTexture( name: String )

@@ -156,22 +156,28 @@ class ModelEditor extends ImguiTool
 		set(5, hxd.Res.tex.bottom);
 		#end
 
+		#if pbr
 		//Create a new environment that we can use to control some of the material behavior
 		var env = new h3d.scene.pbr.Environment(envMap);
 		env.compute();
 
 		//Set the environment on the custom PBR renderer
+
 		var renderer = cast(preview.renderer, h3d.scene.pbr.Renderer);
 		renderer.env = env;
 
 		//sys.io.File.saveContent("res/mat/ribbed-chipped-metal.material", cerastes.file.CDPrinter.print( matDef ) );
-		modelObject = modelDef.toObject(preview);
+
 
 		//var cubeShader = bg.material.mainPass.addShader(new h3d.shader.pbr.CubeLod(env.env));
 		var light = new h3d.scene.pbr.PointLight(preview);
 		light.setPosition(30, 10, 40);
 		light.range = 100;
 		light.power = 8;
+		#end
+
+
+		modelObject = modelDef.toObject(preview);
 
 		// Draw axis
 		var g = new h3d.scene.Graphics( preview );

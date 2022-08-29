@@ -42,9 +42,20 @@ class Q3BSPEntities
 			spawnEntity(e);
 		}
 
+		// Global ents
+		//spawnEntityClass( Q3BSPLightVol, { bsp: bsp } );
+		w.addChild( new Q3BSPLightVol({ bsp: bsp }) );
+
 		entities = null;
 		bsp = null;
 		world = null;
+	}
+
+	public static function spawnEntityClass( cls: Class<Dynamic>, def: EntityData )
+	{
+		var entity: Entity = Type.createInstance(cls,[]);
+		@:privateAccess entity.create(def, world);
+		world.addChild(entity);
 	}
 
 	public static function spawnEntity( def: EntityData )

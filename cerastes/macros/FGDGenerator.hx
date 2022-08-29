@@ -93,6 +93,9 @@ class FGDGenerator
 											if( f.def != null )
 												line += ' : "${f.def}"';
 
+											if( f.tt != null )
+												line += ' : "${f.tt}"';
+
 											switch( f.type )
 											{
 												case "flags":

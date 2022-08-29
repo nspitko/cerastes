@@ -104,7 +104,16 @@ class BaseEntity extends Object implements cerastes.Entity
 		// Slam position with body position
 		if( body != null )
 			body.sync();
+
+		#if hlimgui
+		imguiUpdate();
+		#end
 	}
+
+	// ---------------------------------------------------------------------------------------------------------------
+	#if hlimgui
+	function imguiUpdate() {}
+	#end
 
 	// ---------------------------------------------------------------------------------------------------------------
 	function create( def: EntityData, w: World )

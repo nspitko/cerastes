@@ -43,49 +43,55 @@ class Light extends Entity
 @qClass(
 	{
 		name: "light",
-		desc: "Standard point light",
+		desc: "Makes your day brighter.",
 		type: "PointClass",
-		base: ["LightBase"],
+		base: ["LightBase", "Target"],
 		fields: [
 			{
-				name: "power",
-				desc: "Power",
+				name: "light",
+				desc: "Light Intensity",
 				type: "int",
-				def: "8"
+				def: "300"
 			},
 			{
-				name: "range",
-				desc: "Range",
+				name: "radius",
+				desc: "Spotlight Radius",
+				tt: "Only affects spotlights.",
 				type: "int",
-				def: "128"
+				def: "64"
+			},
+			{
+				name: "scale",
+				desc: "Intensity Scale",
+				tt: "Override intensity scale.",
+				type: "float",
+				def: "1"
+			},
+			{
+				name: "fade",
+				desc: "Linear Fade",
+				tt: "Only affects linear lights",
+				type: "float",
+				def: "1"
 			},
 			{
 				name: "spawnflags",
 				type: "flags",
 				opts: [
-					{ f: 1, d: "Starts off", v: 0 },
+					{ f: 1, d: "Linear falloff", v: 0 },
+					{ f: 2, d: "No angle attenuation", v: 0 },
+					{ f: 16, d: "Not dynamic", v: 0 }
 				]
 			}
 		]
-	},
-	// Aliases
-	{
-		name: "light_fluoro",
-		desc: "hack",
-		type: "PointClass",
-		base: ["LightBase"],
-	},
-	{
-		name: "light_fluorospark",
-		desc: "hack",
-		type: "PointClass",
-		base: ["LightBase"],
 	}
 )
 class PointLight extends Light
 {
 	override function createLight(def: EntityData)
 	{
+
+		var intensity = def.getPropertyFloat("light", 300);
 #if pbr
 		var l = new h3d.scene.pbr.PointLight( this );
 		l.shadows.mode = Dynamic;
@@ -121,7 +127,8 @@ class PointLight extends Light
 #else
 		var l = new h3d.scene.fwd.PointLight( this );
 
-		l.params.y = 300;
+
+		l.params.z /= intensity * 100;
 
 #end
 		light = l;
@@ -135,13 +142,15 @@ class PointLight extends Light
 
 		if( spawnFlags & 1 == 1 )
 		{
-			l.visible = false;
+			light.visible = false;
 		}
 
 
 
 		// DEBUG
-		//l.visible = false;
+		l.visible = false;
+
+		DebugDraw.sphere(new Point(x,y,z),15,0x00FF00,-1);
 
 
 	}

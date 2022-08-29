@@ -114,7 +114,7 @@ class Q3BSPBrush extends BaseBrush
 		body.addTo(world.physics, WORLD, MASK_WORLD );
 		body.object = this;
 
-		debugDrawBody(body,-1);
+		//debugDrawBody(body,-1);
 	}
 
 	function createBrush( def: EntityData )
@@ -409,6 +409,7 @@ class Q3BSPBrush extends BaseBrush
 			mat.mainPass.isStatic = true;
 			mat.mainPass.enableLights = false;
 			mat.castShadows = false;
+			//mat.receiveShadows = true;
 
 			// @todo: need more context upstream to derive this
 			var lmTex = hxd.Res.maps.bsp2_compile.lm_0000_png.toTexture();

@@ -27,7 +27,7 @@ import imgui.NodeEditor;
 
 import cerastes.tools.ImguiTools.IG;
 import cerastes.tools.ImGuiNodes;
-
+#if oldWorldEditor
 @:keep
 class WorldEditor extends ImguiTool
 {
@@ -554,5 +554,5 @@ class WorldEditor extends ImguiTool
 	}
 
 }
-
-#end
+#end // if oldWorldEditor
+#end // if hlimgui

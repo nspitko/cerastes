@@ -22,7 +22,7 @@ class Q3BSPEntity extends BaseEntity
 		if( origin != null )
 		{
 			setPosition(
-				-origin.x,
+				origin.x,
 				origin.y,
 				origin.z
 			);

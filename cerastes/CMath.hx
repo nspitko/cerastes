@@ -980,11 +980,16 @@ import haxe.macro.Expr;
 	 }
 
 
-	 public static inline function pointMultiply( a: Point, b: Point ): Point
-	 {
-		 return new Point( a.x * b.x, a.y * b.y, a.z * b.z );
-	 }
+	public static inline function pointMultiply( a: Point, b: Point ): Point
+	{
+		return new Point( a.x * b.x, a.y * b.y, a.z * b.z );
+	}
+	public static inline function pointDivide( a: Point, b: Point ): Point
+	{
+		return new Point( a.x / b.x, a.y / b.y, a.z / b.z );
+	}
 
+	// @todo rename
 	public static inline function dividePoint( input: Point, denom: Float)
 	{
 		return new Point( input.x / denom, input.y / denom, input.z / denom );

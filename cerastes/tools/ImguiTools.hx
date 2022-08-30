@@ -561,6 +561,67 @@ class ImGuiTools {
 		return null;
 	}
 
+	public static function inputFile(title: String, file: String, path: String = "", ext = null, allowDelete = true, allowMulti = false): Null<String>
+	{
+		var newFile = IG.textInput( title, file );
+
+		if( newFile != null && hxd.Res.loader.exists( newFile ) )
+			return newFile;
+
+		if( ImGui.beginDragDropTarget() )
+		{
+			// Non-atlased bitmaps
+			var payload = ImGui.acceptDragDropPayloadString("asset_name");
+			if( payload != null && hxd.Res.loader.exists( payload ) )
+			{
+				if( ext == null || StringTools.endsWith(payload, ext))
+					return payload;
+			}
+
+			ImGui.endDragDropTarget();
+		}
+
+		// Add file picker
+		ImGui.sameLine();
+		if( ImGui.button( '\uf07c##${title}' ) )
+		{
+			var fs: LocalFileSystem = cast hxd.Res.loader.fs;
+
+			if( file != null && hxd.Res.loader.fs.exists( file ) )
+			{
+				path = '${fs.baseDir}${hxd.Res.loader.fs.get(file).directory}';
+			}
+			else
+			{
+				path = '${fs.baseDir}${path}';
+			}
+
+			var openFile = UI.loadFile({
+				title:"Select File",
+				fileName: path,
+				filters:[
+					{name:"Files", exts:["files",ext != null ? ext : "*"]}
+				]
+			});
+			if( openFile != null )
+			{
+				return Utils.toLocalFile( openFile );
+			}
+		}
+
+		// Clear texture button
+		if( allowDelete )
+		{
+			ImGui.sameLine();
+			if( ImGui.button( '\uf2ed##${title}' ) )
+			{
+				return "";
+			}
+		}
+
+		return null;
+	}
+
 
 	static function comboFilterDrawPopup( state: ComboFilterState, start: Int, entries: Array<String> )
 	{

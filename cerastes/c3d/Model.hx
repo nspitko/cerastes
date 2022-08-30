@@ -28,7 +28,7 @@ class ModelDef
 	// String separated list of materials to apply, in slot order
 	public var materials: Array<String> = [];
 
-	@serializeType("cerastes.c3e.JointMask")
+	@serializeType("cerastes.c3d.JointMask")
 	public var jointMasks: Map<String, JointMask> = [];
 
 	// String separated list of additional libraries to load (for animations)

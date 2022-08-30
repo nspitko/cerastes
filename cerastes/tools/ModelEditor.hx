@@ -1,5 +1,6 @@
 
 package cerastes.tools;
+import cerastes.tools.ImguiTool.ImGuiPopupType;
 import h3d.Vector;
 import h3d.scene.CameraController;
 import h3d.Matrix;
@@ -115,8 +116,8 @@ class ModelEditor extends ImguiTool
 		events = new SceneEvents();
 		events.addScene(preview);
 
-		openFile("mdl/kronii.model");
-		//openFile("mdl/headless.model");
+		//openFile("mdl/kronii.model");
+		openFile("models/placeholder/vanguard.model");
 
 
 	}
@@ -301,19 +302,21 @@ class ModelEditor extends ImguiTool
 	{
 
 		ImGui.setNextWindowDockId( dockspaceIdLeft, dockCond );
-		ImGui.begin('Editor##${windowID()}', null, ImGuiWindowFlags.NoMove | ImGuiWindowFlags.HorizontalScrollbar );
+		ImGui.begin('Properties##${windowID()}', null, ImGuiWindowFlags.NoMove | ImGuiWindowFlags.HorizontalScrollbar );
 		handleShortcuts();
 
-
-		var changed = false;
+		var newFile = IG.inputFile("Mesh", modelDef.file, "models", "fbx", false);
+		if( newFile != null )
+		{
+			modelDef.file = newFile;
+			rebuildPreview();
+		}
 
 		ImGui.text("Materials");
 		ImGui.separator();
 
 		if( modelLibrary != null )
 		{
-
-
 			for( idx in 0 ... modelLibrary.header.materials.length )
 			{
 				var defMat = idx < modelDef.materials.length ? modelDef.materials[idx] : "";
@@ -335,6 +338,32 @@ class ModelEditor extends ImguiTool
 					rebuildPreview();
 				}
 			}
+		}
+
+
+		ImGui.text("Library");
+		ImGui.separator();
+		ImGui.text("Add additional FBX files for animations");
+
+		for( l in 0 ... modelDef.libraries.length )
+		{
+			var lib = modelDef.libraries[l];
+			var bits = lib.split("/");
+			var name = bits.length > 0 ? bits[bits.length - 1] : "???";
+			var file = IG.inputFile( '${name}##lib${l}', lib, "models/", "fbx" );
+			if( file != null )
+			{
+				if( file == "" )
+					modelDef.libraries.splice(l,1);
+				else
+					modelDef.libraries[l] = file;
+			}
+		}
+
+		var newFile = IG.inputFile( 'Add Library', "", "models/", "fbx", false, true );
+		if( newFile != null )
+		{
+			modelDef.libraries.push(newFile);
 		}
 
 
@@ -368,7 +397,7 @@ class ModelEditor extends ImguiTool
 		{
 			sys.io.File.saveContent(Utils.fixWritePath(newFile,"model"), cerastes.file.CDPrinter.print( modelDef ) );
 
-			fileName = Utils.toLocalFile( fileName );
+			fileName = Utils.toLocalFile( Utils.fixWritePath(newFile,"model") );
 
 			cerastes.tools.AssetBrowser.needsReload = true;
 			ImGuiToolManager.showPopup("File saved",'Wrote ${fileName} successfully.', Info);
@@ -465,25 +494,35 @@ class ModelEditor extends ImguiTool
 				// Additionally, load in animations from sub-libraries
 				for( l in modelDef.libraries )
 				{
-
-					var res = hxd.Res.loader.loadCache( l, Model );
-					var lib = res.toHmd();
-
-					for( a in lib.header.animations )
+					try
 					{
-						if( ImGui.treeNodeEx( '${lib.resource.name}/${a.name}', flags | ImGuiTreeNodeFlags.Leaf ) )
-						{
-							if( ImGui.isItemClicked() )
-							{
-								var anim = lib.loadAnimation( a.name );
-								modelObject.playAnimation( anim );
+						var res = hxd.Res.loader.loadCache( l, Model );
+						var lib = res.toHmd();
 
-								selectedObject = anim;
-								selectedObjectType = Animation;
+						for( a in lib.header.animations )
+						{
+							if( ImGui.treeNodeEx( '${lib.resource.name}/${a.name}', flags | ImGuiTreeNodeFlags.Leaf ) )
+							{
+								if( ImGui.isItemClicked() )
+								{
+									var anim = lib.loadAnimation( a.name );
+									modelObject.playAnimation( anim );
+
+									selectedObject = anim;
+									selectedObjectType = Animation;
+								}
+								ImGui.treePop();
 							}
-							ImGui.treePop();
 						}
+
 					}
+					catch( e )
+					{
+						ImGuiToolManager.showPopup("Invalid Library",'${l} could not be loaded.\nReason: ${e}', ImGuiPopupType.Error );
+						modelDef.libraries.remove(l);
+						break;
+					}
+
 				}
 
 				ImGui.treePop();
@@ -562,7 +601,17 @@ class ModelEditor extends ImguiTool
 
 		var startPos: ImVec2 = ImGui.getCursorScreenPos();
 		//var windowPos: ImVec2 = ImGui.getWindowPos();
+
+		ImGui.pushStyleColor( ImGuiCol.Button, 0 );
+		ImGui.pushStyleColor( ImGuiCol.ButtonActive, 0 );
+		ImGui.pushStyleColor( ImGuiCol.ButtonHovered, 0 );
+
 		ImGui.imageButton(sceneRT, { x: size.x , y: size.x }, null, null, 0 );
+
+		ImGui.popStyleColor();
+		ImGui.popStyleColor();
+		ImGui.popStyleColor();
+
 		ImGuiToolManager.updatePreviewEvents( startPos, events );
 		#if imguizmo
 		ImGuizmo.setRect(startPos.x, startPos.y, size.x, size.x);

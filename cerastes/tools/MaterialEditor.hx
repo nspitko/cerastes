@@ -132,27 +132,37 @@ class MaterialEditor extends ImguiTool
 		set(3, hxd.Res.tex.left);
 		set(4, hxd.Res.tex.top);
 		set(5, hxd.Res.tex.bottom);
-		#end
+
 		//Create a new environment that we can use to control some of the material behavior
 		var env = new h3d.scene.pbr.Environment(envMap);
 		env.compute();
 
-		//Set the environment on the custom PBR renderer
 		var renderer = cast(preview.renderer, h3d.scene.pbr.Renderer);
 		renderer.env = env;
 
+
 		//Finally create a shader and apply it to the background mesh so we can actually render our environment on screen.
 		var cubeShader = bg.material.mainPass.addShader(new h3d.shader.pbr.CubeLod(env.env));
+		#end
 
 		//sys.io.File.saveContent("res/mat/ribbed-chipped-metal.material", cerastes.file.CDPrinter.print( matDef ) );
 
 		previewMesh = new Mesh(sphere, materialDef.toMaterial(), preview);
 
 		//var cubeShader = bg.material.mainPass.addShader(new h3d.shader.pbr.CubeLod(env.env));
+		#if pbr
 		var light = new h3d.scene.pbr.PointLight(preview);
-		light.setPosition(30, 10, 40);
+
 		light.range = 100;
 		light.power = 8;
+		#else
+		var light = new h3d.scene.fwd.PointLight(preview);
+		light.params.z /= 200;
+		#end
+
+		light.setPosition(-3, 15, 10);
+
+
 
 	}
 
@@ -204,7 +214,7 @@ class MaterialEditor extends ImguiTool
 		if( ret != null )
 			materialDef.normal = ret == "" ? null : ret;
 
-
+		#if pbr
 		ret = IG.inputTexture("Metalness", materialDef.pbr);
 		if( ret != null )
 			materialDef.pbr = ret == "" ? null : ret;
@@ -221,6 +231,8 @@ class MaterialEditor extends ImguiTool
 
 		ImGui.text("Render settings");
 		ImGui.separator();
+
+		#end
 
 		wref( ImGui.sliderDouble("Emissive##value", _, 0, 1 ), materialDef.emissive );
 		wref( ImGui.checkbox("Alpha Kill", _ ), materialDef.alphaKill );

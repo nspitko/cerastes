@@ -39,7 +39,7 @@ class Q3BSPEntities
 
 		for( e in entities )
 		{
-			spawnEntity(e);
+			world.createEntity(e);
 		}
 
 		// Global ents
@@ -51,44 +51,7 @@ class Q3BSPEntities
 		world = null;
 	}
 
-	public static function spawnEntityClass( cls: Class<Dynamic>, def: EntityData )
-	{
-		var entity: Entity = Type.createInstance(cls,[]);
-		@:privateAccess entity.create(def, world);
-		world.addChild(entity);
-	}
 
-	public static function spawnEntity( def: EntityData )
-	{
-		ensureClassMap();
-
-		var className = def.getProperty("classname");
-		if( className == null )
-		{
-			Utils.warning('Entity def missing classname!!!');
-			return null;
-		}
-
-
-		trace('found entity ${className}');
-
-
-		var cls: Class<Dynamic> = classMap.get( className );
-
-		if( cls != null )
-		{
-			var entity: Entity = Type.createInstance(cls,[]);
-			@:privateAccess entity.create(def, world);
-			world.addChild(entity);
-
-
-
-			return entity;
-		}
-
-		Utils.warning('Could not find class def for ${className}');
-		return null;
-	}
 
 	static function parse()
 	{

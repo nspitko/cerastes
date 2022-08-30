@@ -72,31 +72,8 @@ class PropTest extends Entity
 	{
 		super.onCreated( def );
 		bsp = def.bsp;
-		//return;
 
-		var g = new Graphics(this);
 
-		g.material.mainPass.setPassName("overlay");
-		g.material.mainPass.depthTest = Always;
-
-		var lineSize = 25;
-		var arrowSize = 10;
-/*
-		// X (Red)
-		g.lineStyle(1, 0xFF0000, 1);
-		g.drawLine(new Point(-lineSize,0,0), new Point(lineSize,0,0));
-		g.drawLine(new Point(lineSize,arrowSize,0), new Point(lineSize,-arrowSize,0));
-
-		// Y (Green)
-		g.lineStyle(1, 0x00FF00, 1);
-		g.drawLine(new Point(0,-lineSize,0), new Point(0,lineSize,0));
-		g.drawLine(new Point(arrowSize,lineSize,0), new Point(-arrowSize,lineSize,0));
-
-		// Z (Blue)
-		g.lineStyle(1, 0x0000FF, 1);
-		g.drawLine(new Point(0,0,-lineSize), new Point(0,0,lineSize));
-		g.drawLine(new Point(arrowSize,0,lineSize), new Point(-arrowSize,0,lineSize));
-*/
 		// physics test
 		var radius = 16;
 		var sp = new h3d.prim.Sphere(radius, 8, 6);
@@ -120,22 +97,27 @@ class PropTest extends Entity
 
 	public override function tick( delta: Float )
 	{
-		var speed = 100 * delta;
-		if( Key.isDown( Key.W ) )
-			setAbsOrigin( x - speed, y, z );
-		if( Key.isDown( Key.A ) )
-			setAbsOrigin( x , y + speed, z );
-		if( Key.isDown( Key.S ) )
-			setAbsOrigin( x + speed, y, z );
-		if( Key.isDown( Key.D ) )
-			setAbsOrigin( x , y - speed, z );
+		super.tick(delta);
+		if( false )
+		{
+			var speed = 100 * delta;
+			if( Key.isDown( Key.W ) )
+				setAbsOrigin( x - speed, y, z );
+			if( Key.isDown( Key.A ) )
+				setAbsOrigin( x , y + speed, z );
+			if( Key.isDown( Key.S ) )
+				setAbsOrigin( x + speed, y, z );
+			if( Key.isDown( Key.D ) )
+				setAbsOrigin( x , y - speed, z );
 
-		if( Key.isDown( Key.E ) )
-			setAbsOrigin( x , y, z + speed );
-		if( Key.isDown( Key.Q ) )
-			setAbsOrigin( x , y , z - speed );
+			if( Key.isDown( Key.E ) )
+				setAbsOrigin( x , y, z + speed );
+			if( Key.isDown( Key.Q ) )
+				setAbsOrigin( x , y , z - speed );
+		}
 
-		if( false ){
+		if( false )
+		{
 
 			var wx = bsp.models[0].maxs[0] - bsp.models[0].mins[0];
 			var wy = bsp.models[0].maxs[1] - bsp.models[0].mins[1];

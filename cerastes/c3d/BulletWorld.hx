@@ -1,5 +1,7 @@
 package cerastes.c3d;
 
+import h3d.Vector;
+import h3d.col.Point;
 import bullet.*;
 
 @:enum
@@ -15,7 +17,7 @@ abstract BulletCollisionFilterGroup(Int) from Int to Int
 @:enum
 abstract BulletCollisionFilterMask(Int) from Int to Int
 {
-	public var MASK_ALL						= WORLD | NPC | PLAYER | PROP | TRIGGER;
+	public var MASK_ALL						= 0xFFFFFFFF;
 	public var MASK_WORLD					= NPC | PLAYER | PROP; // I'm the world, I collide with things that are not the world
 	public var MASK_PLAYER					= WORLD | NPC | PROP | TRIGGER;
 	public var MASK_NPC						= WORLD | PLAYER | TRIGGER; // NPCs ignore props for pathings reasons that may exist some day
@@ -35,6 +37,14 @@ class BulletContactManifold
 
 }
 
+@:structInit
+class BulletRayTestResult
+{
+	public var body: BulletBody;
+	public var position: Vector;
+	public var normal: Vector;
+}
+
 
 class BulletWorld {
 
@@ -44,9 +54,11 @@ class BulletWorld {
 	var pcache : Native.OverlappingPairCache;
 	var solver : Native.ConstraintSolver;
 	var inst : Native.DiscreteDynamicsWorld;
-	var bodies : Array<BulletBody> = [];
+	var bodies : Map<Int,BulletBody> = [];
 	var constraints : Array<BulletConstraint> = [];
 	public var parent : h3d.scene.Object;
+
+	var bodyIdx = 0;
 
 	public function new( ?parent ) {
 		this.parent = parent;
@@ -58,6 +70,55 @@ class BulletWorld {
 		inst = new Native.DiscreteDynamicsWorld(dispatch, broad, solver, config);
 	}
 
+	public inline function rayTestP( from: Point, to: Point, group: BulletCollisionFilterGroup, mask: BulletCollisionFilterMask ): BulletRayTestResult
+	{
+		var f = new bullet.Native.Vector3( from.x, from.y, from.z );
+		var t = new bullet.Native.Vector3( to.x, to.y, to.z );
+		var r = rayTest( f, t, group, mask );
+		f.delete();
+		t.delete();
+		return r;
+	}
+
+	public inline function rayTestV( from: Vector, to: Vector, group: BulletCollisionFilterGroup, mask: BulletCollisionFilterMask ): BulletRayTestResult
+	{
+		var f = new bullet.Native.Vector3( from.x, from.y, from.z );
+		var t = new bullet.Native.Vector3( to.x, to.y, to.z );
+		var r = rayTest( f, t, group, mask );
+		f.delete();
+		t.delete();
+		return r;
+	}
+
+	public function rayTest( from: bullet.Native.Vector3, to: bullet.Native.Vector3, group: BulletCollisionFilterGroup, mask: BulletCollisionFilterMask ): BulletRayTestResult
+	{
+		var result = new bullet.Native.ClosestRayResultCallback(from, to);
+
+		result.m_collisionFilterGroup = group;
+		result.m_collisionFilterMask = mask;
+
+		inst.rayTest(from, to, result );
+
+
+		if( result.hasHit() )
+		{
+			var body = getBodyOwner( result.m_collisionObject );
+
+			var ret: BulletRayTestResult = {
+				body: body,
+				normal: new Vector( result.m_hitNormalWorld.x(), result.m_hitNormalWorld.y(), result.m_hitNormalWorld.z() ),
+				position: new Vector( result.m_hitPointWorld.x(), result.m_hitPointWorld.y(), result.m_hitPointWorld.z() )
+			};
+
+			result.delete();
+
+			return ret;
+		}
+		result.delete();
+
+		return null;
+	}
+
 	public function setGravity( x : Float, y : Float, z : Float ) {
 		inst.setGravity(new Native.Vector3(x, y, z));
 	}
@@ -66,14 +127,19 @@ class BulletWorld {
 		inst.stepSimulation(time, iterations);
 	}
 
+	inline function getBodyOwner( body: bullet.Native.CollisionObject )
+	{
+		return bodies.get( body.getUserIndex() );
+	}
+
 	public function checkCollisions()
 	{
 		var numManifolds = dispatch.getNumManifolds();
 		for( i in 0 ... numManifolds )
 		{
 			var manifold = dispatch.getManifoldByIndexInternal( i );
-			var bodyA = bodies[ manifold.getBody0().getUserIndex() ];
-			var bodyB = bodies[ manifold.getBody1().getUserIndex() ];
+			var bodyA = getBodyOwner( manifold.getBody0() );
+			var bodyB = getBodyOwner( manifold.getBody1() );
 
 			//DebugDraw.line( bodyA.position, bodyB.position, 0xFF0000 );
 			var entA = Std.downcast( bodyA.object, Entity );
@@ -105,7 +171,7 @@ class BulletWorld {
 		if( b.world != null ) throw "Body already in world";
 
 		var found = false;
-		for(idx in 0 ... bodies.length )
+		for(idx in 0 ... bodyIdx )
 		{
 			if( bodies[idx] == null )
 			{
@@ -118,8 +184,9 @@ class BulletWorld {
 
 		if( !found )
 		{
-			@:privateAccess b.inst.setUserIndex( bodies.length );
-			bodies.push(b);
+			bodyIdx++;
+			@:privateAccess b.inst.setUserIndex( bodyIdx );
+			bodies[bodyIdx] = b;
 		}
 
 		@:privateAccess b.world = this;
@@ -140,10 +207,7 @@ class BulletWorld {
 	function removeBody( b : BulletBody )
 	{
 		// Never remove items from the array, just null them out so we can retain indices
-		var idx = bodies.indexOf(b);
-		if( idx == -1 )
-			return;
-		bodies[idx] = null;
+		bodies.remove(@:privateAccess b.inst.getUserIndex() );
 
 		@:privateAccess b.world = null;
 

@@ -8,18 +8,18 @@ import h3d.Matrix;
 import hxd.Window;
 import hxd.Key;
 
-@:access( cerastes.c3d.entities.Player)
-class FPSPlayerController extends PlayerController
+@:access( cerastes.c3d.entities.Player )
+class ThirdPersonPlayerController extends PlayerController
 {
 	var moveSpeed = 6;
 	var lookSpeed = 0.006;
 
 	var lastX = 0;
 	var lastY = 0;
+	var cameraPos: Vector = new Vector(0,-128,60);
 
 	var rotationX: Float = 0;
 	var rotationY: Float = 0;
-
 
 	var controller: bullet.Native.KinematicCharacterController;
 
@@ -126,81 +126,29 @@ class FPSPlayerController extends PlayerController
 
 		// update camera from new player position
 		var m = player.getTransform() ;
-		m.setPosition( m.getPosition().add(player.eyePos) );
-		cam.setTransform(m);
+		// Trace back to our target pos, find the closest point we can get before hitting a wall
 
+		var cameraOffset = cameraPos.clone();
+		var playerPos = new Vector(player.x, player.y, player.z + cameraPos.z);
 
+		cameraOffset.transform(m);
 
-		lastX = Window.getInstance().mouseX;
-		lastY = Window.getInstance().mouseY;
-	}
+		DebugDraw.lineV(cameraOffset, playerPos);
 
-	/*
-
-	public override function onCreated(  def: cerastes.c3d.map.Data.Entity )
-	{
-		super.onCreated(def);
-
-		world.getScene().camera = new cerastes.c3d.Camera();
-		world.getScene().camera.mcam = getTransform();
-
-		world.getScene().camera.setFovX(70,16/9);
-		world.getScene().camera.zoom = 5;
-
-		var targetMat = world.getScene().camera.mcam;
-
-		var basisRot = new Matrix();
-		basisRot.initRotationAxis(new Vector(0,0,1),90 * ( Math.PI / 180 ));
-
-		world.getScene().camera.mcam.multiply3x4(basisRot, targetMat);
-	}
-
-	public override function tick( d: Float )
-	{
-		// @todo non-shit version
-		var pos = player.body.position;
-		var cam = world.getScene().camera;
-
-
-		// Movement directly controls the player body
-		if( Key.isDown( Key.W ) )
+		var ray = world.physics.rayTestV(playerPos, cameraOffset, PLAYER, MASK_ALL);
+		if( ray != null )
 		{
-			var pos = player.body.position;
-			pos.x += d * moveSpeed;
-
+			cameraOffset = ray.position;
 		}
 
-		player.body.setTransform( pos );
+		DebugDraw.box( cameraOffset.toPoint() );
 
-		// Camera control ONLY affects the camera proj matrix.
-
-		var relX = lookSpeed * ( lastX - Window.getInstance().mouseX );
-		var relY = lookSpeed * ( lastY - Window.getInstance().mouseY );
-
-		cam.zoom = 1;
-
-		DebugDraw.text('xRel = ${relX}');
-		DebugDraw.text('viewX = ${cam.viewX}');
-		DebugDraw.text('viewY = ${cam.viewY}');
-		DebugDraw.text('Zoom = ${cam.zoom}');
-
-		var xRot = new Quat();
-
-		//xRot.initRotation(0,0,relX);
-		var xRotMat = new Matrix();
-		xRotMat.initRotationAxis(new Vector(0,1,0), relX);
-
-		DebugDraw.text( '${xRotMat.toString()}' );
-		var targetMat = world.getScene().camera.mcam;
-
-		world.getScene().camera.mcam.multiply3x4(xRotMat, targetMat);
-
-
-
-		DebugDraw.text( '${world.getScene().camera.mcam.toString()}' );
+		cam.pos.set( cameraOffset.x, cameraOffset.y, cameraOffset.z );
+		cam.target.set( player.x, player.y, player.z + player.eyePos.z );
 
 
 		lastX = Window.getInstance().mouseX;
 		lastY = Window.getInstance().mouseY;
-	}*/
+	}
+
 }

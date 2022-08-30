@@ -41,7 +41,7 @@ class Q3BSPBrush extends BaseBrush
 
 	var idxBuffer: Indexes;
 	var idxBytes: Bytes;
-	var enableVis: Bool = false;
+	public static var enableVis: Bool = false;
 	var modelDef: DModel_t;
 	var brushBounds: Bounds;
 	var visLeafs: haxe.ds.Vector<DLeaf_t>;

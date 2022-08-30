@@ -128,7 +128,12 @@ class DebugDraw
 		});
 	}
 
-	public static function line(source: Point, target: Point, color: Int, duration: Float = 0, alpha: Float = 1, thickness: Float = 1 )
+	public static inline function lineV(source: Vector, target: Vector, color: Int = 0xFF0000, duration: Float = 0, alpha: Float = 1, thickness: Float = 1 )
+	{
+		line( source.toPoint(), target.toPoint(), color, duration, alpha, thickness );
+	}
+
+	public static function line(source: Point, target: Point, color: Int = 0xFF0000, duration: Float = 0, alpha: Float = 1, thickness: Float = 1 )
 	{
 		addLine( source, target, color, duration, thickness );
 	}

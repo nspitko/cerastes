@@ -90,7 +90,7 @@ class BaseWorld extends Object
 		return null;
 	}
 
-	public function createEntityClass( cls: Class<Object>, def: EntityData ) : Entity
+	public function createEntityClass( cls: Class<Dynamic>, def: EntityData ) : Entity
 	{
 		//
 		return null;

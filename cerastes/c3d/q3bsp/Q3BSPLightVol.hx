@@ -6,12 +6,16 @@ import h3d.col.Point;
 import cerastes.c3d.Entity.EntityData;
 import hxd.PixelFormat;
 import h2d.Tile;
-import cerastes.tools.ImguiTools.ImGuiTools;
-import imgui.ImGui;
+
 import h3d.mat.Texture;
 import hxd.Pixels;
 import h3d.scene.Object;
 import cerastes.c3d.q3bsp.Q3BSPFile.BSPFileDef;
+
+#if hlimgui
+import cerastes.tools.ImguiTools.ImGuiTools;
+import imgui.ImGui;
+#end
 
 class Q3BSPLightVol extends h3d.scene.fwd.Light
 {

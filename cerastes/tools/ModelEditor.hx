@@ -1,5 +1,7 @@
 
 package cerastes.tools;
+#if hlimgui
+
 import cerastes.tools.ImguiTool.ImGuiPopupType;
 import h3d.Vector;
 import h3d.scene.CameraController;
@@ -9,7 +11,6 @@ import h3d.scene.Graphics;
 import hxd.res.Model;
 import hxd.SceneEvents;
 import h3d.col.Point;
-#if hlimgui
 
 import hl.UI;
 import imgui.ImGuiMacro.wref;
@@ -46,6 +47,7 @@ enum MESelectedObjectType {
 	None;
 	Animation;
 	Joint;
+	Library;
 }
 
 @:keep
@@ -93,6 +95,8 @@ class ModelEditor extends ImguiTool
 	var previewGraphics: Graphics;
 
 	var cameraController: CameraController;
+
+	var showScaleBox = true;
 
 	public function new()
 	{
@@ -175,6 +179,9 @@ class ModelEditor extends ImguiTool
 		light.setPosition(30, 10, 40);
 		light.range = 100;
 		light.power = 8;
+		#else
+
+		cast( preview.lightSystem, h3d.scene.fwd.LightSystem).ambientLight.set(1,1,1,1);
 		#end
 
 
@@ -201,7 +208,7 @@ class ModelEditor extends ImguiTool
 
 
 		var gridSize = 10;
-		g.lineStyle(10, 0x888888, 0.1);
+		g.lineStyle(1, 0x888888, 1);
 		for( x in -gridSize ... gridSize )
 			g.drawLine(new Point(x,-gridSize,0), new Point(x,gridSize,0));
 
@@ -211,11 +218,15 @@ class ModelEditor extends ImguiTool
 
 		//new h3d.scene.CameraController(preview).loadFromCamera();
 
-		//preview.camera.pos.set(0,0,0);
+
 
 		//var dc = new cerastes.c3d.Camera();
 		//dc.mcam = preview.camera.mcam;
 
+
+		//trace(preview.camera.pos);
+		preview.camera.pos.set(20,-30,40);
+		preview.camera.target.set(0,0,8);
 
 		cameraController = new h3d.scene.CameraController(preview);
 		cameraController.loadFromCamera();
@@ -296,8 +307,6 @@ class ModelEditor extends ImguiTool
 
 	}
 
-
-
 	function modelSettings()
 	{
 
@@ -309,6 +318,11 @@ class ModelEditor extends ImguiTool
 		if( newFile != null )
 		{
 			modelDef.file = newFile;
+			rebuildPreview();
+		}
+
+		if( imgui.ImGuiMacro.wref( ImGui.inputDouble("Scale", _, 0.1, 0.5, "%.2f"), modelDef.scale ) )
+		{
 			rebuildPreview();
 		}
 
@@ -341,34 +355,40 @@ class ModelEditor extends ImguiTool
 		}
 
 
-		ImGui.text("Library");
+		ImGui.text("Libraries");
 		ImGui.separator();
-		ImGui.text("Add additional FBX files for animations");
+		ImGui.beginChildFrame( ImGui.getID( "libraries" ), {x: -1, y: 100 * ImGuiToolManager.scaleFactor});
 
 		for( l in 0 ... modelDef.libraries.length )
 		{
 			var lib = modelDef.libraries[l];
 			var bits = lib.split("/");
 			var name = bits.length > 0 ? bits[bits.length - 1] : "???";
-			var file = IG.inputFile( '${name}##lib${l}', lib, "models/", "fbx" );
-			if( file != null )
+
+			var flags = ImGuiTreeNodeFlags.DefaultOpen | ImGuiTreeNodeFlags.Leaf;
+			if( selectedObjectType == Library && l == selectedObject )
+				flags |= ImGuiTreeNodeFlags.Selected;
+
+			if( ImGui.treeNodeEx( '${name}', flags ) )
 			{
-				if( file == "" )
-					modelDef.libraries.splice(l,1);
-				else
-					modelDef.libraries[l] = file;
+				if( ImGui.isItemClicked( ) )
+				{
+					selectedObject = l;
+					selectedObjectType = Library;
+				}
+				ImGui.treePop();
 			}
+
 		}
+
+
+		ImGui.endChild();
 
 		var newFile = IG.inputFile( 'Add Library', "", "models/", "fbx", false, true );
 		if( newFile != null )
 		{
 			modelDef.libraries.push(newFile);
 		}
-
-
-
-
 
 		processMouse();
 
@@ -382,6 +402,17 @@ class ModelEditor extends ImguiTool
 		if( ImGui.isWindowFocused(  ImGuiFocusedFlags.RootAndChildWindows ) && Key.isDown( Key.CTRL ) && Key.isPressed( Key.S ) )
 		{
 			save();
+		}
+
+		if( ImGui.isWindowFocused(  ImGuiFocusedFlags.RootAndChildWindows ) && Key.isDown( Key.DELETE ) )
+		{
+			switch( selectedObjectType )
+			{
+				case Library:
+					modelDef.libraries.splice(selectedObject,1);
+					selectedObjectType = None;
+				default:
+			}
 		}
 	}
 

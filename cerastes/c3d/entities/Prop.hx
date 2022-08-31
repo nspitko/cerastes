@@ -4,7 +4,6 @@ package cerastes.c3d.entities;
 
 import cerastes.c3d.q3bsp.Q3BSPFile.BSPFileDef;
 import hxd.Key;
-import imgui.ImGui;
 import h3d.scene.fwd.PointLight;
 import cerastes.c3d.Entity.EntityData;
 import cerastes.c3d.Material.MaterialDef;
@@ -12,8 +11,10 @@ import h3d.prim.ModelCache;
 import h3d.col.Point;
 import h3d.scene.Graphics;
 import cerastes.c3d.Entity;
+#if hlimgui
+import imgui.ImGui;
 import imgui.ImGuiMacro;
-
+#end
 
 import cerastes.c3d.BulletWorld.BulletCollisionFilterGroup;
 import cerastes.c3d.BulletWorld.BulletCollisionFilterMask;

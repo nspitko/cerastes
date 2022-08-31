@@ -8,6 +8,23 @@ import h3d.scene.Mesh;
 import h3d.scene.Object;
 
 @:structInit
+class ModelPoint
+{
+	public var x: Float = 0;
+	public var y: Float = 0;
+	public var z: Float = 0;
+}
+
+@:structInit
+class Attachment
+{
+	public var joint: String;
+	public var offset: ModelPoint;
+
+}
+
+
+@:structInit
 class JointMask
 {
 	public var joints: Array<String>;
@@ -36,6 +53,10 @@ class ModelDef
 
 	@noSerialize
 	static var cache: Map<String, Library> = [];
+
+	public var scale: Float = 1;
+	@serializeType("cerastes.c3d.ModelPoint")
+	public var rotation: ModelPoint = {};
 
 	public function getAnimations() : Array< h3d.anim.Animation >
 	{
@@ -113,10 +134,20 @@ class ModelDef
 			//obj.rotate(Math.PI/2,0,-Math.PI);
 			#end
 
+			var r = Math.PI / 180;
+
+			if( rotation != null )
+				obj.rotate( rotation.x * r, rotation.y * r, rotation.z * r );
+
+			// Test for 0 for back compat. Can be removed later.
+			if( scale > 0 )
+				obj.scale( scale );
+
 			objs.push(obj);
 			var p = objs[m.parent];
 			if( p != null )
 				p.addChild(obj);
+
 
 
 		}
@@ -128,6 +159,8 @@ class ModelDef
 
 		if( parent != null )
 			parent.addChild(o);
+
+
 
 		return o;
 

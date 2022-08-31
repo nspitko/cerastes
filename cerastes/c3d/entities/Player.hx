@@ -10,7 +10,7 @@ import h3d.col.Point;
 
 @qClass(
 	{
-		name: "info_player_start",
+		name: "info_player_start_generic",
 		desc: "Player Start",
 		type: "PointClass",
 		base: ["PlayerClass", "Angle"],
@@ -53,6 +53,34 @@ class Player extends Actor
 
 		eyePos = new Vector(0,0,32);
 
+
+		var playerType = def.getPropertyInt("playertype");
+
+		var d: EntityData = {};
+
+		if( controller == null )
+		{
+			switch( playerType )
+			{
+				case 1:
+					controller = cast world.createEntityClass( FPSPlayerController, d );
+
+				case 0:
+					controller = cast world.createEntityClass( ThirdPersonPlayerController, d );
+
+				default:
+					Utils.error('info_player_start has invalid player type ${playerType}; no player will spawn!');
+					return;
+			}
+		}
+
+		controller.initialize(this);
+
+
+	}
+
+	override function createBody( def: EntityData )
+	{
 		//body = new BulletBody( new bullet.Native.CapsuleShape(16,32), 50, RigidBody );
 		var shape = new bullet.Native.CapsuleShape(8,16);
 		body = new BulletBody( shape, 50, PairCachingGhostObject );
@@ -63,26 +91,6 @@ class Player extends Actor
 		body.slamRotation = false;
 
 		body.collisionFlags |= CollisionFlags.CF_CHARACTER_OBJECT ;
-
-		var playerType = def.getPropertyInt("playertype");
-
-		var d: EntityData = {};
-
-		switch( playerType )
-		{
-			case 1:
-				controller = cast world.createEntityClass( FPSPlayerController, d );
-
-			case 0:
-				controller = cast world.createEntityClass( ThirdPersonPlayerController, d );
-
-			default:
-				Utils.error('info_player_start has invalid player type ${playerType}; no player will spawn!');
-				return;
-		}
-
-		controller.initialize(this);
-
 
 	}
 

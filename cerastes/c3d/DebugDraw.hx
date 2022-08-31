@@ -1,5 +1,6 @@
 package cerastes.c3d;
 
+import h3d.Matrix;
 import h2d.Object;
 import hxd.res.DefaultFont;
 import h3d.prim.Polygon;
@@ -177,6 +178,33 @@ class DebugDraw
 		// Z (Blue)
 		addLine(new Point( position.x + 0, position.y + 0, position.z + -lineSize), new Point( position.x + 0, position.y + 0, position.z + lineSize),0x0000FF, duration);
 		addLine(new Point( position.x + arrowSize, position.y + 0, position.z + lineSize), new Point( position.x + -arrowSize, position.y + 0, position.z + lineSize),0x0000FF, duration);
+
+	}
+
+	public static function drawAxisM(matrix: Matrix, size: Float = 15, duration: Float = 0 )
+	{
+		var lineSize = size;
+		var arrowSize = size * 0.25;
+
+		var center = matrix.getPosition().toPoint();
+
+		var fwd = new Point(lineSize,0,0);
+		fwd.transform(matrix);
+
+		var side = new Point(0,lineSize,0);
+		side.transform(matrix);
+
+		var up = new Point(0,0,lineSize);
+		up.transform(matrix);
+
+		// x (Red)
+		addLine( center, fwd, 0xFF0000, duration);
+
+		// Y (Green)
+		addLine( center, side, 0x00FF00, duration);
+
+		// Z (Blue)
+		addLine( center, up, 0x0000FF, duration);
 
 	}
 

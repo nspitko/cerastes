@@ -33,6 +33,7 @@ typedef AssetBrowserPreviewItem = {
 	var dirty: Bool;
 	var alwaysUpdate: Bool;
 	var loaded: Bool;
+	var visible: Bool;
 }
 
 class AssetBrowser  extends  ImguiTool
@@ -102,18 +103,17 @@ class AssetBrowser  extends  ImguiTool
 			dirty: false,
 			loaded: false,
 			alwaysUpdate: false,
+			visible: false,
 		});
 
 		return previews.get(file);
 	}
 
-	function setVisible( p: AssetBrowserPreviewItem )
+	function setVisible( p: AssetBrowserPreviewItem, visible: Bool = true )
 	{
 
-		if( !p.loaded )
+		if( visible && !p.loaded )
 		{
-
-
 			p.dirty = true;
 			p.loaded = true;
 			//p.scene = new h2d.Scene();
@@ -131,9 +131,8 @@ class AssetBrowser  extends  ImguiTool
 			{
 				p.scene = null;
 			}
-
-
 		}
+		p.visible = visible;
 	}
 
 	function loadAsset(asset: AssetBrowserPreviewItem)
@@ -594,11 +593,17 @@ class AssetBrowser  extends  ImguiTool
 	{
 
 		var windowPos : ImVec2 =  ImGui.getWindowPos();
+
 		var windowContentRegionMax : ImVec2 = ImGui.getWindowContentRegionMax();
+
 		var windowRight = windowPos.x + windowContentRegionMax.x;
 		var style : ImGuiStyle = ImGui.getStyle();
+
+		var stamp = haxe.Timer.stamp();
+
 		for(fp => preview in previews )
 		{
+
 			if( filterText.length > 0 && !StringTools.contains(fp, filterText) )
 				continue;
 
@@ -614,29 +619,34 @@ class AssetBrowser  extends  ImguiTool
 			if( ImGui.isItemVisible() )
 			{
 				setVisible(preview);
-			}
 
-			if( ImGui.isItemHovered() )
-			{
-				onItemHover(preview);
-				if( ImGui.isMouseDoubleClicked( ImGuiMouseButton.Left ) )
+
+				if( ImGui.isItemHovered() )
 				{
-					Utils.info('Asset open: ${preview.file}');
-					openAssetEditor( preview );
+					onItemHover(preview);
+					if( ImGui.isMouseDoubleClicked( ImGuiMouseButton.Left ) )
+					{
+						Utils.info('Asset open: ${preview.file}');
+						openAssetEditor( preview );
+					}
+				}
+
+
+
+				if( ImGui.beginDragDropSource() )
+				{
+					ImGui.setDragDropPayloadString("asset_name",preview.file);
+
+					ImGui.beginTooltip();
+					ImGui.image(t, {x: 128 * scaleFactor, y: 128*scaleFactor});
+					ImGui.endTooltip();
+
+					ImGui.endDragDropSource();
 				}
 			}
-
-
-
-			if( ImGui.beginDragDropSource() )
+			else
 			{
-				ImGui.setDragDropPayloadString("asset_name",preview.file);
-
-				ImGui.beginTooltip();
-				ImGui.image(t, {x: 128 * scaleFactor, y: 128*scaleFactor});
-				ImGui.endTooltip();
-
-				ImGui.endDragDropSource();
+				setVisible(preview, false);
 			}
 
 			var itemRectMax: ImVec2 = ImGui.getItemRectMax();
@@ -692,8 +702,9 @@ class AssetBrowser  extends  ImguiTool
 
 	function getItemType( asset: AssetBrowserPreviewItem )
 	{
-
-		var ext = Path.extension( asset.file );
+		// var ext = Path.extension( asset.file ); // SLOW!!
+		var idx = asset.file.lastIndexOf(".");
+		var ext = asset.file.substr(idx+1);
 		return switch(ext)
 		{
 			case "fnt" | "msdf" | "sdf": "Font";

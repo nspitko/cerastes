@@ -16,7 +16,7 @@ class ThirdPersonPlayerController extends PlayerController
 
 	var lastX = 0;
 	var lastY = 0;
-	var cameraPos: Vector = new Vector(0,-128,60);
+	var cameraPos: Vector = new Vector(-128,0,60);
 
 	var rotationX: Float = 0;
 	var rotationY: Float = 0;
@@ -69,12 +69,16 @@ class ThirdPersonPlayerController extends PlayerController
 
 		var q = new Quat();
 
-		player.qRot.initRotation(0,rotationY, -rotationX);
+		//player.qRot.initRotation(rotationY,0, -rotationX);
+		player.qRot.initRotation(0,0, -rotationX);
+		q.initRotation(rotationY,0, -rotationX);
 
 
-		var dir = player.getRotationQuat().getDirection().toPoint();
+		var dir = q.getDirection().toPoint();
 		dir.z = 0;
 		dir.normalize();
+
+		DebugDraw.drawAxisM(player.getTransform());
 
 		//DebugDraw.text('Player = ${player.getTransform().toString()}');
 
@@ -125,7 +129,9 @@ class ThirdPersonPlayerController extends PlayerController
 
 
 		// update camera from new player position
-		var m = player.getTransform() ;
+		var m = q.toMatrix();
+		m.setPosition( player.getTransform().getPosition() );
+
 		// Trace back to our target pos, find the closest point we can get before hitting a wall
 
 		var cameraOffset = cameraPos.clone();

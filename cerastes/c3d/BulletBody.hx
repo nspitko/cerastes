@@ -48,7 +48,13 @@ class BulletBody {
 	// HACK: Hold on to a handle to any used mesh so we GC it properly
 	var mesh: Native.StridingMeshInterface;
 
-	public function new( shape : Native.CollisionShape, mass : Float, ?type: BulletBodyType = RigidBody ) {
+	public function new( shape : Native.CollisionShape, mass : Float, ?type: BulletBodyType = RigidBody )
+	{
+		if( type == CollisionObject )
+		{
+			type = RigidBody;
+			mass = 0;
+		}
 
 		this.type = type;
 		state = new Native.DefaultMotionState();

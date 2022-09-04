@@ -110,7 +110,8 @@ class Q3BSPBrush extends BaseBrush
 			bulletIfaces.push(iface);
 
 		}
-		body = new cerastes.c3d.BulletBody( compoundShape, 0, CollisionObject );
+
+		body = new cerastes.c3d.BulletBody( compoundShape, 1, CollisionObject );
 		body.addTo(world.physics, WORLD, MASK_WORLD );
 		body.object = this;
 

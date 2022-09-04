@@ -13,6 +13,14 @@ import h3d.scene.Object;
 #end #end
 
 
+@:keepSub
+@:structInit
+class EntitySubclassData
+{
+	public var base: String = null;
+	public var cls: String = null;
+}
+
 
 @:structInit
 class EntityDataBase #if hxbit implements hxbit.Serializable #end
@@ -64,6 +72,7 @@ class Entity extends QEntity {}
 class Entity extends BaseEntity {}
 #end #end
 
+@:subClass("cerastes.c3d.SubclassData")
 @:keepSub
 @:keepInit
 class BaseEntity extends Object implements cerastes.Entity
@@ -75,6 +84,8 @@ class BaseEntity extends Object implements cerastes.Entity
 	var destroyed = false;
 	public var world(get, null): cerastes.c3d.World;
 	public var body: cerastes.c3d.BulletBody = null;
+
+	//@:noCompletion var subclassData: EntitySubclassData;
 
 	public function get_world() : cerastes.c3d.World
 	{
@@ -118,6 +129,7 @@ class BaseEntity extends Object implements cerastes.Entity
 	// ---------------------------------------------------------------------------------------------------------------
 	function create( def: EntityData, w: World )
 	{
+		//ensureSubclassData();
 		world = w;
 		createBody(def);
 /*

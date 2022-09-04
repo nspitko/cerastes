@@ -17,7 +17,7 @@ abstract BulletCollisionFilterGroup(Int) from Int to Int
 @:enum
 abstract BulletCollisionFilterMask(Int) from Int to Int
 {
-	public var MASK_ALL						= 0xFFFFFFFF;
+	public var MASK_ALL						= 0xFFFF;
 	public var MASK_WORLD					= NPC | PLAYER | PROP; // I'm the world, I collide with things that are not the world
 	public var MASK_PLAYER					= WORLD | NPC | PROP | TRIGGER;
 	public var MASK_NPC						= WORLD | PLAYER | TRIGGER; // NPCs ignore props for pathings reasons that may exist some day

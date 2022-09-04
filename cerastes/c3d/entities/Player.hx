@@ -1,6 +1,7 @@
 package cerastes.c3d.entities;
 
 
+import cerastes.c3d.Entity.EntitySubclassData;
 import cerastes.c3d.entities.ThirdPersonCameraController.ThirdPersonPlayerController;
 import cerastes.c3d.Entity.EntityData;
 import bullet.Constants.CollisionFlags;
@@ -40,6 +41,12 @@ class PlayerStart extends Entity
 }
 
 
+@:structInit
+class PlayerSubclassData extends EntitySubclassData
+{
+	public var speed: Float = 100;
+}
+
 
 class Player extends Actor
 {
@@ -52,6 +59,9 @@ class Player extends Actor
 		super.onCreated( def );
 
 		eyePos = new Vector(0,0,32);
+
+		//var d = getSubclassData();
+		//trace(d.speed);
 
 
 		var playerType = def.getPropertyInt("playertype");
@@ -83,14 +93,18 @@ class Player extends Actor
 	{
 		//body = new BulletBody( new bullet.Native.CapsuleShape(16,32), 50, RigidBody );
 		var shape = new bullet.Native.CapsuleShape(8,16);
-		body = new BulletBody( shape, 50, PairCachingGhostObject );
+		body = new BulletBody( shape, 50, RigidBody );
 		body.object = this;
+
 		world.physics.addBody( body, PLAYER, MASK_PLAYER );
-		body.setRollingFriction(100);
-		body.setFriction(100);
+		//body.setRollingFriction(100);
+		//body.setFriction(100);
 		body.slamRotation = false;
 
-		body.collisionFlags |= CollisionFlags.CF_CHARACTER_OBJECT ;
+		var rb : bullet.Native.RigidBody = cast @:privateAccess body.inst;
+		rb.setAngularFactor(new bullet.Native.Vector3(0,0,0));
+		rb.setSleepingThresholds(0, 0);
+		//body.collisionFlags |= CollisionFlags.CF_KINEMATIC_OBJECT ;
 
 	}
 

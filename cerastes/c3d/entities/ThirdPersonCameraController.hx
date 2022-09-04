@@ -40,16 +40,16 @@ class ThirdPersonPlayerController extends PlayerController
 	{
 		super.initialize(p);
 
-		controller = new bullet.Native.KinematicCharacterController(cast @:privateAccess p.body.inst, cast @:privateAccess p.body.shape, 32, new bullet.Native.Vector3(0,0,1) );
+		//controller = new bullet.Native.KinematicCharacterController(cast @:privateAccess p.body.inst, cast @:privateAccess p.body.shape, 32, new bullet.Native.Vector3(0,0,1) );
 
 		// @todo
 		//controller.setFallSpeed(9.8 * QWorld.METERS_TO_QU );
 		//controller.setGravity( new bullet.Native.Vector3(0,0, -9.8 * QWorld.METERS_TO_QU) );
-		controller.warp( new bullet.Native.Vector3( p.x, p.y, p.z ) );
-		controller.setUseGhostSweepTest(false);
+		//controller.warp( new bullet.Native.Vector3( p.x, p.y, p.z ) );
+		//controller.setUseGhostSweepTest(false);
 
-		controller.setJumpSpeed( 225 );
-		@:privateAccess world.physics.inst.addAction( controller );
+		//controller.setJumpSpeed( 225 );
+		//@:privateAccess world.physics.inst.addAction( controller );
 	}
 
 	public override function tick( d: Float )
@@ -110,17 +110,20 @@ class ThirdPersonPlayerController extends PlayerController
 
 		if( Key.isPressed( Key.SPACE ) )
 		{
-			controller.jump();
+			//controller.jump();
 		}
 
 		if( isMoving )
 		{
 			dir = dir.multiply(moveSpeed);
-			controller.setWalkDirection( new bullet.Native.Vector3(dir.x, dir.y, dir.z) );
+			//controller.setWalkDirection( new bullet.Native.Vector3(dir.x, dir.y, dir.z) );
+			var pos = player.getAbsPos();
+			dir = dir.add( pos.getPosition().toPoint() );
+			player.setAbsOrigin( dir.x, dir.y, dir.z );
 		}
 
-		else
-			controller.setWalkDirection( new bullet.Native.Vector3(0,0,0) );
+		//else
+			//controller.setWalkDirection( new bullet.Native.Vector3(0,0,0) );
 
 		//player.body.setTransform( pos );
 
@@ -135,11 +138,12 @@ class ThirdPersonPlayerController extends PlayerController
 		// Trace back to our target pos, find the closest point we can get before hitting a wall
 
 		var cameraOffset = cameraPos.clone();
+
 		var playerPos = new Vector(player.x, player.y, player.z + cameraPos.z);
 
 		cameraOffset.transform(m);
 
-		DebugDraw.lineV(cameraOffset, playerPos);
+		//DebugDraw.lineV(cameraOffset, playerPos);
 
 		var ray = world.physics.rayTestV(playerPos, cameraOffset, PLAYER, MASK_ALL);
 		if( ray != null )
@@ -147,7 +151,7 @@ class ThirdPersonPlayerController extends PlayerController
 			cameraOffset = ray.position;
 		}
 
-		DebugDraw.box( cameraOffset.toPoint() );
+		//DebugDraw.box( cameraOffset.toPoint() );
 
 		cam.pos.set( cameraOffset.x, cameraOffset.y, cameraOffset.z );
 		cam.target.set( player.x, player.y, player.z + player.eyePos.z );

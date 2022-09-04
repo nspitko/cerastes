@@ -1,5 +1,7 @@
 
 package cerastes.tools;
+
+#if hlimgui
 import imgui.ImGuiMacro.wref;
 import cerastes.c3d.GPUParticle.GPUParticleDef;
 import hl.UI;
@@ -18,7 +20,6 @@ import h3d.parts.GpuParticles;
 import imgui.ImGui.ImGuiID;
 import h3d.mat.Texture;
 import h3d.parts.Emitter;
-#if hlimgui
 
 
 

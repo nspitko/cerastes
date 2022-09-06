@@ -1,5 +1,7 @@
 package cerastes.c3d.entities;
 
+import cerastes.c3d.World.BaseWorld;
+import h3d.col.Point;
 import haxe.io.Bytes;
 #if hlimgui
 import hl.BytesAccess;
@@ -36,8 +38,8 @@ class Worldspawn extends Brush
 		// Ok yeah but...
 		var config = new recast.Native.RcConfig();
 
-		config.cs = 0.2;
-		config.ch = 0.2;
+		config.cs = 0.2 * BaseWorld.METERS_TO_WORLD;
+		config.ch = 0.2 * BaseWorld.METERS_TO_WORLD;
 		config.walkableSlopeAngle = 35;
 		config.walkableHeight = 1;
 		config.walkableClimb = 1;
@@ -47,48 +49,104 @@ class Worldspawn extends Brush
 		config.minRegionArea = 8;
 		config.mergeRegionArea = 20;
 		config.maxVertsPerPoly = 6;
-		config.detailSampleDist = 6;
+		config.detailSampleDist = 6 * BaseWorld.METERS_TO_WORLD;
 		config.detailSampleMaxError = 1;
 
 		var navMesh = new recast.Native.NavMesh();
 
 		var numPos = bsp.vertices.length * 3;
-		var positions: hl.BytesAccess<Single> = new hl.Bytes( numPos * 2 );
+		var positions: hl.BytesAccess<Single> = new hl.Bytes( numPos * 4 * 3 );
 
-		for( i in  0 ... bsp.vertices.length )
+		var modelDef = bsp.models[0];
+
+		var pos = 0;
+		for( s in 0 ... modelDef.numSurfaces )
 		{
-			var v = bsp.vertices[i];
-			positions.set(i*3 + 0, v.xyz[0]);
-			positions.set(i*3 + 1, v.xyz[1]);
-			positions.set(i*3 + 2, v.xyz[2]);
+			var surf = bsp.surfaces[ modelDef.firstSurface + s ];
+			for( i in 0 ... surf.numVertices )
+			{
+				var v = bsp.vertices[i + surf.firstVertex];
+				positions.set(pos++, -v.xyz[0]);
+				positions.set(pos++, v.xyz[2]);
+				positions.set(pos++, v.xyz[1]);
+
+				Utils.assert(pos <= numPos, "Bad write" );
+			}
 		}
+
 
 		var numIdx = 0;
-		for( m in 0 ... bsp.models.length )
-		{
-			for( s in 0 ... bsp.models[m].numSurfaces )
-				numIdx += bsp.surfaces[ s + bsp.models[m].firstSurface ].numIndexes;
-		}
 
-		var indexes: hl.BytesAccess<Int> = new hl.Bytes( numIdx * 2 );
+		for( s in 0 ... modelDef.numSurfaces )
+			numIdx += bsp.surfaces[ s + modelDef.firstSurface ].numIndexes;
+
+
+		var indexes: hl.BytesAccess<Int> = new hl.Bytes( numIdx * 4 );
 
 		var i = 0;
-		for( m in 0 ... bsp.models.length )
+
+		for( s in 0 ... modelDef.numSurfaces )
 		{
-			for( s in 0 ... bsp.models[m].numSurfaces )
+			var face = bsp.surfaces[ s + modelDef.firstSurface ];
+			for(f in 0 ... face.numIndexes )
 			{
-				var surf = bsp.surfaces[ s + bsp.models[m].firstSurface ];
-				for(idx in 0 ... surf.numIndexes )
+				var index = face.firstVertex  + bsp.meshVerts[f + face.firstIndex ];
+
+				indexes.set(i++, index);
+			}
+		}
+
+
+		if( false )
+			{
+				var idx = 0;
+				while ( idx < numIdx  )
 				{
-					indexes.set(i++, bsp.meshVerts[idx + surf.firstIndex]);
+
+					var vOffset = indexes[idx] * 3;
+					var p1 = new Point( positions.get(vOffset), positions.get(vOffset+1), positions.get(vOffset+2) );
+					vOffset = indexes[idx + 1] * 3;
+					var p2 = new Point( positions.get(vOffset), positions.get(vOffset+1), positions.get(vOffset+2) );
+					vOffset = indexes[idx + 2] * 3;
+					var p3 = new Point( positions.get(vOffset), positions.get(vOffset+1), positions.get(vOffset+2) );
+
+					DebugDraw.line( p1,p2, 0x002288, -1 );
+					DebugDraw.line( p3, p2 , 0x002288, -1 );
+					DebugDraw.line( p1, p3, 0x002288, -1 );
+
+					idx += 3;
+
+
 				}
 			}
 
+
+
+		navMesh.build(cast positions, bsp.vertices.length, cast indexes, numIdx, config);
+
+		trace("?OK?");
+
+
+		if( false )
+		{
+			// Draw bounds
+			var debugMesh = navMesh.getDebugNavMesh();
+
+			for( i in 0 ... debugMesh.getTriangleCount() )
+			{
+				var triangle = debugMesh.getTriangle( i );
+				var p1 = triangle.getPoint(0);
+				var p2 = triangle.getPoint(1);
+				var p3 = triangle.getPoint(2);
+
+
+				DebugDraw.line( new Point( -p1.x, p1.z, p1.y ), new Point( -p2.x, p2.z, p2.y ), 0x002288, -1 );
+				DebugDraw.line( new Point( -p3.x, p3.z, p3.y ), new Point( -p2.x, p2.z, p2.y ), 0x002288, -1 );
+				DebugDraw.line( new Point( -p1.x, p1.z, p1.y ), new Point( -p3.x, p3.z, p3.y ), 0x002288, -1 );
+
+
+			}
 		}
-
-
-
-		navMesh.build(cast positions, numPos, cast indexes, numIdx, config);
 
 		#end
 

@@ -47,6 +47,8 @@ class DebugDraw
 	static var textLines: Array<DebugText> = [];
 	static var textDirty = false;
 
+	public static var colorAdd = 0;
+
 	public static function tick( delta: Float )
 	{
 		if( g == null )
@@ -139,24 +141,25 @@ class DebugDraw
 		addLine( source, target, color, duration, thickness );
 	}
 
-	public static function box( position: Point, size: Float = 15, color: Int = 0xFFFFFF, duration: Float = 0, alpha: Float = 1, thickness: Float = 1 )
+	public static function box( position: Point, size: Point, color: Int = 0xFFFFFF, duration: Float = 0, alpha: Float = 1, thickness: Float = 1 )
 	{
 		polygon(cube, position, size, color, duration, alpha, thickness );
 	}
 
 	public static function sphere( position: Point, size: Float = 15, color: Int = 0xFFFFFF, duration: Float = 0, alpha: Float = 1, thickness: Float = 1 )
 	{
-		polygon(ball, position, size, color, duration, alpha, thickness );
+		var s = new Point(size, size, size);
+		polygon(ball, position, s, color, duration, alpha, thickness );
 	}
 
-	public static function polygon( polygon: Polygon, position: Point, size, color: Int, duration: Float = 0, alpha: Float = 1, thickness: Float = 1 )
+	public static function polygon( polygon: Polygon, position: Point, size: Point, color: Int, duration: Float = 0, alpha: Float = 1, thickness: Float = 1 )
 	{
 		var i = 0;
 		while( i < polygon.idx.length )
 		{
 			var idx = polygon.idx[i];
 			var idxn = polygon.idx[i+1];
-			addLine( polygon.points[idx].multiply(size).add( position ), polygon.points[idxn].multiply(size).add( position ), color, duration, alpha, thickness );
+			addLine( CMath.pointMultiply( polygon.points[idx],size ).add( position ), CMath.pointMultiply( polygon.points[idxn],size ).add( position ), color, duration, alpha, thickness );
 			i++;
 			if( i % 3 == 2 ) i++;
 		}
@@ -214,7 +217,7 @@ class DebugDraw
 		lines.push({
 			start: source,
 			end: target,
-			color: color,
+			color: color + colorAdd,
 			time: duration >= 0 ? hxd.Timer.lastTimeStamp + duration : duration,
 			thickness: thickness,
 			alpha: alpha

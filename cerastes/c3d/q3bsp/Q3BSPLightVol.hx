@@ -126,7 +126,7 @@ class Q3BSPLightVol extends h3d.scene.fwd.Light
 					var cold = 0;// CMath.floor( scale * v.directional[0] ) << 16 | CMath.floor( scale *v.directional[1] ) << 8 | CMath.floor( scale * v.directional[0] );
 
 					var pos = new Point( (x + 0.5 ) * 64 + bsp.models[0].mins[0], (y + 0.5) * 64 + bsp.models[0].mins[1], ( 0.5 + z ) * 128 + bsp.models[0].mins[2] );
-					DebugDraw.box( pos, 10, col + cold, -1 );
+					DebugDraw.box( pos, new Point(10,10,10), col + cold, -1 );
 
 					var mat = new Matrix();
 					var angX = ( v.dir[0] / 255 ) * 6.28319;// - 1.5708 ; // byte to radian

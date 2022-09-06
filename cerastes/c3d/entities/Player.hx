@@ -89,24 +89,7 @@ class Player extends Actor
 
 	}
 
-	override function createBody( def: EntityData )
-	{
-		//body = new BulletBody( new bullet.Native.CapsuleShape(16,32), 50, RigidBody );
-		var shape = new bullet.Native.CapsuleShape(8,16);
-		body = new BulletBody( shape, 50, RigidBody );
-		body.object = this;
 
-		world.physics.addBody( body, PLAYER, MASK_PLAYER );
-		//body.setRollingFriction(100);
-		//body.setFriction(100);
-		body.slamRotation = false;
-
-		var rb : bullet.Native.RigidBody = cast @:privateAccess body.inst;
-		rb.setAngularFactor(new bullet.Native.Vector3(0,0,0));
-		rb.setSleepingThresholds(0, 0);
-		//body.collisionFlags |= CollisionFlags.CF_KINEMATIC_OBJECT ;
-
-	}
 
 	public override function sync( ctx: RenderContext )
 	{

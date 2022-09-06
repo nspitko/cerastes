@@ -1,5 +1,6 @@
 package cerastes.c3d;
 
+import h3d.Vector;
 import h3d.col.Point;
 import h3d.scene.Object;
 
@@ -83,7 +84,11 @@ class BaseEntity extends Object implements cerastes.Entity
 
 	var destroyed = false;
 	public var world(get, null): cerastes.c3d.World;
+	#if bullet
 	public var body: cerastes.c3d.BulletBody = null;
+	public var bodyOrigin = new Vector(0,0,0);
+	public var bodyOffset = new Vector(0,0,0);
+	#end
 
 	//@:noCompletion var subclassData: EntitySubclassData;
 
@@ -216,7 +221,33 @@ class BaseEntity extends Object implements cerastes.Entity
 		if( body != null )
 		{
 			body.setTransform( new bullet.Point(x,y,z) );
+			bodyOrigin.set( x + bodyOffset.x, y + bodyOffset.y, z + bodyOffset.z);
 		}
+		#end
+	}
+
+	// ---------------------------------------------------------------------------------------------------------------
+	public function setBodyOrigin( x : Float, y : Float, z : Float )
+	{
+		if( #if !bullet true || #end Utils.assert( body != null, "Tried to set body origin on entity without a body!" ) )
+		{
+			setAbsOrigin(x,y,z);
+			return;
+		}
+		#if bullet
+		setAbsOrigin( x - bodyOffset.x, y - bodyOffset.y, z - bodyOffset.z );
+		#end
+	}
+
+	// ---------------------------------------------------------------------------------------------------------------
+	public function getBodyOrigin() : h3d.Vector
+	{
+		if( #if !bullet true || #end Utils.assert( body != null, "Tried to set body origin on entity without a body!" ) )
+		{
+			return new Vector(x,y,z);
+		}
+		#if bullet
+		return bodyOrigin;
 		#end
 	}
 

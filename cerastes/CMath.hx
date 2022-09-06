@@ -989,6 +989,35 @@ import haxe.macro.Expr;
 		return new Point( a.x / b.x, a.y / b.y, a.z / b.z );
 	}
 
+	// Vector
+	public static inline function vectorMA( va: Vector, scale: Float, vb: Vector )
+	{
+		return new Vector(
+			va.x + scale * vb.x,
+			va.y + scale * vb.y,
+			va.z + scale * vb.z
+		);
+	}
+
+	public static inline function vectorFrac( va: Vector, vb: Vector, fraction: Float )
+	{
+		return new Vector(
+			va.x + fraction * (vb.x - va.x),
+			va.y + fraction * (vb.y - va.y),
+			va.z + fraction * (vb.z - va.z)
+		);
+	}
+
+
+	public static inline function vectorMul( va: Vector, vb: Vector )
+	{
+		return new Vector(
+			va.x * vb.x,
+			va.y * vb.y,
+			va.z * vb.z
+		);
+	}
+
 	// @todo rename
 	public static inline function dividePoint( input: Point, denom: Float)
 	{

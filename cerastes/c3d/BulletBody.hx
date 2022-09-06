@@ -45,6 +45,9 @@ class BulletBody {
 
 	public var type(default,null): BulletBodyType;
 
+	public var group(default, null): BulletCollisionFilterGroup;
+	public var mask(default, null): BulletCollisionFilterMask;
+
 	// HACK: Hold on to a handle to any used mesh so we GC it properly
 	var mesh: Native.StridingMeshInterface;
 
@@ -124,6 +127,9 @@ class BulletBody {
 
 	public function addTo( world : BulletWorld, group: BulletCollisionFilterGroup, mask: BulletCollisionFilterMask ) {
 		if( this.world != null ) remove();
+
+		this.group = group;
+		this.mask = mask;
 		@:privateAccess world.addBody(this, group, mask);
 	}
 

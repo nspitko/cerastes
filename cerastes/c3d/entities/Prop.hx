@@ -58,7 +58,7 @@ class PropPhysics extends Prop
 
 @qClass(
 	{
-		name: "prop_test",
+		name: "prop_testF",
 		desc: "Test prop",
 		type: "PointClass",
 		base: ["Angle"],

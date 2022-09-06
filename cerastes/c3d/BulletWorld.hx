@@ -1,5 +1,6 @@
 package cerastes.c3d;
 
+import cerastes.macros.Metrics;
 import h3d.Vector;
 import h3d.col.Point;
 import bullet.*;
@@ -40,9 +41,11 @@ class BulletContactManifold
 @:structInit
 class BulletRayTestResult
 {
+	public var hit: Bool;
 	public var body: BulletBody;
 	public var position: Vector;
 	public var normal: Vector;
+	public var fraction: Float;
 }
 
 
@@ -90,8 +93,19 @@ class BulletWorld {
 		return r;
 	}
 
+	public inline function rayTestMinV( from: Vector, to: Vector, group: BulletCollisionFilterGroup, mask: BulletCollisionFilterMask ): BulletRayTestResult
+	{
+		var f = new bullet.Native.Vector3( from.x, from.y, from.z );
+		var t = new bullet.Native.Vector3( to.x, to.y, to.z );
+		var r = rayTest( f, t, group, mask );
+		f.delete();
+		t.delete();
+		return r;
+	}
+
 	public function rayTest( from: bullet.Native.Vector3, to: bullet.Native.Vector3, group: BulletCollisionFilterGroup, mask: BulletCollisionFilterMask ): BulletRayTestResult
 	{
+		Metrics.begin("rayTest");
 		var result = new bullet.Native.ClosestRayResultCallback(from, to);
 
 		result.m_collisionFilterGroup = group;
@@ -99,24 +113,102 @@ class BulletWorld {
 
 		inst.rayTest(from, to, result );
 
+		var body = null;
 
 		if( result.hasHit() )
 		{
-			var body = getBodyOwner( result.m_collisionObject );
-
-			var ret: BulletRayTestResult = {
-				body: body,
-				normal: new Vector( result.m_hitNormalWorld.x(), result.m_hitNormalWorld.y(), result.m_hitNormalWorld.z() ),
-				position: new Vector( result.m_hitPointWorld.x(), result.m_hitPointWorld.y(), result.m_hitPointWorld.z() )
-			};
-
-			result.delete();
-
-			return ret;
+			body = getBodyOwner( result.m_collisionObject );
 		}
+
+		var ret: BulletRayTestResult = {
+			hit: result.hasHit(),
+			body: body,
+			normal: result.hasHit() ? new Vector( result.m_hitNormalWorld.x(), result.m_hitNormalWorld.y(), result.m_hitNormalWorld.z() )  : new Vector( 0, 0, 1 ),
+			position: result.hasHit() ? new Vector( result.m_hitPointWorld.x(), result.m_hitPointWorld.y(), result.m_hitPointWorld.z() )  : new Vector( to.x(), to.y(), to.z() ),
+			fraction: result.m_closestHitFraction
+		};
+
+		if( true )
+		{
+			var col = result.hasHit() ? 0x00FF00 : 0xFF0000;
+			DebugDraw.lineV( new Vector( from.x(), from.y(), from.z() ), ret.position, col );
+		}
+
 		result.delete();
 
-		return null;
+		Metrics.end();
+		return ret;
+	}
+
+	public inline function shapeTestV( shape: bullet.Native.ConvexShape, from: Vector, to: Vector, group: BulletCollisionFilterGroup, mask: BulletCollisionFilterMask ): BulletRayTestResult
+	{
+
+		var f = new bullet.Native.Vector3( from.x, from.y, from.z );
+		var t = new bullet.Native.Vector3( to.x, to.y, to.z );
+
+		var ft = new bullet.Native.Transform();
+		var tt = new bullet.Native.Transform();
+		ft.setIdentity();
+		tt.setIdentity();
+		ft.setOrigin( f );
+		tt.setOrigin( t );
+
+		var r = shapeTest( shape, ft, tt, group, mask );
+		f.delete();
+		t.delete();
+		ft.delete();
+		tt.delete();
+
+		if( true )
+		{
+			var amin = new bullet.Native.Vector3(0,0,0);
+			var amax = new bullet.Native.Vector3(0,0,0);
+			var t = new bullet.Native.Transform();
+			t.setIdentity();
+
+			shape.getAabb(t,amin,amax);
+
+			var col = r.hit ? 0x00FF00 : 0xFF0000;
+			DebugDraw.box( r.position.toPoint(), new Point( amax.x() - amin.x(), amax.y() - amin.y(), amax.z() - amin.z()), col );
+		}
+
+		return r;
+	}
+
+	public function shapeTest( shape: bullet.Native.ConvexShape, from: bullet.Native.Transform, to: bullet.Native.Transform, group: BulletCollisionFilterGroup, mask: BulletCollisionFilterMask ): BulletRayTestResult
+	{
+		Metrics.begin("shapeTest");
+		var s = Math.cos( 45 * (Math.PI / 180 ) );
+		var result = new bullet.Native.ClosestConvexResultCallback(
+			new bullet.Native.Vector3(0,0,-1),
+			new bullet.Native.Vector3(s,s,s)
+		);
+
+		result.m_collisionFilterGroup = group;
+		result.m_collisionFilterMask = mask;
+
+		inst.convexSweepTest(shape, from, to, result, 0.5 );
+
+		var body = null;
+
+		if( result.hasHit() )
+		{
+			body = getBodyOwner( result.m_hitCollisionObject );
+		}
+
+
+		var ret: BulletRayTestResult = {
+			hit: result.hasHit(),
+			body: body,
+			normal: result.hasHit() ? new Vector( result.m_hitNormalWorld.x(), result.m_hitNormalWorld.y(), result.m_hitNormalWorld.z() )  : new Vector( 0, 0, 1 ),
+			position: result.hasHit() ? new Vector( result.m_hitPointWorld.x(), result.m_hitPointWorld.y(), result.m_hitPointWorld.z() )  : new Vector( to.getOrigin().x(), to.getOrigin().y(), to.getOrigin().z() ),
+			fraction: result.m_closestHitFraction
+		};
+
+		result.delete();
+		Metrics.end();
+
+		return ret;
 	}
 
 	public function setGravity( x : Float, y : Float, z : Float ) {
@@ -124,7 +216,9 @@ class BulletWorld {
 	}
 
 	public function stepSimulation( time : Float, iterations : Int ) {
+		Metrics.begin("stepSimulation");
 		inst.stepSimulation(time, iterations);
+		Metrics.end();
 	}
 
 	inline function getBodyOwner( body: bullet.Native.CollisionObject )
@@ -169,6 +263,9 @@ class BulletWorld {
 	public function addBody( b : BulletBody, group: BulletCollisionFilterGroup, mask: BulletCollisionFilterMask )
 	{
 		if( b.world != null ) throw "Body already in world";
+
+		@:privateAccess b.group = group;
+		@:privateAccess b.mask = mask;
 
 		var found = false;
 		for(idx in 0 ... bodyIdx )

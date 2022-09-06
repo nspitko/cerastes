@@ -1,5 +1,6 @@
 package cerastes.c3d.entities;
 
+import cerastes.macros.Metrics;
 import cerastes.c3d.Entity.EntityData;
 import h3d.col.Point;
 import h3d.Quat;
@@ -11,7 +12,7 @@ import hxd.Key;
 @:access( cerastes.c3d.entities.Player )
 class ThirdPersonPlayerController extends PlayerController
 {
-	var moveSpeed = 6;
+	var moveSpeed = 20;
 	var lookSpeed = 0.006;
 
 	var lastX = 0;
@@ -78,7 +79,7 @@ class ThirdPersonPlayerController extends PlayerController
 		dir.z = 0;
 		dir.normalize();
 
-		DebugDraw.drawAxisM(player.getTransform());
+		//DebugDraw.drawAxisM(player.getTransform());
 
 		//DebugDraw.text('Player = ${player.getTransform().toString()}');
 
@@ -117,10 +118,15 @@ class ThirdPersonPlayerController extends PlayerController
 		{
 			dir = dir.multiply(moveSpeed);
 			//controller.setWalkDirection( new bullet.Native.Vector3(dir.x, dir.y, dir.z) );
-			var pos = player.getAbsPos();
-			dir = dir.add( pos.getPosition().toPoint() );
-			player.setAbsOrigin( dir.x, dir.y, dir.z );
+			//var pos = player.getAbsPos();
+			//dir = dir.add( pos.getPosition().toPoint() );
+			//player.setAbsOrigin( dir.x, dir.y, dir.z );
+			@privateAccess player.moveDir.load(dir.toVector());
+			//trace(dir);
 		}
+		else
+			@privateAccess player.moveDir.set(0,0,0);
+
 
 		//else
 			//controller.setWalkDirection( new bullet.Native.Vector3(0,0,0) );
@@ -146,7 +152,7 @@ class ThirdPersonPlayerController extends PlayerController
 		//DebugDraw.lineV(cameraOffset, playerPos);
 
 		var ray = world.physics.rayTestV(playerPos, cameraOffset, PLAYER, MASK_ALL);
-		if( ray != null )
+		if( ray.hit )
 		{
 			cameraOffset = ray.position;
 		}

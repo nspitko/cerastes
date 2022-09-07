@@ -27,7 +27,7 @@ class Worldspawn extends Brush
 	override function tick( delta: Float )
 	{
 		super.tick(delta);
-		debugDrawBody(body);
+		//debugDrawBody(body);
 	}
 
 	override function create(def: EntityData, world: World )
@@ -98,27 +98,27 @@ class Worldspawn extends Brush
 
 
 		if( false )
+		{
+			var idx = 0;
+			while ( idx < numIdx  )
 			{
-				var idx = 0;
-				while ( idx < numIdx  )
-				{
 
-					var vOffset = indexes[idx] * 3;
-					var p1 = new Point( positions.get(vOffset), positions.get(vOffset+1), positions.get(vOffset+2) );
-					vOffset = indexes[idx + 1] * 3;
-					var p2 = new Point( positions.get(vOffset), positions.get(vOffset+1), positions.get(vOffset+2) );
-					vOffset = indexes[idx + 2] * 3;
-					var p3 = new Point( positions.get(vOffset), positions.get(vOffset+1), positions.get(vOffset+2) );
+				var vOffset = indexes[idx] * 3;
+				var p1 = new Point( positions.get(vOffset), positions.get(vOffset+1), positions.get(vOffset+2) );
+				vOffset = indexes[idx + 1] * 3;
+				var p2 = new Point( positions.get(vOffset), positions.get(vOffset+1), positions.get(vOffset+2) );
+				vOffset = indexes[idx + 2] * 3;
+				var p3 = new Point( positions.get(vOffset), positions.get(vOffset+1), positions.get(vOffset+2) );
 
-					DebugDraw.line( p1,p2, 0x002288, -1 );
-					DebugDraw.line( p3, p2 , 0x002288, -1 );
-					DebugDraw.line( p1, p3, 0x002288, -1 );
+				DebugDraw.line( p1,p2, 0x002288, -1 );
+				DebugDraw.line( p3, p2 , 0x002288, -1 );
+				DebugDraw.line( p1, p3, 0x002288, -1 );
 
-					idx += 3;
+				idx += 3;
 
 
-				}
 			}
+		}
 
 
 

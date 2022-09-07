@@ -1,5 +1,6 @@
 package cerastes.c3d.q3bsp;
 
+import cerastes.macros.Metrics;
 import cerastes.c3d.q3bsp.Q3BSPFile.DLeaf_t;
 import h3d.mat.Data.Face;
 import cerastes.c3d.Material.MaterialDef;
@@ -42,6 +43,8 @@ class Q3BSPBrush extends BaseBrush
 	var idxBuffer: Indexes;
 	var idxBytes: Bytes;
 	public static var enableVis: Bool = false;
+
+	var skipVis = false; // This is enabled if vis is detected to be bad.
 	var modelDef: DModel_t;
 	var brushBounds: Bounds;
 	var visLeafs: haxe.ds.Vector<DLeaf_t>;
@@ -380,6 +383,12 @@ class Q3BSPBrush extends BaseBrush
 
 			var matPath = '${shader.shader}';
 			var tex = null;
+
+			// Special case
+			if( matPath == "textures/__TB_empty")
+				matPath = 'textures/editor/__TB_empty';
+			trace(matPath);
+
 			if( hxd.Res.loader.exists('$matPath.png') )
 				matPath = '$matPath.png';
 			else
@@ -531,9 +540,18 @@ class Q3BSPBrush extends BaseBrush
 	override function emit( ctx : RenderContext )
 	{
 
+		// Fast path for when vis fails.
+		if( skipVis )
+		{
+			for( matId => mat in materialMap )
+			{
+				ctx.emit(mat, this, matId);
+			}
+			return;
+		}
 
 		visibleFaces = [];
-		for( key in materialMap.keys() )
+		for( key => val in materialMap )
 		{
 			// @todo: Perf
 			visibleFaces[key] = [];
@@ -545,6 +563,8 @@ class Q3BSPBrush extends BaseBrush
 		var rootLeafIdx = findLeaf(ctx.camera.pos);
 		var rootLeaf = bsp.leafs[rootLeafIdx];
 
+		Metrics.begin("Vis");
+		var numVisibleLeaves = 0;
 		//for( leaf in bsp.leafs )
 		for( leaf in visLeafs )
 		{
@@ -575,7 +595,17 @@ class Q3BSPBrush extends BaseBrush
 					visibleMaterials.push(matId);
 					ctx.emit(materialMap[matId], this, matId);
 				}
+
 			}
+			numVisibleLeaves++;
+		}
+
+		Metrics.end();
+
+		if( numVisibleLeaves == visLeafs.length )
+		{
+			Utils.warning("Vis is invalid! Skipping future vis checks.");
+			skipVis = true;
 		}
 		//trace('Visible faces: ${visibleFaces.length}');
 		//trace('Emitted textures: $emitIdx');

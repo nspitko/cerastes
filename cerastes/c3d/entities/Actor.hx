@@ -132,7 +132,7 @@ class Actor extends Entity
 		var wishDir = moveDir.clone();
 
 
-		var wishVel = wishDir.clone();
+		var wishVel = moveDir.clone().normalized().multiply( moveSpeed );
 		var wishSpeed = wishDir.normalized();
 		wishSpeed = wishSpeed.multiply( delta );
 
@@ -199,7 +199,9 @@ class Actor extends Entity
 			return;
 		}
 
-		var downOrigin = getBodyOrigin();
+		// Snap down to the floor. after our first slide.
+		var downOrigin = CMath.vectorFrac( startOrigin, down, rc.fraction );
+		startOrigin = getBodyOrigin();
 		var downVelocity = velocity.clone();
 
 		up.load( startOrigin );
@@ -251,7 +253,7 @@ class Actor extends Entity
 
 		if( gravity )
 		{
-			var endVelocity = velocity.clone();
+			endVelocity = velocity.clone();
 			endVelocity.z -= world.gravity * delta;
 			velocity.z = ( velocity.z + endVelocity.z ) * 0.5;
 			primalVelocity.z = endVelocity.z;
@@ -289,11 +291,13 @@ class Actor extends Entity
 			//	trace('z change=${z - end.z}; frac=${rc.fraction}');
 
 			// @todo: Does this work??
-			if( rc.fraction <= 0 )
+			// IT DOES NOT
+			/*
+			if( rc.fraction < 0 )
 			{
 				velocity.z = 0;
 				return true;
-			}
+			}*/
 
 			if( rc.fraction > 0 )
 			{

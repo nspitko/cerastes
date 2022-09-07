@@ -37,7 +37,7 @@ class Actor extends Entity
 	var walking: Bool = false;
 	var groundTrace: BulletRayTestResult = null;
 
-	var moveSpeed = 6;
+	var moveSpeed = 2;
 	var moveSpeedAccel = 10;
 	var moveSpeedAccelAir = 10;
 
@@ -45,6 +45,7 @@ class Actor extends Entity
 
 
 	var moveDir = new Vector(0,0,0);
+	var moveTime:Float = 1;
 
 	var touchingEntities: Array<Entity> = [];
 
@@ -72,7 +73,7 @@ class Actor extends Entity
 	{
 		// @todo: Get body size from model
 		var shape = new bullet.Native.BoxShape(new bullet.Native.Vector3( bodyRadius,bodyRadius,bodyHeight/2 ));
-		bodyOffset.set(bodyRadius, bodyRadius, bodyHeight / 2);
+		bodyOffset.set(0, 0, bodyHeight / 2);
 		body = new BulletBody( shape, 50, RigidBody );
 		world.physics.addBody( body, NPC, MASK_NPC );
 		body.slamRotation = false;
@@ -81,8 +82,6 @@ class Actor extends Entity
 		var rb : bullet.Native.RigidBody = cast @:privateAccess body.inst;
 		body.collisionFlags |= CollisionFlags.CF_KINEMATIC_OBJECT;
 		body.object = this;
-
-
 	}
 
 	function updateMovement( delta: Float )
@@ -90,6 +89,7 @@ class Actor extends Entity
 		Metrics.begin("updateMovement");
 		// zero out impact speed
 		impactSpeed = 0;
+		moveTime = 1;
 
 		var origin = getBodyOrigin();
 
@@ -173,7 +173,7 @@ class Actor extends Entity
 		if( velocity.x == 0 && velocity.y == 0 )
 			return;
 
-		moveSlide( delta, false );
+		moveStepSlide( delta, false );
 
 	}
 
@@ -206,15 +206,15 @@ class Actor extends Entity
 		up.z += stepSize;
 
 		// test player position if they were a stepheight height
-		var rc = world.physics.shapeTestV( cast body.shape, up, startOrigin, body.group, body.mask );
+		var rc = world.physics.shapeTestV( cast body.shape, startOrigin, up, body.group, body.mask );
 		if( rc.fraction == 0 ) // @todo: TEST
 		{
 			trace("bend can't step");
 			return;
 		}
 
-		ss = rc.position.z - startOrigin.z;
-		var newPos = CMath.vectorFrac( up, startOrigin, rc.fraction );
+		var newPos = CMath.vectorFrac( startOrigin, up, rc.fraction );
+		ss = newPos.z - startOrigin.z;
 		setBodyOrigin(newPos.x, newPos.y, newPos.z);
 		//trace("SetAbs: stepslide stepheight");
 		velocity.load(startVelocity);
@@ -276,8 +276,6 @@ class Actor extends Entity
 		planes[numPlanes] = velocity.normalized();
 		numPlanes++;
 
-		var timeLeft: Float = 1;
-
 		var numBumps = 4;
 		var bumpCount = 0;
 		while( bumpCount < numBumps )
@@ -285,11 +283,10 @@ class Actor extends Entity
 			if( velocity.x == 0 && velocity.y == 0 && velocity.z == 0.0 )
 				return true;
 
-			bumpCount++;
-			var end = CMath.vectorMA( getBodyOrigin(), timeLeft, velocity );
+			var end = CMath.vectorMA( getBodyOrigin(), moveTime, velocity );
 			var rc = world.physics.shapeTestV( cast body.shape, getBodyOrigin(), end, body.group, body.mask );
-			if( rc.fraction > 0 && rc.fraction < 1)
-				trace('z change=${z - end.z}; frac=${rc.fraction}');
+			//if( rc.fraction > 0 && rc.fraction < 1)
+			//	trace('z change=${z - end.z}; frac=${rc.fraction}');
 
 			// @todo: Does this work??
 			if( rc.fraction <= 0 )
@@ -313,7 +310,7 @@ class Actor extends Entity
 
 			addTouchingEnt( cast rc.body.object );
 
-			timeLeft -= timeLeft * rc.fraction;
+			moveTime -= moveTime * rc.fraction;
 
 			if( numPlanes >= maxClipPlanes )
 			{
@@ -407,6 +404,8 @@ class Actor extends Entity
 				break;
 			}
 
+			bumpCount++;
+
 		}
 
 		if( gravity )
@@ -414,7 +413,7 @@ class Actor extends Entity
 
 
 
-		return bumpCount != 0;
+		return bumpCount == 0;
 	}
 
 	function addTouchingEnt( e: Entity )
@@ -514,14 +513,15 @@ class Actor extends Entity
 		var origin = getBodyOrigin();
 		var point = origin.clone();
 		point.z -= 1;
+		//origin.z +=
 
 		// Trace from our current pos to our target pos
 		// @todo: Consider aabb
-		//DebugDraw.colorAdd = 0x0000FF;
+		DebugDraw.colorAdd = 0x0000FF;
 		var rc = world.physics.shapeTestV( cast body.shape, origin, point, body.group, body.mask );
 		groundTrace = rc;
 
-		//DebugDraw.colorAdd = 0;
+		DebugDraw.colorAdd = 0;
 
 
 		// @todo: Consider trace may start inside solid

@@ -228,6 +228,9 @@ abstract MapSurfaceType_t(Int) from Int to Int {
 	public var visData: BSPVisDataDef = {};
 	public var patches: Vector<CPatch_t> = null;
 	public var facets: Facet_t = null;
+
+	//
+	public var fileName: String;
 }
 
 
@@ -252,7 +255,7 @@ class Q3BSPFile
 		var resource = hxd.Res.loader.load( fileName );
 		bytes = resource.entry.getBytes();
 
-		file = {};
+		file = { fileName: fileName};
 
 		loadHeader();
 		loadEntities();

@@ -124,9 +124,6 @@ class Worldspawn extends Brush
 
 		navMesh.build(cast positions, bsp.vertices.length, cast indexes, numIdx, config);
 
-		trace("?OK?");
-
-
 		if( false )
 		{
 			// Draw bounds

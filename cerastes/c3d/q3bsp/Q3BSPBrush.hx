@@ -73,6 +73,9 @@ class Q3BSPBrush extends BaseBrush
 			{
 				var color = Std.random(0xFFFFFF);
 				var s = brushCol.faces[f];
+				if( s.vertices.length < 3 )
+					continue;
+
 				var i = 0;
 				while( i < s.indices.length )
 				{
@@ -127,7 +130,7 @@ class Q3BSPBrush extends BaseBrush
 		if( def.getProperty("classname") != "worldspawn")
 		{
 			var model = def.getProperty("model");
-			if( Utils.assert( model != null && model.substr(0,1) != "*", "Brush has missing/invalid model specification; brush will not function" ) ) return;
+			if( Utils.assert( model != null && model.substr(0,1) == "*", "Brush has missing/invalid model specification; brush will not function" ) ) return;
 
 			modelId = Std.parseInt( model.substr(0,1) );
 		}
@@ -291,7 +294,7 @@ class Q3BSPBrush extends BaseBrush
 		}
 		*/
 
-		vertexBuffer.uploadBytes( vertexBytes, 0, bsp.vertices.length );
+		vertexBuffer.uploadBytes( vertexBytes, 0, CMath.floor( pos / stride / 4 ) );
 
 		for( i in 0...bufferNames.length )
 			addBuffer(bufferNames[i], vertexBuffer, bufferPositions[i]);
@@ -413,7 +416,9 @@ class Q3BSPBrush extends BaseBrush
 			//mat.receiveShadows = true;
 
 			// @todo: need more context upstream to derive this
-			var lmTex = hxd.Res.maps.bsp2_compile.lm_0000_png.toTexture();
+			var texFile = '${bsp.fileName.substr(0, bsp.fileName.length - 4)}/lm_${ StringTools.lpad(""+surface.lightMapIndex,"0",4) }.tga';
+			trace(texFile);
+			var lmTex = hxd.Res.loader.load( texFile ).toTexture();
 			lmShader.texture = lmTex;
 
 			//shader.lightMapTexture = lmTex;

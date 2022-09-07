@@ -200,10 +200,7 @@ class BaseEntity extends Object implements cerastes.Entity
 	 */
 	function initializeBody()
 	{
-		if( body != null )
-		{
-			body.setTransform( new bullet.Point( x, y, z ) );
-		}
+
 	}
 
 	// ---------------------------------------------------------------------------------------------------------------

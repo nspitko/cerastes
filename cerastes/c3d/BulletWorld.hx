@@ -169,7 +169,8 @@ class BulletWorld {
 			shape.getAabb(t,amin,amax);
 
 			var col = r.hit ? 0x00FF00 : 0xFF0000;
-			DebugDraw.box( r.position.toPoint(), new Point( amax.x() - amin.x(), amax.y() - amin.y(), amax.z() - amin.z()), col );
+			var pos = CMath.vectorFrac( from, to, r.fraction );
+			DebugDraw.box( pos.toPoint(), new Point( amax.x() - amin.x(), amax.y() - amin.y(), amax.z() - amin.z()), col );
 		}
 
 		return r;

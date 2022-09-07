@@ -21,7 +21,7 @@ class Q3BSPEntity extends BaseEntity
 		var origin = def.getPropertyPoint('origin');
 		if( origin != null )
 		{
-			setPosition(
+			setAbsOrigin(
 				origin.x,
 				origin.y,
 				origin.z

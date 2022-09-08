@@ -48,7 +48,7 @@ class PlayerSubclassData extends EntitySubclassData
 }
 
 
-class Player extends Actor
+class Player extends KinematicActor
 {
 	var controller: PlayerController;
 

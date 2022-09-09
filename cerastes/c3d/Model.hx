@@ -1,5 +1,6 @@
 package cerastes.c3d;
 
+import h3d.prim.HMDModel;
 import h3d.prim.ModelCache;
 import hxd.fmt.hmd.Library;
 import cerastes.c3d.Material.MaterialDef;
@@ -117,15 +118,18 @@ class ModelDef
 			{
 				var prim = @:privateAccess library.makePrimitive(m.geometry);
 
-				if( m.skin != null )
+				if( false && m.skin != null )
 				{
 					var skinData = @:privateAccess library.makeSkin(m.skin, library.header.geometries[m.geometry]);
 					skinData.primitive = prim;
 					obj = new h3d.scene.Skin(skinData, [for( idx in 0 ... m.materials.length ) loadMaterial(materials[idx])]);
-				} else if( m.materials.length == 1 )
+				} else if( false && m.materials.length == 1 )
 					obj = new h3d.scene.Mesh(prim, loadMaterial( materials[0] ), obj );
 				else
 					obj = new h3d.scene.MultiMaterial(prim, [for( idx in 0 ... m.materials.length ) loadMaterial(materials[idx])], obj);
+
+				var prim: HMDModel =cast  @:privateAccess cast (obj, h3d.scene.Mesh).primitive;
+				//prim.addTangents();
 			}
 
 			obj.name = m.name;
@@ -143,13 +147,14 @@ class ModelDef
 			if( scale > 0 )
 				obj.scale( scale );
 
-			objs.push(obj);
-			var p = objs[m.parent];
-			if( p != null )
-				p.addChild(obj);
+			objs.push( obj );
+		}
 
-
-
+		for( i in 0 ...library.header.models.length )
+		{
+			var m = library.header.models[i];
+			if( m.parent >= 0 && i != m.parent )
+				objs[m.parent].addChild(objs[i]);
 		}
 
 

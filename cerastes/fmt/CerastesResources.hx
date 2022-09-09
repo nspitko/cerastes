@@ -16,7 +16,9 @@ class CerastesResources
 		#if flow
 		Config.extensions["flow"] = "cerastes.fmt.FlowResource";
 		#end
+		Config.extensions["glb,gltf"] = "hxd.res.Model";
 
+		
 	}
 	#end
 }

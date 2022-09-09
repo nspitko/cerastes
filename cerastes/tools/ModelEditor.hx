@@ -121,7 +121,7 @@ class ModelEditor extends ImguiTool
 		events.addScene(preview);
 
 		//openFile("mdl/kronii.model");
-		openFile("models/placeholder/vanguard.model");
+		openFile("models/placeholder/vanguard_gltf.model");
 
 
 	}
@@ -137,7 +137,17 @@ class ModelEditor extends ImguiTool
 		} catch(e)
 		{
 			ImGuiToolManager.showPopup("Failed to open file",'$f could not be opened:\n${e}',Error);
+			Utils.warning( e.toString() );
 		}
+	}
+
+	function resizeRT( newSize: ImVec2 )
+	{
+		if( sceneRT.width == newSize.x && sceneRT.height == newSize.y )
+			return;
+
+		sceneRT.resize( CMath.floor( newSize.x ), CMath.floor( newSize.y ) );
+		sceneRT.depthBuffer = new DepthBuffer( CMath.floor( newSize.x ), CMath.floor( newSize.y ) );
 	}
 
 	function rebuildPreview()
@@ -186,7 +196,6 @@ class ModelEditor extends ImguiTool
 
 
 		modelObject = modelDef.toObject(preview);
-
 		// Draw axis
 		var g = new h3d.scene.Graphics( preview );
 
@@ -622,13 +631,14 @@ class ModelEditor extends ImguiTool
 		refreshPreview();
 
 		ImGui.setNextWindowDockId( dockspaceIdCenter, dockCond );
-		ImGui.begin('Preview##${windowID()}');
+		ImGui.begin('Preview##${windowID()}', null, ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse);
 		#if imguizmo
 		ImGuizmo.setDrawlist();
 		#end
 		handleShortcuts();
 
 		var size = ImGui.getWindowSize();
+		var style = ImGui.getStyle();
 
 		var startPos: ImVec2 = ImGui.getCursorScreenPos();
 		//var windowPos: ImVec2 = ImGui.getWindowPos();
@@ -637,7 +647,13 @@ class ModelEditor extends ImguiTool
 		ImGui.pushStyleColor( ImGuiCol.ButtonActive, 0 );
 		ImGui.pushStyleColor( ImGuiCol.ButtonHovered, 0 );
 
-		ImGui.imageButton(sceneRT, { x: size.x , y: size.x }, null, null, 0 );
+		var texSize: ImVec2 = {x: size.x, y: size.y};
+		texSize.x -= style.WindowPadding.x * 2;
+		texSize.y -= style.WindowPadding.y * 2;
+
+		resizeRT(texSize);
+
+		ImGui.imageButton(sceneRT, texSize, null, null, 0 );
 
 		ImGui.popStyleColor();
 		ImGui.popStyleColor();

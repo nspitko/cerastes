@@ -140,8 +140,11 @@ class Utils
 		#end
 	}
 
-	public static inline function assert( condition: Bool, msg: String, ?pos:haxe.PosInfos )
+	public static inline function assert( condition: Bool, ?msg: String, ?pos:haxe.PosInfos )
 	{
+		if( msg == null )
+			msg = "Assertion failed";
+
 		if( !condition )
 		{
 			writeLog('Assertion failed: ${msg} ', ASSERT, pos);

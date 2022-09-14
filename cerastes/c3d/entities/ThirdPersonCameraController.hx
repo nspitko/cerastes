@@ -1,5 +1,6 @@
 package cerastes.c3d.entities;
 
+import cerastes.c3d.Vec3;
 import cerastes.macros.Metrics;
 import cerastes.c3d.Entity.EntityData;
 import h3d.col.Point;
@@ -17,7 +18,7 @@ class ThirdPersonPlayerController extends PlayerController
 
 	var lastX = 0;
 	var lastY = 0;
-	var cameraPos: Vector = new Vector(-128,0,60);
+	var cameraPos: Vec3 = new Vec3(-128,0,60);
 
 	var rotationX: Float = 0;
 	var rotationY: Float = 0;
@@ -138,7 +139,7 @@ class ThirdPersonPlayerController extends PlayerController
 
 
 		// update camera from new player position
-		var m = q.toMatrix();
+		var m: cerastes.c3d.Matrix = q.toMatrix();
 		m.setPosition( player.getTransform().getPosition() );
 
 		// Trace back to our target pos, find the closest point we can get before hitting a wall
@@ -147,7 +148,7 @@ class ThirdPersonPlayerController extends PlayerController
 
 		var playerPos = new Vector(player.x, player.y, player.z + cameraPos.z);
 
-		cameraOffset.transform(m);
+		cameraOffset *= m;
 
 		//DebugDraw.lineV(cameraOffset, playerPos);
 

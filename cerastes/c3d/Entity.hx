@@ -1,5 +1,6 @@
 package cerastes.c3d;
 
+import cerastes.c3d.Vec3;
 import h3d.Vector;
 import h3d.col.Point;
 import h3d.scene.Object;
@@ -86,8 +87,8 @@ class BaseEntity extends Object implements cerastes.Entity
 	public var world(get, null): cerastes.c3d.World;
 	#if bullet
 	public var body: cerastes.c3d.BulletBody = null;
-	public var bodyOrigin = new Vector(0,0,0);
-	public var bodyOffset = new Vector(0,0,0);
+	public var bodyOrigin = new Vec3(0,0,0);
+	public var bodyOffset = new Vec3(0,0,0);
 	#end
 
 	//@:noCompletion var subclassData: EntitySubclassData;

@@ -1,13 +1,12 @@
 package cerastes.c3d.entities;
 
 
+import cerastes.c3d.Vec3;
 import cerastes.c3d.Entity.EntitySubclassData;
 import cerastes.c3d.entities.ThirdPersonCameraController.ThirdPersonPlayerController;
 import cerastes.c3d.Entity.EntityData;
 import bullet.Constants.CollisionFlags;
-import h3d.Vector;
 import h3d.scene.RenderContext;
-import h3d.col.Point;
 
 @qClass(
 	{
@@ -52,13 +51,13 @@ class Player extends KinematicActor
 {
 	var controller: PlayerController;
 
-	var eyePos: Vector;
+	var eyePos: Vec3;
 
 	public override function onCreated(  def: EntityData )
 	{
 		super.onCreated( def );
 
-		eyePos = new Vector(0,0,32);
+		eyePos = new Vec3(0,0,32);
 
 		//var d = getSubclassData();
 		//trace(d.speed);

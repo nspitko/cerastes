@@ -52,6 +52,7 @@ class HMDOut {
 			var hasJoints = accList[JOINTS] != -1;
 			var hasWeights = accList[WEIGHTS] != -1;
 			var hasIndices = accList[INDICES] != -1;
+			var hasTangents = accList[TAN] != -1;
 
 			// We do not support generating normals on models that use indices (yet)
 			Debug.assert(hasNorm || !hasIndices);
@@ -59,11 +60,20 @@ class HMDOut {
 			Debug.assert(hasJoints == hasWeights);
 
 			var posAcc = gltfData.accData[accList[POS]];
+			var normAcc = gltfData.accData[accList[NOR]];
+			var uvAcc = gltfData.accData[accList[TEX]];
+			var tanAcc = gltfData.accData[accList[TAN]];
 
 			var genNormals = null;
 			if (!hasNorm) {
 				genNormals = generateNormals(posAcc);
 			}
+
+			if( !hasTangents )
+				throw "!! No tangents!!";
+
+			//var tangents = generateTangents(posAcc, normAcc, uvAcc);
+
 
 			var norAcc = gltfData.accData[accList[NOR]];
 			var texAcc = gltfData.accData[accList[TEX]];
@@ -92,6 +102,21 @@ class HMDOut {
 					outBytes.writeFloat(norm.z);
 				}
 
+				if( hasTangents )
+				{
+					outBytes.writeFloat(Util.getFloat(gltfData, tanAcc, i, 0));
+					outBytes.writeFloat(Util.getFloat(gltfData, tanAcc, i, 1));
+					outBytes.writeFloat(Util.getFloat(gltfData, tanAcc, i, 2));
+				}
+				else
+				{
+					// Reserve space for tangent data (We'll optionally fix it up later
+					outBytes.writeFloat(0);
+					outBytes.writeFloat(0);
+					outBytes.writeFloat(0);
+				}
+
+
 				// Tex coord data
 				if (hasTex) {
 					outBytes.writeFloat(Util.getFloat(gltfData, texAcc, i, 0));
@@ -101,33 +126,21 @@ class HMDOut {
 					outBytes.writeFloat(0.5);
 				}
 
-				// Note: Heaps currently only supports up to
-				// 3 bones influencing a vertex at once
-				// therefore drop the 4th index and weight
-				// and renormalize the weights
-
 				if (hasJoints) {
-					for (jInd in 0...3) {
+					for (jInd in 0...4) {
 						var joint = Util.getInt(gltfData, jointAcc, i, jInd);
 						Debug.assert(joint >= 0);
 						outBytes.writeByte(joint);
 					}
-					outBytes.writeByte(0);
+					//outBytes.writeByte(0);
 				}
 				if (hasWeights) {
-					var weights =[];
-					var sum = 0.0;
-					for (wInd in 0...3) {
+					for (wInd in 0...4) {
 						var wVal = Util.getFloat(gltfData, weightAcc, i, wInd);
 						Debug.assert(!Math.isNaN(wVal));
-						weights.push(wVal);
-						sum+=wVal;
-					}
 
-					outBytes.writeFloat(weights[0]/sum);
-					outBytes.writeFloat(weights[1]/sum);
-					outBytes.writeFloat(weights[2]/sum);
-					outBytes.writeFloat(0);
+						outBytes.writeFloat(wVal);
+					}
 				}
 			}
 		}
@@ -171,11 +184,12 @@ class HMDOut {
 				geoMaterials.push(geoMats);
 				geo.props = null;
 				geo.vertexCount = posAcc.count;
-				geo.vertexStride = 8;
+				geo.vertexStride = 11;
 
 				geo.vertexFormat = [];
 				geo.vertexFormat.push(new GeometryFormat("position", DVec3));
 				geo.vertexFormat.push(new GeometryFormat("normal", DVec3));
+				geo.vertexFormat.push(new GeometryFormat("tangent", DVec3));
 				geo.vertexFormat.push(new GeometryFormat("uv", DVec2));
 				geo.vertexPosition = dataPos[accSet];
 				geo.bounds = bounds[accSet];
@@ -190,7 +204,7 @@ class HMDOut {
 				var mesh = gltfData.meshes[meshInd];
 
 				// @todo
-				//var tangents = buildTangents(mesh);
+
 
 
 				var indexList = [];
@@ -422,10 +436,39 @@ class HMDOut {
 		return ret;
 	}
 
+	function makePosition( m : h3d.Matrix ) {
+		var p = new Position();
+		var s = m.getScale();
+		var q = new h3d.Quat();
+		q.initRotateMatrix(m);
+		q.normalize();
+		if( q.w < 0 ) q.negate();
+		p.sx = round(s.x);
+		p.sy = round(s.y);
+		p.sz = round(s.z);
+		p.qx = round(q.x);
+		p.qy = round(q.y);
+		p.qz = round(q.z);
+		p.x = round(m._41);
+		p.y = round(m._42);
+		p.z = round(m._43);
+		return p;
+	}
+
+	/**
+		Keep high precision values. Might increase animation data size and compressed size.
+	**/
+	public var highPrecision : Bool = false;
+
+	function round(v:Float) {
+		if( v != v ) throw "NaN found";
+		return highPrecision ? v : std.Math.fround(v * 131072) / 131072;
+	}
+
 	function buildSkin(skin:SkinData, nodeName): hxd.fmt.hmd.Data.Skin {
 		var ret = new hxd.fmt.hmd.Data.Skin();
 		ret.name = (skin.skeleton != null ? gltfData.nodes[skin.skeleton].name : nodeName) + "_skin";
-		ret.props = null;
+		ret.props = [FourBonesByVertex]; // @todo should this go here or in sj?
 		ret.split = null;
 		ret.joints = [];
 		for (i in 0...skin.joints.length) {
@@ -441,10 +484,23 @@ class HMDOut {
 			// Get invBindMatrix
 			var invBindMat = Util.getMatrix(gltfData,gltfData.accData[skin.invBindMatAcc], i);
 			sj.transpos = Util.posFromMatrix(invBindMat);
+			// Copied from the FBX loader... Oh no......
+			if( sj.transpos.sx != 1 || sj.transpos.sy != 1 || sj.transpos.sz != 1 ) {
+				// FIX : the scale is not correctly taken into account, this formula will extract it and fix things
+				var tmp = Util.posFromMatrix(invBindMat).toMatrix();
+				tmp.transpose();
+				var s = tmp.getScale();
+				tmp.prependScale(1 / s.x, 1 / s.y, 1 / s.z);
+				tmp.transpose();
+				sj.transpos = makePosition(tmp);
+				sj.transpos.sx = round(s.x);
+				sj.transpos.sy = round(s.y);
+				sj.transpos.sz = round(s.z);
+			}
 			// Ensure this matrix converted to a 'Position' correctly
 			var testMat = sj.transpos.toMatrix();
 			//var testPos = Position.fromMatrix(testMat);
-			Debug.assert(Util.matNear(invBindMat, testMat));
+			//Debug.assert(Util.matNear(invBindMat, testMat));
 
 			ret.joints.push(sj);
 		}
@@ -505,16 +561,18 @@ class HMDOut {
 		}
 		return ret;
 	}
-/*
-	function buildTangents( geom : MeshData ) {
-		var verts = geom.getVertices();
-		var normals = geom.getNormals();
-		var uvs = geom.getUVs();
-		var index = geom.getIndexes();
 
+	function generateTangents( posAcc: BuffAccess, normAcc: BuffAccess, uvAcc: BuffAccess ) : Array<Vector>
+	{
+		/*
 		#if (hl && !hl_disable_mikkt && (haxe_ver >= "4.0"))
+		Debug.assert(posAcc.count % 3 == 0);
+		Debug.assert(normAcc.count % 3 == 0);
+
+
+
 		var m = new hl.Format.Mikktspace();
-		m.buffer = new hl.Bytes(8 * 4 * index.vidx.length);
+		m.buffer = new hl.Bytes(8 * 4 * posAcc.count);
 		m.stride = 8;
 		m.xPos = 0;
 		m.normalPos = 3;
@@ -529,6 +587,41 @@ class HMDOut {
 		m.tangentPos = 0;
 
 		var out = 0;
+
+
+		for (i in 0...posAcc.count) {
+			// Position data
+			var x = Util.getFloat(gltfData, posAcc, i, 0);
+			outBytes.writeFloat(x);
+			var y = Util.getFloat(gltfData, posAcc, i, 1);
+			outBytes.writeFloat(y);
+			var z = Util.getFloat(gltfData, posAcc, i, 2);
+			outBytes.writeFloat(z);
+			bb.addPos(x, y, z);
+
+			// Normal data
+			if (hasNorm) {
+				outBytes.writeFloat(Util.getFloat(gltfData, norAcc, i, 0));
+				outBytes.writeFloat(Util.getFloat(gltfData, norAcc, i, 1));
+				outBytes.writeFloat(Util.getFloat(gltfData, norAcc, i, 2));
+			} else {
+				var norm = genNormals[Std.int(i/3)];
+				outBytes.writeFloat(norm.x);
+				outBytes.writeFloat(norm.y);
+				outBytes.writeFloat(norm.z);
+			}
+
+			// Tex coord data
+			if (hasTex) {
+				outBytes.writeFloat(Util.getFloat(gltfData, texAcc, i, 0));
+				outBytes.writeFloat(Util.getFloat(gltfData, texAcc, i, 1));
+			} else {
+				outBytes.writeFloat(0.5);
+				outBytes.writeFloat(0.5);
+			}
+		}
+
+
 		for( i in 0...index.vidx.length ) {
 			var vidx = index.vidx[i];
 			m.buffer[out++] = verts[vidx*3];
@@ -598,8 +691,10 @@ class HMDOut {
 		throw "Tangent generation is not supported on this platform";
 		return ([] : Array<Float>);
 		#end
+		*/
+		return null;
 	}
-*/
+
 
 	public static function emitHMD(name:String, relDir:String, data: Data) {
 		var out = new HMDOut(name, relDir,data);

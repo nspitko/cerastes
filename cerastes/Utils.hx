@@ -397,7 +397,7 @@ class Utils
 
 
 			// Add res path if it's missing
-			var resPos = path.indexOf(resDir);
+			var resPos = path.indexOf('/$resDir/');
 			if( resPos == -1 )
 			{
 				path = Path.join([resDir,path]);

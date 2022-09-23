@@ -118,7 +118,7 @@ class ModelDef
 			{
 				var prim = @:privateAccess library.makePrimitive(m.geometry);
 
-				if( false && m.skin != null )
+				if( m.skin != null )
 				{
 					var skinData = @:privateAccess library.makeSkin(m.skin, library.header.geometries[m.geometry]);
 					skinData.primitive = prim;
@@ -144,7 +144,7 @@ class ModelDef
 				obj.rotate( rotation.x * r, rotation.y * r, rotation.z * r );
 
 			// Test for 0 for back compat. Can be removed later.
-			if( scale > 0 )
+			if( scale > 0 && scale != 1 )
 				obj.scale( scale );
 
 			objs.push( obj );

@@ -103,6 +103,11 @@ import hxd.res.Resource;
 	public var maxWidth: Int = -1;
 	public var maxHeight: Int = -1;
 
+	public var paddingTop: Int = 0;
+	public var paddingRight: Int = 0;
+	public var paddingBottom: Int = 0;
+	public var paddingLeft: Int = 0;
+
 	public var horizontalSpacing: Int = 0;
 	public var verticalSpacing: Int = 0;
 
@@ -354,6 +359,11 @@ class CUIResource extends Resource
 
 				o.borderWidth = e.borderWidth;
 				o.borderHeight = e.borderHeight;
+
+				o.paddingLeft = e.paddingLeft;
+				o.paddingRight = e.paddingRight;
+				o.paddingTop = e.paddingTop;
+				o.paddingBottom = e.paddingBottom;
 
 				o.multiline = e.multiline;
 

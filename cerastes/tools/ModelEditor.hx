@@ -122,6 +122,7 @@ class ModelEditor extends ImguiTool
 
 		//openFile("mdl/kronii.model");
 		openFile("models/placeholder/vanguard_gltf.model");
+		//openFile("models/placeholder/vanguard.model");
 
 
 	}
@@ -150,10 +151,8 @@ class ModelEditor extends ImguiTool
 		sceneRT.depthBuffer = new DepthBuffer( CMath.floor( newSize.x ), CMath.floor( newSize.y ) );
 	}
 
-	function rebuildPreview()
+	public static function buildModelPreview(scene: h3d.scene.Scene, def: ModelDef)
 	{
-		preview.removeChildren();
-
 		//Create an environment map texture
 		var envMap = new h3d.mat.Texture(512, 512, [Cube]);
 
@@ -169,35 +168,36 @@ class ModelEditor extends ImguiTool
 		set(3, hxd.Res.tex.left);
 		set(4, hxd.Res.tex.top);
 		set(5, hxd.Res.tex.bottom);
-		#end
 
-		#if pbr
 		//Create a new environment that we can use to control some of the material behavior
 		var env = new h3d.scene.pbr.Environment(envMap);
 		env.compute();
 
 		//Set the environment on the custom PBR renderer
 
-		var renderer = cast(preview.renderer, h3d.scene.pbr.Renderer);
+		var renderer = cast(scene.renderer, h3d.scene.pbr.Renderer);
 		renderer.env = env;
 
 		//sys.io.File.saveContent("res/mat/ribbed-chipped-metal.material", cerastes.file.CDPrinter.print( matDef ) );
 
 
 		//var cubeShader = bg.material.mainPass.addShader(new h3d.shader.pbr.CubeLod(env.env));
-		var light = new h3d.scene.pbr.PointLight(preview);
+		var light = new h3d.scene.pbr.PointLight(scene);
 		light.setPosition(30, 10, 40);
 		light.range = 100;
 		light.power = 8;
 		#else
 
-		cast( preview.lightSystem, h3d.scene.fwd.LightSystem).ambientLight.set(1,1,1,1);
+		//cast( scene.lightSystem, h3d.scene.fwd.LightSystem).ambientLight.set(1,1,1,1);
+		var light = new h3d.scene.fwd.PointLight(scene);
+		light.setPosition(30, 10, 40);
+		light.params.z /= 300 * 10;
 		#end
 
 
-		modelObject = modelDef.toObject(preview);
+		var modelObject = def.toObject(scene);
 		// Draw axis
-		var g = new h3d.scene.Graphics( preview );
+		var g = new h3d.scene.Graphics( scene );
 
 		var lineSize = 1;
 
@@ -234,8 +234,17 @@ class ModelEditor extends ImguiTool
 
 
 		//trace(preview.camera.pos);
-		preview.camera.pos.set(20,-30,40);
-		preview.camera.target.set(0,0,8);
+		scene.camera.pos.set(20,-30,40);
+		scene.camera.target.set(0,0,8);
+
+		return modelObject;
+	}
+
+	function rebuildPreview()
+	{
+		preview.removeChildren();
+
+		modelObject = buildModelPreview( preview, modelDef );
 
 		cameraController = new h3d.scene.CameraController(preview);
 		cameraController.loadFromCamera();
@@ -393,7 +402,7 @@ class ModelEditor extends ImguiTool
 
 		ImGui.endChild();
 
-		var newFile = IG.inputFile( 'Add Library', "", "models/", "fbx", false, true );
+		var newFile = IG.inputFile( 'Add Library', "", "models/", "glb", false, true );
 		if( newFile != null )
 		{
 			modelDef.libraries.push(newFile);
@@ -524,6 +533,7 @@ class ModelEditor extends ImguiTool
 							var anim = modelLibrary.loadAnimation( a.name );
 							modelObject.playAnimation( anim );
 
+
 							selectedObject = anim;
 							selectedObjectType = Animation;
 						}
@@ -534,7 +544,7 @@ class ModelEditor extends ImguiTool
 				// Additionally, load in animations from sub-libraries
 				for( l in modelDef.libraries )
 				{
-					try
+					//try
 					{
 						var res = hxd.Res.loader.loadCache( l, Model );
 						var lib = res.toHmd();
@@ -556,12 +566,14 @@ class ModelEditor extends ImguiTool
 						}
 
 					}
+					/*
 					catch( e )
 					{
 						ImGuiToolManager.showPopup("Invalid Library",'${l} could not be loaded.\nReason: ${e}', ImGuiPopupType.Error );
 						modelDef.libraries.remove(l);
 						break;
 					}
+					*/
 
 				}
 

@@ -44,6 +44,9 @@ class CDParser {
 			switch (c) {
 				case ' '.code, '\r'.code, '\n'.code, '\t'.code:
 				// loop
+				case '/'.code:
+					// Comment
+					parseComment();
 				case '{'.code:
 
 					if( assumeType != null )
@@ -64,6 +67,9 @@ class CDParser {
 						switch (c) {
 							case ' '.code, '\r'.code, '\n'.code, '\t'.code:
 							// loop
+							case '/'.code:
+								// Comment
+								parseComment();
 							case '}'.code:
 								if (field.length > 0 )
 									invalidChar();
@@ -138,6 +144,9 @@ class CDParser {
 					while (true) {
 						var c = nextChar();
 						switch (c) {
+							case '/'.code:
+								// Comment
+								parseComment();
 							case ' '.code, '\r'.code, '\n'.code, '\t'.code:
 							// loop
 							case '}'.code:
@@ -476,6 +485,14 @@ class CDParser {
 		return StringTools.fastCodeAt(str, pos++);
 	}
 
+	inline function parseComment() {
+		while (true) {
+			var c = nextChar();
+			if( c == '\n'.code )
+				break;
+		}
+	}
+
 	inline function nextCharNonWS() {
 		var r;
 		do
@@ -491,7 +508,7 @@ class CDParser {
 		do
 		{
 			r = StringTools.fastCodeAt(str, pos++);
-		} while( r == ' '.code || r == '\r'.code || r == '\n'.code || r == '\t'.code );
+		} while( r == ' '.code || r == '\r'.code || r == '\n'.code || r == '\t'.code || r == ','.code );
 		pos--;
 	}
 

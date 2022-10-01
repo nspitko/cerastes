@@ -938,6 +938,11 @@ class UIEditor extends ImguiTool
 				IG.wref( ImGui.inputInt("Vertical Spacing",_,1,10), d.verticalSpacing );
 				IG.wref( ImGui.inputInt("Horizontal Spacing",_,1,10), d.horizontalSpacing );
 
+				IG.wref( ImGui.inputInt("Padding Top",_,1,10), d.paddingTop );
+				IG.wref( ImGui.inputInt("Padding Bottom",_,1,10), d.paddingBottom );
+				IG.wref( ImGui.inputInt("Padding Left",_,1,10), d.paddingLeft );
+				IG.wref( ImGui.inputInt("Padding Right",_,1,10), d.paddingRight );
+
 				var newTile = IG.inputTile( "Background Tile", d.backgroundTile );
 				if( newTile != null )
 					d.backgroundTile = newTile;

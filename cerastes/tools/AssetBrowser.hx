@@ -1,5 +1,7 @@
 package cerastes.tools;
 
+import cerastes.c3d.Model.ModelDef;
+import cerastes.c3d.Material.MaterialDef;
 import cerastes.file.CDParser;
 import cerastes.flow.Flow.FlowFile;
 import cerastes.data.Nodes.NodeKind;
@@ -67,6 +69,7 @@ class AssetBrowser  extends  ImguiTool
 		"Texture Atlas" => true,
 		"Material" => true,
 		"Others" => false,
+		"Raw Model" => false,
 	];
 
 	public static var needsReload = false;
@@ -144,6 +147,46 @@ class AssetBrowser  extends  ImguiTool
 				asset.scene = new h2d.Scene();
 				asset.texture = hxd.Res.load( asset.file ).toTexture();
 				asset.dirty = false;
+
+			case "material":
+				asset.scene3d = new h3d.scene.Scene();
+
+				var def =  cerastes.file.CDParser.parse( hxd.Res.loader.load( asset.file ).entry.getText(), MaterialDef );
+				cerastes.tools.MaterialEditor.buildMaterialPreview( asset.scene3d, def );
+
+				asset.texture = new Texture(previewWidth,previewHeight, [Target] );
+
+
+				// Label
+				var t = new h2d.Text( hxd.Res.fnt.kodenmanhou16.toFont(), asset.scene);
+
+				t.text = Path.withoutDirectory( Path.withoutExtension(asset.file) );
+				t.textAlign = Center;
+				t.maxWidth = previewWidth - 8;
+				t.x = 4;
+				t.y = 4;
+				t.color = Vector.fromColor( getTypeColor(asset.file) );
+				t.dropShadow = { dx:1, dy : 1, color : 0, alpha : 1 };
+
+			case "model":
+				asset.scene3d = new h3d.scene.Scene();
+
+				var def =  cerastes.file.CDParser.parse( hxd.Res.loader.load( asset.file ).entry.getText(), ModelDef );
+				cerastes.tools.ModelEditor.buildModelPreview( asset.scene3d, def );
+
+				asset.texture = new Texture(previewWidth,previewHeight, [Target] );
+
+
+				// Label
+				var t = new h2d.Text( hxd.Res.fnt.kodenmanhou16.toFont(), asset.scene);
+
+				t.text = Path.withoutDirectory( Path.withoutExtension(asset.file) );
+				t.textAlign = Center;
+				t.maxWidth = previewWidth - 8;
+				t.x = 4;
+				t.y = 4;
+				t.color = Vector.fromColor( getTypeColor(asset.file) );
+				t.dropShadow = { dx:1, dy : 1, color : 0, alpha : 1 };
 
 			case "fnt":
 				asset.scene = new h2d.Scene();
@@ -259,15 +302,22 @@ class AssetBrowser  extends  ImguiTool
 				asset.scene = new h2d.Scene();
 				var res = new cerastes.fmt.CUIResource( hxd.Res.loader.load(asset.file).entry );
 
-				var obj = res.toObject();
+				try
+				{
+					var obj = res.toObject();
 
-				var scale = previewWidth / viewportWidth;
-				obj.scale( scale );
+					var scale = previewWidth / viewportWidth;
+					obj.scale( scale );
 
-				var offsetY = ( ( viewportWidth - viewportHeight ) / 2 ) * scale;
-				obj.y = offsetY;
+					var offsetY = ( ( viewportWidth - viewportHeight ) / 2 ) * scale;
+					obj.y = offsetY;
 
-				asset.scene.addChild( obj );
+					asset.scene.addChild( obj );
+				}
+				catch( e )
+				{
+					
+				}
 
 				var t = new h2d.Text( hxd.Res.fnt.kodenmanhou16.toFont(), asset.scene);
 
@@ -340,12 +390,19 @@ class AssetBrowser  extends  ImguiTool
 				t.color = Vector.fromColor( getTypeColor(asset.file) );
 				t.dropShadow = { dx:1, dy : 1, color : 0, alpha : 1 };
 
-			case "fbx_disabled":
-				asset.scene3d = new h3d.scene.Scene();
-				var cache = new h3d.prim.ModelCache();
-				var newObject = cache.loadModel( hxd.Res.loader.load( asset.file ).toModel() );
-				asset.scene3d.addChild( newObject);
-				asset.texture = new Texture(previewWidth,previewHeight, [Target] );
+			case "fbx" | "glb":
+				try
+				{
+					asset.scene3d = new h3d.scene.Scene();
+					var cache = new h3d.prim.ModelCache();
+					var newObject = cache.loadModel( hxd.Res.loader.load( asset.file ).toModel() );
+					asset.scene3d.addChild( newObject);
+					asset.texture = new Texture(previewWidth,previewHeight, [Target] );
+				}
+				catch( e )
+				{
+
+				}
 
 				var t = new h2d.Text( hxd.Res.fnt.kodenmanhou16.toFont(), asset.scene);
 
@@ -584,6 +641,9 @@ class AssetBrowser  extends  ImguiTool
 			case "material":
 				var t: MaterialEditor = cast ImGuiToolManager.showTool("MaterialEditor");
 				t.openFile( asset.file );
+			case "model":
+				var t: ModelEditor = cast ImGuiToolManager.showTool("ModelEditor");
+				t.openFile( asset.file );
 			case "wav" | "ogg" | "mp3":
 				hxd.Res.load( asset.file ).toSound().play();
 		}
@@ -720,7 +780,8 @@ class AssetBrowser  extends  ImguiTool
 			#end
 			case "csd": "Sprite";
 			case "atlas": "Texture Atlas";
-			case "fbx": "Model";
+			case "fbx" | "glb": "Raw Model";
+			case "model": "Model";
 			case "audio": "Audio Cue Sheet";
 			#if cannonml
 			case "cml": "Cannon Bullet File";
@@ -741,15 +802,22 @@ class AssetBrowser  extends  ImguiTool
 			if( !target.dirty && !target.alwaysUpdate )
 				continue;
 
-			target.texture.clear( 0 );
+			try
+			{
+				target.texture.clear( 0 );
 
-			e.pushTarget( target.texture );
-			e.clear(0,1);
-			if( target.scene != null )
-				target.scene.render(e);
-			if( target.scene3d != null )
-				target.scene3d.render(e);
-			e.popTarget();
+				e.pushTarget( target.texture );
+				e.clear(0,1);
+				if( target.scene != null )
+					target.scene.render(e);
+				if( target.scene3d != null )
+					target.scene3d.render(e);
+				e.popTarget();
+			}
+			catch(e )
+			{
+
+			}
 
 			target.dirty = false;
 		}

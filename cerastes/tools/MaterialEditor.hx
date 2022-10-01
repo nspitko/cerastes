@@ -99,10 +99,8 @@ class MaterialEditor extends ImguiTool
 		}
 	}
 
-	function rebuildPreview()
+	public static function buildMaterialPreview( scene: h3d.scene.Scene, def: MaterialDef )
 	{
-		preview.removeChildren();
-
 		var sphere = new h3d.prim.Sphere( 1, 128, 128, 1);
 		//sphere.unindex();
 		sphere.addNormals();
@@ -111,7 +109,7 @@ class MaterialEditor extends ImguiTool
 
 		// Create env
 		//Create a background mesh
-		var bg = new h3d.scene.Mesh(sphere, preview);
+		var bg = new h3d.scene.Mesh(sphere, scene);
 		bg.scale(10);
 		//Make sure it is always rendered
 		bg.material.mainPass.culling = Front;
@@ -147,7 +145,7 @@ class MaterialEditor extends ImguiTool
 
 		//sys.io.File.saveContent("res/mat/ribbed-chipped-metal.material", cerastes.file.CDPrinter.print( matDef ) );
 
-		previewMesh = new Mesh(sphere, materialDef.toMaterial(), preview);
+		var previewMesh = new Mesh(sphere, def.toMaterial(), scene);
 
 		//var cubeShader = bg.material.mainPass.addShader(new h3d.shader.pbr.CubeLod(env.env));
 		#if pbr
@@ -156,11 +154,20 @@ class MaterialEditor extends ImguiTool
 		light.range = 100;
 		light.power = 8;
 		#else
-		var light = new h3d.scene.fwd.PointLight(preview);
+		var light = new h3d.scene.fwd.PointLight(scene);
 		light.params.z /= 200;
 		#end
 
 		light.setPosition(-3, 15, 10);
+
+		return previewMesh;
+	}
+
+	function rebuildPreview()
+	{
+		preview.removeChildren();
+
+		previewMesh = buildMaterialPreview( preview, materialDef );
 
 
 

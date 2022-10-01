@@ -55,7 +55,9 @@ class DebugDraw
 		{
 			g = new Graphics();
 
+			#if debugUseOverlay
 			g.material.mainPass.setPassName("overlay");
+			#end
 			g.material.mainPass.depthTest = Always;
 
 			cube = new h3d.prim.Cube(1,1,1,true);

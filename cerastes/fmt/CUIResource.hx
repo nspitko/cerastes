@@ -472,7 +472,7 @@ class CUIResource extends Resource
 			return null;
 
 		if(file.charAt(0) == "#" )
-			return Tile.fromColor( Std.parseInt( file.substr(1) ) );
+			return Tile.fromColor( Std.parseInt( '0x${file.substr(1)}' ) );
 		else if ( file.indexOf(".atlas") != -1 )
 		{
 			var atlasPos = file.indexOf(".atlas") + 6;

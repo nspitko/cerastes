@@ -39,6 +39,8 @@ class Button extends h2d.Flow
 	public var disabledColor: Vector = new Vector(1,1,1,1); // Replaces defaultColor if disabled = true
 
 	public var onActivate : (hxd.Event) -> Void;
+	public var onMouseOver : (hxd.Event) -> Void;
+	public var onMouseOut : (hxd.Event) -> Void;
 
 	public var orientation(default, set): Orientation = None;
 
@@ -179,9 +181,15 @@ class Button extends h2d.Flow
 		//this.interactive.onClick = function(_) onClick();
 		this.interactive.onOver = function(_) {
 			state = Hover;
+
+			if( onMouseOver != null && alpha > 0 )
+				onMouseOver(_);
 		}
 		this.interactive.onOut = function(_) {
 			state = Default;
+
+			if( onMouseOut != null && alpha > 0 )
+				onMouseOut(_);
 		}
 		this.interactive.onPush = function(_) {
 			state = Press;

@@ -4,10 +4,21 @@ import haxe.Json;
 import cerastes.Utils.*;
 
 
-abstract LocalizedString(String) from String to String
+abstract LocalizedString(String) from String
 {
-	inline public function new(i:String) {
-		this = LocalizationManager.localize(i);
+	inline public function new(i:String)  {
+		this = i;
+	}
+
+	inline public function get(...rest: String)
+	{
+		return LocalizationManager.formatStr(this, rest.toArray());
+	}
+
+	@:to
+	public inline function toStringg(): String
+	{
+		return LocalizationManager.localize(this);
 	}
 }
 
@@ -43,7 +54,6 @@ class LocalizationManager
 		//var str = ~/^[\t ]+|[\t ]+$/gm.replace( key, "");
 		if( Utils.assert( token != null, "Tried to localized null string as token!" ) )
 			return "null";
-
 
 		return formatStr(token, rest.toArray());
 	}

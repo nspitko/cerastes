@@ -408,7 +408,7 @@ class ImGuiTools {
 			ImGui.endTooltip();
 		}
 
-		if( newTile != null && hxd.Res.loader.exists( newTile ) )
+		if( newTile != null && Utils.isValidTexture(newTile) )
 			return newTile;
 
 		if( ImGui.beginDragDropTarget() )

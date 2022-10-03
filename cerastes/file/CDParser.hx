@@ -514,7 +514,21 @@ class CDParser {
 
 	function invalidChar() {
 		pos--; // rewind
-		throw 'Invalid char ${str.charAt(pos)} (${StringTools.fastCodeAt(str, pos)}) at position ${pos}';
+		var line = 1;
+		var linePos = 0;
+
+		while( true )
+		{
+			var next = str.indexOf("\n", linePos+1 );
+			if( next != -1 && next < pos )
+			{
+				linePos = next;
+				line++;
+			}
+			else break;
+		}
+
+		throw 'Invalid char ${str.charAt(pos)} (${StringTools.fastCodeAt(str, pos)}) in at position ${line}:${pos-linePos}';
 	}
 
 	function invalidNumber(start:Int) {

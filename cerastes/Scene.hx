@@ -1,5 +1,7 @@
 package cerastes;
 
+import h2d.Bitmap;
+import h3d.mat.Texture;
 import cerastes.macros.Callbacks.ClassKey;
 import cerastes.ui.Console.GlobalConsole;
 import hxd.fmt.fbx.BaseLibrary.TmpObject;
@@ -14,6 +16,9 @@ class Scene
 	public var s2d(default,null) : h2d.Scene;
 
     var trackedCallbacks = new Array<(ClassKey -> Bool)>();
+
+    var rtScaled: Texture;
+    var s2dScaled: h2d.Scene;
 
     public function new( a : Main )
     {
@@ -74,7 +79,16 @@ class Scene
 		}
         if( scale != null ) viewportScale = Std.parseInt(scale);
 
-		s2d.scaleMode = ScaleMode.Stretch(Math.floor( viewportWidth / viewportScale ), Math.floor( viewportHeight / viewportScale ));
+        if(  viewportScale > 1 )
+        {
+            s2d.scaleMode = ScaleMode.Zoom(viewportScale);
+            rtScaled = new Texture(Math.floor( viewportWidth / viewportScale ),Math.floor( viewportHeight / viewportScale ), [Target] );
+            s2dScaled = new h2d.Scene();
+            s2dScaled.scaleMode = ScaleMode.Zoom(viewportScale);
+            new Bitmap( h2d.Tile.fromTexture( rtScaled ), s2dScaled );
+        }
+        else
+	        s2d.scaleMode = ScaleMode.Stretch(Math.floor( viewportWidth / viewportScale ), Math.floor( viewportHeight / viewportScale ));
     }
 
     public function disableEvents()
@@ -106,8 +120,25 @@ class Scene
      */
     public function render(e:h3d.Engine)
     {
-        s3d.render(e);
-        s2d.render(e);
+
+
+        if( s2dScaled != null )
+        {
+            app.engine.pushTarget( rtScaled );
+            app.engine.clear(0,1);
+            s3d.render(e);
+            s2d.render(e);
+            app.engine.popTarget();
+
+            s2dScaled.render(e);
+        }
+        else
+        {
+            s3d.render(e);
+            s2d.render(e);
+        }
+
+
 
     }
 
@@ -185,7 +216,9 @@ class Scene
         other.enter();
 
 
-        this.unload();
+        // Delay this until after tick
+        new Timer(0, () -> { this.unload(); });
+
     }
 
 

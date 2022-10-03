@@ -18,6 +18,7 @@ import imgui.ImGuiDrawable;
 import imgui.ImGuiDrawable.ImGuiDrawableBuffers;
 import imgui.ImGui;
 
+import imgui.ImGuiMacro.wref;
 
 @:keep
 class Console extends ImguiTool
@@ -50,7 +51,7 @@ class Console extends ImguiTool
 		ImGui.setNextWindowSize( { x: 400, y: 250 }, ImGuiCond.FirstUseEver );
 		ImGui.begin("\uf120 Console");
 
-		if( IG.wref( ImGui.inputTextWithHint("##filter","Filter...",_ ), filter ) )
+		if( wref( ImGui.inputTextWithHint("##filter","Filter...",_ ), filter ) )
 		{
 			/// Update filter...
 		}
@@ -65,7 +66,7 @@ class Console extends ImguiTool
 		var command = "";
 
 		var flags = ImGuiInputTextFlags.CallbackCompletion | ImGuiInputTextFlags.EnterReturnsTrue | ImGuiInputTextFlags.CallbackHistory;
-		if( IG.wref( ImGui.inputTextWithHint("##command","Command",_, flags, commandHint ), command ) )
+		if( wref( ImGui.inputTextWithHint("##command","Command",_, flags, commandHint ), command ) )
 		{
 			runCommand( command );
 			ImGui.setKeyboardFocusHere(-1);
@@ -278,18 +279,18 @@ class Console extends ImguiTool
 	function buttonRow()
 	{
 		// Filters
-		IG.wref( ImGui.checkbox("Info", _ ), showInfo );
+		wref( ImGui.checkbox("Info", _ ), showInfo );
 		ImGui.sameLine();
-		IG.wref( ImGui.checkbox("Warn", _ ), showWarn );
+		wref( ImGui.checkbox("Warn", _ ), showWarn );
 		ImGui.sameLine();
-		IG.wref( ImGui.checkbox("Error", _ ), showErr );
+		wref( ImGui.checkbox("Error", _ ), showErr );
 
 		ImGui.sameLine();
 
 		// Columns
-		IG.wref( ImGui.checkbox("Time", _ ), showTime );
+		wref( ImGui.checkbox("Time", _ ), showTime );
 		ImGui.sameLine();
-		IG.wref( ImGui.checkbox("Pos", _ ), showPos );
+		wref( ImGui.checkbox("Pos", _ ), showPos );
 
 		// Columns
 	}

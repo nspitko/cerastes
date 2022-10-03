@@ -27,6 +27,7 @@ import imgui.ImGuiDrawable;
 import imgui.ImGuiDrawable.ImGuiDrawableBuffers;
 import imgui.ImGui;
 import cerastes.tools.ImguiTools.IG;
+import imgui.ImGuiMacro.wref;
 
 @:keep
 @multiInstance(true)
@@ -537,7 +538,7 @@ class UIEditor extends ImguiTool
 			ImGui.dockBuilderRemoveNode( dockspaceId );
 			ImGui.dockBuilderAddNode( dockspaceId, flags );
 
-			var idOut: hl.Ref<ImGuiID> = dockspaceId;
+			var idOut = hl.Ref.make( dockspaceId );
 
 			dockspaceIdLeft = ImGui.dockBuilderSplitNode(idOut.get(), ImGuiDir.Left, 0.20, null, idOut);
 			dockspaceIdRight = ImGui.dockBuilderSplitNode(idOut.get(), ImGuiDir.Right, 0.3, null, idOut);
@@ -803,16 +804,16 @@ class UIEditor extends ImguiTool
 		switch( type )
 		{
 			case "h2d.Object":
-				IG.wref( ImGui.inputDouble("X",_,1,10,"%.2f"), def.x );
-				IG.wref( ImGui.inputDouble("Y",_,1,10,"%.2f"), def.y );
+				wref( ImGui.inputDouble("X",_,1,10,"%.2f"), def.x );
+				wref( ImGui.inputDouble("Y",_,1,10,"%.2f"), def.y );
 				var single: Single = def.rotation;
-				if( IG.wref( ImGui.sliderAngle("Rotation", _), single ) )
+				if( wref( ImGui.sliderAngle("Rotation", _), single ) )
 					def.rotation = single;
 
-				IG.wref( ImGui.inputDouble("Scale X",_,1,10,"%.2f"), def.scaleX );
-				IG.wref( ImGui.inputDouble("Scale Y",_,1,10,"%.2f"), def.scaleY );
+				wref( ImGui.inputDouble("Scale X",_,1,10,"%.2f"), def.scaleX );
+				wref( ImGui.inputDouble("Scale Y",_,1,10,"%.2f"), def.scaleY );
 
-				IG.wref( ImGui.checkbox( "Visible", _ ), def.visible );
+				wref( ImGui.checkbox( "Visible", _ ), def.visible );
 
 
 
@@ -845,9 +846,9 @@ class UIEditor extends ImguiTool
 
 				if( StringTools.endsWith( d.font, ".msdf.fnt" ) )
 				{
-					IG.wref( ImGui.inputInt( "Font Size", _ ), d.sdfSize );
-					IG.wref( ImGui.inputDouble( "Alpha Cutoff", _ ), d.sdfAlpha );
-					IG.wref( ImGui.inputDouble( "Smoothing", _ ), d.sdfSmoothing );
+					wref( ImGui.inputInt( "Font Size", _ ), d.sdfSize );
+					wref( ImGui.inputDouble( "Alpha Cutoff", _ ), d.sdfAlpha );
+					wref( ImGui.inputDouble( "Smoothing", _ ), d.sdfSmoothing );
 				}
 
 				var out = IG.combo("Text Align", d.textAlign, h2d.Text.Align );
@@ -856,7 +857,7 @@ class UIEditor extends ImguiTool
 
 
 				var maxWidth: Float = d.maxWidth > 0 ? d.maxWidth : 0;
-				if( IG.wref( ImGui.inputDouble("Max Width",_,1,10,"%.2f"), maxWidth ) )
+				if( wref( ImGui.inputDouble("Max Width",_,1,10,"%.2f"), maxWidth ) )
 				{
 					if( maxWidth > 0 )
 						d.maxWidth = maxWidth;
@@ -876,7 +877,7 @@ class UIEditor extends ImguiTool
 					d.tile = newTile;
 
 				var width: Float = d.width > 0 ? d.width : 0;
-				if( IG.wref( ImGui.inputDouble("Width",_,1,10,"%.2f"), width ) )
+				if( wref( ImGui.inputDouble("Width",_,1,10,"%.2f"), width ) )
 				{
 					if( width > 0 )
 						d.width = width;
@@ -885,7 +886,7 @@ class UIEditor extends ImguiTool
 				}
 
 				var height: Float = d.height > 0 ? d.height : 0;
-				if( IG.wref( ImGui.inputDouble("Height",_,1,10,"%.2f"), height ) )
+				if( wref( ImGui.inputDouble("Height",_,1,10,"%.2f"), height ) )
 				{
 					if( height > 0 )
 						d.height = height;
@@ -901,7 +902,7 @@ class UIEditor extends ImguiTool
 				if( layout != null )
 					d.layout = layout;
 
-				IG.wref( ImGui.checkbox( "Wrap", _ ), d.multiline );
+				wref( ImGui.checkbox( "Wrap", _ ), d.multiline );
 
 
 				var align = IG.combo("Vertical Align", d.verticalAlign, h2d.Flow.FlowAlign );
@@ -919,29 +920,29 @@ class UIEditor extends ImguiTool
 				var minW: Int = d.minWidth != -1 ? cast d.minWidth : 0;
 				var minH: Int = d.minHeight != -1 ? cast d.minHeight : 0;
 
-				if( IG.wref( ImGui.inputInt("Min Width",_,1,10), minW ) )
+				if( wref( ImGui.inputInt("Min Width",_,1,10), minW ) )
 					d.minWidth = minW;
 
-				if( IG.wref( ImGui.inputInt("Min Height",_,1,10), minH ) )
+				if( wref( ImGui.inputInt("Min Height",_,1,10), minH ) )
 					d.minHeight = minH;
 
 				var maxW: Int = d.maxWidth != -1 ? cast d.maxWidth : 0;
 				var maxH: Int = d.maxHeight != -1 ? cast d.maxHeight : 0;
 
-				if( IG.wref( ImGui.inputInt("Max Width",_,1,10), maxW ) )
+				if( wref( ImGui.inputInt("Max Width",_,1,10), maxW ) )
 					d.maxWidth = maxW;
 
-				if( IG.wref( ImGui.inputInt("Max Height",_,1,10), maxH ) )
+				if( wref( ImGui.inputInt("Max Height",_,1,10), maxH ) )
 					d.maxHeight = maxH;
 
 
-				IG.wref( ImGui.inputInt("Vertical Spacing",_,1,10), d.verticalSpacing );
-				IG.wref( ImGui.inputInt("Horizontal Spacing",_,1,10), d.horizontalSpacing );
+				wref( ImGui.inputInt("Vertical Spacing",_,1,10), d.verticalSpacing );
+				wref( ImGui.inputInt("Horizontal Spacing",_,1,10), d.horizontalSpacing );
 
-				IG.wref( ImGui.inputInt("Padding Top",_,1,10), d.paddingTop );
-				IG.wref( ImGui.inputInt("Padding Bottom",_,1,10), d.paddingBottom );
-				IG.wref( ImGui.inputInt("Padding Left",_,1,10), d.paddingLeft );
-				IG.wref( ImGui.inputInt("Padding Right",_,1,10), d.paddingRight );
+				wref( ImGui.inputInt("Padding Top",_,1,10), d.paddingTop );
+				wref( ImGui.inputInt("Padding Bottom",_,1,10), d.paddingBottom );
+				wref( ImGui.inputInt("Padding Left",_,1,10), d.paddingLeft );
+				wref( ImGui.inputInt("Padding Right",_,1,10), d.paddingRight );
 
 				var newTile = IG.inputTile( "Background Tile", d.backgroundTile );
 				if( newTile != null )
@@ -955,17 +956,17 @@ class UIEditor extends ImguiTool
 				}
 
 
-				IG.wref( ImGui.inputInt("Border Width",_,1,10), d.borderWidth );
-				IG.wref( ImGui.inputInt("Border Height",_,1,10), d.borderHeight );
+				wref( ImGui.inputInt("Border Width",_,1,10), d.borderWidth );
+				wref( ImGui.inputInt("Border Height",_,1,10), d.borderHeight );
 
 			case "h2d.Mask":
 				var t : CUIMask = cast def;
 
-				IG.wref( ImGui.inputInt("Width",_,1,10), t.width );
-				IG.wref( ImGui.inputInt("Height",_,1,10), t.height );
+				wref( ImGui.inputInt("Width",_,1,10), t.width );
+				wref( ImGui.inputInt("Height",_,1,10), t.height );
 
-				IG.wref( ImGui.inputDouble("Scroll X",_,1,10,"%.2f"), t.scrollX );
-				IG.wref( ImGui.inputDouble("Scroll Y",_,1,10,"%.2f"), t.scrollY );
+				wref( ImGui.inputDouble("Scroll X",_,1,10,"%.2f"), t.scrollX );
+				wref( ImGui.inputDouble("Scroll Y",_,1,10,"%.2f"), t.scrollY );
 
 
 
@@ -973,16 +974,16 @@ class UIEditor extends ImguiTool
 				var d : CUIScaleGrid = cast def;
 
 
-				IG.wref( ImGui.inputDouble("Width",_,1,10), d.width );
-				IG.wref( ImGui.inputDouble("Height",_,1,10), d.height );
+				wref( ImGui.inputDouble("Width",_,1,10), d.width );
+				wref( ImGui.inputDouble("Height",_,1,10), d.height );
 
-				IG.wref( ImGui.inputInt("Border Top",_,1,10), d.borderTop );
-				IG.wref( ImGui.inputInt("Border Bottom",_,1,10), d.borderBottom );
-				IG.wref( ImGui.inputInt("Border Left",_,1,10), d.borderLeft );
-				IG.wref( ImGui.inputInt("Border Right",_,1,10), d.borderRight );
+				wref( ImGui.inputInt("Border Top",_,1,10), d.borderTop );
+				wref( ImGui.inputInt("Border Bottom",_,1,10), d.borderBottom );
+				wref( ImGui.inputInt("Border Left",_,1,10), d.borderLeft );
+				wref( ImGui.inputInt("Border Right",_,1,10), d.borderRight );
 
-				IG.wref( ImGui.inputInt("Border Width",_,1,10), d.borderWidth );
-				IG.wref( ImGui.inputInt("Border Height",_,1,10), d.borderHeight );
+				wref( ImGui.inputInt("Border Width",_,1,10), d.borderWidth );
+				wref( ImGui.inputInt("Border Height",_,1,10), d.borderHeight );
 
 				var newTile = IG.inputTile( "Background Tile", d.contentTile );
 				if( newTile != null )
@@ -1053,8 +1054,8 @@ class UIEditor extends ImguiTool
 			case "h2d.Interactive":
 				var d : CUIInteractive = cast def;
 
-				IG.wref( ImGui.inputDouble("Width",_,1,10), d.width );
-				IG.wref( ImGui.inputDouble("Height",_,1,10), d.height );
+				wref( ImGui.inputDouble("Width",_,1,10), d.width );
+				wref( ImGui.inputDouble("Height",_,1,10), d.height );
 
 				/*
 				var cursor = IG.combo("Cursor", t.cursor, hxd.Cursor );
@@ -1064,7 +1065,7 @@ class UIEditor extends ImguiTool
 				}*/
 /*
 				// But why?
-				IG.wref( ImGui.checkbox( "Ellipse", _ ), t.isEllipse );
+				wref( ImGui.checkbox( "Ellipse", _ ), t.isEllipse );
 
 				var c = Vector.fromColor( t.backgroundColor );
 				var color = new hl.NativeArray<Single>(4);
@@ -1075,7 +1076,7 @@ class UIEditor extends ImguiTool
 				var flags = ImGuiColorEditFlags.AlphaBar | ImGuiColorEditFlags.AlphaPreview
 						| ImGuiColorEditFlags.DisplayRGB | ImGuiColorEditFlags.DisplayHex
 						| ImGuiColorEditFlags.AlphaPreviewHalf;
-				if( IG.wref( ImGui.colorPicker4( "Color", _, flags), color ) )
+				if( wref( ImGui.colorPicker4( "Color", _, flags), color ) )
 				{
 					c.set(color[0], color[1], color[2], color[3] );
 					t.backgroundColor = c.toColor();

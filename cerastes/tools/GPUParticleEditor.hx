@@ -554,7 +554,7 @@ class GPUParticleEditor extends ImguiTool
 			ImGui.dockBuilderRemoveNode( dockspaceId );
 			ImGui.dockBuilderAddNode( dockspaceId, flags );
 
-			var idOut: hl.Ref<ImGuiID> = dockspaceId;
+			var idOut = hl.Ref.make( dockspaceId );
 
 			dockspaceIdLeft = ImGui.dockBuilderSplitNode(idOut.get(), ImGuiDir.Left, 0.5, null, idOut);
 			//dockspaceIdRight = ImGui.dockBuilderSplitNode(idOut.get(), ImGuiDir.Right, 0.3, null, idOut);

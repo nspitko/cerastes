@@ -304,7 +304,7 @@ class FlowDebugger extends ImguiTool
 			ImGui.dockBuilderRemoveNode( dockspaceId );
 			ImGui.dockBuilderAddNode( dockspaceId, flags );
 
-			var idOut: hl.Ref<ImGuiID> = dockspaceId;
+			var idOut = hl.Ref.make( dockspaceId );
 
 			dockspaceIdRight = ImGui.dockBuilderSplitNode(idOut.get(), ImGuiDir.Right, 0.5, null, idOut);
 			dockspaceIdCenter = idOut.get();

@@ -8,11 +8,25 @@ class TweenManager
 
 	private var tweens = new Array<Tween>();
 
+	public static var skipFrames = 0;
+	static var timer = 0;
+
 	private function new () {}  // private constructor
 
 	public function tick( delta: Float )
 	{
 		Metrics.begin();
+		if( skipFrames > 0 )
+		{
+			timer++;
+
+			if( timer < skipFrames )
+				return;
+
+			delta = timer * 1/60;
+			timer = 0;
+		}
+
 		var i = tweens.length;
 		while( i-- > 0 )
 		{

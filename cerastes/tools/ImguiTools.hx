@@ -21,6 +21,7 @@ import h3d.Vector;
 import h2d.col.Point;
 import h2d.Tile;
 
+import imgui.ImGuiMacro.wref;
 
 
 // https://github.com/ocornut/imgui/issues/1658#issuecomment-427426154
@@ -52,42 +53,7 @@ class ImGuiTools {
 #if !macro
 	static var typeMap: Map<String,Dynamic> = [];
 	static var enumMap: Map<String,Array<Dynamic>> = [];
-#end
 
-	public static macro function wref(expr:Expr, names:Array<Expr>):Expr {
-		var tmps:Array<String> = [];
-		var tmpDecl:Array<Expr> = [];
-		var tmpAssign:Array<Expr> = [];
-		for (n in names) {
-			var tmpName = "__tmp_" + tmps.length;
-			tmps.push(tmpName);
-			tmpDecl.push(macro var $tmpName = $n);
-			tmpAssign.push(macro $n = $i{tmpName});
-		}
-		function repl(e:Expr) {
-			switch (e.expr) {
-				case ECall(e, params):
-					repl(e);
-					for (p in params) repl(p);
-				case EConst(Constant.CIdent("_")), EConst(Constant.CIdent("__")):
-					e.expr = EConst(CIdent(tmps.shift()));
-				case EField(e, field):
-					repl(e);
-				case EParenthesis(e):
-					repl(e);
-				case EBlock(exprs):
-					for (e in exprs) repl(e);
-				default:
-			}
-		}
-		repl(expr);
-		tmpDecl.push(macro var result = $e{expr});
-		var result = tmpDecl.concat(tmpAssign);
-		result.push(macro result);
-		return macro $b{result};
-	}
-
-	#if !macro
 
 	public static var point:ImVec2 = {};
 	public static var point2:ImVec2 = {};
@@ -346,7 +312,7 @@ class ImGuiTools {
 		var flags = ImGuiColorEditFlags.AlphaBar | ImGuiColorEditFlags.AlphaPreview
 				| ImGuiColorEditFlags.DisplayRGB | ImGuiColorEditFlags.DisplayHex
 				| ImGuiColorEditFlags.AlphaPreviewHalf;
-		if( IG.wref( ImGui.colorPicker4( "Color", _, flags), color ) )
+		if( wref( ImGui.colorPicker4( "Color", _, flags), color ) )
 		{
 			return ( Math.floor( 255. * color[0] ) << 16 ) |
 					( Math.floor( 255. * color[1] ) <<  8 ) |
@@ -372,7 +338,7 @@ class ImGuiTools {
 		var flags = ImGuiColorEditFlags.AlphaBar | ImGuiColorEditFlags.AlphaPreview
 				| ImGuiColorEditFlags.DisplayRGB | ImGuiColorEditFlags.DisplayHex
 				| ImGuiColorEditFlags.AlphaPreviewHalf;
-		if( IG.wref( ImGui.colorPicker4( "Color", _, flags), color ) )
+		if( wref( ImGui.colorPicker4( "Color", _, flags), color ) )
 		{
 			if( key != null  )
 				ImGui.popID();
@@ -403,9 +369,12 @@ class ImGuiTools {
 		if( ImGui.isItemHovered() && tile != null && tile.length > 0 )
 		{
 			var t = CUIResource.getTile(tile);
-			ImGui.beginTooltip();
-			ImGuiTools.image(t);
-			ImGui.endTooltip();
+			if( t != null )
+			{
+				ImGui.beginTooltip();
+				ImGuiTools.image(t);
+				ImGui.endTooltip();
+			}
 		}
 
 		if( newTile != null && Utils.isValidTexture(newTile) )

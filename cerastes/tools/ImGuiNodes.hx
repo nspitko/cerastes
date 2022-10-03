@@ -11,6 +11,8 @@ import cerastes.tools.ImguiTools.IG;
 import imgui.NodeEditor;
 import imgui.ImGui;
 
+import imgui.ImGuiMacro.wref;
+
 @:structInit
 class TestNode extends Node
 {
@@ -518,8 +520,8 @@ class ImGuiNodes
 			var endPinId: PinId = -1;
 
 
-			var startRef = new hl.Ref(startPinId);
-			var endRef = new hl.Ref(endPinId);
+			var startRef = hl.Ref.make(startPinId);
+			var endRef = hl.Ref.make(endPinId);
 
 			if( NodeEditor.queryNewLink( startRef, endRef ) )
 			{
@@ -603,7 +605,7 @@ class ImGuiNodes
 			var linkId: LinkId = 0;
 			var pinStartId: PinId = 0;
 			var pinEndId: PinId = 0;
-			while( IG.wref( NodeEditor.queryDeletedNode( _ ), nodeId ) )
+			while( wref( NodeEditor.queryDeletedNode( _ ), nodeId ) )
 			{
 				var node = findNode(nodeId);
 
@@ -615,7 +617,7 @@ class ImGuiNodes
 
 			}
 
-			while( IG.wref( NodeEditor.queryDeletedLink( _, _, _ ), linkId, pinStartId, pinEndId ) )
+			while( wref( NodeEditor.queryDeletedLink( _, _, _ ), linkId, pinStartId, pinEndId ) )
 			{
 				var link = findLink(linkId);
 
@@ -634,21 +636,21 @@ class ImGuiNodes
 		if( canSuspend )
 		{
 			NodeEditor.suspend();
-			if( IG.wref( NodeEditor.showNodeContextMenu( _ ), contextNodeId ) )
+			if( wref( NodeEditor.showNodeContextMenu( _ ), contextNodeId ) )
 			{
 				//NodeEditor.suspend();
 				ImGui.openPopup("node_rc");
 				//NodeEditor.resume();
 			}
 
-			if( IG.wref( NodeEditor.showLinkContextMenu( _ ), contextLinkId ) )
+			if( wref( NodeEditor.showLinkContextMenu( _ ), contextLinkId ) )
 			{
 				//NodeEditor.suspend();
 				ImGui.openPopup("link_rc");
 				//NodeEditor.resume();
 			}
 
-			if( IG.wref( NodeEditor.showPinContextMenu( _ ), contextPinId ) )
+			if( wref( NodeEditor.showPinContextMenu( _ ), contextPinId ) )
 			{
 				//NodeEditor.suspend();
 				ImGui.openPopup("pin_rc");

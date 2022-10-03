@@ -948,7 +948,7 @@ class BulletLevelEditor extends ImguiTool
 			ImGui.dockBuilderRemoveNode( dockspaceId );
 			ImGui.dockBuilderAddNode( dockspaceId, flags );
 
-			var idOut: hl.Ref<ImGuiID> = dockspaceId;
+			var idOut = hl.Ref.make( dockspaceId );
 
 			dockspaceIdLeft = ImGui.dockBuilderSplitNode(idOut.get(), ImGuiDir.Left, 0.30, null, idOut);
 			dockspaceIdRight = ImGui.dockBuilderSplitNode(idOut.get(), ImGuiDir.Right, 0.30, null, idOut);

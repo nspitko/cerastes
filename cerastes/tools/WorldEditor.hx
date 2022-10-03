@@ -452,8 +452,8 @@ class WorldEditor extends ImguiTool
 
 			var d2 = 0;
 
-			var idOut: hl.Ref<ImGuiID> = dockspaceId;
-			var idOtherOut: hl.Ref<ImGuiID> = d2;
+			var idOut = hl.Ref.make( dockspaceId );
+			var idOtherOut = hl.Ref.make( d2 );
 
 			dockspaceIdLeft = ImGui.dockBuilderSplitNode(idOut.get(), ImGuiDir.Left, 0.20, null, idOut);
 			dockspaceIdRight = ImGui.dockBuilderSplitNode(idOut.get(), ImGuiDir.Right, 0.3, null, idOut);

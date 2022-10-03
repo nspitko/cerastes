@@ -55,11 +55,6 @@ class LocalizationManager
 		if( Utils.assert( token != null, "Tried to localized null string as token!" ) )
 			return "null";
 
-		return formatStr(token, rest.toArray());
-	}
-
-	public static function formatStr(token: String, ?subs: Array<String>)
-	{
 		var str = tokens.get(token);
 
 		if( str == null )
@@ -68,13 +63,18 @@ class LocalizationManager
 			str = token;
 		}
 
+		return formatStr(str, rest.toArray());
+	}
+
+	public static function formatStr(str: String, ?subs: Array<String>)
+	{
 		str = ~/^[\t ]+|[\t ]+$/gm.replace( str, "");
 
 		if( subs != null )
 		{
 			for( i in 0...subs.length )
 			{
-				str = StringTools.replace(str,"%"+(i+1)+"$s",subs[i]);
+				str = StringTools.replace(str,"%"+(i+1),subs[i]);
 
 			}
 		}

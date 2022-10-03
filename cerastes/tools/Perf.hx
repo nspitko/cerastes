@@ -14,6 +14,7 @@ import hxd.System;
 import imgui.ImGuiDrawable;
 import imgui.ImGuiDrawable.ImGuiDrawableBuffers;
 import imgui.ImGui;
+import imgui.ImGuiMacro.wref;
 
 @:keep
 class Perf extends ImguiTool
@@ -136,7 +137,7 @@ class Perf extends ImguiTool
 
 		ImGui.sameLine();
 
-		if( IG.wref( ImGui.checkbox( "VSync", _ ), vsync ) )
+		if( wref( ImGui.checkbox( "VSync", _ ), vsync ) )
 			hxd.Window.getInstance().vsync = vsync;
 
 		ImGui.beginChild("flameChart", null, true, ImGuiWindowFlags.NoScrollWithMouse );

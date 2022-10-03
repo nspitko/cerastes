@@ -27,6 +27,8 @@ import imgui.ImGui;
 import cerastes.bulletml.BulletManager;
 import cerastes.bulletml.CannonBullet;
 
+import imgui.ImGuiMacro.wref;
+
 
 enum SpriteInspectorMode {
 	NONE;
@@ -354,11 +356,11 @@ class SpriteEditor extends ImguiTool
 		ImGui.setNextWindowDockId( dockspaceIdCenter, dockCond );
 		ImGui.begin('Preview##${windowID()}', null, ImGuiWindowFlags.NoScrollWithMouse | ImGuiWindowFlags.NoScrollbar);
 
-		IG.wref( ImGui.checkbox( "Draw colliders", _ ), drawColliders );
+		wref( ImGui.checkbox( "Draw colliders", _ ), drawColliders );
 		ImGui.sameLine();
-		IG.wref( ImGui.checkbox( "Draw Attachments", _ ), drawAttachments );
+		wref( ImGui.checkbox( "Draw Attachments", _ ), drawAttachments );
 		ImGui.sameLine();
-		IG.wref( ImGui.checkbox( "Play Audio", _ ), playAudio );
+		wref( ImGui.checkbox( "Play Audio", _ ), playAudio );
 		sprite.mute = !playAudio;
 
 		var windowSize: ImVec2 = cast ImGui.getWindowSize();
@@ -1427,8 +1429,8 @@ class SpriteEditor extends ImguiTool
 		if( ImGui.beginPopupModal("Add Sound Cue", null, ImGuiWindowFlags.AlwaysAutoResize ) )
 		{
 
-			IG.wref( ImGui.inputDouble("Start", _ ), modalStart );
-			IG.wref( ImGui.inputDouble("Duration", _ ), modalDuration );
+			wref( ImGui.inputDouble("Start", _ ), modalStart );
+			wref( ImGui.inputDouble("Duration", _ ), modalDuration );
 			var n =  IG.textInput("Sound", modalName );
 			if( n != null )
 				modalName = n;
@@ -1456,8 +1458,8 @@ class SpriteEditor extends ImguiTool
 		if( ImGui.beginPopupModal("Add Tag", null, ImGuiWindowFlags.AlwaysAutoResize ) )
 		{
 
-			IG.wref( ImGui.inputDouble("Start", _ ), modalStart );
-			IG.wref( ImGui.inputDouble("Duration", _ ), modalDuration );
+			wref( ImGui.inputDouble("Start", _ ), modalStart );
+			wref( ImGui.inputDouble("Duration", _ ), modalDuration );
 			var n =  IG.textInput("Tag", modalName );
 			if( n != null )
 				modalName = n;
@@ -1485,8 +1487,8 @@ class SpriteEditor extends ImguiTool
 		if( ImGui.beginPopupModal("Add Attachment Override", null, ImGuiWindowFlags.AlwaysAutoResize ) )
 		{
 
-			IG.wref( ImGui.inputDouble("Start", _ ), modalStart );
-			IG.wref( ImGui.inputDouble("Duration", _ ), modalDuration );
+			wref( ImGui.inputDouble("Start", _ ), modalStart );
+			wref( ImGui.inputDouble("Duration", _ ), modalDuration );
 			var n =  IG.textInput("Attachment", modalName );
 			if( n != null )
 				modalName = n;
@@ -1651,9 +1653,9 @@ class SpriteEditor extends ImguiTool
 					}
 					ImGui.endDragDropTarget();
 				}
-				IG.wref( ImGui.inputDouble("Duration (ms)", _, 0.01, .1, "%.3f"), selectedFrame.duration);
-				IG.wref( ImGui.inputDouble("Offset X", _, 1, 10, "%.2f"),  selectedFrame.offsetX);
-				IG.wref( ImGui.inputDouble("Offset Y", _, 1, 10, "%.2f"), selectedFrame.offsetY);
+				wref( ImGui.inputDouble("Duration (ms)", _, 0.01, .1, "%.3f"), selectedFrame.duration);
+				wref( ImGui.inputDouble("Offset X", _, 1, 10, "%.2f"),  selectedFrame.offsetX);
+				wref( ImGui.inputDouble("Offset Y", _, 1, 10, "%.2f"), selectedFrame.offsetY);
 
 				ImGui.popID();
 
@@ -1666,7 +1668,7 @@ class SpriteEditor extends ImguiTool
 					rebuildSprite();
 				}
 				var single: Single = selectedAttachment.rotation;
-				if( IG.wref( ImGui.sliderAngle("Rotation", _), single ) )
+				if( wref( ImGui.sliderAngle("Rotation", _), single ) )
 					selectedAttachment.rotation = single;
 
 				if( ImGui.isItemHovered() )
@@ -1728,7 +1730,7 @@ class SpriteEditor extends ImguiTool
 				var options = new hl.NativeArray<String>(2);
 				options[0] = "Box";
 				options[1] = "Circle";
-				IG.wref( ImGui.combo("Type", _, options), selectedCollider.type);
+				wref( ImGui.combo("Type", _, options), selectedCollider.type);
 				*/
 				if( ImGui.beginCombo("Type", selectedCollider.type.toString() ) )
 				{
@@ -1752,8 +1754,8 @@ class SpriteEditor extends ImguiTool
 				ImGui.separator();
 
 
-				IG.wref( ImGui.inputDouble("Start", _), selectedSound.start );
-				IG.wref( ImGui.inputDouble("Duration", _), selectedSound.duration );
+				wref( ImGui.inputDouble("Start", _), selectedSound.start );
+				wref( ImGui.inputDouble("Duration", _), selectedSound.duration );
 
 				if( ImGui.isItemHovered() )
 				{
@@ -1778,8 +1780,8 @@ class SpriteEditor extends ImguiTool
 				ImGui.text("Attachment Override settings");
 				ImGui.separator();
 
-				IG.wref( ImGui.inputDouble("Start", _), selectedAttachmentOverride.start );
-				IG.wref( ImGui.inputDouble("Duration", _), selectedAttachmentOverride.duration );
+				wref( ImGui.inputDouble("Start", _), selectedAttachmentOverride.start );
+				wref( ImGui.inputDouble("Duration", _), selectedAttachmentOverride.duration );
 
 				if( IG.posInput("Offset", selectedAttachmentOverride.position, "%.2f") )
 				{
@@ -1826,7 +1828,7 @@ class SpriteEditor extends ImguiTool
 
 
 				var single: Single = selectedAttachmentOverride.rotation;
-				if( IG.wref( ImGui.sliderAngle("Rotation", _), single ) )
+				if( wref( ImGui.sliderAngle("Rotation", _), single ) )
 					selectedAttachmentOverride.rotation = single;
 
 				if( ImGui.isItemHovered() )
@@ -1873,13 +1875,13 @@ class SpriteEditor extends ImguiTool
 					ImGui.endCombo();
 				}
 
-				IG.wref( ImGui.inputDouble("Tween Duration", _), selectedAttachmentOverride.tweenDuration );
+				wref( ImGui.inputDouble("Tween Duration", _), selectedAttachmentOverride.tweenDuration );
 
 				if( selectedAttachmentOverride.tweenOrigin == null )
 				{
 					var setOrigin = false;
 
-					if( IG.wref( ImGui.checkbox("Tween Origin", _), setOrigin) && setOrigin )
+					if( wref( ImGui.checkbox("Tween Origin", _), setOrigin) && setOrigin )
 					{
 						selectedAttachmentOverride.tweenOrigin = {x: 0, y:0};
 					}
@@ -1892,7 +1894,7 @@ class SpriteEditor extends ImguiTool
 					}
 
 					var single: Single = selectedAttachmentOverride.tweenRotation != null ? cast selectedAttachmentOverride.tweenRotation : 0.;
-					if( IG.wref( ImGui.sliderAngle("Tween Rotation", _), single ) )
+					if( wref( ImGui.sliderAngle("Tween Rotation", _), single ) )
 						selectedAttachmentOverride.tweenRotation = single;
 
 						if( ImGui.isItemHovered() )
@@ -1911,8 +1913,8 @@ class SpriteEditor extends ImguiTool
 				ImGui.text("Tag settings");
 				ImGui.separator();
 
-				IG.wref( ImGui.inputDouble("Start", _), selectedTag.start );
-				IG.wref( ImGui.inputDouble("Duration", _), selectedTag.duration );
+				wref( ImGui.inputDouble("Start", _), selectedTag.start );
+				wref( ImGui.inputDouble("Duration", _), selectedTag.duration );
 
 				ImGui.popID();
 
@@ -1944,7 +1946,7 @@ class SpriteEditor extends ImguiTool
 			ImGui.dockBuilderRemoveNode( dockspaceId );
 			ImGui.dockBuilderAddNode( dockspaceId, flags );
 
-			var idOut: hl.Ref<ImGuiID> = dockspaceId;
+			var idOut = hl.Ref.make( dockspaceId );
 
 			dockspaceIdBottom = ImGui.dockBuilderSplitNode(idOut.get(), ImGuiDir.Down, 0.40, null, idOut);
 			dockspaceIdLeft = ImGui.dockBuilderSplitNode(idOut.get(), ImGuiDir.Left, 0.30, null, idOut);

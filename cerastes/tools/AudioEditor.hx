@@ -29,6 +29,7 @@ import imgui.ImGuiDrawable.ImGuiDrawableBuffers;
 import imgui.ImGui;
 import imgui.NodeEditor;
 import hl.UI;
+import imgui.ImGuiMacro.wref;
 
 @:structInit
 class AETreeNode
@@ -704,16 +705,16 @@ class AudioEditor extends ImguiTool
 					ImGui.text( selectedItem.name );
 					ImGui.popFont();
 
-					IG.wref( ImGui.sliderDouble( "Volume", _, 0, 2 ), selectedItem.volume );
-					IG.wref( ImGui.sliderDouble( "Volume Variance", _, -1, 1 ), selectedItem.volumeVariance );
+					wref( ImGui.sliderDouble( "Volume", _, 0, 2 ), selectedItem.volume );
+					wref( ImGui.sliderDouble( "Volume Variance", _, -1, 1 ), selectedItem.volumeVariance );
 
-					IG.wref( ImGui.checkbox( "Loop", _ ), selectedItem.loop );
+					wref( ImGui.checkbox( "Loop", _ ), selectedItem.loop );
 
-					IG.wref( ImGui.sliderDouble( "Pitch", _, 0, 2 ), selectedItem.pitch );
-					IG.wref( ImGui.sliderDouble( "Pitch Variance", _, -1, 1 ), selectedItem.pitchVariance );
+					wref( ImGui.sliderDouble( "Pitch", _, 0, 2 ), selectedItem.pitch );
+					wref( ImGui.sliderDouble( "Pitch Variance", _, -1, 1 ), selectedItem.pitchVariance );
 
-					IG.wref( ImGui.sliderDouble( "Low Pass", _, 0, 1 ), selectedItem.lowpass );
-					IG.wref( ImGui.sliderDouble( "Low Pass Variance", _, -1, 1 ), selectedItem.lowpassVariance );
+					wref( ImGui.sliderDouble( "Low Pass", _, 0, 1 ), selectedItem.lowpass );
+					wref( ImGui.sliderDouble( "Low Pass Variance", _, -1, 1 ), selectedItem.lowpassVariance );
 
 
 
@@ -748,7 +749,7 @@ class AudioEditor extends ImguiTool
 			ImGui.dockBuilderRemoveNode( dockspaceId );
 			ImGui.dockBuilderAddNode( dockspaceId, flags );
 
-			var idOut: hl.Ref<ImGuiID> = dockspaceId;
+			var idOut = hl.Ref.make( dockspaceId );
 
 			dockspaceIdLeft = ImGui.dockBuilderSplitNode(idOut.get(), ImGuiDir.Left, 0.20, null, idOut);
 			dockspaceIdRight = ImGui.dockBuilderSplitNode(idOut.get(), ImGuiDir.Right, 0.3, null, idOut);

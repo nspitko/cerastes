@@ -894,12 +894,16 @@ class FlowRunner
 		context.interp.variables.set(name, value );
 	}
 
-	public function run( nodeId: NodeId32 = 0 )
+	public function run( nodeId: NodeId32 = 0, label: String = null )
 	{
 		if( nodeId != 0 )
 		{
 			var target = lookupNodeById( nodeId );
 			target.process(this);
+		}
+		else if( label != null )
+		{
+			jump(label);
 		}
 		else
 			root.process(this);
@@ -919,7 +923,7 @@ class FlowRunner
 
 	}
 
-	public function jumpFile( file: String, nodeId = 0 )
+	public function jumpFile( file: String, nodeId: NodeId32 = 0, label: String = null )
 	{
 		var hasExited = false;
 
@@ -940,7 +944,7 @@ class FlowRunner
 			hasExited = true;
 			return handled;
 		} );
-		childRunner.run(nodeId);
+		childRunner.run(nodeId, label);
 	}
 
 	function lookupNodeByPin( pinId: PinId32 )

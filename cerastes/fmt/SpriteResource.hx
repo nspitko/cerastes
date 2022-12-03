@@ -1,5 +1,5 @@
 package cerastes.fmt;
-
+#if spritemeta
 import cerastes.collision.Collision.ColliderType;
 import cerastes.Sprite.SpriteCache;
 import h2d.col.Point;
@@ -201,3 +201,4 @@ class SpriteResource extends Resource
 		return d;
 	}
 }
+#end

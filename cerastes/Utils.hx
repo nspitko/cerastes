@@ -418,7 +418,7 @@ class Utils
 
 	private static var missingTexture: Texture;
 
-	static function invalidTexture()
+	public static function invalidTexture()
 	{
 		if( missingTexture == null )
 			missingTexture = Texture.fromColor(0xFF00FF);

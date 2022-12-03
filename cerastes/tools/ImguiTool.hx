@@ -15,6 +15,7 @@ import cerastes.macros.Metrics;
 import haxe.rtti.Meta;
 import haxe.macro.Expr;
 
+@:keepSub
 class ImguiTool
 {
 	public var toolId: Int = 0;

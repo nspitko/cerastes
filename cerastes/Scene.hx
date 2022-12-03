@@ -7,6 +7,7 @@ import cerastes.ui.Console.GlobalConsole;
 import hxd.fmt.fbx.BaseLibrary.TmpObject;
 import haxe.Constraints;
 
+@:keepSub
 class Scene
 {
 
@@ -81,14 +82,10 @@ class Scene
 
         if(  viewportScale > 1 )
         {
-            s2d.scaleMode = ScaleMode.Zoom(viewportScale);
-            rtScaled = new Texture(Math.floor( viewportWidth / viewportScale ),Math.floor( viewportHeight / viewportScale ), [Target] );
-            s2dScaled = new h2d.Scene();
-            s2dScaled.scaleMode = ScaleMode.Zoom(viewportScale);
-            new Bitmap( h2d.Tile.fromTexture( rtScaled ), s2dScaled );
+            s2d.filter = new h2d.filter.Nothing();
         }
-        else
-	        s2d.scaleMode = ScaleMode.Stretch(Math.floor( viewportWidth / viewportScale ), Math.floor( viewportHeight / viewportScale ));
+
+	    s2d.scaleMode = ScaleMode.Stretch(Math.floor( viewportWidth / viewportScale ), Math.floor( viewportHeight / viewportScale ));
     }
 
     public function disableEvents()

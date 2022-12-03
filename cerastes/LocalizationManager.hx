@@ -12,7 +12,9 @@ abstract LocalizedString(String) from String
 
 	inline public function get(...rest: String)
 	{
-		return LocalizationManager.formatStr(this, rest.toArray());
+		var str = LocalizationManager.localize(this);
+
+		return LocalizationManager.formatStr(str, rest.toArray());
 	}
 
 	@:to

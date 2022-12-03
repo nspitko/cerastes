@@ -8,7 +8,9 @@ class CerastesResources
 	#if macro
 	public static function build()
 	{
+		#if spriteresource
 		Config.extensions["csd"] = "cerastes.fmt.SpriteResource";
+		#end
 		#if cannonml
 		Config.extensions["cbl"] = "cerastes.fmt.BulletLevelResource";
 		#end
@@ -18,7 +20,7 @@ class CerastesResources
 		#end
 		Config.extensions["glb,gltf"] = "hxd.res.Model";
 
-		
+
 	}
 	#end
 }

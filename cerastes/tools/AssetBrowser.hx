@@ -59,7 +59,7 @@ class AssetBrowser  extends  ImguiTool
 		"Sprite" => true,
 		"Image" => false,
 		"Model" => true,
-		"Sound" => true,
+		"Sound" => false,
 		"Audio Cue Sheet" => true,
 		"Particles" => true,
 		"Font" => true,
@@ -316,7 +316,7 @@ class AssetBrowser  extends  ImguiTool
 				}
 				catch( e )
 				{
-					
+
 				}
 
 				var t = new h2d.Text( hxd.Res.fnt.kodenmanhou16.toFont(), asset.scene);
@@ -328,7 +328,7 @@ class AssetBrowser  extends  ImguiTool
 				t.y = 4;
 				t.color = Vector.fromColor( getTypeColor(asset.file) );
 				t.dropShadow = { dx:1, dy : 1, color : 0, alpha : 1 };
-
+			#if spritemeta
 			case "csd":
 				asset.scene = new h2d.Scene();
 				asset.alwaysUpdate = true;
@@ -357,7 +357,7 @@ class AssetBrowser  extends  ImguiTool
 				t.y = 4;
 				t.color = Vector.fromColor( getTypeColor(asset.file) );
 				t.dropShadow = { dx:1, dy : 1, color : 0, alpha : 1 };
-
+			#end
 			case "atlas":
 				asset.scene = new h2d.Scene();
 				var atlas = hxd.Res.load( asset.file ).to( Atlas );
@@ -626,9 +626,11 @@ class AssetBrowser  extends  ImguiTool
 			case "ui":
 				var t: UIEditor = cast ImGuiToolManager.showTool("UIEditor");
 				t.openFile( asset.file );
+			#if spritemeta
 			case "csd":
 				var t: SpriteEditor = cast ImGuiToolManager.showTool("SpriteEditor");
 				t.openFile( asset.file );
+			#end
 			case "atlas":
 				var t: AtlasBrowser = cast ImGuiToolManager.showTool("AtlasBrowser");
 				t.openFile( asset.file );

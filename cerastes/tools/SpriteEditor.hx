@@ -1,6 +1,7 @@
 
 package cerastes.tools;
 #if hlimgui
+#if spritemeta
 import hl.NativeArray;
 import hl.Ref;
 import cerastes.macros.SpriteData;
@@ -1959,4 +1960,5 @@ class SpriteEditor extends ImguiTool
 	}
 }
 
+#end
 #end

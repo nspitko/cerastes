@@ -597,7 +597,7 @@ class ModelEditor extends ImguiTool
 			{
 				for( mod in modelLibrary.header.models )
 				{
-					if( ImGui.treeNodeEx( mod.name, flags ) )
+					if( mod.name != null && ImGui.treeNodeEx( mod.name, flags ) )
 					{
 						// Bones
 						if( mod.skin != null && ImGui.treeNodeEx( "Skeleton", flags ) )
@@ -859,7 +859,14 @@ class ModelEditor extends ImguiTool
 			e.pushTarget( sceneRT );
 			e.clear(0,1);
 
-			preview.render(e);
+			try
+			{
+				preview.render(e);
+			}
+			catch(e )
+			{
+				// @todo: Show error
+			}
 
 			e.popTarget();
 

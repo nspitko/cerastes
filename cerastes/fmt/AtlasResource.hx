@@ -285,6 +285,18 @@ enum PackMode {
 	#end
 }
 
+/**
+ * Controls loading and unloading assets, as well as piping requests to the desired atlas
+ */
+class AtlasManager
+{
+	public static function load( file: String )
+	{
+		//var entry = hxd.Res.loader.load( file );
+
+	}
+}
+
 class AtlasResource extends Resource
 {
 	var data: Atlas;

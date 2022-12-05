@@ -1,5 +1,6 @@
 package cerastes.butai;
 
+#if butai
 import haxe.Json;
 
 import game.GameState;
@@ -10,7 +11,6 @@ import db.Butai;
 
 import cerastes.butai.Debug;
 
-#if butai
 @:build(cerastes.macros.Callbacks.ButaiCallbackGenerator.build("res/nodes.bdef"))
 @:build(cerastes.macros.Callbacks.CallbackGenerator.build())
 class ButaiNodeManager

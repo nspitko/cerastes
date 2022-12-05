@@ -855,6 +855,8 @@ class FlowRunner
 	var context: FlowContext;
 
 	var file: String;
+	// Just the name of the file, no path/ext
+	var name: String;
 
 	static var runnerIdx = 0;
 	public var runnerId(default, null): Int = 0;
@@ -882,6 +884,10 @@ class FlowRunner
 		this.nodes = res.getData().nodes;
 		this.links = res.getData().links;
 		this.file = res.name;
+
+		var r = ~/([A-z0-9-]+)\.flow/;
+		Utils.assert(r.match(this.file), "Could not resolve flow name. This will break localization (and may crash)");
+		this.name = r.matched(1);
 
 		context = ctx == null ? new FlowContext( this ) : ctx;
 

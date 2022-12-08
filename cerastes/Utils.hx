@@ -417,6 +417,7 @@ class Utils
 	}
 
 	private static var missingTexture: Texture;
+	private static var missingTile: h2d.Tile;
 
 	public static function invalidTexture()
 	{
@@ -424,6 +425,14 @@ class Utils
 			missingTexture = Texture.fromColor(0xFF00FF);
 
 		return missingTexture;
+	}
+
+	public static function invalidTile()
+	{
+		if( missingTile == null )
+			missingTile = h2d.Tile.fromTexture( invalidTexture() );
+
+		return missingTile;
 	}
 
 	public static function resolveTexture( file: String ): Texture

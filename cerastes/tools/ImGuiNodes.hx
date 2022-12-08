@@ -228,7 +228,6 @@ class ImGuiNodes
 				Utils.assert(false, 'Unknown node kind ${node.def.kind}');
 		}
 
-
 		if( !node.editorData.hasRendered )
 		{
 			node.editorData.hasRendered = true;

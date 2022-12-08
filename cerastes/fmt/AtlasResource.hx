@@ -285,17 +285,6 @@ enum PackMode {
 	#end
 }
 
-/**
- * Controls loading and unloading assets, as well as piping requests to the desired atlas
- */
-class AtlasManager
-{
-	public static function load( file: String )
-	{
-		//var entry = hxd.Res.loader.load( file );
-
-	}
-}
 
 class AtlasResource extends Resource
 {
@@ -304,14 +293,18 @@ class AtlasResource extends Resource
 	static var minVersion = 1;
 	static var version = 1;
 
+	public function getTile( t: String )
+	{
+		getData();
+
+	}
 
 	public function getData( ?cache: Bool = true ) : Atlas
 	{
 		if (data != null && cache) return data;
 
 		data = CDParser.parse( entry.getText(), Atlas );
-
-
+		data.load();
 		return data;
 	}
 }

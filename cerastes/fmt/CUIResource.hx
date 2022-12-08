@@ -473,9 +473,25 @@ class CUIResource extends Resource
 
 		if(file.charAt(0) == "#" )
 			return Tile.fromColor( Std.parseInt( '0x${file.substr(1)}' ) );
+		else if ( file.indexOf(".catlas") != -1 )
+		{
+			var atlasPos = file.indexOf(".catlas") + 7;
+			var atlasName = file.substr( 0, atlasPos );
+			var tileName = file.substr(atlasPos + 1);
+
+			var res = hxd.Res.loader.loadCache(atlasName, AtlasResource );
+			if( res != null )
+			{
+				var entry = res.getData().entries[tileName];
+				if( entry == null )
+					return Utils.invalidTile();
+
+				return entry.tile;
+			}
+		}
 		else if ( file.indexOf(".atlas") != -1 )
 		{
-			var atlasPos = file.indexOf(".atlas") + 6;
+			var atlasPos = file.indexOf(".atlas") + 7;
 			var atlasName = file.substr( 0, atlasPos );
 			var tileName = file.substr(atlasPos + 1);
 

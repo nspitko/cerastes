@@ -63,7 +63,7 @@ typedef PortId = Int;
 @:keep
 @:structInit class EditorData
 {
-	#if hlimgui
+	#if tools
 	public var x: Float = 0;
 	public var y: Float = 0;
 	@noSerialize
@@ -78,11 +78,12 @@ typedef PortId = Int;
 	public var id: NodeId32 = -1;
 	@serializeType("haxe.ds.IntMap")
 	public var pins: Map<PortId,PinId32> = [];
-	#if hlimgui
-	var def(get, never): NodeDefinition;
+	#if tools
 	@serializeType("cerastes.data.EditorData")
 	public var editorData: EditorData = {};
-
+	#end
+	#if hlimgui
+	var def(get, never): NodeDefinition;
 	public var label(get, never): String;
 	public var labelInfo(get, never): String;
 	public var width(get, never): Float;

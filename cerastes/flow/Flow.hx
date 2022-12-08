@@ -637,10 +637,13 @@ class FlowNode extends Node
 			var metadata: haxe.DynamicAccess<Dynamic> = data;
 			if( metadata.exists("editor") )
 			{
+				var tooltip = null;
+				if( metadata.exists("editorTooltip") )
+				{
+					tooltip = metadata.get("editorTooltip")[0];
+				}
 				var args = metadata.get("editor");
-				renderElement(field, args[1], args);
-
-
+				renderElement(field, args[1], args, tooltip);
 			}
 		}
 
@@ -649,7 +652,7 @@ class FlowNode extends Node
 		ImGui.popID();
 	}
 
-	function renderElement( field: String, type: String, args: Array<String> )
+	function renderElement( field: String, type: String, args: Array<String>, ?tooltip: String )
 	{
 		switch( type )
 		{
@@ -659,6 +662,9 @@ class FlowNode extends Node
 				if( ret != null )
 					Reflect.setField( this, field, ret );
 
+				if (tooltip != null && ImGui.isItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
+					ImGui.setTooltip(tooltip);
+
 				onAfterProp(field);
 
 			case "StringMultiline" | "LocalizedStringMultiline":
@@ -667,6 +673,9 @@ class FlowNode extends Node
 				if( ret != null )
 					Reflect.setField( this, field, ret );
 
+				if (tooltip != null && ImGui.isItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
+					ImGui.setTooltip(tooltip);
+
 				onAfterProp(field);
 
 			case "Tile":
@@ -674,6 +683,9 @@ class FlowNode extends Node
 				var ret = IG.inputTile(args[0],val);
 				if( ret != null )
 					Reflect.setField( this, field, ret );
+
+				if (tooltip != null && ImGui.isItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
+					ImGui.setTooltip(tooltip);
 
 				onAfterProp(field);
 
@@ -693,6 +705,9 @@ class FlowNode extends Node
 						Reflect.setField( this, field, payload );
 					}
 				}
+
+				if (tooltip != null && ImGui.isItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
+					ImGui.setTooltip(tooltip);
 
 
 				if( ImGui.button("Select...") )
@@ -721,9 +736,18 @@ class FlowNode extends Node
 					}
 					ImGui.endCombo();
 				}
+
+				if (tooltip != null && ImGui.isItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
+					ImGui.setTooltip(tooltip);
+
 				onAfterProp(field);
 
 			case "Array":
+				ImGui.text(args[0]);
+
+				if (tooltip != null && ImGui.isItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
+					ImGui.setTooltip(tooltip);
+
 				var val:Array<String> = Reflect.getProperty(this,field);
 				switch( args[2] )
 				{

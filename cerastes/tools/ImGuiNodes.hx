@@ -359,8 +359,8 @@ class ImGuiNodes
 		}
 
 		var headerEnd: ImVec2 = ImGui.getCursorPos();
-		var headerEndS: ImVec2S = { x: headerEnd.x, y: headerEnd.y };
 		headerEnd.x = headerStart.x + width  + style.NodePadding.z;
+		var headerEndS: ImVec2S = { x: headerEnd.x, y: headerEnd.y };
 
 		ImGui.setCursorPosY( headerEnd.y + style.NodeBorderWidth * 8 );
 
@@ -423,7 +423,7 @@ class ImGuiNodes
 		NodeEditor.endNode();
 
 		var drawList: ImDrawList = NodeEditor.getNodeBackgroundDrawList( node.id );
-		drawList.addImageRounded( tile.getTexture(), headerStartS, headerEndS, {x: 0, y: 0}, {x:1, y:1}, node.def.color, style.NodeRounding, ImDrawFlags.RoundCornersTop );
+		drawList.addImageRounded( tile.getTexture(), headerStart, headerEnd, {x: 0, y: 0}, {x:1, y:1}, node.def.color, style.NodeRounding, ImDrawFlags.RoundCornersTop );
 		drawList.addLine( {x: headerStart.x + style.NodeBorderWidth - 1, y: headerEnd.y }, {x: headerEnd.x - style.NodeBorderWidth, y: headerEnd.y}, node.def.color, style.NodeBorderWidth / 2 );
 	}
 

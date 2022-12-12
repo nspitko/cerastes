@@ -471,4 +471,9 @@ class Utils
 
 		return false;
 	}
+
+	public static function getCoreCount()
+	{
+		return 15; // Hack
+	}
 }

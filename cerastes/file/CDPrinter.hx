@@ -291,6 +291,9 @@ class CDPrinter {
 
 		}
 
+		if( cls == null )
+			return null;
+
 		cls = Type.getSuperClass( cls );
 		if( cls != null )
 			return getMetaForField(f, m, cls );

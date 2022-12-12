@@ -1,5 +1,9 @@
 package cerastes.fmt;
 
+import sys.thread.Mutex;
+import cerastes.tools.ImguiTool.ImGuiToolManager;
+import sys.thread.Lock;
+import sys.thread.Thread;
 import h2d.Tile;
 import cerastes.file.CDParser;
 import cerastes.file.CDPrinter;
@@ -27,6 +31,13 @@ enum PackMode {
 	public var z: Int = 0;
 	public var w: Int = 0;
 
+}
+
+@:structInit class PackJob
+{
+	public var xs: Int = 0;
+	public var ys: Int = 0;
+	public var mode: PackMode = MaxRects;
 }
 
 
@@ -92,6 +103,7 @@ enum PackMode {
 	public var packMode: PackMode = MaxRects;
 	public var size: Vec2i = {};
 
+	@noSerialize
 	var tile: Tile = null;
 
 	public function load()
@@ -114,103 +126,67 @@ enum PackMode {
 
 	#if binpacking
 	#if tools
-	public function pack( name: String )
+	@noSerialize var jobWorkerThread: Thread = null;
+	@noSerialize var trimWork: Array<AtlasEntry> = [];
+	@noSerialize var pool: Array<Thread> = null;
+	@noSerialize var binSizes = [32,64,128,256,512,1024,2048,4096,8192];
+	@noSerialize var fileName: String;
+	@noSerialize var workerLock = new Lock();
+	@noSerialize var packJobs: Array<PackJob> = [];
+	@noSerialize var trimMutex = new Mutex();
+
+
+	public function pack( file: String )
 	{
-		var binSizes = [32,64,128,256,512,1024,2048,4096,8192];
+		//jobWorkerThread = Thread.create(jobWorker);
+		fileName = file;
+		jobWorker();
+
+
+	}
+
+
+	function jobWorker()
+	{
+		if( pool != null )
+			return;
+
+		trimWork = [];
+		pool = [];
+		binSizes = [32,64,128,256,512,1024,2048,4096,8192];
+		trimMutex = new Mutex();
+		workerLock = new Lock();
+
+		for( key => entry in entries )
+		{
+			trimWork.push( entry );
+		}
+
+		// Create a thread pool
+		var cores = Utils.getCoreCount();
+		for( i in 0 ... cores )
+		{
+			pool.push( Thread.create( trimWorker ) );
+		}
+
+
+		for( i in 0 ... cores )
+			workerLock.wait();
+
+		Utils.assert(trimWork.length == 0, "Not all threads are ready");
+
+		// Actually pack
 		var xsIdx = 0;
 		var ysIdx = 0;
 
-		// First step: Trim
-		for( key => entry in entries )
-		{
 
-			for( frame in entry.frames )
-			{
-				var i = hxd.Res.loader.load( frame.file ).toImage();
 
-				var p = i.getPixels();
 
-				frame.size.x = entry.size.x;
-				frame.size.y = entry.size.y;
-
-				if( p.format != BGRA )
-				{
-					trace( p.format );
-					continue;
-				}
-
-				// trim X
-				var trimLeft = 0;
-				var trimRight = 0;
-				var left = true;
-				for(x in 0 ... p.width )
-				{
-					var clear = true;
-					for( y in 0 ... p.height )
-					{
-						if( p.getPixel(x,y) & 0xFF000000 != 0 )
-						{
-							left = false;
-							clear = false;
-							trimRight = 0;
-							break;
-						}
-					}
-
-					if( !clear )
-						continue;
-
-					if( left )
-						trimLeft++;
-					else
-						trimRight++;
-				}
-
-				if( trimLeft > 0 || trimRight > 0 )
-				{
-					//trace('Trimmed ${trimLeft + trimRight}/${p.width} pixels off y in ${frame.file}');
-					frame.offset.x += trimLeft;
-					frame.size.x -= trimLeft + trimRight;
-
-				}
-
-				// trim Y
-				var trimTop = 0;
-				var trimBottom = 0;
-				var top = true;
-				for(y in 0 ... p.height )
-				{
-					var clear = true;
-					for( x in 0 ... p.width )
-					{
-						if( p.getPixel(x,y) & 0xFF000000 != 0 )
-						{
-							top = false;
-							clear = false;
-							trimBottom = 0;
-							break;
-						}
-					}
-
-					if( !clear )
-						continue;
-
-					if( top )
-						trimTop++;
-					else
-						trimBottom++;
-				}
-
-				if( trimTop > 0 || trimBottom > 0 )
-				{
-					//trace('Trimmed ${trimTop + trimBottom}/${p.height} pixels off y in ${frame.file}');
-					frame.offset.y += trimTop;
-					frame.size.y -= trimTop + trimBottom;
-				}
-			}
-		}
+		var minX = 0;
+		var minY = 0;
 
 		var packed = false;
+		var occupancy = 0.0;
 		do
 		{
 			var fit = 0;
@@ -254,17 +230,15 @@ enum PackMode {
 
 			}
 
-
+			occupancy = packer.occupancy();
 		}
 		while( !packed );
 
 		// Build the actual texture
-		Utils.info('${name} Packed size: ${binSizes[xsIdx]}x${binSizes[ysIdx]}');
 		var pixels = Pixels.alloc(binSizes[xsIdx], binSizes[ysIdx], hxd.PixelFormat.ARGB);
 
 		for( entry in entries )
 		{
-
 			for( frame in entry.frames )
 			{
 				var i = hxd.Res.loader.load( frame.file ).toImage();
@@ -275,12 +249,130 @@ enum PackMode {
 		}
 
 		// Write result
+		var texFile = StringTools.replace(fileName,".catlas","_tex.png");
 		var bytes = pixels.toPNG();
-		textureFile = 'atlases/${name}_tex.png';
+		textureFile = texFile;
 		sys.io.File.saveBytes( 'res/${textureFile}', bytes);
-		sys.io.File.saveContent( 'res/atlases/${name}.catlas', CDPrinter.print( this ) );
+		sys.io.File.saveContent( 'res/${fileName}', CDPrinter.print( this ) );
+
+		#if hlimgui
+		ImGuiToolManager.showPopup('Packing complete','Packed size: ${binSizes[xsIdx]}x${binSizes[ysIdx]}, occupancy ${Math.round( occupancy * 100 )}%', Info);
+		#end
+
+		pool = null;
 
 	}
+
+	function trimWorker()
+	{
+		while( true )
+		{
+			trimMutex.acquire();
+			var entry = trimWork.shift();
+			trimMutex.release();
+			if( entry == null )
+				break;
+
+
+			trimEntry( entry );
+
+
+
+		}
+
+		workerLock.release();
+	}
+
+	function trimEntry( entry: AtlasEntry )
+	{
+		for( frame in entry.frames )
+		{
+			var i = hxd.Res.loader.load( frame.file ).toImage();
+
+			var p = i.getPixels();
+
+			frame.size.x = p.width;
+			frame.size.y = p.height;
+			frame.offset.x = 0;
+			frame.offset.y = 0;
+
+			if( p.format != BGRA )
+			{
+				trace( p.format );
+				continue;
+			}
+
+			// trim X
+			var trimLeft = 0;
+			var trimRight = 0;
+			var left = true;
+			for(x in 0 ... p.width )
+			{
+				var clear = true;
+				for( y in 0 ... p.height )
+				{
+					if( p.getPixel(x,y) & 0xFF000000 != 0 )
+					{
+						left = false;
+						clear = false;
+						trimRight = 0;
+						break;
+					}
+				}
+
+				if( !clear )
+					continue;
+
+				if( left )
+					trimLeft++;
+				else
+					trimRight++;
+			}
+
+			if( trimLeft > 0 || trimRight > 0 )
+			{
+				//trace('Trimmed ${trimLeft + trimRight}/${p.width} pixels off y in ${frame.file}');
+				frame.offset.x += trimLeft;
+				frame.size.x -= trimLeft + trimRight;
+
+			}
+
+			// trim Y
+			var trimTop = 0;
+			var trimBottom = 0;
+			var top = true;
+			for(y in 0 ... p.height )
+			{
+				var clear = true;
+				for( x in 0 ... p.width )
+				{
+					if( p.getPixel(x,y) & 0xFF000000 != 0 )
+					{
+						top = false;
+						clear = false;
+						trimBottom = 0;
+						break;
+					}
+				}
+
+				if( !clear )
+					continue;
+
+				if( top )
+					trimTop++;
+				else
+					trimBottom++;
+			}
+
+			if( trimTop > 0 || trimBottom > 0 )
+			{
+				//trace('Trimmed ${trimTop + trimBottom}/${p.height} pixels off y in ${frame.file}');
+				frame.offset.y += trimTop;
+				frame.size.y -= trimTop + trimBottom;
+			}
+		}
+	}
+
 	#end
 	#end
 }

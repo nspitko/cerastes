@@ -24,6 +24,12 @@ import imgui.ImGui;
 import h2d.Object;
 import haxe.ds.Map;
 
+enum AESelectedObjectType {
+	None;
+	Entry;
+	Frame;
+}
+
 
 @multiInstance(true)
 class AtlasBuilder  extends  ImguiTool
@@ -48,6 +54,11 @@ class AtlasBuilder  extends  ImguiTool
 
 	var previewWidth : Float;
 	var previewHeight: Float;
+
+	var selectedEntry: AtlasEntry;
+	var selectedFrame: AtlasFrame;
+
+	var selectedItemType: AESelectedObjectType = None;
 
 	static var globalIndex = 0;
 	var index = 0;
@@ -106,6 +117,8 @@ class AtlasBuilder  extends  ImguiTool
 
 		ImGui.end();
 
+		packer();
+
 		ImGui.setNextWindowDockId( dockspaceIdCenter, dockCond );
 		ImGui.begin('View##${windowID()}', null, ImGuiWindowFlags.NoMove | ImGuiWindowFlags.HorizontalScrollbar );
 		handleShortcuts();
@@ -126,7 +139,7 @@ class AtlasBuilder  extends  ImguiTool
 		ImGui.end();
 
 		inspector();
-		packer();
+
 
 		if( !isOpenRef.get() )
 		{
@@ -139,6 +152,63 @@ class AtlasBuilder  extends  ImguiTool
 		ImGui.setNextWindowDockId( dockspaceIdLeft, dockCond );
 		ImGui.begin('Inspector##${windowID()}');
 		handleShortcuts();
+
+		if( selectedEntry != null )
+		{
+			ImGui.pushFont( ImGuiToolManager.headingFont );
+			ImGui.text( selectedEntry.name );
+			ImGui.popFont();
+
+			ImGui.text("Frames");
+			ImGui.separator();
+			ImGui.beginChildFrame( ImGui.getID( "frames" ), {x: -1, y: 100 * ImGuiToolManager.scaleFactor});
+
+			for( frame in selectedEntry.frames )
+			{
+				var file = frame.file;
+				var bits = file.split("/");
+				var name = bits.length > 0 ? bits[bits.length - 1] : file;
+
+				var flags = ImGuiTreeNodeFlags.DefaultOpen | ImGuiTreeNodeFlags.Leaf;
+				if( selectedItemType == Frame && frame == selectedFrame )
+					flags |= ImGuiTreeNodeFlags.Selected;
+
+				if( ImGui.treeNodeEx( '${name}', flags ) )
+				{
+					if( ImGui.isItemHovered() )
+					{
+						onFrameHover( frame );
+					}
+					if( ImGui.isItemClicked( ) )
+					{
+						selectedFrame = frame;
+						selectedItemType = Frame;
+					}
+					ImGui.treePop();
+				}
+			}
+
+			ImGui.endChildFrame();
+
+			if( ImGui.isItemClicked( ImGuiMouseButton.Right ) )
+			{
+				ImGui.openPopup('${windowID()}_framerc');
+			}
+
+			if( ImGui.beginPopup('${windowID()}_framerc') )
+			{
+
+				if( ImGui.menuItem( 'Add...') )
+				{
+					var file = 
+				}
+
+				ImGui.endPopup();
+			}
+
+
+		}
+
 		ImGui.end();
 	}
 
@@ -155,7 +225,10 @@ class AtlasBuilder  extends  ImguiTool
 		if( atlas.packMode == null )
 			atlas.packMode = MaxRects;
 
-		ImGui.button("Pack");
+		if( ImGui.button("Pack") )
+		{
+			atlas.pack( fileName );
+		}
 		ImGui.sameLine();
 
 		ImGui.text("Size:");
@@ -206,17 +279,14 @@ class AtlasBuilder  extends  ImguiTool
 			var buttonPos = ImGui.getCursorPos();
 			if( ImGui.button('',{x: buttonWidth, y: buttonHeight } ) )
 			{
-				trace('Asset select: ${name}');
+				selectedEntry = entry;
+				selectedItemType = Entry;
 			}
 
 
 			if( ImGui.isItemHovered() )
 			{
 				onItemHover(entry);
-				if( ImGui.isMouseDoubleClicked( ImGuiMouseButton.Left ) )
-				{
-					trace('Asset open: ${name}');
-				}
 			}
 
 
@@ -290,6 +360,30 @@ class AtlasBuilder  extends  ImguiTool
 		ImGui.endTooltip();
 	}
 
+	function onFrameHover( frame: AtlasFrame )
+	{
+		ImGui.beginTooltip();
+		ImGui.pushFont( ImGuiToolManager.headingFont );
+		ImGui.text(frame.file);
+		ImGui.popFont();
+		ImGui.separator();
+
+		var hoverSize = 1024 * scaleFactor;
+
+		var scale = 2.0;
+		if( frame.size.x * scale > hoverSize )
+			scale = hoverSize / frame.size.x;
+
+		if( frame.size.y * scale > hoverSize )
+			scale = hoverSize / frame.size.y;
+
+		ImGui.text('size=${frame.size.x}x${frame.size.y}, offset=${frame.offset.x}x${frame.offset.y}, pos=${frame.pos.x}x${frame.pos.y}');
+		IG.image( frame.tile, {x: scale, y: scale} );
+
+
+		ImGui.endTooltip();
+	}
+
 	public override inline function windowID()
 	{
 		return 'catlased${fileName != null ? fileName : ""+toolId}';
@@ -352,8 +446,8 @@ class AtlasBuilder  extends  ImguiTool
 		}
 
 		#if binpacking
-		atlas.pack();
-		ImGuiToolManager.showPopup("File saved",'Wrote ${fileName} successfully.', Info);
+		atlas.pack(fileName);
+		ImGuiToolManager.showPopup("Pack job started",'May take several minutes depending on the texture size.', Info);
 		#else
 		ImGuiToolManager.showPopup("Save failure",'Not build with binpacker!', Error);
 		#end
@@ -369,6 +463,10 @@ class AtlasBuilder  extends  ImguiTool
 		if( Key.isDown( Key.CTRL ) && Key.isPressed( Key.S ) )
 		{
 			save();
+		}
+		if( Key.isDown( Key.DELETE) && selectedItemType == Frame && selectedFrame != null && selectedEntry != null )
+		{
+			selectedEntry.frames.remove( selectedFrame );
 		}
 	}
 

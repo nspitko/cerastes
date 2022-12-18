@@ -251,6 +251,8 @@ class CDParser {
 					return parseString();
 				case '0'.code, '1'.code, '2'.code, '3'.code, '4'.code, '5'.code, '6'.code, '7'.code, '8'.code, '9'.code, '-'.code:
 					return parseNumber(c, assumeType);
+				case '#'.code:
+					return parseHexLiteral(c);
 				default:
 					invalidChar();
 			}
@@ -479,6 +481,35 @@ class CDParser {
 			var i = Std.int(f);
 			return if (i == f) i else f;
 		}
+	}
+
+	inline function parseHexLiteral(c:Int):Dynamic {
+		var start = pos; // Skip past #
+		var digit = false;
+		var end = false;
+
+		while (true) {
+			c = nextChar();
+			switch (c) {
+				case '0'.code, '1'.code, '2'.code, '3'.code, '4'.code, '5'.code, '6'.code, '7'.code, '8'.code, '9'.code,
+							'A'.code, 'B'.code, 'C'.code, 'D'.code, 'E'.code, 'F'.code,
+							'a'.code, 'b'.code, 'c'.code, 'd'.code, 'e'.code, 'f'.code:
+					digit = true;
+				default:
+					if (!digit)
+						invalidNumber(start);
+					pos--;
+					end = true;
+			}
+			if (end)
+				break;
+		}
+
+		if( pos - start != 6 )
+			invalidNumber(start);
+
+		return Std.parseInt('0x${str.substr(start, pos - start)}');
+
 	}
 
 	inline function nextChar() {

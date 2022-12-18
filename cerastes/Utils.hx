@@ -325,31 +325,21 @@ class Utils
 	public static function getDPIScaleFactor() : Float
 	{
 		var scale: Float = 1;
+		var size: Int = 0;
 		#if hlsdl
-		if( Sdl.getScreenHeight() > 1200 )
-		{
-			scale = 1.25;
-
-
-			if(Sdl.getScreenHeight() >= 2160 )
-				scale = 1.5;
-
-		}
+		size = Sdl.getScreenHeight();
 		#elseif hldx
-		if( dx.Window.getScreenHeight() > 1200 )
-		{
-			scale = 1.25;
-
-
-			if(dx.Window.getScreenHeight() >= 2160 )
-				scale = 1.5;
-
-		}
+		size = dx.Window.getScreenHeight();
 		#end
 
+		if( size > 1200 )
+		{
+			scale = 1.25;
 
+			if( size >= 2160 )
+				scale = 1.5;
 
-
+		}
 		return scale;
 
 	}

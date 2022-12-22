@@ -656,6 +656,16 @@ class FlowNode extends Node
 	{
 		switch( type )
 		{
+			case "Bool":
+				var val = Reflect.getProperty(this,field);
+				if( wref( ImGui.checkbox(args[0], _ ), val ) )
+					Reflect.setField( this, field, val.get() );
+
+				if (tooltip != null && ImGui.isItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
+					ImGui.setTooltip(tooltip);
+
+				onAfterProp(field);
+
 			case "String" | "LocalizedString":
 				var val = Reflect.getProperty(this,field);
 				var ret = IG.textInput(args[0],val);

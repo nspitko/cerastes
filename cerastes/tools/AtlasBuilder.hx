@@ -200,7 +200,7 @@ class AtlasBuilder  extends  ImguiTool
 
 				if( ImGui.menuItem( 'Add...') )
 				{
-					var file = 
+					//var file =
 				}
 
 				ImGui.endPopup();

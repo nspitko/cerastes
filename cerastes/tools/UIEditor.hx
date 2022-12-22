@@ -1,6 +1,7 @@
 
 package cerastes.tools;
 
+import cerastes.ui.UIEntity;
 #if hlimgui
 import hxd.Key;
 import hxd.res.Font;
@@ -147,6 +148,17 @@ class UIEditor extends ImguiTool
 		if( ImGui.beginPopup("uie_additem") )
 		{
 			var types = ["h2d.Object", "h2d.Text", "h2d.Bitmap", "h2d.Flow", "h2d.Mask", "h2d.ScaleGrid", "cerastes.ui.Button", "cerastes.ui.AdvancedText", "cerastes.ui.Reference"];
+
+			// Add custom objects
+			var classList = CompileTime.getAllClasses(UIEntity);
+			var options = [ for(c in classList) Type.getClassName(c) ];
+
+			for( c in classList )
+			{
+				var cls = Type.getClassName(c);
+				types.push(cls);
+			}
+
 
 			for( t in types )
 			{
@@ -797,6 +809,11 @@ class UIEditor extends ImguiTool
 	//
 	function populateEditorFields(obj: Object, def: CUIObject, type: String )
 	{
+		switch( type )
+		{
+			case "cerastes.ui.UIEntity":
+				return;
+		}
 
 		if (!ImGui.collapsingHeader(type, ImGuiTreeNodeFlags.DefaultOpen ))
 			return;
@@ -1084,6 +1101,13 @@ class UIEditor extends ImguiTool
 
 */
 
+			default:
+				var cl = Type.resolveClass(type);
+				var fn = Reflect.field(cl, "getInspector");
+				if( fn != null )
+					fn();
+				else
+					Utils.assert( false, 'Type ${type} does not have getInspector.' );
 
 
 		}
@@ -1134,7 +1158,13 @@ class UIEditor extends ImguiTool
 			case "cerastes.ui.Button": return "\uf04d";
 			case "cerastes.ui.AdvancedText": return "\uf033";
 			case "cerastes.ui.Reference": return "\uf07c";
-			default: return "";
+			default:
+				var cl = Type.resolveClass(type);
+				var fn = Reflect.field(cl, "getEditorIcon");
+				if( fn != null )
+					return fn();
+
+				return "";
 		}
 	}
 
@@ -1224,6 +1254,24 @@ class UIEditor extends ImguiTool
 				};
 
 				parent.children.push(def);
+
+			default:
+				var cl = Type.resolveClass(type);
+				var fn = Reflect.field(cl, "getDef");
+				if( fn != null )
+				{
+					var def = fn();
+					def.type = type;
+					def.children = [];
+					def.name = getAutoName(type);
+
+					parent.children.push(def);
+				}
+				else
+				{
+					Utils.warning('UIEntity ${type} is missing getDef!!');
+				}
+
 
 		}
 

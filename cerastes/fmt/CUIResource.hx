@@ -1,5 +1,6 @@
 package cerastes.fmt;
 
+import cerastes.ui.UIEntity;
 import haxe.display.Display.CompletionItemResolveParams;
 import cerastes.file.CDParser;
 import cerastes.file.CDPrinter;
@@ -33,6 +34,11 @@ import hxd.res.Resource;
 	public var scaleY: Float = 1;
 
 	public var visible: Bool = true;
+
+}
+
+@:structInit class CUIEntity extends CUIObject {
+	public var cls: String = null;
 }
 
 @:structInit class CUIDrawable extends CUIObject {
@@ -265,7 +271,26 @@ class CUIResource extends Resource
 				obj = new cerastes.ui.Reference( d.file );
 
 			default:
-				Utils.error('CUI: Cannot create unknown type ${entry.type}; ignoring!!');
+
+				var opts = CompileTime.getAllClasses(UIEntity);
+
+				for( c in opts )
+				{
+					if( Type.getClassName(c) == entry.type )
+					{
+						var t = Type.resolveClass( entry.type );
+						obj = Type.createInstance(t, []);
+						break;
+					}
+				}
+
+				if( obj == null )
+				{
+					Utils.error('CUI: Cannot create unknown type ${entry.type}; ignoring!!');
+					obj = new h2d.Object();
+				}
+
+
 
 		}
 

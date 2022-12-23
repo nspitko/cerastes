@@ -279,7 +279,7 @@ class CUIResource extends Resource
 					if( Type.getClassName(c) == entry.type )
 					{
 						var t = Type.resolveClass( entry.type );
-						obj = Type.createInstance(t, []);
+						obj = Type.createInstance(t, [entry]);
 						break;
 					}
 				}

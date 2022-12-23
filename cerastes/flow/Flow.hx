@@ -25,9 +25,8 @@ import cerastes.tools.FlowDebugger;
 	 @editor("Instruction","StringMultiline")
 	 public var instruction: String;
 
-	 public override function process( runner: FlowRunner )
+	 public override function process()
 	 {
-
 		try
 		{
 			var program = runner.context.parser.parseString(instruction);
@@ -41,7 +40,7 @@ import cerastes.tools.FlowDebugger;
 			Utils.warning('Error:${e.message}\nWhile running instruction for node ${id}\nInstruction was ${instruction}');
 		}
 
-		nextAll( runner );
+		nextAll( );
 	 }
 
 	 #if hlimgui
@@ -78,7 +77,7 @@ import cerastes.tools.FlowDebugger;
 	 @editor("Condition","Array","String")
 	 public var conditions: Array<String>;
 
-	 public override function process( runner: FlowRunner )
+	 public override function process()
 	 {
 		var idx = 0;
 		try
@@ -89,17 +88,17 @@ import cerastes.tools.FlowDebugger;
 
 				var result : Bool = runner.context.interp.execute(program);
 				if( result )
-					next( pins[idx+1], runner ); // true
+					next( pins[idx+1] ); // true
 
 				idx++;
 			}
-			next( pins[idx+1], runner ); // false
+			next( pins[idx+1] ); // false
 
 
 		}
 		catch (e )
 		{
-			next( pins[2], runner ); // false
+			next( pins[2] ); // false
 			Utils.warning('Error:${e.message}\nWhile running conditions for node ${id}.\nInstruction was ${conditions[idx]}');
 		}
 	 }
@@ -236,7 +235,7 @@ class FileNode extends FlowNode
 	@noSerialize
 	var childRunner: FlowRunner;
 
-	public override function process( runner: FlowRunner )
+	public override function process()
 	{
 		var hasExited = false;
 
@@ -244,7 +243,7 @@ class FileNode extends FlowNode
 		if( file == null || !hxd.Res.loader.exists( file ) )
 		{
 			Utils.error('File node ${id} points to missing file ${file}!');
-			super.process(runner);
+			super.process();
 			return;
 		}
 
@@ -257,7 +256,7 @@ class FileNode extends FlowNode
 				return handled;
 			}
 			hasExited = true;
-			nextAll( runner );
+			nextAll( );
 			return handled;
 		} );
 		childRunner.run();
@@ -309,11 +308,11 @@ class SceneNode extends FlowNode
 	public var scene: String;
 
 
-	public override function process( runner: FlowRunner )
+	public override function process()
 	{
 		Main.currentScene.switchToNewScene( scene );
 
-		super.process(runner);
+		super.process();
 	}
 
 	#if hlimgui
@@ -407,6 +406,7 @@ class EntryNode extends FlowNode
 {
 	public override function register( runner: FlowRunner )
 	{
+		super.register(runner);
 		runner.root = this;
 	}
 
@@ -435,7 +435,7 @@ class EntryNode extends FlowNode
  @:structInit
 class ExitNode extends FlowNode
 {
-	public override function process( runner: FlowRunner )
+	public override function process()
 	{
 		runner.onExit();
 	}
@@ -471,6 +471,8 @@ class ExitNode extends FlowNode
 @:structInit
 class FlowNode extends Node
 {
+	@noSerialize
+	public var runner: FlowRunner = null;
 
 	inline function key( runner: FlowRunner )
 	{
@@ -488,9 +490,9 @@ class FlowNode extends Node
 	 *
 	 * @param runner
 	 */
-	public function process( runner: FlowRunner )
+	public function process()
 	{
-		nextAll(runner);
+		nextAll();
 	}
 
 	/**
@@ -500,11 +502,11 @@ class FlowNode extends Node
 	 *
 	 * @param runner
 	 */
-	public function nextAll( runner: FlowRunner )
+	public function nextAll()
 	{
 		for( portId => pinId in pins )
 		{
-			next( pinId, runner );
+			next( pinId );
 		}
 	}
 
@@ -517,7 +519,7 @@ class FlowNode extends Node
 	 * @param runner
 	 */
 	@:access(cerastes.flow.Flow.FlowRunner)
-	public function next( pin: PinId32, runner: FlowRunner )
+	public function next( pin: PinId32 )
 	{
 		for( link in runner.links )
 		{
@@ -562,7 +564,7 @@ class FlowNode extends Node
 				FlowDebugger.addHistory(runner, this, target, pin);
 				#end
 
-				target.process( runner );
+				target.process( );
 			}
 		}
 	}
@@ -573,7 +575,7 @@ class FlowNode extends Node
 	 * @param runner
 	 */
 	@:access(cerastes.flow.Flow.FlowRunner)
-	public function getOutputs( pin: PinId32, runner: FlowRunner )
+	public function getOutputs( pin: PinId32 )
 	{
 		var out = [];
 		for( link in runner.links )
@@ -614,12 +616,10 @@ class FlowNode extends Node
 		return out;
 	}
 
-
 	public function register( runner: FlowRunner )
 	{
-
+		this.runner = runner;
 	}
-
 	#if hlimgui
 
 	var inputCallback: ImGuiInputTextCallbackDataFunc = null;
@@ -939,14 +939,14 @@ class FlowRunner
 		if( nodeId != 0 )
 		{
 			var target = lookupNodeById( nodeId );
-			target.process(this);
+			target.process();
 		}
 		else if( label != null )
 		{
 			jump(label);
 		}
 		else
-			root.process(this);
+			root.process();
 	}
 
 	public function jump( id: String )
@@ -958,7 +958,7 @@ class FlowRunner
 		}
 
 		var node = labels.get(id);
-		node.process( this );
+		node.process();
 
 
 	}

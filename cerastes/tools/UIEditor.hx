@@ -149,17 +149,6 @@ class UIEditor extends ImguiTool
 		{
 			var types = ["h2d.Object", "h2d.Text", "h2d.Bitmap", "h2d.Flow", "h2d.Mask", "h2d.ScaleGrid", "cerastes.ui.Button", "cerastes.ui.AdvancedText", "cerastes.ui.Reference"];
 
-			// Add custom objects
-			var classList = CompileTime.getAllClasses(UIEntity);
-			var options = [ for(c in classList) Type.getClassName(c) ];
-
-			for( c in classList )
-			{
-				var cls = Type.getClassName(c);
-				types.push(cls);
-			}
-
-
 			for( t in types )
 			{
 				if( ImGui.menuItem( '${getIconForType(t)} ${getNameForType(t)}') )
@@ -785,6 +774,50 @@ class UIEditor extends ImguiTool
 			}
 		}
 
+		if( def == rootDef )
+		{
+			// Add custom objects
+			var classList = CompileTime.getAllClasses(UIEntity);
+			var options = [ for(c in classList) Type.getClassName(c) ];
+
+			if( ImGui.beginCombo( "Class", def.type ) )
+			{
+				if( ImGui.selectable( "h2d.Object", "h2d.Object" == def.type ) )
+				{
+					def.type = "h2d.Object";
+					updateScene();
+				}
+
+				for( c in classList )
+				{
+					var cls = Type.getClassName(c);
+					if( ImGui.selectable( cls, cls == def.type ) )
+					{
+						var fn = Reflect.field(c, "getDef");
+						if( fn != null )
+						{
+							var def = fn();
+							def.children = rootDef.children;
+							def.name = rootDef.name;
+							def.type = cls;
+							def.x = rootDef.x;
+							def.y = rootDef.y;
+							def.scaleX = rootDef.scaleX;
+							def.scaleY = rootDef.scaleY;
+							def.rotation = rootDef.rotation;
+							def.visible = rootDef.visible;
+
+							rootDef = def;
+							updateScene();
+						}
+
+					}
+				}
+				ImGui.endCombo();
+			}
+
+		}
+
 		ImGui.pushID(def.name);
 
 		ImGui.separator();
@@ -1105,7 +1138,7 @@ class UIEditor extends ImguiTool
 				var cl = Type.resolveClass(type);
 				var fn = Reflect.field(cl, "getInspector");
 				if( fn != null )
-					fn();
+					fn( def );
 				else
 					Utils.assert( false, 'Type ${type} does not have getInspector.' );
 

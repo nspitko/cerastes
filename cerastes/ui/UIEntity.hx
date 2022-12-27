@@ -22,4 +22,17 @@ class UIEntity extends h2d.Object implements Entity
 	{
 		return false;
 	}
+
+	//
+
+	public function initialize()
+	{
+
+	}
+
+	override function onAdd()
+	{
+		super.onAdd();
+		initialize();
+	}
 }

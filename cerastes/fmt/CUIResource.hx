@@ -81,6 +81,12 @@ import hxd.res.Resource;
 	public var height: Float = -1;
 }
 
+@:structInit class CUIAnim extends CUIDrawable {
+	public var entry: String = "#FF00FF";
+	public var speed: Float = 15;
+	public var loop: Bool = true;
+}
+
 
 @:structInit class CUIButton extends CUIFlow {
 	public var hoverTile: String = "";
@@ -246,6 +252,9 @@ class CUIResource extends Resource
 			case "h2d.Bitmap":
 				obj = new Bitmap( );
 
+			case "h2d.Anim":
+				obj = new h2d.Anim();
+
 			case "h2d.Mask":
 				var d : CUIMask = cast entry;
 				obj = new h2d.Mask(d.width,d.height);
@@ -360,6 +369,14 @@ class CUIResource extends Resource
 
 				o.width = e.width > 0 ? e.width : null;
 				o.height = e.height > 0 ? e.height : null;
+
+			case "h2d.Anim":
+				var o = cast(obj, h2d.Anim);
+				var e: CUIAnim = cast entry;
+
+				@:privateAccess o.frames = getTiles( e.entry );
+				o.speed = e.speed;
+				o.loop = e.loop;
 
 			case "h2d.Flow":
 				var o = cast(obj, h2d.Flow);
@@ -534,6 +551,52 @@ class CUIResource extends Resource
 		}
 
 		return null;
+
+	}
+
+	public static function getTiles( file: String ): Array<Tile>
+	{
+		if( file == null || file == "")
+			return [ Utils.invalidTile() ];
+
+		if(file.charAt(0) == "#" )
+			return [ Tile.fromColor( Std.parseInt( '0x${file.substr(1)}' ) ) ];
+		else if ( file.indexOf(".catlas") != -1 )
+		{
+			var atlasPos = file.indexOf(".catlas") + 7;
+			var atlasName = file.substr( 0, atlasPos );
+			var tileName = file.substr(atlasPos + 1);
+
+			var res = hxd.Res.loader.loadCache(atlasName, AtlasResource );
+			if( res != null )
+			{
+				var entry = res.getData().entries[tileName];
+				if( entry == null )
+					return [ Utils.invalidTile() ];
+
+				return entry.tiles;
+			}
+		}
+		else if ( file.indexOf(".atlas") != -1 )
+		{
+			var atlasPos = file.indexOf(".atlas") + 7;
+			var atlasName = file.substr( 0, atlasPos );
+			var tileName = file.substr(atlasPos + 1);
+
+			var res = hxd.Res.loader.loadCache(atlasName, hxd.res.Atlas );
+			if( res != null )
+				return res.getAnim( tileName );
+		}
+		else
+		{
+			var res = hxd.Res.loader.loadCache( file, hxd.res.Image );
+			if( res == null || res.entry.isDirectory )
+				return null;
+
+			return [ res.toTile() ];
+		}
+
+		return [ Utils.invalidTile() ];
 
 	}
 

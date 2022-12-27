@@ -147,7 +147,7 @@ class UIEditor extends ImguiTool
 
 		if( ImGui.beginPopup("uie_additem") )
 		{
-			var types = ["h2d.Object", "h2d.Text", "h2d.Bitmap", "h2d.Flow", "h2d.Mask", "h2d.ScaleGrid", "cerastes.ui.Button", "cerastes.ui.AdvancedText", "cerastes.ui.Reference"];
+			var types = ["h2d.Object", "h2d.Text", "h2d.Bitmap", "h2d.Anim", "h2d.Flow", "h2d.Mask", "h2d.ScaleGrid", "cerastes.ui.Button", "cerastes.ui.AdvancedText", "cerastes.ui.Reference"];
 
 			for( t in types )
 			{
@@ -766,7 +766,13 @@ class UIEditor extends ImguiTool
 		var newName = IG.textInput( "ID", def.name );
 		if( newName != null && newName.length > 0 )
 		{
-			var other = preview.getObjectByName(newName);
+			// Allow ID collisions in other heirarchy trees.
+			var parent = obj;
+			if( obj.parent != null )
+				parent = obj.parent;
+
+
+			var other = parent.getObjectByName(newName);
 			if( other == null )
 			{
 				def.name = newName;
@@ -943,6 +949,17 @@ class UIEditor extends ImguiTool
 					else
 						d.height = -1;
 				}
+
+			case "h2d.Anim":
+				var d: CUIAnim = cast def;
+
+
+				var newTile = IG.inputTile( "Entry", d.entry );
+				if( newTile != null )
+					d.entry = newTile;
+
+				wref( ImGui.inputDouble("Speed", _, 1, 5, "%.1f" ),  d.speed );
+				wref( ImGui.checkbox("Loop", _ ), d.loop );
 
 			case "h2d.Flow":
 				var d: CUIFlow = cast def;
@@ -1185,6 +1202,7 @@ class UIEditor extends ImguiTool
 			case "h2d.Object": return "\uf0b2";
 			case "h2d.Text": return "\uf031";
 			case "h2d.Bitmap": return "\uf03e";
+			case "h2d.Anim": return "\uf008";
 			case "h2d.Flow": return "\uf0db";
 			case "h2d.Mask": return "\uf125";
 			case "h2d.ScaleGrid": return "\uf00a";
@@ -1237,6 +1255,14 @@ class UIEditor extends ImguiTool
 
 			case "h2d.Bitmap":
 				var def: CUIBitmap = {
+					type: type,
+					name: getAutoName(type),
+					children: []
+				};
+
+				parent.children.push(def);
+			case "h2d.Anim":
+				var def: CUIAnim = {
 					type: type,
 					name: getAutoName(type),
 					children: []

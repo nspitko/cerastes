@@ -1,5 +1,6 @@
 package cerastes.tools;
 
+import cerastes.fmt.AtlasResource;
 import cerastes.c3d.Model.ModelDef;
 import cerastes.c3d.Material.MaterialDef;
 import cerastes.file.CDParser;
@@ -390,6 +391,38 @@ class AssetBrowser  extends  ImguiTool
 				t.color = Vector.fromColor( getTypeColor(asset.file) );
 				t.dropShadow = { dx:1, dy : 1, color : 0, alpha : 1 };
 
+			case "catlas":
+				asset.scene = new h2d.Scene();
+				var res = hxd.Res.loader.loadCache(asset.file, AtlasResource );
+				var count = 0;
+
+				for(name => entry in res.getData().entries )
+				{
+					var t = entry.frames[0].tile;
+					var b = new Bitmap( entry.frames[0].tile, asset.scene );
+
+					b.x = 10 * scaleFactor * count;
+					b.y = 10 * scaleFactor * count;
+
+					var scale = ( previewWidth / t.width  ) * 0.7;
+					b.scale(scale);
+
+					count++;
+
+					if( count > 3 )
+						break;
+				}
+
+				var t = new h2d.Text( hxd.Res.fnt.kodenmanhou16.toFont(), asset.scene);
+
+				t.text = Path.withoutDirectory( Path.withoutExtension(asset.file) );
+				t.textAlign = Center;
+				t.maxWidth = previewWidth - 8;
+				t.x = 4;
+				t.y = 4;
+				t.color = Vector.fromColor( getTypeColor(asset.file) );
+				t.dropShadow = { dx:1, dy : 1, color : 0, alpha : 1 };
+
 			case "fbx" | "glb":
 				try
 				{
@@ -634,6 +667,9 @@ class AssetBrowser  extends  ImguiTool
 			case "atlas":
 				var t: AtlasBrowser = cast ImGuiToolManager.showTool("AtlasBrowser");
 				t.openFile( asset.file );
+			case "catlas":
+				var t: AtlasBuilder = cast ImGuiToolManager.showTool("AtlasBuilder");
+				t.openFile( asset.file );
 			case "flow":
 				var t: FlowEditor = cast ImGuiToolManager.showTool("FlowEditor");
 				t.openFile( asset.file );
@@ -751,7 +787,7 @@ class AssetBrowser  extends  ImguiTool
 		{
 			case "wav" | "mp3" | "ogg": 0xFF88FF88;
 			case "ui": 0xFF2288FF;
-			case "atlas": 0xFFff0088;
+			case "atlas" | "catlas": 0xFFff0088;
 			case "csd": 0xFF88ffff;
 			case "fbx": 0xFFff88ff;
 			case "flow": 0xFFFF6688;
@@ -781,7 +817,7 @@ class AssetBrowser  extends  ImguiTool
 			case "flow": "Flow";
 			#end
 			case "csd": "Sprite";
-			case "atlas": "Texture Atlas";
+			case "atlas" | "catlas": "Texture Atlas";
 			case "fbx" | "glb": "Raw Model";
 			case "model": "Model";
 			case "audio": "Audio Cue Sheet";

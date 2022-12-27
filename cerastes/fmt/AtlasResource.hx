@@ -1,15 +1,18 @@
 package cerastes.fmt;
 
-import sys.thread.Mutex;
-import cerastes.tools.ImguiTool.ImGuiToolManager;
-import sys.thread.Lock;
-import sys.thread.Thread;
 import h2d.Tile;
 import cerastes.file.CDParser;
 import cerastes.file.CDPrinter;
 import hxd.Pixels;
 import cerastes.c2d.Vec2;
 import hxd.res.Resource;
+
+#if hlimgui
+import cerastes.tools.ImguiTool.ImGuiToolManager;
+import sys.thread.Mutex;
+import sys.thread.Lock;
+import sys.thread.Thread;
+#end
 
 enum PackMode {
 	MaxRects;
@@ -58,7 +61,7 @@ enum PackMode {
 	@noSerialize
 	public var tile(get, never): h2d.Tile;
 
-	public function get_tile()
+	function get_tile()
 	{
 		atlas.ensureLoaded();
 		return @:privateAccess atlas.tile.sub( pos.x, pos.y, size.x, size.y, offset.x, offset.y );
@@ -86,11 +89,21 @@ enum PackMode {
 
 	@noSerialize
 	public var tile(get, never): h2d.Tile;
+	@noSerialize
+	public var tiles(get, never): Array<h2d.Tile>;
 
-	public function get_tile()
+	function get_tile()
 	{
 		atlas.ensureLoaded();
-		return @:privateAccess atlas.tile.sub( frames[0].pos.x, frames[0].pos.y, frames[0].size.x, frames[0].size.y, frames[0].offset.x, frames[0].offset.y );
+		if( frames.length == 0 )
+			return Utils.invalidTile();
+
+		return frames[0].tile;
+	}
+
+	function get_tiles()
+	{
+		return[ for( f in frames ) f.tile ];
 	}
 }
 

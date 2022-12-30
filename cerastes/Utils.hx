@@ -44,7 +44,6 @@ class LogLine
 
 class Utils
 {
-	public static var BREAK_ON_ASSERT = true;
 	public static var BREAK_ON_ERROR = false;
 	public static var BREAK_ON_WARNING = false;
 	public static var WRITE_LOG = false;
@@ -126,12 +125,9 @@ class Utils
 			if( WRITE_LOG )
 				logFile.flush();
 			#end
-			if( BREAK_ON_ASSERT )
-			{
-				#if hl
-					hl.Api.breakPoint();
-				#end
-			}
+			#if ( !noassert && hl )
+				hl.Api.breakPoint();
+			#end
 		}
 
 		return !condition;
@@ -165,12 +161,9 @@ class Utils
 			if( WRITE_LOG )
 				logFile.flush();
 			#end
-			if( BREAK_ON_ASSERT )
-			{
-				#if hl
-					hl.Api.breakPoint();
-				#end
-			}
+			#if ( !noassert && hl )
+				hl.Api.breakPoint();
+			#end
 		}
 
 		return !condition;

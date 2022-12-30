@@ -126,9 +126,8 @@ class UIEditor extends ImguiTool
 
 	}
 
-	function updateDef( o: CUIObject )
+	function updateDef( e: Object, o: CUIObject )
 	{
-		var e = previewRoot.getObjectByName( o.name );
 		cerastes.fmt.CUIResource.updateObject(o, e);
 		@:privateAccess e.onContentChanged();
 	}
@@ -164,7 +163,7 @@ class UIEditor extends ImguiTool
 			var parent = getDefParent( selectedInspectorTree );
 			if( parent == null )
 			{
-
+				Utils.error("?????");
 			}
 			else
 			{
@@ -378,7 +377,7 @@ class UIEditor extends ImguiTool
 		if( selectedInspectorTree == null )
 			return;
 
-		var o = preview.getObjectByName( selectedInspectorTree.name );
+		var o = selectedInspectorTree.handle;
 		if( o == null )
 			return;
 
@@ -461,7 +460,7 @@ class UIEditor extends ImguiTool
 		// Drag
 		if( selectedInspectorTree != null )
 		{
-			var o = preview.getObjectByName( selectedInspectorTree.name );
+			var o = selectedInspectorTree.handle;
 			if( o == null )
 			{
 				Utils.warning("Lost selected object...");
@@ -716,7 +715,7 @@ class UIEditor extends ImguiTool
 
 		for( c in def.children )
 		{
-			if( c.name == find.name )
+			if( c == find )
 				return def;
 
 			var d = getDefParent(find, c );
@@ -750,6 +749,23 @@ class UIEditor extends ImguiTool
 		e.popTarget();
 	}
 
+	function replaceDef( start: CUIObject, search: CUIObject, replace: CUIObject )
+	{
+		for( i in 0 ... start.children.length )
+		{
+			if( start.children[i] == search )
+			{
+				start.children[i] = replace;
+				return;
+			}
+			else
+			{
+				replaceDef( start.children[i], search, replace );
+			}
+		}
+
+	}
+
 	function populateEditor()
 	{
 		var def = selectedInspectorTree;
@@ -759,7 +775,7 @@ class UIEditor extends ImguiTool
 
 
 
-		var obj = preview.getObjectByName(def.name);
+		var obj = def.handle;
 		if( obj == null )
 			return;
 
@@ -780,7 +796,7 @@ class UIEditor extends ImguiTool
 			}
 		}
 
-		if( def == rootDef )
+		//if( def == rootDef )
 		{
 			// Add custom objects
 			var classList = CompileTime.getAllClasses(UIEntity);
@@ -802,18 +818,25 @@ class UIEditor extends ImguiTool
 						var fn = Reflect.field(c, "getDef");
 						if( fn != null )
 						{
-							var def = fn();
-							def.children = rootDef.children;
-							def.name = rootDef.name;
-							def.type = cls;
-							def.x = rootDef.x;
-							def.y = rootDef.y;
-							def.scaleX = rootDef.scaleX;
-							def.scaleY = rootDef.scaleY;
-							def.rotation = rootDef.rotation;
-							def.visible = rootDef.visible;
+							var newDef = fn();
+							newDef.children = def.children;
+							newDef.name = def.name;
+							newDef.type = cls;
+							newDef.x = def.x;
+							newDef.y = def.y;
+							newDef.scaleX = def.scaleX;
+							newDef.scaleY = def.scaleY;
+							newDef.rotation = def.rotation;
+							newDef.visible = def.visible;
 
-							rootDef = def;
+							if( def == rootDef )
+							{
+								rootDef = newDef;
+							}
+							else
+							{
+								replaceDef(rootDef, def, newDef );
+							}
 							updateScene();
 						}
 
@@ -838,7 +861,7 @@ class UIEditor extends ImguiTool
 			s = Type.getSuperClass( s );
 		}
 
-		updateDef( def );
+		updateDef( obj, def );
 
 		ImGui.popID();
 	}

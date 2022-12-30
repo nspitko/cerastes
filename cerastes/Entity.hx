@@ -22,7 +22,7 @@ class EntityManager
 
 	var scheduledFunctions: Array<ScheduledFunction> = [];
 
-	public function new () {} 
+	public function new () {}
 
 	public function tick( delta: Float )
 	{
@@ -49,6 +49,11 @@ class EntityManager
 	public function register( t : Entity )
 	{
 		entities.push(t);
+	}
+
+	public function remove( t : Entity )
+	{
+		entities.remove(t);
 	}
 
 	public function find( id: String )

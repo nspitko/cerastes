@@ -1,5 +1,7 @@
 package cerastes.ui;
 
+import cerastes.Entity.EntityManager;
+
 class UIEntity extends h2d.Object implements Entity
 {
 	public var lookupId: String;
@@ -10,6 +12,12 @@ class UIEntity extends h2d.Object implements Entity
 		return "\uf07c";
 	}
 	#end
+
+	public function new()
+	{
+		super();
+	}
+
 
 	public function tick( delta: Float ) {}
 	public function destroy()
@@ -30,9 +38,15 @@ class UIEntity extends h2d.Object implements Entity
 
 	}
 
-	override function onAdd()
+	public override function onAdd()
 	{
 		super.onAdd();
-		initialize();
+		EntityManager.instance.register(this);
+	}
+
+	public override function onRemove()
+	{
+		super.onRemove();
+		EntityManager.instance.remove(this);
 	}
 }

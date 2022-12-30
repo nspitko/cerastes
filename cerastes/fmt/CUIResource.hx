@@ -35,6 +35,11 @@ import hxd.res.Resource;
 
 	public var visible: Bool = true;
 
+	#if hlimgui
+	@noSerialize
+	public var handle: h2d.Object = null;
+	#end
+
 }
 
 @:structInit class CUIEntity extends CUIObject {
@@ -173,7 +178,7 @@ class CUIResource extends Resource
 	static var minVersion = 1;
 	static var version = 2;
 
-	public function toObject(?parent = null)
+	public function toObject(?parent: h2d.Object = null)
 	{
 		var data = getData();
 		Utils.assert( data.version <= version, "CUI generated with newer version than this parser supports" );
@@ -181,13 +186,18 @@ class CUIResource extends Resource
 		if( data.version < version )
 			Utils.warning( '${entry.name} was generated using a different code version. Open and save to upgrade.' );
 
-		var root = new Object(parent);
+		var root = new Object();
 
 		#if debug
 		recursiveUpgradeObjects( data.root, data.version );
 		#end
 
 		recursiveCreateObjects(data.root, root);
+
+		root = root.getChildAt(0);
+
+		if( parent != null )
+			parent.addChild(root);
 
 		return root;
 	}
@@ -227,6 +237,11 @@ class CUIResource extends Resource
 		if( entry.children != null )
 			for( c in entry.children )
 				recursiveCreateObjects( c, e );
+
+		// Fuck this but I don't wanna rewrite everything.
+		var ent: UIEntity = Std.downcast( e, UIEntity );
+		if( ent != null )
+			ent.initialize();
 	}
 
 	public static function updateObject( entry: CUIObject, target: Object )
@@ -304,6 +319,7 @@ class CUIResource extends Resource
 		}
 
 		obj.name = entry.name;
+		entry.handle = obj;
 
 		recursiveSetProperties(obj, entry);
 
@@ -611,8 +627,8 @@ class CUIResource extends Resource
 			root: def
 		};
 
-		var s = new haxe.Serializer();
-		s.serialize(cui);
+		//var s = new haxe.Serializer();
+		//s.serialize(cui);
 
 		//sys.io.File.saveContent( Utils.fixWritePath(file,"cui"),s.toString());
 		sys.io.File.saveContent( Utils.fixWritePath(file,"ui"), CDPrinter.print( cui ) );

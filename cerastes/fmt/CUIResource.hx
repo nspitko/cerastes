@@ -57,10 +57,10 @@ import hxd.res.Resource;
 @:structInit class CUIInteractive extends CUIDrawable {
 	public var cursor: hxd.Cursor = hxd.Cursor.Default;
 	public var isEllipse: Bool = false ;
-	public var backgroundColor: Int = 0xFFFFFFFF;
+	//public var backgroundColor: Int = 0xFFFFFFFF;
 
-	public var width: Float;
-	public var height: Float;
+	public var width: Float = 0;
+	public var height: Float = 0;
 }
 
 @:structInit class CUIText extends CUIDrawable {
@@ -93,10 +93,11 @@ import hxd.res.Resource;
 }
 
 
-@:structInit class CUIButton extends CUIFlow {
+@:structInit class CUISGButton extends CUIFlow {
 	public var hoverTile: String = "";
 	public var pressTile: String = "";
 	public var defaultTile: String = "";
+	public var disabledTile: String = "";
 
 	public var defaultColor: Vector = new Vector(1,1,1,1);
 	public var hoverColor: Vector = new Vector(1,1,1,1);
@@ -106,7 +107,23 @@ import hxd.res.Resource;
 	public var disabledColor: Vector = new Vector(1,1,1,1);
 
 
-	public var orientation: cerastes.ui.Button.Orientation = None;
+	public var orientation: cerastes.ui.ScaleGridButton.Orientation = None;
+}
+
+@:structInit class CUIBButton extends CUIInteractive {
+	public var hoverTile: String = "";
+	public var pressTile: String = "";
+	public var defaultTile: String = "";
+	public var disabledTile: String = "";
+
+	public var defaultColor: Vector = new Vector(1,1,1,1);
+	public var hoverColor: Vector = new Vector(1,1,1,1);
+	public var pressColor: Vector = new Vector(1,1,1,1);
+
+	public var visitedColor: Vector = new Vector(1,1,1,1);
+	public var disabledColor: Vector = new Vector(1,1,1,1);
+
+	public var orientation: cerastes.ui.ScaleGridButton.Orientation = None;
 }
 
 @:structInit class CUIFlow extends CUIDrawable {
@@ -274,17 +291,21 @@ class CUIResource extends Resource
 				var d : CUIMask = cast entry;
 				obj = new h2d.Mask(d.width,d.height);
 
+			case "h2d.Interactive":
+				var d: CUIInteractive = cast entry;
+				obj = new h2d.Interactive(d.width, d.height);
+
 			case "h2d.ScaleGrid":
 				var d : CUIScaleGrid = cast entry;
 				obj = new h2d.ScaleGrid(getTile(d.contentTile),d.borderLeft, d.borderTop);
 
-			case "h2d.Interactive":
-				var props: CUIInteractive = cast entry;
-				obj = new h2d.Interactive(props.width,props.height);
+			case "cerastes.ui.ScaleGridButton":
+				//var props: CUISGButton = cast entry;
+				obj = new cerastes.ui.ScaleGridButton();
 
-			case "cerastes.ui.Button":
-				//var props: CUIButton = cast entry;
-				obj = new cerastes.ui.Button();
+			case "cerastes.ui.BitmapButton":
+				var d: CUIBButton = cast entry;
+				obj = new cerastes.ui.BitmapButton(d.width, d.height);
 
 			case "cerastes.ui.AdvancedText":
 				var d : CUIAdvancedText = cast entry;
@@ -319,7 +340,9 @@ class CUIResource extends Resource
 		}
 
 		obj.name = entry.name;
+		#if tools
 		entry.handle = obj;
+		#end
 
 		recursiveSetProperties(obj, entry);
 
@@ -441,7 +464,7 @@ class CUIResource extends Resource
 				var e: CUIInteractive = cast entry;
 
 				o.isEllipse = e.isEllipse;
-				o.backgroundColor = e.backgroundColor;
+				//o.backgroundColor = e.backgroundColor;
 				o.cursor = e.cursor;
 
 			case "h2d.ScaleGrid":
@@ -464,12 +487,13 @@ class CUIResource extends Resource
 				o.width = e.width;
 				o.height = e.height;
 
-			case "cerastes.ui.Button":
-				var o = cast(obj, cerastes.ui.Button);
-				var e: CUIButton = cast entry;
+			case "cerastes.ui.ScaleGridButton":
+				var o = cast(obj, cerastes.ui.ScaleGridButton);
+				var e: CUISGButton = cast entry;
 
 				o.hoverTile = getTile( e.hoverTile );
 				o.pressTile = getTile( e.pressTile );
+				o.disabledTile = getTile( e.disabledTile );
 				o.defaultTile = getTile( e.defaultTile );
 
 				if( e.defaultColor != null )
@@ -492,6 +516,32 @@ class CUIResource extends Resource
 					o.minWidth = Math.ceil(o.defaultTile.width);
 					o.minHeight = Math.ceil(o.defaultTile.height);
 				}
+
+				o.reflow();
+
+			case "cerastes.ui.BitmapButton":
+				var o = cast(obj, cerastes.ui.BitmapButton);
+				var e: CUIBButton = cast entry;
+
+				o.hoverTile = getTile( e.hoverTile );
+				o.pressTile = getTile( e.pressTile );
+				o.disabledTile = getTile( e.disabledTile );
+				o.defaultTile = getTile( e.defaultTile );
+
+				if( e.defaultColor != null )
+				{
+					o.defaultColor = e.defaultColor;
+					o.pressColor = e.pressColor;
+					o.hoverColor = e.hoverColor;
+
+					o.visitedColor = e.visitedColor;
+					o.disabledColor = e.disabledColor;
+				}
+
+				if( e.orientation == null ) e.orientation = None;
+
+				o.orientation = e.orientation;
+
 
 				o.reflow();
 

@@ -1,6 +1,8 @@
 package cerastes;
 
 
+import cerastes.fmt.AtlasResource;
+import cerastes.fmt.AtlasResource.AtlasEntry;
 import h3d.mat.Texture;
 import hxd.fmt.pak.FileSystem;
 #if hldx
@@ -439,6 +441,31 @@ class Utils
 			return res.toTexture();
 		}
 
+	}
+
+	public static function getAtlasEntry( file: String ) : AtlasEntry
+	{
+		if( file == null || file == "")
+			return null;
+
+		if ( file.indexOf(".catlas") != -1 )
+		{
+			var atlasPos = file.indexOf(".catlas") + 7;
+			var atlasName = file.substr( 0, atlasPos );
+			var tileName = file.substr(atlasPos + 1);
+
+			var res = hxd.Res.loader.loadCache(atlasName, AtlasResource );
+			if( res != null )
+			{
+				var entry = res.getData().entries[tileName];
+				if( entry == null )
+					return null;
+
+				return entry;
+			}
+		}
+
+		return null;
 	}
 
 	public static function isValidTexture( file: String ): Bool

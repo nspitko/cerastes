@@ -82,10 +82,14 @@ class AdvancedText extends h2d.Text
 			} else {
 				if( e != null )
 				{
-					if( c == "#" )
+					if( c == "☃" )
 					{
 						if( colorOverride == null )
-							colorOverride = Vector.fromColor(0xF7941D);
+						{
+							var color = t.substr(i+1,6);
+							i+= 6;
+							colorOverride = Vector.fromColor( Std.parseInt('0x${color}') );
+						}
 						else
 							colorOverride = null;
 
@@ -142,6 +146,7 @@ class AdvancedText extends h2d.Text
 		calcDone = true;
 		if ( rebuild ) needsRebuild = false;
 	}
+
 
 	override function sync( ctx: RenderContext )
 	{

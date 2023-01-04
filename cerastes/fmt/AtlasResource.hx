@@ -9,6 +9,8 @@ import hxd.res.Resource;
 
 #if hlimgui
 import cerastes.tools.ImguiTool.ImGuiToolManager;
+#end
+#if tools
 import sys.thread.Mutex;
 import sys.thread.Lock;
 import sys.thread.Thread;
@@ -143,7 +145,7 @@ enum PackMode {
 	@noSerialize var trimWork: Array<AtlasEntry> = [];
 	@noSerialize var pool: Array<Thread> = null;
 	@noSerialize var binSizes = [32,64,128,256,512,1024,2048,4096,8192];
-	@noSerialize var fileName: String;
+	@noSerialize var fileName: String = null;
 	@noSerialize var workerLock = new Lock();
 	@noSerialize var packJobs: Array<PackJob> = [];
 	@noSerialize var trimMutex = new Mutex();

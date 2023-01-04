@@ -32,7 +32,7 @@ class TimerManager
 class Timer
 {
 	var time : Float = 0;
-	var duration: Float;
+	public var duration: Float;
 	public var finished = false;
 	public var repeat = false;
 
@@ -44,6 +44,12 @@ class Timer
 		this.onComplete = onComplete;
 
 		TimerManager.instance.register(this);
+	}
+
+	public function restart( )
+	{
+		time = 0;
+		finished = false;
 	}
 
 	public function cancel( )

@@ -24,12 +24,13 @@ enum Orientation
 }
 
 @:keep
-class Button extends h2d.Flow
+class ScaleGridButton extends h2d.Flow
 {
 
 	public var defaultTile(default, set): h2d.Tile = null;
 	public var hoverTile: h2d.Tile = null;
 	public var pressTile: h2d.Tile = null;
+	public var disabledTile: h2d.Tile = null;
 
 	public var defaultColor: Vector = new Vector(1,1,1,1);
 	public var hoverColor: Vector = new Vector(1,1,1,1);
@@ -88,6 +89,8 @@ class Button extends h2d.Flow
 			case Hover:
 				if( hoverTile != null )
 					this.backgroundTile = hoverTile;
+				else
+					this.backgroundTile = defaultTile;
 
 				if( hoverColor != null )
 					this.background.color = hoverColor;
@@ -103,12 +106,18 @@ class Button extends h2d.Flow
 			case Press:
 				if( pressTile != null )
 					this.backgroundTile = pressTile;
+				else
+					this.backgroundTile = defaultTile;
 
 				if( pressColor != null )
 					this.background.color = pressColor;
 
 			case Disabled:
-				this.backgroundTile = defaultTile;
+				if( disabledTile != null )
+					this.backgroundTile = disabledTile;
+				else
+					this.backgroundTile = defaultTile;
+
 
 				if( disabledColor != null )
 					this.background.color = disabledColor;
@@ -129,7 +138,6 @@ class Button extends h2d.Flow
 	override function reflow()
 	{
 		super.reflow();
-		if( background == null ) return;
 		switch( orientation )
 		{
 			case None:

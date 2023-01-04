@@ -207,14 +207,19 @@ class AssetBrowser  extends  ImguiTool
 				{
 					var res = hxd.Res.loader.loadCache( asset.file, hxd.res.BitmapFont);
 
+					var nb = asset.file.split("/");
+					var end = nb[nb.length -1];
+					var name = end.substr(0,end.length - 4);
+
+
 					var t = new Text(res.toFont(), asset.scene );
 
 					t.maxWidth = previewWidth - 8;
 
 					t.textAlign = MultilineCenter;
-					t.text = t.font.name;
-					t.y = ( previewHeight - t.textHeight ) / 2;
-					t.x = ( previewWidth - t.textWidth ) / 2;
+					t.text = t.font.name.length > 0 ? t.font.name : name;
+					t.y = Math.floor( ( previewHeight - t.textHeight ) / 2 );
+					t.x = Math.floor( ( previewWidth - t.textWidth ) / 2 );
 				}
 
 			case "flow":

@@ -195,6 +195,8 @@ class CUIResource extends Resource
 	static var minVersion = 1;
 	static var version = 2;
 
+	static var entsToInitialize: Array<UIEntity> = [];
+
 	public function toObject(?parent: h2d.Object = null)
 	{
 		var data = getData();
@@ -209,12 +211,17 @@ class CUIResource extends Resource
 		recursiveUpgradeObjects( data.root, data.version );
 		#end
 
-		recursiveCreateObjects(data.root, root);
+		recursiveCreateObjects(data.root, root, root);
 
 		root = root.getChildAt(0);
 
 		if( parent != null )
 			parent.addChild(root);
+
+		for( e in entsToInitialize )
+			e.initialize(root);
+
+		entsToInitialize = [];
 
 		return root;
 	}
@@ -246,19 +253,19 @@ class CUIResource extends Resource
 		}
 	}
 
-	public static function recursiveCreateObjects( entry: CUIObject, parent: Object )
+	public static function recursiveCreateObjects( entry: CUIObject, parent: Object, root: Object )
 	{
 		var e = createObject(entry);
 		parent.addChild(e);
 
 		if( entry.children != null )
 			for( c in entry.children )
-				recursiveCreateObjects( c, e );
+				recursiveCreateObjects( c, e, root );
 
 		// Fuck this but I don't wanna rewrite everything.
 		var ent: UIEntity = Std.downcast( e, UIEntity );
 		if( ent != null )
-			ent.initialize();
+			entsToInitialize.push(ent);
 	}
 
 	public static function updateObject( entry: CUIObject, target: Object )
@@ -353,6 +360,12 @@ class CUIResource extends Resource
 	static function recursiveSetProperties(obj: Object, entry: CUIObject)
 	{
 		setProperties(obj, entry.type, entry);
+
+		// Fuck this but I don't wanna rewrite everything.
+		// CANNOT do this here !!!
+		//var ent: UIEntity = Std.downcast( obj, UIEntity );
+		//if( ent != null )
+		//	ent.initialize( ent.getScene() );
 
 		var s =  Type.getSuperClass( Type.getClass( obj ) );
 		while( s != null )

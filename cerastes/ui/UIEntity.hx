@@ -1,5 +1,6 @@
 package cerastes.ui;
 
+import h2d.Object;
 import cerastes.Entity.EntityManager;
 
 class UIEntity extends h2d.Object implements Entity
@@ -33,7 +34,7 @@ class UIEntity extends h2d.Object implements Entity
 
 	//
 
-	public function initialize()
+	public function initialize( root: h2d.Object )
 	{
 
 	}
@@ -49,4 +50,5 @@ class UIEntity extends h2d.Object implements Entity
 		super.onRemove();
 		EntityManager.instance.remove(this);
 	}
+
 }

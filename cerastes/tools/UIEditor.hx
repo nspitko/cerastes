@@ -384,6 +384,7 @@ class UIEditor extends ImguiTool
 		var type = Type.getClassName( Type.getClass( o ) );
 
 		var bounds = o.getBounds();
+		var size = o.getSize();
 
 		var colBounds = 0x6666ff;
 		var colMins = 0x66ff66;
@@ -402,13 +403,32 @@ class UIEditor extends ImguiTool
 				selectedItemBorder.lineStyle(4,colMaxs, 0.5);
 				selectedItemBorder.drawRect(bounds.xMin, bounds.yMin, flow.maxWidth, flow.maxHeight);
 			}
-			var text: CUIText = Std.downcast( selectedInspectorTree, CUIText );
-			if( text != null )
+			else
 			{
-				var t: h2d.Text = cast o;
-				selectedItemBorder.lineStyle(4,colMaxs, 0.5);
-				selectedItemBorder.drawRect(bounds.xMin, bounds.yMin, text.maxWidth, t.textHeight);
+				var text: CUIText = Std.downcast( selectedInspectorTree, CUIText );
+				if( text != null )
+				{
+					var t: h2d.Text = cast o;
+					selectedItemBorder.lineStyle(4,colMaxs, 0.5);
+					selectedItemBorder.drawRect(bounds.xMin, bounds.yMin, text.maxWidth, t.textHeight);
+				}
+				else
+				{
+
+					var size = o.getSize();
+					size.x += o.x;
+					size.y += o.y;
+					if( size.width != bounds.width || size.height != bounds.height )
+					{
+						selectedItemBorder.lineStyle(4,colMaxs, 0.5);
+						selectedItemBorder.drawRect(size.xMin, size.yMin, size.width, size.height);
+					}
+
+				}
 			}
+
+
+
 
 		}
 		else if( Std.downcast( selectedInspectorTree, CUIMask ) != null )

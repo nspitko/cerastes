@@ -119,8 +119,6 @@ import hxd.res.Resource;
 	public var defaultColor: Vector = new Vector(1,1,1,1);
 	public var hoverColor: Vector = new Vector(1,1,1,1);
 	public var pressColor: Vector = new Vector(1,1,1,1);
-
-	public var visitedColor: Vector = new Vector(1,1,1,1);
 	public var disabledColor: Vector = new Vector(1,1,1,1);
 
 	public var orientation: cerastes.ui.ScaleGridButton.Orientation = None;
@@ -271,6 +269,11 @@ class CUIResource extends Resource
 	public static function updateObject( entry: CUIObject, target: Object )
 	{
 		recursiveSetProperties(target, entry);
+
+		var ent: UIEntity = Std.downcast( target, UIEntity );
+		if( ent != null )
+			ent.initialize( ent.getScene() );
+
 	}
 
 	static function createObject( entry: CUIObject ) : h2d.Object
@@ -360,12 +363,6 @@ class CUIResource extends Resource
 	static function recursiveSetProperties(obj: Object, entry: CUIObject)
 	{
 		setProperties(obj, entry.type, entry);
-
-		// Fuck this but I don't wanna rewrite everything.
-		// CANNOT do this here !!!
-		//var ent: UIEntity = Std.downcast( obj, UIEntity );
-		//if( ent != null )
-		//	ent.initialize( ent.getScene() );
 
 		var s =  Type.getSuperClass( Type.getClass( obj ) );
 		while( s != null )
@@ -547,13 +544,16 @@ class CUIResource extends Resource
 					o.pressColor = e.pressColor;
 					o.hoverColor = e.hoverColor;
 
-					o.visitedColor = e.visitedColor;
 					o.disabledColor = e.disabledColor;
 				}
 
 				if( e.orientation == null ) e.orientation = None;
 
 				o.orientation = e.orientation;
+
+				if( e.width > 0 ) o.width = e.width;
+				if( e.height > 0 ) o.height = e.height;
+
 
 
 				o.reflow();

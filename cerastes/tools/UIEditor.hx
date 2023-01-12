@@ -94,7 +94,12 @@ class UIEditor extends ImguiTool
 		};
 
 		previewRoot = new Object(preview);
-		cerastes.fmt.CUIResource.recursiveCreateObjects(rootDef, previewRoot);
+		cerastes.fmt.CUIResource.recursiveCreateObjects(rootDef, previewRoot, previewRoot);
+		var entsToInitialize = @:privateAccess cerastes.fmt.CUIResource.entsToInitialize;
+		for( e in entsToInitialize )
+			e.initialize(previewRoot);
+
+		@:privateAccess cerastes.fmt.CUIResource.entsToInitialize = [];
 
 	}
 
@@ -119,7 +124,14 @@ class UIEditor extends ImguiTool
 	{
 		preview.removeChildren();
 		previewRoot = new Object(preview);
-		cerastes.fmt.CUIResource.recursiveCreateObjects(rootDef, previewRoot);
+		cerastes.fmt.CUIResource.recursiveCreateObjects(rootDef, previewRoot, previewRoot);
+
+		var entsToInitialize = @:privateAccess cerastes.fmt.CUIResource.entsToInitialize;
+		for( e in entsToInitialize )
+			e.initialize(previewRoot);
+
+		@:privateAccess cerastes.fmt.CUIResource.entsToInitialize = [];
+
 		//selectedItemBorder = new Graphics();
 		preview.addChild(selectedItemBorder);
 		preview.addChild(cursor);
@@ -1171,17 +1183,10 @@ class UIEditor extends ImguiTool
 					if( nc != null )
 						d.defaultColor = nc;
 
-					ImGui.text("Visited Color");
-					var nc = IG.inputColorHVec( d.visitedColor, "visitedColor" );
-					if( nc != null )
-						d.visitedColor = nc;
-
 					ImGui.text("Disabled Color");
 					var nc = IG.inputColorHVec( d.disabledColor, "disabledColor" );
 					if( nc != null )
 						d.disabledColor = nc;
-
-
 
 					var nc = IG.inputColorHVec( d.hoverColor, "hoverColor" );
 					if( nc != null )

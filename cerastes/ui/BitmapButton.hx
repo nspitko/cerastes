@@ -195,18 +195,28 @@ class BitmapButton extends h2d.Interactive
 		cursor = Button;
 		//this.interactive.onClick = function(_) onClick();
 		onOver = function(_) {
+			if( !enabled )
+				return;
+
 			state = Hover;
 
 			if( onMouseOver != null && !hidden )
 				onMouseOver(_);
 		}
 		onOut = function(_) {
+			if( !enabled )
+				return;
+
 			state = Default;
 
 			if( onMouseOut != null && !hidden )
 				onMouseOut(_);
 		}
 		onPush = function(_) {
+
+			if( !enabled )
+				return;
+
 			state = Press;
 
 			if( onActivate != null && !hidden )
@@ -214,6 +224,10 @@ class BitmapButton extends h2d.Interactive
 		}
 
 		onRelease = function(_) {
+
+			if( !enabled )
+				return;
+
 			state = Default;
 		}
 

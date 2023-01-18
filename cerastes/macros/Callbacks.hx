@@ -208,7 +208,7 @@ class CallbackGenerator
 					var handled = false;
 					for( l in $i{"_listeners_" + field.name})
 					{
-						handled = handled || l($a{argNames});
+						handled = l($a{argNames}) || handled;
 					}
 
 					return handled;

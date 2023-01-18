@@ -388,6 +388,23 @@ class FlowEditor extends ImguiTool
 
 		nodes.shouldNavigateToContent = true;
 
+		// Ensure we have an entrance node; if not create it!
+		var hasEntrance = false;
+		for( n in nodes.nodes )
+		{
+			if( Std.isOfType( n, EntryNode ) )
+			{
+				hasEntrance = true;
+				break;
+			}
+		}
+		if( !hasEntrance )
+		{
+			var t: EntryNode = {};
+			nodes.addNode(t, 25, 25);
+		}
+
+
 	}
 
 	function saveAs()

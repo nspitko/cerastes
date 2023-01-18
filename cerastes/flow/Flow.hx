@@ -649,6 +649,8 @@ class FlowNode extends Node
 
 		customRender();
 
+		ImGui.text('ID: ${id}');
+
 		ImGui.popID();
 	}
 

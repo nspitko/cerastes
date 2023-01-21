@@ -24,6 +24,140 @@ class AdvancedText extends h2d.Text
 		return v;
 	}
 
+	function stripText( text: String )
+	{
+		var r = ~/☃[A-z0-9]{6}(.*)☃/gm;
+		text = r.replace(text,"$1");
+
+		return text;
+	}
+
+	/**
+	 * This was a mistake.
+	 * @param text
+	 * @param leftMargin = 0.
+	 * @param afterData = 0.
+	 * @param font
+	 * @param sizes
+	 * @param prevChar
+	 */
+	override function splitRawText( text : String, leftMargin = 0., afterData = 0., ?font : h2d.Font, ?sizes:Array<Float>, ?prevChar:Int = -1 )
+	{
+		var maxWidth = realMaxWidth;
+		if( maxWidth < 0 )
+		{
+			if ( sizes == null )
+				return text;
+			else
+				maxWidth = Math.POSITIVE_INFINITY;
+		}
+		if ( font == null ) font = this.font;
+		var lines = [], restPos = 0;
+		var x = leftMargin;
+		var i = 0;
+
+
+		var inSnowman = false;
+		var skipChars = 0;
+
+
+		//while( i < text.length )
+		for( i in 0 ... text.length)
+		{
+			var cc = text.charCodeAt(i);
+
+			if( cc == '☃'.code)
+			{
+				if( !inSnowman )
+				{
+					inSnowman = true;
+					skipChars = 7;
+				}
+				else
+				{
+					inSnowman = false;
+					skipChars = 1;
+				}
+			}
+
+			if( skipChars > 0 )
+			{
+				skipChars--;
+				continue;
+			}
+
+			var e = font.getChar(cc);
+			var newline = cc == '\n'.code;
+			var esize = e.width + e.getKerningOffset(prevChar);
+			var nc = text.charCodeAt(i+1);
+			if( font.charset.isBreakChar(cc) && (nc == null || !font.charset.isComplementChar(nc)) )
+			{
+				if( lines.length == 0 && leftMargin > 0 && x > maxWidth )
+				{
+					lines.push("");
+					if ( sizes != null ) sizes.push(leftMargin);
+					x -= leftMargin;
+				}
+				var size = x + esize + letterSpacing; /* TODO : no letter spacing */
+				var k = i + 1, max = text.length;
+				var prevChar = prevChar;
+				var breakFound = false;
+				while( size <= maxWidth && k < max )
+				{
+					var cc = text.charCodeAt(k++);
+					if( lineBreak && (font.charset.isSpace(cc) || cc == '\n'.code ) )
+					{
+						breakFound = true;
+						break;
+					}
+
+					var e = font.getChar(cc);
+					size += e.width + letterSpacing + e.getKerningOffset(prevChar);
+					prevChar = cc;
+					var nc = text.charCodeAt(k+1);
+					if( font.charset.isBreakChar(cc) && (nc == null || !font.charset.isComplementChar(nc)) ) break;
+				}
+				if( lineBreak && (size > maxWidth || (!breakFound && size + afterData > maxWidth)) )
+				{
+					newline = true;
+					if( font.charset.isSpace(cc) )
+					{
+						lines.push(text.substr(restPos, i - restPos));
+						e = null;
+					}
+					else
+					{
+						lines.push(text.substr(restPos, i + 1 - restPos));
+					}
+					restPos = i + 1;
+				}
+			}
+			if( e != null && cc != '\n'.code )
+				x += esize + letterSpacing;
+			if( newline )
+			{
+				if ( sizes != null ) sizes.push(x);
+				x = 0;
+				prevChar = -1;
+			}
+			else
+				prevChar = cc;
+
+		}
+		if( restPos < text.length )
+		{
+			if( lines.length == 0 && leftMargin > 0 && x + afterData - letterSpacing > maxWidth )
+			{
+				lines.push("");
+				if ( sizes != null ) sizes.push(leftMargin);
+					x -= leftMargin;
+			}
+			lines.push(text.substr(restPos, text.length - restPos));
+			if ( sizes != null ) sizes.push(x);
+		}
+		return lines.join("\n");
+	}
+
 
 	override function initGlyphs( text : String, rebuild = true ) : Void
 	{
@@ -34,7 +168,7 @@ class AdvancedText extends h2d.Text
 		var align = textAlign;
 		var lines = new Array<Float>();
 		var dl = font.lineHeight + lineSpacing;
-		var t = splitRawText(text, 0, 0, lines);
+		var t = splitRawText( text, 0, 0, lines);
 
 		for ( lw in lines ) {
 			if ( lw > x ) x = lw;

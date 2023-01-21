@@ -142,30 +142,31 @@ class BitmapButton extends h2d.Interactive
 
 	public function reflow()
 	{
+
 		switch( orientation )
 		{
 			case None:
 			case CW:
 				bitmap.rotation = Math.PI / 2;
-				bitmap.x = bitmap.height;
+				bitmap.x = bitmap.tile.height;
 			case CW180:
 				bitmap.rotation = Math.PI;
-				bitmap.x = bitmap.width;
-				bitmap.y = bitmap.height;
+				bitmap.x = bitmap.tile.width;
+				bitmap.y = bitmap.tile.height;
 			case CCW:
 				bitmap.rotation = -Math.PI / 2;
-				bitmap.y = bitmap.width;
+				bitmap.y = bitmap.tile.width;
 			case FlipX:
 				bitmap.scaleX = -1;
-				bitmap.x = bitmap.width;
+				bitmap.x = bitmap.tile.width;
 			case FlipY:
 				bitmap.scaleY = -1;
-				bitmap.y = bitmap.height;
+				bitmap.y = bitmap.tile.height;
 			case FlipXY:
 				bitmap.scaleX = -1;
 				bitmap.scaleY = -1;
-				bitmap.x = bitmap.width;
-				bitmap.y = bitmap.height;
+				bitmap.x = bitmap.tile.width;
+				bitmap.y = bitmap.tile.height;
 		}
 
 		state = state;

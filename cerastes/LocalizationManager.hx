@@ -143,7 +143,7 @@ class LocalizationManager
 	public static function formatStr(str: String, ?subs: Array<String>)
 	{
 		// @todo what was this doing???
-		str = ~/^[\t ]+|[\t ]+$/gm.replace( str, "");
+		//str = ~/^[\t ]+|[\t ]+$/gm.replace( str, "");
 
 		if( subs != null )
 		{

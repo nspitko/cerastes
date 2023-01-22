@@ -724,24 +724,33 @@ class UIEditor extends ImguiTool
 			{
 				if( ImGui.menuItem( '\uf24d Clone') )
 				{
+					var parent: h2d.Object = preview;
+					if( c.handle != null && c.handle.parent != null )
+						parent = c.handle.parent;
+
 					var clone = c.clone((name) -> {
 						var reg = ~/([0-9]+)([^0-9]*)$/;
 						if( reg.match(name) )
 						{
 							var endNum = reg.matched(0);
-							if( endNum != null )
+							var num = Std.parseInt( endNum );
+							var newName: String;
+							do
 							{
-								var num = Std.parseInt( endNum );
 								num++;
-								return reg.replace( name, '${Std.string( num )}$2' );
+								newName = reg.replace( name, '${Std.string( num )}$2' );
 							}
+							while( parent.getObjectByName(newName) != null );
+
+							return newName;
+
 						}
 						return name + " 1";
 
 					});
-					var parent = getDefParent(c);
+					var defParent = getDefParent(c);
 
-					parent.children.push( clone );
+					defParent.children.push( clone );
 
 					updateScene();
 				}

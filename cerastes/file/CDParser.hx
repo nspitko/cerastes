@@ -196,6 +196,8 @@ class CDParser {
 						switch (c) {
 							case ' '.code, '\r'.code, '\n'.code, '\t'.code:
 							// loop
+							case '/'.code:
+								parseComment();
 							case ']'.code:
 								return arr;
 							case ','.code:

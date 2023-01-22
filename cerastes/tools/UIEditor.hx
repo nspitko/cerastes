@@ -1,6 +1,7 @@
 
 package cerastes.tools;
 
+import cerastes.macros.Metrics;
 import cerastes.ui.UIEntity;
 #if hlimgui
 import hxd.Key;
@@ -122,6 +123,7 @@ class UIEditor extends ImguiTool
 
 	function updateScene()
 	{
+		Metrics.begin();
 		preview.removeChildren();
 		previewRoot = new Object(preview);
 		cerastes.fmt.CUIResource.recursiveCreateObjects(rootDef, previewRoot, previewRoot);
@@ -135,13 +137,16 @@ class UIEditor extends ImguiTool
 		//selectedItemBorder = new Graphics();
 		preview.addChild(selectedItemBorder);
 		preview.addChild(cursor);
+		Metrics.end();
 
 	}
 
 	function updateDef( e: Object, o: CUIObject )
 	{
+		Metrics.begin();
 		cerastes.fmt.CUIResource.updateObject(o, e);
 		@:privateAccess e.onContentChanged();
+		Metrics.end();
 	}
 
 	function inspectorColumn()
@@ -633,6 +638,9 @@ class UIEditor extends ImguiTool
 			if( ImGui.isItemClicked() )
 				selectedInspectorTree = c;
 
+			if( ImGui.isItemClicked( ImGuiMouseButton.Right ) )
+				ImGui.openPopup('${c.name}_uie_context');
+
 			// Drag source
 			var srcFlags: ImGuiDragDropFlags  = 0;
 			srcFlags |= ImGuiDragDropFlags.SourceNoPreviewTooltip;
@@ -707,6 +715,36 @@ class UIEditor extends ImguiTool
 					updateScene();
 				}
 
+
+				ImGui.endPopup();
+			}
+
+			// Right click context menu
+			if( ImGui.beginPopup('${c.name}_uie_context') )
+			{
+				if( ImGui.menuItem( '\uf24d Clone') )
+				{
+					var clone = c.clone((name) -> {
+						var reg = ~/([0-9]+)([^0-9]*)$/;
+						if( reg.match(name) )
+						{
+							var endNum = reg.matched(0);
+							if( endNum != null )
+							{
+								var num = Std.parseInt( endNum );
+								num++;
+								return reg.replace( name, '${Std.string( num )}$2' );
+							}
+						}
+						return name + " 1";
+
+					});
+					var parent = getDefParent(c);
+
+					parent.children.push( clone );
+
+					updateScene();
+				}
 
 				ImGui.endPopup();
 			}

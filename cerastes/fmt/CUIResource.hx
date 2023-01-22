@@ -38,6 +38,39 @@ import hxd.res.Resource;
 	#if hlimgui
 	@noSerialize
 	public var handle: h2d.Object = null;
+
+	public function clone( fnRename: (String) -> String )
+	{
+		var cls = Type.getClass(this);
+		var inst = Type.createEmptyInstance(cls);
+		var fields = Type.getInstanceFields(cls);
+		for (field in fields)
+		{
+			if( field == "children")
+			{
+				continue;
+			}
+			else
+			{
+				// generic copy
+				var val:Dynamic = Reflect.field(this,field);
+				if ( !Reflect.isFunction(val) )
+				{
+					Reflect.setField(inst,field,val);
+				}
+			}
+		}
+
+		inst.name = fnRename( inst.name );
+		inst.children = [];
+		inst.handle = null; // fixup
+		// Now clone children
+		for( c in children )
+		{
+			inst.children.push( c.clone( fnRename ) );
+		}
+		return inst;
+	}
 	#end
 
 }
@@ -197,6 +230,8 @@ class CUIResource extends Resource
 
 	public function toObject(?parent: h2d.Object = null)
 	{
+		entsToInitialize = [];
+
 		var data = getData();
 		Utils.assert( data.version <= version, "CUI generated with newer version than this parser supports" );
 		Utils.assert( data.version >= minVersion, "CUI version newer than parser understands; parsing will probably fail!" );
@@ -399,7 +434,10 @@ class CUIResource extends Resource
 			case "h2d.Text":
 				var o = cast(obj, h2d.Text);
 				var e: CUIText = cast entry;
-				o.text = e.text;
+				if( e.text.charAt(0) == "#" )
+					o.text = LocalizationManager.localize( e.text.substr(1) );
+				else
+					o.text = e.text;
 
 				o.font = getFont( e.font, e );
 

@@ -16,6 +16,7 @@ class AdvancedText extends h2d.Text
 
 	public var revealed(default, null): Bool = false;
 	public var characters(default, set): Int = -1; // -1 -> All, else limit to a specific number
+	public var ellipsis: Bool = false;
 
 	function set_characters( v: Int )
 	{
@@ -187,6 +188,10 @@ class AdvancedText extends h2d.Text
 			x = 0;
 		}
 
+		// hack
+		if( ellipsis )
+			t = StringTools.replace(text,"\n","");
+
 		var colorOverride :Vector = null;
 		var mode = None;
 
@@ -297,5 +302,25 @@ class AdvancedText extends h2d.Text
 			if ( needsRebuild )
 				initGlyphs(currentText);
 		}
+	}
+
+	override function set_text(t : String) {
+		var t = t == null ? "null" : t;
+		if( t == this.text ) return t;
+
+		if( ellipsis && maxWidth > 0 )
+		{
+			// chunk by word to find what fits
+			var w: Float = calcTextWidth( t );
+			var lastSpace = t.lastIndexOf(" ");
+			while( w > realMaxWidth && lastSpace > 0 )
+			{
+				t = LocalizationManager.localize("ellipsis", t.substr(0, lastSpace ) );
+				w = calcTextWidth( t );
+				lastSpace = t.lastIndexOf(" ");
+			}
+		}
+
+		return super.set_text(t);
 	}
 }

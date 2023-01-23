@@ -110,6 +110,7 @@ import hxd.res.Resource;
 }
 
 @:structInit class CUIAdvancedText extends CUIText {
+	public var ellipsis: Bool = false;
 }
 
 
@@ -226,11 +227,10 @@ class CUIResource extends Resource
 	static var minVersion = 1;
 	static var version = 2;
 
-	static var entsToInitialize: Array<UIEntity> = [];
+	var entsToInitialize: Array<UIEntity> = [];
 
 	public function toObject(?parent: h2d.Object = null)
 	{
-		entsToInitialize = [];
 
 		var data = getData();
 		Utils.assert( data.version <= version, "CUI generated with newer version than this parser supports" );
@@ -238,13 +238,21 @@ class CUIResource extends Resource
 		if( data.version < version )
 			Utils.warning( '${entry.name} was generated using a different code version. Open and save to upgrade.' );
 
-		var root = new Object();
-
 		#if debug
 		recursiveUpgradeObjects( data.root, data.version );
 		#end
 
-		recursiveCreateObjects(data.root, root, root);
+
+		return defToObject( data.root, parent );
+	}
+
+	public function defToObject(def: CUIObject, ?parent: h2d.Object )
+	{
+		entsToInitialize = [];
+
+		var root = new Object();
+
+		recursiveCreateObjects(def, root, root);
 
 		root = root.getChildAt(0);
 
@@ -254,9 +262,8 @@ class CUIResource extends Resource
 		for( e in entsToInitialize )
 			e.initialize(root);
 
-		entsToInitialize = [];
-
 		return root;
+
 	}
 
 	public static function recursiveUpgradeObjects( object: CUIObject, version: Int)
@@ -286,7 +293,7 @@ class CUIResource extends Resource
 		}
 	}
 
-	public static function recursiveCreateObjects( entry: CUIObject, parent: Object, root: Object )
+	public function recursiveCreateObjects( entry: CUIObject, parent: Object, root: Object )
 	{
 		var e = createObject(entry);
 		parent.addChild(e);
@@ -445,6 +452,10 @@ class CUIResource extends Resource
 				o.maxWidth = e.maxWidth;
 
 			case "cerastes.ui.AdvancedText":
+				var o = cast( obj, cerastes.ui.AdvancedText );
+				var e: CUIAdvancedText = cast entry;
+
+				o.ellipsis = e.ellipsis;
 
 
 			case "h2d.Bitmap":

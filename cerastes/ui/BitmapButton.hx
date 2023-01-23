@@ -213,6 +213,7 @@ class BitmapButton extends h2d.Interactive
 			if( onMouseOut != null && !hidden )
 				onMouseOut(_);
 		}
+
 		onPush = function(_) {
 
 			if( !enabled )

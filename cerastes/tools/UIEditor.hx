@@ -94,14 +94,7 @@ class UIEditor extends ImguiTool
 			children: []
 		};
 
-		previewRoot = new Object(preview);
-		cerastes.fmt.CUIResource.recursiveCreateObjects(rootDef, previewRoot, previewRoot);
-		var entsToInitialize = @:privateAccess cerastes.fmt.CUIResource.entsToInitialize;
-		for( e in entsToInitialize )
-			e.initialize(previewRoot);
-
-		@:privateAccess cerastes.fmt.CUIResource.entsToInitialize = [];
-
+		updateScene();
 	}
 
 	public function openFile( f: String )
@@ -125,14 +118,10 @@ class UIEditor extends ImguiTool
 	{
 		Metrics.begin();
 		preview.removeChildren();
-		previewRoot = new Object(preview);
-		cerastes.fmt.CUIResource.recursiveCreateObjects(rootDef, previewRoot, previewRoot);
-
-		var entsToInitialize = @:privateAccess cerastes.fmt.CUIResource.entsToInitialize;
-		for( e in entsToInitialize )
-			e.initialize(previewRoot);
-
-		@:privateAccess cerastes.fmt.CUIResource.entsToInitialize = [];
+		//previewRoot = new Object(preview);
+		var res = new CUIResource(null);
+		previewRoot = res.defToObject(rootDef);
+		preview.addChild(previewRoot);
 
 		//selectedItemBorder = new Graphics();
 		preview.addChild(selectedItemBorder);
@@ -1025,6 +1014,10 @@ class UIEditor extends ImguiTool
 				}
 
 			case "cerastes.ui.AdvancedText":
+
+				var d: CUIAdvancedText = cast def;
+
+				wref( ImGui.checkbox( "Ellipsis", _ ), d.ellipsis );
 
 			case "h2d.Bitmap":
 				var d: CUIBitmap = cast def;

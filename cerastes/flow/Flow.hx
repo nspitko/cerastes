@@ -88,7 +88,10 @@ import cerastes.tools.FlowDebugger;
 
 				var result : Bool = runner.context.interp.execute(program);
 				if( result )
+				{
 					next( pins[idx+1] ); // true
+					return;
+				}
 
 				idx++;
 			}

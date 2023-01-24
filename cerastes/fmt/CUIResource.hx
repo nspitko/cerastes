@@ -18,6 +18,14 @@ import h2d.Object;
 import haxe.Json;
 import hxd.res.Resource;
 
+@:keepSub
+@:structInit class CUIFilterDef {
+
+}
+
+@:structInit class CUIMaskFilterDef {
+
+}
 
 // Cerastes UI
 @:keepSub
@@ -34,6 +42,8 @@ import hxd.res.Resource;
 	public var scaleY: Float = 1;
 
 	public var visible: Bool = true;
+
+	public var filters: Array< CUIFilterDef > = null;
 
 	#if hlimgui
 	@noSerialize
@@ -118,6 +128,13 @@ import hxd.res.Resource;
 	public var tile: String = "#FF00FF";
 	public var width: Float = -1;
 	public var height: Float = -1;
+}
+
+@:structInit class CUIAdvancedBitmap extends CUIBitmap {
+	public var scrollX: Int = 0;
+	public var scrollY: Int = 0;
+	public var clipX: Int = 0;
+	public var clipY: Int = 0;
 }
 
 @:structInit class CUIAnim extends CUIDrawable {
@@ -336,6 +353,9 @@ class CUIResource extends Resource
 			case "h2d.Bitmap":
 				obj = new Bitmap( );
 
+			case "cerastes.ui.AdvancedBitmap":
+				obj = new cerastes.ui.AdvancedBitmap();
+
 			case "h2d.Anim":
 				obj = new h2d.Anim();
 
@@ -467,6 +487,17 @@ class CUIResource extends Resource
 
 				o.width = e.width > 0 ? e.width : null;
 				o.height = e.height > 0 ? e.height : null;
+
+
+			case "cerastes.ui.AdvancedBitmap":
+				var o = cast(obj, cerastes.ui.AdvancedBitmap);
+				var e: CUIAdvancedBitmap = cast entry;
+
+				o.scrollX = e.scrollX;
+				o.scrollY = e.scrollY;
+
+				o.clipX = e.clipX;
+				o.clipY = e.clipY;
 
 			case "h2d.Anim":
 				var o = cast(obj, h2d.Anim);

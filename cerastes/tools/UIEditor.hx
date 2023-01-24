@@ -1045,6 +1045,15 @@ class UIEditor extends ImguiTool
 						d.height = -1;
 				}
 
+			case "cerastes.ui.AdvancedBitmap":
+				var d: CUIAdvancedBitmap = cast def;
+
+				wref( ImGui.inputInt("Clip X",_,1,10), d.clipX );
+				wref( ImGui.inputInt("Clip Y",_,1,10), d.clipY );
+
+				wref( ImGui.inputInt("Scroll X",_,1,10), d.scrollX );
+				wref( ImGui.inputInt("Scroll Y",_,1,10), d.scrollY );
+
 			case "h2d.Anim":
 				var d: CUIAnim = cast def;
 

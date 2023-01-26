@@ -27,15 +27,17 @@ class EntityManager
 	public function tick( delta: Float )
 	{
 		Metrics.begin();
-		var i = entities.length;
+		var ents = entities.copy();
+		var i = ents.length;
 		while( i-- > 0 )
 		{
-			if( entities[i].isDestroyed() )
-				entities.splice(i,1);
+			if( ents[i].isDestroyed() )
+				ents.splice(i,1);
 			else
-				entities[i].tick(delta);
-
+				ents[i].tick(delta);
 		}
+
+		entities = ents;
 
 		var t = haxe.Timer.stamp();
 		while( scheduledFunctions.length > 0 && scheduledFunctions[0].time < t )
@@ -49,11 +51,6 @@ class EntityManager
 	public function register( t : Entity )
 	{
 		entities.push(t);
-	}
-
-	public function remove( t : Entity )
-	{
-		entities.remove(t);
 	}
 
 	public function find( id: String )

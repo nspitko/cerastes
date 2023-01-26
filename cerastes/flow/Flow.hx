@@ -221,6 +221,9 @@ import cerastes.tools.FlowDebugger;
 		// @bugbug What the fuck are these numbers
 		commentWidth = v.x - 16;
 		commentHeight = v.y - 43;
+
+		if( commentHeight == 16)
+			trace("Setting node to bad value?!");
 	}
 	 #end
  }
@@ -388,6 +391,45 @@ class LabelNode extends FlowNode
 				kind: Output,
 				label: "Output \uf04b",
 				dataType: Node
+			}
+		]
+	};
+
+	override function get_def()	{ return d;	}
+
+	override function get_labelInfo()
+	{
+		return labelId;
+	}
+	#end
+}
+
+/**
+ * Jump to a label. Useful for organizing large graphs.
+ */
+ @:structInit
+class JumpNode extends FlowNode
+{
+	@editor("Label","String")
+	public var labelId: String = null;
+
+	public override function process()
+	{
+		if( labelId != null)
+			runner.jump(labelId);
+	}
+
+	#if hlimgui
+	static final d: NodeDefinition = {
+		name:"Jump",
+		kind: Blueprint,
+		color: 0xFF882222,
+		pins: [
+			{
+				id: 0,
+				kind: Input,
+				label: "\uf04e Input",
+				dataType: Node,
 			}
 		]
 	};
@@ -671,6 +713,16 @@ class FlowNode extends Node
 
 				onAfterProp(field);
 
+			case "Int":
+				var val = Reflect.getProperty(this,field);
+				if( wref( ImGui.inputInt(args[0], _ ), val ) )
+					Reflect.setField( this, field, val.get() );
+
+				if (tooltip != null && ImGui.isItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
+					ImGui.setTooltip(tooltip);
+
+				onAfterProp(field);
+
 			case "String" | "LocalizedString":
 				var val = Reflect.getProperty(this,field);
 				var ret = IG.textInput(args[0],val);
@@ -937,6 +989,11 @@ class FlowRunner
 	public function setVar( name: String, value: Dynamic )
 	{
 		context.interp.variables.set(name, value );
+	}
+
+	public function getVar( name: String )
+	{
+		return context.interp.variables.get( name );
 	}
 
 	public function run( nodeId: NodeId32 = 0, label: String = null )

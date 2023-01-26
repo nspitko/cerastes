@@ -2,10 +2,13 @@ package cerastes.ui;
 
 import h2d.Object;
 import cerastes.Entity.EntityManager;
+import cerastes.macros.Callbacks.ClassKey;
 
 class UIEntity extends h2d.Object implements Entity
 {
 	public var lookupId: String;
+	var trackedCallbacks = new Array<(ClassKey -> Bool)>();
+	var destroyed = false;
 
 	#if tools
 	public static function getEditorIcon()
@@ -21,15 +24,16 @@ class UIEntity extends h2d.Object implements Entity
 
 
 	public function tick( delta: Float ) {}
-	public function destroy()
-	{
-		removeChildren();
-		visible = false;
-	}
 
 	public function isDestroyed()
 	{
-		return false;
+		return destroyed;
+	}
+
+	public function destroy()
+	{
+		destroyed = true;
+		remove();
 	}
 
 	//
@@ -37,6 +41,12 @@ class UIEntity extends h2d.Object implements Entity
 	public function initialize( root: h2d.Object )
 	{
 
+	}
+
+	function trackCallback( success: Bool, unregisterFunction: ( ClassKey -> Bool ) )
+	{
+		if( success )
+			trackedCallbacks.push( unregisterFunction );
 	}
 
 	public override function onAdd()
@@ -48,7 +58,10 @@ class UIEntity extends h2d.Object implements Entity
 	public override function onRemove()
 	{
 		super.onRemove();
-		EntityManager.instance.remove(this);
+		destroyed = true;
+
+		for( cb in trackedCallbacks )
+            cb( this );
 	}
 
 }

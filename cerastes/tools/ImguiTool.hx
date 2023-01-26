@@ -64,6 +64,40 @@ class ImGuiToolManager
 
 	public static var popupStack: Array<ImGuiPopup> = [];
 
+	public static var enabled(default, set): Bool = false;
+
+	static function set_enabled(v)
+	{
+		enabled = v;
+		if( enabled )
+		{
+			// Temp
+			#if hlsdl
+			sdl.Sdl.setRelativeMouseMode(false);
+			#end
+			#if hldx
+			@:privateAccess hxd.Window.getInstance().window.clipCursor(false);
+			#end
+
+			@:privateAccess hxd.Window.getInstance().window.maximize();
+			Main.currentScene.disableEvents();
+
+			hxd.System.setNativeCursor( hxd.Cursor.Default );
+		}
+		else
+		{
+			@:privateAccess hxd.Window.getInstance().window.restore();
+			Main.currentScene.enableEvents();
+
+
+			// Clear imgui context
+			ImGui.newFrame();
+			ImGui.render();
+		}
+
+		return v;
+	}
+
 	public static function showPopup( title: String, desc: String, type: ImGuiPopupType )
 	{
 		popupStack.push({

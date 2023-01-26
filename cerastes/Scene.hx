@@ -7,6 +7,10 @@ import cerastes.ui.Console.GlobalConsole;
 import hxd.fmt.fbx.BaseLibrary.TmpObject;
 import haxe.Constraints;
 
+#if hlimgui
+import cerastes.tools.ImguiTool.ImGuiToolManager;
+#end
+
 @:keepSub
 class Scene
 {
@@ -52,7 +56,7 @@ class Scene
         s3d.addChild( cerastes.c3d.DebugDraw.g );
         s2d.addChild( cerastes.c3d.DebugDraw.t );
         #if hlimgui
-        if( Main.instance.showTools)
+        if( ImGuiToolManager.enabled )
         {
             Main.instance.sceneEvents.removeScene( s2d );
             Main.instance.sceneEvents.removeScene( s3d );
@@ -153,7 +157,7 @@ class Scene
         app.sevents.removeScene(this.s2d);
 
         #if hlimgui
-        if( Main.instance.showTools)
+        if( ImGuiToolManager.enabled )
         {
             Main.instance.sceneEvents.removeScene( s2d );
             Main.instance.sceneEvents.removeScene( s3d );
@@ -196,6 +200,8 @@ class Scene
         Main.currentScene = other;
         other.enter();
         this.unload();
+
+        @:privateAccess other.s2d.onAdd();
     }
 
     public function switchToNewScene( className: String )
@@ -211,6 +217,8 @@ class Scene
         this.exit();
         Main.currentScene = other;
         other.enter();
+
+        @:privateAccess other.s2d.onAdd();
 
 
         // Delay this until after tick

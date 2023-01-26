@@ -11,6 +11,7 @@ class Config {
 	**/
 	public static var flowEditorNodes: Map<String, Class<Dynamic>> = [
 		"Label" => Type.resolveClass("cerastes.flow.LabelNode"),
+		"Jump" => Type.resolveClass("cerastes.flow.JumpNode"),
 		"Scene" => Type.resolveClass("cerastes.flow.SceneNode"),
 		"Exit" => Type.resolveClass("cerastes.flow.ExitNode"),
 		"File" => Type.resolveClass("cerastes.flow.FileNode"),

@@ -84,6 +84,7 @@ class ImGuiNodes
 	{
 		editor = NodeEditor.createEditor();
 
+
 	}
 
 	public function regenerateData()
@@ -170,6 +171,13 @@ class ImGuiNodes
 
 	public function render()
 	{
+
+
+
+		// HACK: Do not do shit while minimized, it breaks the world.
+		if( hxd.Window.getInstance().width == 0 || hxd.Window.getInstance().height == 0 )
+			return;
+
 		if( iconWidth == 0 )
 		{
 			var size: ImVec2 = ImGui.calcTextSize("\uf04e");
@@ -180,6 +188,9 @@ class ImGuiNodes
 
 		if( style == null )
 			style = NodeEditor.getStyle();
+
+		style.NodeRounding = 0;
+
 
 		NodeEditor.begin("test");
 
@@ -306,12 +317,12 @@ class ImGuiNodes
 			drawList.addRectFilled(
 				{x: itemMin.x - padX, y: itemMin.y - padY },
 				{x: itemMax.x + padX, y: itemMax.y + padY },
-				0x44FFFFFF, 4.0, ImDrawFlags.RoundCornersAll);
+				0x44FFFFFF, style.GroupRounding, ImDrawFlags.RoundCornersAll);
 
 			drawList.addRect(
 				{x: itemMin.x - padX, y: itemMin.y - padY },
 				{x: itemMax.x + padX, y: itemMax.y + padY },
-				0x88FFFFFF, 4.0, ImDrawFlags.RoundCornersAll);
+				0x88FFFFFF, style.GroupRounding, ImDrawFlags.RoundCornersAll);
 
 			//ImGui.popStyleVar();
 
@@ -323,7 +334,8 @@ class ImGuiNodes
 
 			var size: ImVec2 = NodeEditor.getNodeSize( c.id );
 
-			if( size.x > 0 && size.y > 0)
+
+			if( size.x > 0 && size.y > 16)
 				node.setSize( size );
 
 

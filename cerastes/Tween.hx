@@ -1,5 +1,6 @@
 package cerastes;
 
+import tweenxcore.Tools.Easing;
 import cerastes.macros.Metrics;
 
 class TweenManager
@@ -66,7 +67,7 @@ class Tween
 		duration = tweenDuration;
 		start = startVal;
 		end = endVal;
-		func = tweenFunc;
+		func = tweenFunc != null ? tweenFunc : Easing.linear;
 		updateFunc = onUpdate;
 		completeFunc = onComplete;
 

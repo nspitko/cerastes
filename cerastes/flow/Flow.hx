@@ -228,6 +228,44 @@ import cerastes.tools.FlowDebugger;
 	 #end
  }
 
+ /**
+ * Used to switch between scenes
+ * be done from other sources.
+ */
+@:structInit
+class FlowNote extends FlowNode
+{
+	#if hlimgui
+	@editor("Note","StringMultiline")
+	public var note: String;
+
+	@noSerialize
+	public final maxWidth = 250;
+
+	static final d: NodeDefinition = {
+		name:"Note",
+		kind: Note,
+		pins: []
+	};
+
+	override function get_def() { return d; }
+	override function get_label() { return note; }
+	override function get_size(): ImVec2 {
+
+		var size = ImGui.calcTextSize( note, null, false, maxWidth );
+
+		return {x: size.x, y: maxWidth };
+	}
+
+	override function render()
+	{
+		ImGui.pushTextWrapPos( ImGui.getCursorPos().x + maxWidth );
+		ImGui.textWrapped( note );
+		ImGui.popTextWrapPos();
+
+	}
+	#end
+}
 
 
 /**

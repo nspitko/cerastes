@@ -1,9 +1,10 @@
 
 package cerastes.tools;
 
+
+#if hlimgui
 import hxd.Key;
 import hxd.SceneEvents;
-#if hlimgui
 import cerastes.tools.ImguiTools.IG;
 import h3d.Engine;
 import h3d.mat.Texture;
@@ -65,6 +66,16 @@ class ImGuiToolManager
 	public static var popupStack: Array<ImGuiPopup> = [];
 
 	public static var enabled(default, set): Bool = false;
+
+	static var sceneRT: Texture;
+	static var sceneRTId: Int;
+
+	static var viewportWidth: Int;
+	static var viewportHeight: Int;
+	static var viewportScale: Int;
+
+	static var previewEvents: SceneEvents;
+
 
 	static function set_enabled(v)
 	{
@@ -156,6 +167,36 @@ class ImGuiToolManager
 		ImGuiToolManager.consoleFont = ImGuiToolManager.defaultFont; //ImGuiToolManager.addFont("res/tools/console.ttf", 14);
 		ImGuiToolManager.buildFonts();
 
+		var viewportDimensions = IG.getViewportDimensions();
+		viewportWidth = viewportDimensions.width;
+		viewportHeight = viewportDimensions.height;
+		viewportScale = viewportDimensions.scale;
+
+		sceneRT = new Texture(viewportWidth,viewportHeight, [Target] );
+
+		previewEvents = new SceneEvents();
+
+
+
+	}
+
+	public static function drawScene()
+	{
+		ImGui.begin("\uf3fa Scene", null, ImGuiWindowFlags.AlwaysAutoResize );
+		var pos = ImGui.getCursorPos();
+		var screenPos = ImGui.getCursorScreenPos();
+		var size: ImVec2S = { x: viewportWidth, y: viewportHeight };
+
+		ImGui.button("dummy", size );
+		ImGui.setCursorPos( pos );
+		ImGui.image(sceneRT, size );
+
+		updatePreviewEvents( screenPos, viewportScale, previewEvents );
+
+		ImGui.end();
+
+
+
 
 	}
 
@@ -194,6 +235,17 @@ class ImGuiToolManager
 
 			offset = renderPopup( popup, i, offset );
 		}
+
+		var s2d = Main.currentScene.s2d;
+		@:privateAccess
+		{
+			if( previewEvents.scenes.length == 1 && previewEvents.scenes[0] != s2d )
+				previewEvents.removeScene( previewEvents.scenes[0] );
+
+			if( previewEvents.scenes.length == 0 )
+				previewEvents.addScene( s2d );
+		}
+
 
 
 		Metrics.end();
@@ -251,6 +303,19 @@ class ImGuiToolManager
 		Metrics.begin();
 		for( t in tools )
 			t.render( e );
+		Metrics.end();
+
+		Metrics.begin("Scene Render");
+		// Render current scene to texture
+		sceneRT.clear( 0 );
+
+		e.pushTarget( sceneRT );
+		e.clear(0,1);
+		Metrics.begin("currentScene.render");
+		Main.currentScene.render(e);
+
+		Metrics.end();
+		e.popTarget();
 		Metrics.end();
 	}
 
@@ -330,14 +395,19 @@ class ImGuiToolManager
 	}
 
 
-	public static function updatePreviewEvents( startPos: ImVec2, previewEvents: SceneEvents )
+	public static function updatePreviewEvents( startPos: ImVec2, scale: Int = 1, previewEvents: SceneEvents )
 	{
 		#if hlimgui
 		var hovered = ImGui.isItemHovered();
 
 		//InputManager.enabled = hovered;
+		// Click prevents
 		if( !hovered )
-			return;
+		{
+//			trace("no hover");
+//			return;
+		}
+
 
 		var endPos: ImVec2 = ImGui.getCursorScreenPos();
 		var mousePos: ImVec2 = ImGui.getMousePos();
@@ -353,10 +423,8 @@ class ImGuiToolManager
 		var viewportHeight = viewportDimensions.height;
 
 		var engine = Engine.getCurrent();
-		var sx: Single = engine.width / viewportWidth;
-		var sy: Single = engine.height / viewportHeight;
-		mouseScenePos.x *= sx;
-		mouseScenePos.y *= sy;
+		mouseScenePos.x *= scale;
+		mouseScenePos.y *= scale;
 
 		var event = new hxd.Event(EMove, mouseScenePos.x, mouseScenePos.y);
 
@@ -393,6 +461,7 @@ class ImGuiToolManager
 
 
 		@:privateAccess previewEvents.emitEvent( event );
+		previewEvents.setMousePos( event.relX * 1/viewportScale, event.relY * 1/viewportScale );
 
 		//preview.dispatchListeners( event );
 

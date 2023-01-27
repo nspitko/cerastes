@@ -24,6 +24,7 @@ abstract LinkId32(Int) from Int to Int {}
 	var Blueprint = 0;
 	var Comment = 1;
 	var Micro = 2;
+	var Note = 3;
 }
 
 typedef PortId = Int;

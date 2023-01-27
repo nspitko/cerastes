@@ -235,6 +235,8 @@ class ImGuiNodes
 				renderCommentNode(node);
 			case Micro:
 				renderMicroNode(node);
+			case Note:
+				renderNoteNode(node);
 			default:
 				Utils.assert(false, 'Unknown node kind ${node.def.kind}');
 		}
@@ -494,6 +496,24 @@ class ImGuiNodes
 		ImGui.setCursorPos( pinStart );
 
 		ImGui.dummy({x: width, y: height});
+
+		ImGui.popID();
+		NodeEditor.endNode();
+	}
+
+	function renderNoteNode( node: Node )
+	{
+		var size = node.size;
+
+		NodeEditor.beginNode( node.id );
+		ImGui.pushID( '${node.id}' );
+
+
+		node.render();
+
+		
+
+		//ImGui.dummy(size);
 
 		ImGui.popID();
 		NodeEditor.endNode();

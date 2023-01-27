@@ -29,11 +29,13 @@ enum FlowEditorMode {
 	Select;
 	AddNode;
 	AddComment;
+	AddNote;
 }
 
 @:keep
 @:access(cerastes.data.Node)
 @multiInstance(true)
+@:build(cerastes.macros.Callbacks.CallbackGenerator.build())
 class FlowEditor extends ImguiTool
 {
 
@@ -56,6 +58,13 @@ class FlowEditor extends ImguiTool
 	var context = new FlowContext(null);
 
 	var selectedNode: FlowNode;
+
+
+	/**
+	 * Called when doing a debug jump.
+	 */
+	@:callbackStatic public static function onDebugJump( );
+
 
 	public function new()
 	{
@@ -85,6 +94,7 @@ class FlowEditor extends ImguiTool
 		{
 			if( fileName != null && ImGui.menuItem( 'Live Jump') )
 			{
+				onDebugJump();
 				GameState.flow.jumpFile( fileName, nodeId );
 			}
 		}
@@ -173,6 +183,20 @@ class FlowEditor extends ImguiTool
 					mouseStart = null;
 					mode = Select;
 				}
+			case AddNote:
+				if( ImGui.isMouseClicked( ImGuiMouseButton.Left ) )
+				{
+					var pos:ImVec2 = NodeEditor.screenToCanvas(ImGui.getMousePos());
+
+					var note: FlowNote = {
+						note:"Note"
+					};
+
+					nodes.addNode( note, pos.x, pos.y );
+
+					mouseStart = null;
+					mode = Select;
+				}
 
 			case Select:
 			case AddNode:
@@ -192,7 +216,8 @@ class FlowEditor extends ImguiTool
 
 		if( ImGui.button("Select") ) mode = Select;
 		if( ImGui.button("Add Node") ) mode = AddNode;
-		if( ImGui.button("Add Comment") ) mode = AddComment;
+		if( ImGui.button("Add Group") ) mode = AddComment;
+		if( ImGui.button("Add Note") ) mode = AddNote;
 
 
 

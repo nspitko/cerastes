@@ -968,7 +968,7 @@ class UIEditor extends ImguiTool
 				var d : CUIDrawable = cast def;
 				// Color
 				var nc = IG.inputColorInt( d.color );
-				if( nc != -1 )
+				if( nc != null )
 					d.color = nc;
 
 			case "h2d.Text":
@@ -1010,7 +1010,6 @@ class UIEditor extends ImguiTool
 						d.maxWidth = maxWidth;
 					else
 						d.maxWidth = -1;
-
 				}
 
 			case "cerastes.ui.AdvancedText":
@@ -1018,6 +1017,28 @@ class UIEditor extends ImguiTool
 				var d: CUIAdvancedText = cast def;
 
 				wref( ImGui.checkbox( "Ellipsis", _ ), d.ellipsis );
+				wref( ImGui.inputInt( "Max Lines", _ ), d.maxLines );
+
+				var newFont = IG.textInput( "Bold font", d.boldFont );
+				if( newFont != null && hxd.Res.loader.exists( newFont ) )
+					d.boldFont = newFont;
+
+				if( ImGui.isItemHovered() )
+				{
+					ImGui.beginTooltip();
+					ImGui.text("Optional!Required to use bold text overrides though. The text will use the line height of whichever font is taller.");
+					ImGui.endTooltip();
+				}
+
+
+				if( ImGui.beginDragDropTarget() )
+				{
+					var payload = ImGui.acceptDragDropPayloadString("asset_name");
+					if( payload != null && hxd.Res.loader.exists( payload ) )
+						d.boldFont = payload;
+
+					ImGui.endDragDropTarget();
+				}
 
 			case "h2d.Bitmap":
 				var d: CUIBitmap = cast def;

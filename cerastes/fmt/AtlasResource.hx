@@ -114,6 +114,7 @@ enum PackMode {
 	@serializeType("cerastes.fmt.AtlasEntry")
 	public var entries: Map<String,AtlasEntry> = [];
 	public var textureFile: String = null;
+	public var atlasFile: String = null;
 
 	public var packMode: PackMode = MaxRects;
 	public var size: Vec2i = {};
@@ -121,8 +122,12 @@ enum PackMode {
 	@noSerialize
 	var tile: Tile = null;
 
-	public function load()
+	public function load( ?force )
 	{
+		if( force )
+		{
+			tile = null;
+		}
 		for( name => entry in entries )
 		{
 			entry.name = name;
@@ -135,8 +140,17 @@ enum PackMode {
 
 	public function ensureLoaded()
 	{
+		#if hlimgui
+		if( !hxd.Res.loader.exists( textureFile ) )
+		{
+			pack( atlasFile );
+			tile = Utils.invalidTile();
+		}
+		#end
 		if( tile == null )
-			tile = hxd.Res.loader.load( textureFile ).toTile();
+		{
+			tile = CUIResource.getTile( textureFile );
+		}
 	}
 
 	#if binpacking
@@ -148,20 +162,22 @@ enum PackMode {
 	@noSerialize var fileName: String = null;
 	@noSerialize var workerLock = new Lock();
 	@noSerialize var packJobs: Array<PackJob> = [];
+
 	@noSerialize var trimMutex = new Mutex();
+	@noSerialize var resMutex = new Mutex();
 
 
-	public function pack( file: String )
+	public function pack( file: String, ?onComplete: Void -> Void )
 	{
 		//jobWorkerThread = Thread.create(jobWorker);
 		fileName = file;
-		jobWorker();
+		jobWorker( onComplete );
 
 
 	}
 
 
-	function jobWorker()
+	function jobWorker( ?onComplete: Void -> Void  )
 	{
 		if( pool != null )
 			return;
@@ -170,6 +186,7 @@ enum PackMode {
 		pool = [];
 		binSizes = [32,64,128,256,512,1024,2048,4096,8192];
 		trimMutex = new Mutex();
+		resMutex = new Mutex();
 		workerLock = new Lock();
 
 		for( key => entry in entries )
@@ -270,7 +287,11 @@ enum PackMode {
 		sys.io.File.saveBytes( 'res/${textureFile}', bytes);
 		sys.io.File.saveContent( 'res/${fileName}', CDPrinter.print( this ) );
 
+
 		#if hlimgui
+		//hxd.Res.loader.cleanCache();
+		//load( true );
+		//ensureLoaded();
 		ImGuiToolManager.showPopup('Packing complete','Packed size: ${binSizes[xsIdx]}x${binSizes[ysIdx]}, occupancy ${Math.round( occupancy * 100 )}%', Info);
 		#end
 
@@ -302,7 +323,9 @@ enum PackMode {
 	{
 		for( frame in entry.frames )
 		{
+			resMutex.acquire();
 			var i = hxd.Res.loader.load( frame.file ).toImage();
+			resMutex.release();
 
 			var p = i.getPixels();
 
@@ -411,6 +434,7 @@ class AtlasResource extends Resource
 		if (data != null && cache) return data;
 
 		data = CDParser.parse( entry.getText(), Atlas );
+		data.atlasFile = '${entry.path}' ;
 		data.load();
 		return data;
 	}

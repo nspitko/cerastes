@@ -1,4 +1,5 @@
 package cerastes;
+import game.GameState;
 import cerastes.file.CDParser;
 import haxe.Json;
 import cerastes.Utils.*;
@@ -53,7 +54,7 @@ class LocalizationFile
 class LocalizationManager
 {
 	public static var replacements = new Map<String,String>();
-	public static var contexts = new Map<String, LocalizationFile>();
+	public static var contexts = new Map<String, Map<String, String>>();
 	public static var language: String;
 
 	public static var tokenRegex = ~/#([A-z0-9]+)__/;
@@ -66,6 +67,11 @@ class LocalizationManager
 
 		// Always load the common context.
 		loadFile('data/localization_${language}.loc', "common");
+
+		for( f in GameState.config.localizationFiles )
+		{
+			loadFile('data/${f}_${language}.loc', "common");
+		}
 
 
 	}
@@ -80,7 +86,9 @@ class LocalizationManager
 		if( Utils.assert( c != null, "Failed to set localization key; context not loaded!!" ) )
 			return;
 
-		c.tokens[token] = value;
+		Utils.error("Who calls me?");
+
+		//c.tokens[token] = value;
 	}
 
 	#end
@@ -90,8 +98,21 @@ class LocalizationManager
 		var loc: LocalizationFile = CDParser.parse( hxd.Res.loader.load( file ).entry.getText(), LocalizationFile );
 		loc.file = file;
 
-		contexts.set(context, loc);
+		addToContext(context, loc);
+		//contexts.set(context, loc);
 
+	}
+
+	static function addToContext(context: String, loc: LocalizationFile)
+	{
+		if( !contexts.exists(context) )
+			contexts.set(context, []);
+
+		var ctx = contexts[context];
+		for( k => v in loc.tokens )
+		{
+			ctx.set(k, v);
+		}
 	}
 
 	// Clears all contexts other than common. Useful to call this between major barriers to free up ram.
@@ -129,7 +150,7 @@ class LocalizationManager
 		// Tokens may specify a context. If so, the format is #context__token
 		// else we assume the context is "common"
 
-		var str = contexts[context].tokens[token];
+		var str: String = contexts[context][token];
 
 		if( str == null )
 		{

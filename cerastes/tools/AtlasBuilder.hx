@@ -1,6 +1,7 @@
 package cerastes.tools;
 
 
+import cerastes.fmt.CUIResource;
 import cerastes.fmt.AtlasResource.PackMode;
 import hl.UI;
 import hxd.Key;
@@ -82,7 +83,7 @@ class AtlasBuilder  extends  ImguiTool
 		index = globalIndex++;
 
 		// TESTING
-		openFile("atlases/TextureGroup1.catlas");
+		//openFile("atlases/TextureGroup1.catlas");
 	}
 
 	public function openFile( f: String )
@@ -246,7 +247,7 @@ class AtlasBuilder  extends  ImguiTool
 		if( out != null )
 			atlas.packMode = out;
 
-		IG.image( hxd.Res.loader.load(atlas.textureFile).toTile() );
+		IG.image( CUIResource.getTile( atlas.textureFile) );
 
 		ImGui.end();
 	}

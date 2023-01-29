@@ -1,5 +1,6 @@
 package cerastes.fmt;
 
+import cerastes.ui.AdvancedText;
 import cerastes.ui.UIEntity;
 import haxe.display.Display.CompletionItemResolveParams;
 import cerastes.file.CDParser;
@@ -121,6 +122,8 @@ import hxd.res.Resource;
 
 @:structInit class CUIAdvancedText extends CUIText {
 	public var ellipsis: Bool = false;
+	public var maxLines: Int = 0;
+	public var boldFont: String = null;
 }
 
 
@@ -365,7 +368,7 @@ class CUIResource extends Resource
 
 			case "h2d.Interactive":
 				var d: CUIInteractive = cast entry;
-				obj = new h2d.Interactive(d.width, d.height);
+				obj = new cerastes.ui.InteractiveContainer(d.width, d.height);
 
 			case "h2d.ScaleGrid":
 				var d : CUIScaleGrid = cast entry;
@@ -455,27 +458,42 @@ class CUIResource extends Resource
 				var e: CUIDrawable = cast entry;
 				var o: h2d.Drawable = cast obj;
 
-				o.color.setColor( e.color );
-
+				var text = Std.downcast( obj, AdvancedText );
+				if( text != null )
+				{
+					text.desiredColor.setColor( e.color );
+				}
+				else
+				{
+					o.color.setColor( e.color );
+				}
 
 			case "h2d.Text":
 				var o = cast(obj, h2d.Text);
 				var e: CUIText = cast entry;
+
+				o.textAlign = e.textAlign;
+				o.maxWidth = e.maxWidth;
+
+				o.font = getFont( e.font, e );
+
 				if( e.text.charAt(0) == "#" )
 					o.text = LocalizationManager.localize( e.text.substr(1) );
 				else
 					o.text = e.text;
 
-				o.font = getFont( e.font, e );
 
-				o.textAlign = e.textAlign;
-				o.maxWidth = e.maxWidth;
+
 
 			case "cerastes.ui.AdvancedText":
 				var o = cast( obj, cerastes.ui.AdvancedText );
 				var e: CUIAdvancedText = cast entry;
 
 				o.ellipsis = e.ellipsis;
+				if( e.boldFont != null )
+					o.boldFont = getFont( e.boldFont, e );
+
+				o.maxLines = e.maxLines;
 
 
 			case "h2d.Bitmap":

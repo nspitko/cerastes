@@ -707,7 +707,7 @@ class AssetBrowser  extends  ImguiTool
 		for(fp => preview in previews )
 		{
 
-			if( filterText.length > 0 && !StringTools.contains(fp, filterText) )
+			if( filterText.length > 0 && !StringTools.contains(fp.toLowerCase(), filterText.toLowerCase() ) )
 				continue;
 
 			if( !filterTypes[getItemType( preview )] )

@@ -1,5 +1,6 @@
 package cerastes.ui;
 
+import h2d.TileGroup;
 import h2d.RenderContext;
 import h3d.Vector;
 
@@ -17,6 +18,53 @@ class AdvancedText extends h2d.Text
 	public var revealed(default, null): Bool = false;
 	public var characters(default, set): Int = -1; // -1 -> All, else limit to a specific number
 	public var ellipsis: Bool = false;
+	public var maxLines(default, set): Int = 0;
+
+	public var boldFont(default, set) : h2d.Font;
+	var boldGlyphs : h2d.TileGroup;
+	public var desiredColor: Vector = new Vector(1,1,1,1);
+
+	function set_boldFont(font)
+	{
+		if( boldFont == font )
+			return font;
+
+		boldFont = font;
+		if ( font != null )
+		{
+			switch( font.type )
+			{
+				case BitmapFont:
+					if ( sdfShader != null )
+					{
+						removeShader(sdfShader);
+						sdfShader = null;
+					}
+				case SignedDistanceField(channel, alphaCutoff, smoothing):
+					if ( sdfShader == null )
+					{
+						sdfShader = new h3d.shader.SignedDistanceField();
+						addShader(sdfShader);
+					}
+					// Automatically use linear sampling if not designated otherwise.
+					if (smooth == null)
+						smooth = true;
+
+					sdfShader.alphaCutoff = alphaCutoff;
+					sdfShader.smoothing = smoothing;
+					sdfShader.channel = channel;
+					sdfShader.autoSmoothing = smoothing == -1;
+			}
+		}
+		if( boldGlyphs != null )
+			boldGlyphs.remove();
+
+		boldGlyphs = new TileGroup(font == null ? null : font.tile, this);
+		boldGlyphs.visible = false;
+		rebuild();
+
+		return font;
+	}
 
 	function set_characters( v: Int )
 	{
@@ -59,6 +107,7 @@ class AdvancedText extends h2d.Text
 
 
 		var inSnowman = false;
+		var isBold = false;
 		var skipChars = 0;
 
 
@@ -81,17 +130,24 @@ class AdvancedText extends h2d.Text
 				}
 			}
 
+			if( cc == '☄'.code && boldGlyphs != null )
+			{
+				isBold = !isBold;
+			}
+
 			if( skipChars > 0 )
 			{
 				skipChars--;
 				continue;
 			}
 
-			var e = font.getChar(cc);
+			var curFont = isBold ? boldFont : font;
+
+			var e = curFont.getChar(cc);
 			var newline = cc == '\n'.code;
 			var esize = e.width + e.getKerningOffset(prevChar);
 			var nc = text.charCodeAt(i+1);
-			if( font.charset.isBreakChar(cc) && (nc == null || !font.charset.isComplementChar(nc)) )
+			if( curFont.charset.isBreakChar(cc) && (nc == null || !curFont.charset.isComplementChar(nc)) )
 			{
 				if( lines.length == 0 && leftMargin > 0 && x > maxWidth )
 				{
@@ -106,22 +162,22 @@ class AdvancedText extends h2d.Text
 				while( size <= maxWidth && k < max )
 				{
 					var cc = text.charCodeAt(k++);
-					if( lineBreak && (font.charset.isSpace(cc) || cc == '\n'.code ) )
+					if( lineBreak && (curFont.charset.isSpace(cc) || cc == '\n'.code ) )
 					{
 						breakFound = true;
 						break;
 					}
 
-					var e = font.getChar(cc);
+					var e = curFont.getChar(cc);
 					size += e.width + letterSpacing + e.getKerningOffset(prevChar);
 					prevChar = cc;
 					var nc = text.charCodeAt(k+1);
-					if( font.charset.isBreakChar(cc) && (nc == null || !font.charset.isComplementChar(nc)) ) break;
+					if( curFont.charset.isBreakChar(cc) && (nc == null || !curFont.charset.isComplementChar(nc)) ) break;
 				}
 				if( lineBreak && (size > maxWidth || (!breakFound && size + afterData > maxWidth)) )
 				{
 					newline = true;
-					if( font.charset.isSpace(cc) )
+					if( curFont.charset.isSpace(cc) )
 					{
 						lines.push(text.substr(restPos, i - restPos));
 						e = null;
@@ -159,17 +215,43 @@ class AdvancedText extends h2d.Text
 		return lines.join("\n");
 	}
 
+	function slamColor()
+	{
+		if( color.r != 1 || color.g != 1 || color.b != 1 )
+		{
+
+			desiredColor = color.clone();
+			color.r = 1;
+			color.g = 1;
+			color.b = 1;
+			initGlyphs(text, true);
+		}
+	}
+
 
 	override function initGlyphs( text : String, rebuild = true ) : Void
 	{
+
+
 		if( rebuild )
+		{
 			glyphs.clear();
+
+			if( boldGlyphs != null )
+				boldGlyphs.clear();
+		}
 
 		var x = 0., y = 0., xMax = 0., xMin = 0., yMin = 0., prevChar = -1, linei = 0;
 		var align = textAlign;
 		var lines = new Array<Float>();
 		var dl = font.lineHeight + lineSpacing;
+		var bdl = dl;
 		var t = splitRawText( text, 0, 0, lines);
+
+		var boldLine = false;
+
+		if( boldGlyphs != null)
+			bdl = boldFont.lineHeight + lineSpacing;
 
 		for ( lw in lines ) {
 			if ( lw > x ) x = lw;
@@ -190,24 +272,48 @@ class AdvancedText extends h2d.Text
 
 		// hack
 		if( ellipsis )
-			t = StringTools.replace(text,"\n","");
+		{
+			if( maxLines >0 )
+			{
+				var i = 0;
+				var pos = t.indexOf("\n");
+				while( ++i < maxLines && pos > -1 )
+				{
+					pos = t.indexOf("\n",pos+1);
+				}
+				var begin = t.substr(0,pos);
+				var end = t.substr(pos);
+				t = '${begin}${StringTools.replace(end,"\n"," ")}';
+			}
+			else
+			{
+				t = StringTools.replace(text,"\n","");
+			}
+
+		}
 
 		var colorOverride :Vector = null;
 		var mode = None;
 
 		var i: Int = 0;
 		var characterIndex: Int = 0;
+		var isBold = false;
+		var hasBold = false;
+		var curGlyphs = glyphs;
+		var curFont = font;
+		var lineCount = 0;
+
 		while( i < t.length && ( characters == -1 || characterIndex <= characters ) )
 		{
 			var c = t.substr(i,1);
 			var cc = t.charCodeAt(i);
-			var e = font.getChar(cc);
+			var e = curFont.getChar(cc);
 			var offs = e.getKerningOffset(prevChar);
 			var esize = e.width + offs;
 
 			// if the next word goes past the max width, change it into a newline
 
-			if( cc == '\n'.code ) {
+			if( cc == '\n'.code && (maxLines == 0 || lineCount < maxLines-1) ) {
 				if( x > xMax ) xMax = x;
 				switch( align ) {
 				case Left:
@@ -216,7 +322,14 @@ class AdvancedText extends h2d.Text
 					x = lines[++linei];
 					if( x < xMin ) xMin = x;
 				}
-				y += dl;
+				if( boldLine )
+					y += bdl;
+				else
+					y += dl;
+
+				boldLine = false;
+				lineCount++;
+
 				prevChar = -1;
 			} else {
 				if( e != null )
@@ -232,11 +345,21 @@ class AdvancedText extends h2d.Text
 						else
 							colorOverride = null;
 
-						// @todo support multiple colors
 						i++;
 						continue;
 					}
-					if( c == "&" )
+					else if ( c == "☄" && boldGlyphs != null )
+					{
+						boldLine = true;
+						hasBold = true;
+						isBold = !isBold;
+						curFont = isBold ? boldFont : font;
+						curGlyphs = isBold ? boldGlyphs : glyphs;
+
+						i++;
+						continue;
+					}
+					else if( c == "&" )
 					{
 						if( mode == None )
 						{
@@ -258,9 +381,10 @@ class AdvancedText extends h2d.Text
 							finalY += Math.sin(time * 10 + x/5) * 2;
 
 						if( colorOverride != null )
-							glyphs.addColor(x + offs, finalY, colorOverride.x, colorOverride.y, colorOverride.z, 1.0, e.t);
+							curGlyphs.addColor(x + offs, finalY, colorOverride.x, colorOverride.y, colorOverride.z, 1.0, e.t);
 						else
-							glyphs.add(x + offs, finalY, e.t);
+							curGlyphs.addColor(x + offs, finalY, desiredColor.x, desiredColor.y, desiredColor.z, 1.0, e.t);
+							//curGlyphs.add(x + offs, finalY, e.t);
 					}
 					if( y == 0 && e.t.dy < yMin ) yMin = e.t.dy;
 					x += esize + letterSpacing;
@@ -277,11 +401,15 @@ class AdvancedText extends h2d.Text
 		// @bugbug this will count formatting text...
 		revealed = characters >= t.length;
 
+		var lineHeight: Float = (font.baseLine > 0 ? font.baseLine : font.lineHeight);
+		if( hasBold )
+			lineHeight = Math.max( lineHeight, (boldFont.baseLine > 0 ? boldFont.baseLine : boldFont.lineHeight) );
+
 		calcXMin = xMin;
 		calcYMin = yMin;
 		calcWidth = xMax - xMin;
 		calcHeight = y + font.lineHeight;
-		calcSizeHeight = y + (font.baseLine > 0 ? font.baseLine : font.lineHeight) + 10;
+		calcSizeHeight = y + lineHeight + 10;
 		calcDone = true;
 		if ( rebuild ) needsRebuild = false;
 	}
@@ -289,6 +417,8 @@ class AdvancedText extends h2d.Text
 
 	override function sync( ctx: RenderContext )
 	{
+		slamColor();
+
 		if( rebuildEveryFrame )
 		{
 			time = ctx.time;
@@ -304,12 +434,36 @@ class AdvancedText extends h2d.Text
 		}
 	}
 
+	function set_maxLines( v: Int )
+	{
+		maxLines = v;
+
+		return v;
+	}
+
 	override function set_text(t : String) {
 		var t = t == null ? "null" : t;
 		if( t == this.text ) return t;
 
+		t = wrapText( t );
+
+		return super.set_text(t);
+	}
+
+	override function set_textColor(c: Int)
+	{
+		desiredColor.setColor( c );
+		initGlyphs(text, true);
+		return c;
+	}
+
+	public function wrapText(t: String)
+	{
+		//return t;
 		if( ellipsis && maxWidth > 0 )
 		{
+			t = StringTools.trim( t );
+
 			// chunk by word to find what fits
 			var w: Float = calcTextWidth( t );
 			var lastSpace = t.lastIndexOf(" ");
@@ -320,7 +474,14 @@ class AdvancedText extends h2d.Text
 				lastSpace = t.lastIndexOf(" ");
 			}
 		}
+		return t;
+	}
 
-		return super.set_text(t);
+	override function draw(ctx:RenderContext)
+	{
+		super.draw(ctx);
+
+		if( boldGlyphs != null )
+			@:privateAccess boldGlyphs.drawWith(ctx,this);
 	}
 }

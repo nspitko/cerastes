@@ -301,7 +301,7 @@ class ImGuiTools {
 	}
 
 
-	public static function inputColorInt( nColor: Int ): Int
+	public static function inputColorInt( nColor: Int ): Null<Int>
 	{
 		var c = Vector.fromColor(nColor);
 		var color = new hl.NativeArray<Single>(4);
@@ -319,7 +319,7 @@ class ImGuiTools {
 					( Math.floor( 255. * color[2] ) ) |
 					( Math.floor( 255. * color[3]) << 24);
 		}
-		return -1;
+		return null;
 	}
 
 	public static function inputColorHVec( c:Vector, ?key: String = null ): Vector

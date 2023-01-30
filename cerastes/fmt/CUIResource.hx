@@ -720,11 +720,18 @@ class CUIResource extends Resource
 		}
 		else
 		{
-			var res = hxd.Res.loader.loadCache( file, hxd.res.Image );
-			if( res == null || res.entry.isDirectory )
-				return null;
+			try
+			{
+				var res = hxd.Res.loader.loadCache( file, hxd.res.Image );
+				if( res == null || res.entry.isDirectory )
+					return null;
 
-			return res.toTile();
+				return res.toTile();
+			}
+			catch(e)
+			{
+				return null;
+			}
 		}
 
 		return null;

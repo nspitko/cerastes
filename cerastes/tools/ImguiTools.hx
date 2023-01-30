@@ -264,6 +264,8 @@ class ImGuiTools {
 	@:generic
 	public static function combo<T>(label: String, value: T, type:Dynamic ) : T
 	{
+		if( value == null )
+			value = EnumTools.createByIndex( type, 0 );
 
 		var name = EnumTools.getName( type );
 		if(  !typeMap.exists(name))

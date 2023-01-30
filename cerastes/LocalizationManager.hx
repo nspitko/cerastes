@@ -161,6 +161,12 @@ class LocalizationManager
 		return formatStr(str, rest.toArray());
 	}
 
+	public static function exists( token: String )
+	{
+		var context = getContext(token);
+		return contexts[context].exists( token );
+	}
+
 	public static function formatStr(str: String, ?subs: Array<String>)
 	{
 		// @todo what was this doing???

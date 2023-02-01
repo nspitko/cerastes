@@ -345,6 +345,8 @@ class ControllerAccess<T:EnumValue> {
 			|| isKeyboardPressed(Key.SPACE)
 			|| isKeyboardPressed(Key.ENTER)
 			|| isKeyboardPressed(Key.NUMPAD_ENTER)
+			|| isKeyboardPressed(Key.MOUSE_LEFT)
+			|| isKeyboardPressed(Key.MOUSE_RIGHT)
 			;
 	}
 

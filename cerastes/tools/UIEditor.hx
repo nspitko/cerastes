@@ -1258,14 +1258,17 @@ class UIEditor extends ImguiTool
 					if( nc != null )
 						d.disabledColor = nc;
 
+					ImGui.text("Hover Color");
 					var nc = IG.inputColorHVec( d.hoverColor, "hoverColor" );
 					if( nc != null )
 						d.hoverColor = nc;
+
 
 					var newTile = IG.inputTile( "Press Tile", d.pressTile );
 					if( newTile != null )
 						d.pressTile = newTile;
 
+					ImGui.text("Press Color");
 					var nc = IG.inputColorHVec( d.pressColor, "pressColor" );
 					if( nc != null )
 						d.pressColor = nc;

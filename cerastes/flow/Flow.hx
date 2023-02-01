@@ -354,9 +354,12 @@ class SceneNode extends FlowNode
 
 	public override function process()
 	{
-		Main.currentScene.switchToNewScene( scene );
-
-		super.process();
+		var scene: cerastes.Scene = Main.currentScene.switchToNewScene( scene );
+		scene.registerOnSceneReady(this, ( handled ) -> {
+			nextAll();
+			scene.unregisterOnSceneReady(this);
+			return handled;
+		});
 	}
 
 	#if hlimgui

@@ -12,6 +12,7 @@ import cerastes.tools.ImguiTool.ImGuiToolManager;
 #end
 
 @:keepSub
+@:build(cerastes.macros.Callbacks.CallbackGenerator.build())
 class Scene
 {
 
@@ -24,6 +25,9 @@ class Scene
 
     var rtScaled: Texture;
     var s2dScaled: h2d.Scene;
+
+    @:callback public function onSceneReady( );
+
 
     public function new( a : Main )
     {
@@ -220,9 +224,10 @@ class Scene
 
         @:privateAccess other.s2d.onAdd();
 
+        // Delay these until after tick
+        new Timer(0, () -> { other.onSceneReady(); this.unload(); });
 
-        // Delay this until after tick
-        new Timer(0, () -> { this.unload(); });
+        return other;
 
     }
 

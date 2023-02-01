@@ -7,9 +7,9 @@ import h2d.RenderContext.RenderContext;
 
 class TransitionFilter extends Filter {
 
-	
 
-	var pass : TransitionPass;
+
+	public var pass : TransitionPass;
 
 	public function new(  ) {
 		super();
@@ -36,7 +36,7 @@ class TransitionFilter extends Filter {
 class TransitionPass extends h3d.pass.ScreenFx<TransitionShader> {
 
 	var transitionTexture: h3d.mat.Texture;
-	var phase: Float;
+	public var phase: Float;
 
 	public function new() {
 		super(new TransitionShader());
@@ -51,11 +51,11 @@ class TransitionPass extends h3d.pass.ScreenFx<TransitionShader> {
 	}
 
 	public function apply(  ctx : h3d.impl.RenderContext, src : h3d.mat.Texture, ?output : h3d.mat.Texture ) {
-		
+
 		//shader.palette=palette;
 		shader.transitionTexture=transitionTexture;
-		
-		
+
+
 		shader.texture = src;
 		shader.phase = phase;
 		//shader.delta.set(1 / texture.width, 1 / texture.height);
@@ -67,7 +67,7 @@ class TransitionPass extends h3d.pass.ScreenFx<TransitionShader> {
 		var faceCount = isCube ? 6 : 1;
 		var tmp = ctx.textures.allocTarget(src.name+"TransitionTmp", src.width, src.height, false, src.format, isCube);
 
-		
+
 		for(i in 0 ... faceCount){
 			engine.pushTarget(tmp, i);
 			render();

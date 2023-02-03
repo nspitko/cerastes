@@ -1,41 +1,41 @@
 package cerastes.ui;
 
-import cerastes.ui.Button.ButtonState;
 import h3d.Vector;
 import h2d.Bitmap;
 import cerastes.ui.ScaleGridButton.Orientation;
+import cerastes.ui.ScaleGridButton.ButtonState;
 
 
 @:keep
-class BitmapButton extends h2d.Interactive
+class TextButton extends h2d.Flow implements IButton
 {
-	public var defaultTile(default, set): h2d.Tile = null;
-	public var hoverTile: h2d.Tile = null;
-	public var pressTile: h2d.Tile = null;
-	public var disabledTile: h2d.Tile = null;
+	public var text(get, set): String;
 
-	public var defaultColor: Vector = new Vector(1,1,1,1);
-	public var hoverColor: Vector = new Vector(1,1,1,1);
-	public var pressColor: Vector = new Vector(1,1,1,1);
+	public var defaultColor: Int = 0xFFFFFFFF;
+	public var defaultTextColor: Int = 0xFFFFFFFF;
 
-	public var disabledColor: Vector = new Vector(1,1,1,1); // Replaces defaultColor if disabled = true
+	public var hoverColor: Int = 0xFFFFFFFF;
+	public var hoverTextColor: Int = 0xFFFFFFFF;
+
+	public var pressColor: Int = 0xFFFFFFFF;
+	public var pressTextColor: Int = 0xFFFFFFFF;
+
+	public var disabledColor: Int = 0xFFFFFFFF;
+	public var disabledTextColor: Int = 0xFFFFFFFF;
 
 	public var onActivate : (hxd.Event) -> Void;
 	public var onMouseOver : (hxd.Event) -> Void;
 	public var onMouseOut : (hxd.Event) -> Void;
 
-	public var orientation(default, set): Orientation = None;
 	public var enabled(default, set): Bool = true;
-
+	public var toggled(default, set): Bool = false;
 
 	// similar to visible but when hidden we still reserve space
 	public var hidden(default, set): Bool = false;
 
 	var state(default,set): ButtonState = Default;
 
-	var bitmap: Bitmap;
-
-	var colorFilter: h2d.filter.ColorMatrix;
+	var text: cerastes.ui.AdvancedText;
 
 	function set_hidden(v)
 	{
@@ -53,6 +53,17 @@ class BitmapButton extends h2d.Interactive
 		hidden = v;
 
 
+		return v;
+	}
+
+	function set_toggled( v: Bool )
+	{
+		if( v )
+			state = On;
+		else
+			state = Default;
+
+		toggled = v;
 		return v;
 	}
 
@@ -78,18 +89,20 @@ class BitmapButton extends h2d.Interactive
 		switch( v )
 		{
 			case Hover:
-				if( hoverTile != null )
-					bitmap.tile = hoverTile;
-				else
-					bitmap.tile = defaultTile;
-
-				setTint( hoverColor );
 
 			case Default:
 				bitmap.tile = defaultTile;
 
 				setTint( defaultColor );
 
+			case Press:
+				if( pressTile != null )
+					bitmap.tile = pressTile;
+				else
+					bitmap.tile = defaultTile;
+
+				if( pressColor != null )
+					setTint( pressColor );
 
 			case Disabled:
 				if( disabledTile != null )
@@ -99,9 +112,7 @@ class BitmapButton extends h2d.Interactive
 
 				if( disabledColor != null )
 					setTint( disabledColor );
-				
-			case On:
-				Utils.error("STUB");
+
 
 		}
 
@@ -213,7 +224,7 @@ class BitmapButton extends h2d.Interactive
 			if( !enabled )
 				return;
 
-			//state = Press;
+			state = Press;
 
 			if( onActivate != null && !hidden )
 				onActivate(_);

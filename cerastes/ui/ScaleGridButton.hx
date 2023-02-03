@@ -3,14 +3,8 @@ package cerastes.ui;
 import h3d.Vector;
 import hxd.res.DefaultFont;
 import h2d.Object;
+import cerastes.ui.Button.ButtonState;
 
-enum ButtonState
-{
-	Default;
-	Hover;
-	Press;
-	Disabled;
-}
 
 enum Orientation
 {
@@ -103,15 +97,6 @@ class ScaleGridButton extends h2d.Flow
 				else if( defaultColor != null )
 					this.background.color = defaultColor;
 
-			case Press:
-				if( pressTile != null )
-					this.backgroundTile = pressTile;
-				else
-					this.backgroundTile = defaultTile;
-
-				if( pressColor != null )
-					this.background.color = pressColor;
-
 			case Disabled:
 				if( disabledTile != null )
 					this.backgroundTile = disabledTile;
@@ -121,6 +106,9 @@ class ScaleGridButton extends h2d.Flow
 
 				if( disabledColor != null )
 					this.background.color = disabledColor;
+
+			case On:
+				Utils.error("STUB");
 
 		}
 
@@ -200,7 +188,7 @@ class ScaleGridButton extends h2d.Flow
 				onMouseOut(_);
 		}
 		this.interactive.onPush = function(_) {
-			state = Press;
+			//state = Press;
 
 			if( onActivate != null && alpha > 0 )
 				onActivate(_);

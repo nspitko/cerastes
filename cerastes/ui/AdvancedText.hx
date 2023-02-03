@@ -409,7 +409,7 @@ class AdvancedText extends h2d.Text
 		calcYMin = yMin;
 		calcWidth = xMax - xMin;
 		calcHeight = y + font.lineHeight;
-		calcSizeHeight = y + lineHeight + 10;
+		calcSizeHeight = y + lineHeight;
 		calcDone = true;
 		if ( rebuild ) needsRebuild = false;
 	}

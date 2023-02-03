@@ -303,24 +303,29 @@ class ImGuiTools {
 	}
 
 
-	public static function inputColorInt( nColor: Int ): Null<Int>
+	public static function inputColorInt( nColor: Int, ?id: String ): Null<Int>
 	{
+		if( id == null )
+			id = "Color";
+
 		var c = Vector.fromColor(nColor);
 		var color = new hl.NativeArray<Single>(4);
 		color[0] = c.r;
 		color[1] = c.g;
 		color[2] = c.b;
 		color[3] = c.a;
+
 		var flags = ImGuiColorEditFlags.AlphaBar | ImGuiColorEditFlags.AlphaPreview
 				| ImGuiColorEditFlags.DisplayRGB | ImGuiColorEditFlags.DisplayHex
 				| ImGuiColorEditFlags.AlphaPreviewHalf;
-		if( wref( ImGui.colorPicker4( "Color", _, flags), color ) )
+		if( wref( ImGui.colorPicker4( id, _, flags), color ) )
 		{
 			return ( Math.floor( 255. * color[0] ) << 16 ) |
 					( Math.floor( 255. * color[1] ) <<  8 ) |
 					( Math.floor( 255. * color[2] ) ) |
 					( Math.floor( 255. * color[3]) << 24);
 		}
+
 		return null;
 	}
 

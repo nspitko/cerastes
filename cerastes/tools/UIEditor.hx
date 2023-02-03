@@ -152,7 +152,7 @@ class UIEditor extends ImguiTool
 
 		if( ImGui.beginPopup("uie_additem") )
 		{
-			var types = ["h2d.Object", "h2d.Text", "h2d.Bitmap", "h2d.Anim", "h2d.Flow", "h2d.Mask", "h2d.Interactive", "h2d.ScaleGrid", "cerastes.ui.BitmapButton", "cerastes.ui.ScaleGridButton", "cerastes.ui.AdvancedText", "cerastes.ui.Reference"];
+			var types = ["h2d.Object", "h2d.Text", "h2d.Bitmap", "h2d.Anim", "h2d.Flow", "h2d.Mask", "h2d.Interactive", "h2d.ScaleGrid", "cerastes.ui.Button", "cerastes.ui.BitmapButton", "cerastes.ui.ScaleGridButton", "cerastes.ui.TextButton", "cerastes.ui.AdvancedText", "cerastes.ui.Reference"];
 
 			for( t in types )
 			{
@@ -1179,6 +1179,116 @@ class UIEditor extends ImguiTool
 				if( newTile != null )
 					d.contentTile = newTile;
 
+
+			case "cerastes.ui.Button":
+				var d : CUIButton = cast def;
+
+				var e = IG.combo("Button Type", d.buttonMode, cerastes.ui.Button.ButtonType );
+				if( e != null ) d.buttonMode = e;
+
+				var e = IG.combo("Tile mode", d.bitmapMode, cerastes.ui.Button.BitmapMode );
+				if( e != null ) d.bitmapMode = e;
+
+				if( ImGui.collapsingHeader( "Tiles" ) )
+				{
+
+					var newTile = IG.inputTile( "Default Tile", d.defaultTile );
+					if( newTile != null )
+						d.defaultTile = newTile;
+
+					if( d.buttonMode == Toggle )
+					{
+						var newTile = IG.inputTile( "Toggled (on) Tile", d.defaultTile );
+						if( newTile != null )
+							d.onTile = newTile;
+					}
+
+					var newTile = IG.inputTile( "Hover Tile", d.hoverTile );
+					if( newTile != null )
+						d.hoverTile = newTile;
+
+					var newTile = IG.inputTile( "Disabled Tile", d.disabledTile );
+					if( newTile != null )
+						d.disabledTile = newTile;
+				}
+
+				if( ImGui.collapsingHeader("Tints") )
+				{
+					var nc = IG.inputColorInt( d.defaultColor, "Default Color" );
+					if( nc != null )
+						d.defaultColor = nc;
+
+					if( d.buttonMode == Toggle )
+					{
+						ImGui.text("Toggled (on) color");
+						var nc = IG.inputColorInt( d.onColor, "On Color" );
+						if( nc != null )
+							d.onColor = nc;
+					}
+
+					ImGui.text("Hover Color");
+					var nc = IG.inputColorInt( d.hoverColor, "Hover Color" );
+					if( nc != null )
+						d.hoverColor = nc;
+
+					ImGui.text("Disabled Color");
+					var nc = IG.inputColorInt( d.disabledColor, "Disabled Color" );
+					if( nc != null )
+						d.disabledColor = nc;
+
+
+				}
+
+				if( ImGui.collapsingHeader( "Label" ) )
+				{
+					var val = IG.textInput("Text", d.text);
+					if( val != null )
+						d.text = val;
+
+					var newFont = IG.textInput( "Font", d.font );
+					if( newFont != null && hxd.Res.loader.exists( newFont ) )
+						d.font = newFont;
+
+					if( ImGui.beginDragDropTarget() )
+					{
+						var payload = ImGui.acceptDragDropPayloadString("asset_name");
+						if( payload != null && hxd.Res.loader.exists( payload ) )
+							d.font = payload;
+
+						ImGui.endDragDropTarget();
+					}
+
+					wref( ImGui.checkbox( "Ellipsis", _ ), d.ellipsis );
+				}
+
+				if( ImGui.collapsingHeader("Label Tints") )
+				{
+					var nc = IG.inputColorInt( d.defaultTextColor, "Default Text Color" );
+					if( nc != null )
+						d.defaultTextColor = nc;
+
+					if( d.buttonMode == Toggle )
+					{
+						ImGui.text("Toggled Text color");
+						var nc = IG.inputColorInt( d.onTextColor, "On Color" );
+						if( nc != null )
+							d.onTextColor = nc;
+					}
+
+					ImGui.text("Hover Text Color");
+					var nc = IG.inputColorInt( d.hoverTextColor, "Hover Color" );
+					if( nc != null )
+						d.hoverTextColor = nc;
+
+					ImGui.text("Disabled Text Color");
+					var nc = IG.inputColorInt( d.disabledTextColor, "Disabled Color" );
+					if( nc != null )
+						d.disabledTextColor = nc;
+
+				}
+
+
+
 			case "cerastes.ui.ScaleGridButton":
 				var d : CUISGButton = cast def;
 
@@ -1388,6 +1498,7 @@ class UIEditor extends ImguiTool
 			case "h2d.ScaleGrid": return "\uf00a";
 			case "cerastes.ui.ScaleGridButton": return "\uf04d";
 			case "cerastes.ui.BitmapButton": return "\uf04d";
+			case "cerastes.ui.TextButton": return "\uf04d";
 			case "cerastes.ui.AdvancedText": return "\uf033";
 			case "cerastes.ui.Reference": return "\uf07c";
 			default:
@@ -1486,6 +1597,15 @@ class UIEditor extends ImguiTool
 
 				parent.children.push(def);
 
+			case "cerastes.ui.Button":
+				var def: CUIButton = {
+					type: type,
+					name: getAutoName(type),
+					children: []
+				};
+
+				parent.children.push(def);
+
 			case "cerastes.ui.ScaleGridButton":
 				var def: CUISGButton = {
 					type: type,
@@ -1504,6 +1624,15 @@ class UIEditor extends ImguiTool
 				};
 
 				parent.children.push(def);
+
+			case "cerastes.ui.TextButton":
+					var def: CUITButton = {
+						type: type,
+						name: getAutoName(type),
+						children: []
+					};
+
+					parent.children.push(def);
 
 			case "cerastes.ui.Reference":
 				var def: CUIReference = {

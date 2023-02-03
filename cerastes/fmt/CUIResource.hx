@@ -1,5 +1,7 @@
 package cerastes.fmt;
 
+import cerastes.ui.Button.ButtonType;
+import cerastes.ui.Button.BitmapMode;
 import cerastes.ui.AdvancedText;
 import cerastes.ui.UIEntity;
 import haxe.display.Display.CompletionItemResolveParams;
@@ -146,6 +148,32 @@ import hxd.res.Resource;
 	public var loop: Bool = true;
 }
 
+@:structInit class CUIButton extends CUIFlow {
+	public var defaultTile: String = "";
+	public var hoverTile: String = "";
+	public var onTile: String = "";
+	public var disabledTile: String = "";
+
+	public var defaultColor: Int = 0xFFFFFFFF;
+	public var hoverColor: Int = 0xFFFFFFFF;
+	public var onColor: Int = 0xFFFFFFFF;
+	public var disabledColor: Int = 0xFFFFFFFF;
+
+	public var defaultTextColor: Int = 0x000000FF;
+	public var hoverTextColor: Int = 0x000000FF;
+	public var onTextColor: Int = 0x000000FF;
+	public var disabledTextColor: Int = 0x000000FF;
+
+	public var text: String = null;
+	public var font: String = null;
+
+	public var ellipsis: Bool = false;
+
+	public var bitmapMode: BitmapMode = ButtonTile;
+	public var buttonMode: ButtonType = Momentary;
+}
+
+
 
 @:structInit class CUISGButton extends CUIFlow {
 	public var hoverTile: String = "";
@@ -176,6 +204,16 @@ import hxd.res.Resource;
 	public var disabledColor: Vector = new Vector(1,1,1,1);
 
 	public var orientation: cerastes.ui.ScaleGridButton.Orientation = None;
+}
+
+@:structInit class CUITButton extends CUIFlow {
+
+	public var defaultColor: Int = 0xFFFFFFFF;
+	public var hoverColor: Int = 0xFFFFFFFF;
+	public var onColor: Int = 0xFFFFFFFF;
+	public var disabledColor: Int = 0xFFFFFFFF;
+
+	public var text: String = "";
 }
 
 @:structInit class CUIFlow extends CUIDrawable {
@@ -378,6 +416,9 @@ class CUIResource extends Resource
 				//var props: CUISGButton = cast entry;
 				obj = new cerastes.ui.ScaleGridButton();
 
+			case "cerastes.ui.Button":
+				obj = new cerastes.ui.Button();
+
 			case "cerastes.ui.BitmapButton":
 				var d: CUIBButton = cast entry;
 				obj = new cerastes.ui.BitmapButton(d.width, d.height);
@@ -556,7 +597,8 @@ class CUIResource extends Resource
 
 				o.multiline = e.multiline;
 
-				o.backgroundTile = e.backgroundTile.length > 0 ? getTile(e.backgroundTile) : null;
+				if( e.backgroundTile.length > 0 )
+					o.backgroundTile = getTile(e.backgroundTile);
 
 			case "h2d.Mask":
 				var o = cast(obj, h2d.Mask);
@@ -594,6 +636,45 @@ class CUIResource extends Resource
 
 				o.width = e.width;
 				o.height = e.height;
+
+			case "cerastes.ui.Button":
+				var o = cast(obj, cerastes.ui.Button);
+				var e: CUIButton = cast entry;
+
+				o.bitmapMode = e.bitmapMode;
+				o.buttonType = e.buttonMode;
+
+				o.defaultColor = e.defaultColor;
+				o.defaultTextColor = e.defaultTextColor;
+				o.defaultTile = e.defaultTile;
+
+				o.hoverColor = e.hoverColor;
+				o.hoverTile = e.hoverTile;
+				o.hoverTextColor = e.hoverTextColor;
+
+				o.onColor = e.onColor;
+				o.onTextColor = e.onTextColor;
+				o.onTile = e.onTile;
+
+				o.disabledColor = e.disabledColor;
+				o.disabledTextColor = e.disabledTextColor;
+				o.disabledTile = e.disabledTile;
+
+				if( e.ellipsis )
+					o.ellipsis = true;
+
+				if( e.text != null && e.text.length > 0 )
+				{
+					if( e.text.charAt(0) == "#" )
+						o.text = LocalizationManager.localize( e.text.substr(1) );
+					else
+						o.text = e.text;
+				}
+
+				if( e.font != null && e.font.length > 0 )
+					o.font = e.font;
+
+				o.state = Default;
 
 			case "cerastes.ui.ScaleGridButton":
 				var o = cast(obj, cerastes.ui.ScaleGridButton);

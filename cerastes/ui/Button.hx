@@ -62,7 +62,7 @@ class Button extends h2d.Flow implements IButton
 
 	public var defaultColor: Int = 0xFFFFFFFF;
 	public var defaultTextColor: Int = 0xFFFFFFFF;
-	public var defaultTile: String;
+	public var defaultTile(default, set): String;
 
 	public var hoverColor: Int = 0xFFFFFFFF;
 	public var hoverTextColor: Int = 0xFFFFFFFF;
@@ -94,6 +94,13 @@ class Button extends h2d.Flow implements IButton
 
 	var elText: cerastes.ui.AdvancedText = null;
 	var bitmap: h2d.Bitmap = null;
+
+	function set_defaultTile(v)
+	{
+		defaultTile = v;
+		updateTiles();
+		return v;
+	}
 
 	function set_ellipsis(v)
 	{
@@ -201,7 +208,6 @@ class Button extends h2d.Flow implements IButton
 
 	function set_state(v: ButtonState)
 	{
-
 		switch( v )
 		{
 			case Default:
@@ -219,6 +225,11 @@ class Button extends h2d.Flow implements IButton
 
 		state = v;
 		return v;
+	}
+
+	function updateTiles()
+	{
+		set_state(state);
 	}
 
 	function setTints( bitmapTile: String, bitmapColor: Int, textColor: Int )

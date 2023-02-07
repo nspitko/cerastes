@@ -30,6 +30,7 @@ import imgui.ImGuiDrawable.ImGuiDrawableBuffers;
 import imgui.ImGui;
 import cerastes.tools.ImguiTools.IG;
 import imgui.ImGuiMacro.wref;
+import imgui.NeoSequencer;
 
 @:keep
 @multiInstance(true)
@@ -57,6 +58,7 @@ class UIEditor extends ImguiTool
 	var dockspaceIdLeft: ImGuiID;
 	var dockspaceIdRight: ImGuiID;
 	var dockspaceIdCenter: ImGuiID;
+	var dockspaceIdBottom: ImGuiID;
 
 	var dockCond = ImGuiCond.Appearing;
 
@@ -194,6 +196,50 @@ class UIEditor extends ImguiTool
 		ImGui.end();
 	}
 
+	var frame: Int = 0;
+
+	function timeline()
+	{
+		ImGui.setNextWindowDockId( dockspaceIdBottom, dockCond );
+		ImGui.begin('Timeline##${windowID()}', null, ImGuiWindowFlags.NoMove);
+		handleShortcuts();
+
+
+		//var frame: Int = 0;
+		var startFrame: Int = 0;
+		var endFrame: Int = 100;
+
+		var region = ImGui.getWindowContentRegionMax();
+
+		var size: ImVec2S = {x: 0, y: region.y};
+
+		var flags = ImGuiNeoSequencerFlags.EnableSelection | ImGuiNeoSequencerFlags.Selection_EnableDragging | ImGuiNeoSequencerFlags.AlwaysShowHeader | ImGuiNeoSequencerFlags.AllowLengthChanging;
+
+		if( NeoSequencer.begin('Test Sequencer##${windowID()}', frame, startFrame, endFrame, size, flags) )
+		{
+
+			if( NeoSequencer.beginTimeline("test timeline") )
+			{
+				for( i in 0 ... 25 )
+				{
+					var pos = i * 2;
+					NeoSequencer.keyframe( pos );
+
+
+				}
+
+			}
+
+			NeoSequencer.endTimeline();
+
+			NeoSequencer.end();
+		}
+
+
+		//ImGui.endChild();
+		ImGui.end();
+	}
+
 	function editorColumn()
 	{
 		//ImGui.beginChild("uie_editor",{x: 300 * scaleFactor, y: viewportHeight}, false, ImGuiWindowFlags.AlwaysAutoResize);
@@ -319,6 +365,8 @@ class UIEditor extends ImguiTool
 
 		inspectorColumn();
 
+		timeline();
+
 		//ImGui.sameLine();
 
 		// Preview
@@ -360,6 +408,7 @@ class UIEditor extends ImguiTool
 		//ImGui.sameLine();
 
 		editorColumn();
+
 
 		//ImGui.end();
 
@@ -566,8 +615,9 @@ class UIEditor extends ImguiTool
 
 			var idOut = hl.Ref.make( dockspaceId );
 
-			dockspaceIdLeft = ImGui.dockBuilderSplitNode(idOut.get(), ImGuiDir.Left, 0.20, null, idOut);
-			dockspaceIdRight = ImGui.dockBuilderSplitNode(idOut.get(), ImGuiDir.Right, 0.3, null, idOut);
+			dockspaceIdBottom = ImGui.dockBuilderSplitNode(idOut.get(), ImGuiDir.Down, 0.30, null, idOut);
+			dockspaceIdLeft = ImGui.dockBuilderSplitNode(idOut.get(), ImGuiDir.Left, 0.30, null, idOut);
+			dockspaceIdRight = ImGui.dockBuilderSplitNode(idOut.get(), ImGuiDir.Right, 0.30, null, idOut);
 			dockspaceIdCenter = idOut.get();
 
 
@@ -961,6 +1011,54 @@ class UIEditor extends ImguiTool
 				wref( ImGui.inputDouble("Scale Y",_,1,10,"%.2f"), def.scaleY );
 
 				wref( ImGui.checkbox( "Visible", _ ), def.visible );
+
+				var classList = CompileTime.getAllClasses(cerastes.pass.SelectableFilter);
+
+				var curFilterName: String = null;
+				if( def.filter != null )
+				{
+					var cl = Type.resolveClass(def.filter.type);
+					var fn = Reflect.field(cl, "getEditorName");
+					curFilterName = fn();
+				}
+
+
+				ImGui.separator();
+				if( ImGui.beginCombo( "Filter", curFilterName != null ? curFilterName : "None" ) )
+				{
+					if( ImGui.selectable( "None", def.filter == null ) )
+					{
+						def.filter = null;
+						updateScene();
+					}
+
+					for( c in classList )
+					{
+						var cls = Type.getClassName(c);
+						var nameFn = Reflect.field(c, "getEditorName");
+
+						if( ImGui.selectable( nameFn(), cls == def.type ) )
+						{
+							var fn = Reflect.field(c, "getDef");
+							if( fn != null )
+							{
+								var filterDef = fn();
+								filterDef.type = cls;
+								def.filter = filterDef;
+								updateScene();
+							}
+
+						}
+					}
+					ImGui.endCombo();
+				}
+
+				if( def.filter != null )
+				{
+					var cls = Type.resolveClass(def.filter.type);
+					var fn = Reflect.field(cls, "getInspector");
+					fn( def.filter );
+				}
 
 
 

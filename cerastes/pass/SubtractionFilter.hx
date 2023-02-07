@@ -1,9 +1,13 @@
 package cerastes.pass;
 
+#if hlimgui
+import imgui.ImGui;
+import imgui.ImGuiMacro.wref;
+#end
 import cerastes.shaders.TransitionShader;
 import h2d.filter.Filter;
-
 import h2d.RenderContext.RenderContext;
+import cerastes.pass.SelectableFilter;
 
 class SubtractionShader extends h3d.shader.ScreenShader {
 
@@ -22,14 +26,35 @@ class SubtractionShader extends h3d.shader.ScreenShader {
 
 }
 
-class SubtractionFilter extends Filter
+@:structInit class SubtractionFilterDef extends cerastes.fmt.CUIResource.CUIFilterDef
+{
+	public var amount: Float = 0;
+}
+
+class SubtractionFilter extends Filter implements SelectableFilter
 {
 	public var pass : SubtractionPass;
 
-	public function new(  ) {
+	#if hlimgui
+	@:keep public static function getEditorName() { return "\uf07c Subtraction"; }
+	@:keep public static function getDef() : SubtractionFilterDef { return {}; }
+	@:keep public static function getInspector( def: SubtractionFilterDef ) {
+		wref( ImGui.inputDouble("amount",_,0.01,0.1), def.amount );
+	}
+	#end
+
+	public var amount(get, set): Float;
+
+	public function get_amount() { return pass.amount; }
+	@:keep public function set_amount( v ) { pass.amount = v; return v; }
+
+	public function new( ?def: SubtractionFilterDef  ) {
 		super();
 		smooth = false;
 		pass = new SubtractionPass();
+
+		if( def != null )
+			pass.amount = def.amount;
 
 	}
 

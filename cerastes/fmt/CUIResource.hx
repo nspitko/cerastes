@@ -23,11 +23,7 @@ import hxd.res.Resource;
 
 @:keepSub
 @:structInit class CUIFilterDef {
-
-}
-
-@:structInit class CUIMaskFilterDef {
-
+	public var type: String = null;
 }
 
 // Cerastes UI
@@ -46,7 +42,7 @@ import hxd.res.Resource;
 
 	public var visible: Bool = true;
 
-	public var filters: Array< CUIFilterDef > = null;
+	public var filter: CUIFilterDef = null;
 
 	#if hlimgui
 	@noSerialize
@@ -494,6 +490,13 @@ class CUIResource extends Resource
 				obj.scaleY = entry.scaleY;
 
 				obj.visible = entry.visible;
+
+				if( entry.filter != null )
+				{
+					var t = Type.resolveClass( entry.filter.type );
+					var f = Type.createInstance(t, [entry.filter]);
+					obj.filter = f;
+				}
 
 			case "h2d.Drawable":
 				var e: CUIDrawable = cast entry;

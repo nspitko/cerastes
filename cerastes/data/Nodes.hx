@@ -11,9 +11,19 @@ import hl.UI;
 #end
 
 #if hlimgui
-abstract NodeId32(Int) from NodeId to NodeId {}
-abstract PinId32(Int) from PinId to PinId {}
-abstract LinkId32(Int) from LinkId to LinkId {}
+abstract NodeId32(Int) from Int to Int {
+	@:from static inline public function fromI64(v:hl.I64):NodeId32	{ return cast v; }
+	@:to inline public function toI64():hl.I64 { return cast this; }
+}
+abstract PinId32(Int) from Int to Int {
+	@:from static inline public function fromI64(v:hl.I64):PinId32	{ return cast v; }
+	@:to inline public function toI64():hl.I64 { return cast this; }
+
+}
+abstract LinkId32(Int) from Int to Int {
+	@:from static inline public function fromI64(v:hl.I64):LinkId32	{ return cast v; }
+	@:to inline public function toI64():hl.I64 { return cast this; }
+}
 #else
 abstract NodeId32(Int) from Int to Int {}
 abstract PinId32(Int) from Int to Int {}

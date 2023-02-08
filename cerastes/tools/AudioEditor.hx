@@ -235,7 +235,7 @@ class AudioEditor extends ImguiTool
 
 		var trackIdx = 0;
 
-		ImGui.pushStyleVar2( ImGuiStyleVar.ButtonTextAlign, {x: 0.0, y: 0.5} );
+		ImGui.pushStyleVar( ImGuiStyleVar.ButtonTextAlign, {x: 0.0, y: 0.5} );
 		for(track in selectedCue.tracks )
 		{
 			renderTrack( track, trackIdx++, contentWidth );
@@ -368,7 +368,7 @@ class AudioEditor extends ImguiTool
 		ImGui.textColored({x: 1, y: 1, z: 0.5, w: 1.0},'Track ${idx+1}');
 
 		var padding = 8;
-		ImGui.pushStyleVar2( ImGuiStyleVar.FramePadding, {x: 2, y: padding} );
+		ImGui.pushStyleVar( ImGuiStyleVar.FramePadding, {x: 2, y: padding} );
 
 		ImGui.beginChildFrame( getID('track_${idx}'), {x: trackWidth, y: trackHeight}, ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse );
 

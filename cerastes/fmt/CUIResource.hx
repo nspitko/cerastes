@@ -1,5 +1,7 @@
 package cerastes.fmt;
 
+import cerastes.ui.Timeline;
+import cerastes.ui.Timeline.TimelineOperation;
 import cerastes.ui.Button.ButtonType;
 import cerastes.ui.Button.BitmapMode;
 import cerastes.ui.AdvancedText;
@@ -45,8 +47,8 @@ import hxd.res.Resource;
 	public var filter: CUIFilterDef = null;
 
 	#if hlimgui
-	@noSerialize
-	public var handle: h2d.Object = null;
+	@noSerialize public var handle: h2d.Object = null;
+	@noSerialize public var parent: CUIObject = null;
 
 	public function clone( fnRename: (String) -> String )
 	{
@@ -79,6 +81,55 @@ import hxd.res.Resource;
 			inst.children.push( c.clone( fnRename ) );
 		}
 		return inst;
+	}
+
+	function initChildren()
+	{
+		for( c in children )
+		{
+			c.parent = this;
+			c.initChildren();
+		}
+	}
+
+	public static final pathChar = '/';
+
+	public function getObjectByPath( path: String )
+	{
+		var pb = path.split(pathChar);
+		var t = this;
+		var id = pb.shift();
+		if( t.name == id )
+			return this;
+
+		do
+		{
+			for( c in t.children )
+			{
+				if( id == c.name )
+				{
+					id = pb.shift();
+					t = c;
+					break;
+				}
+			}
+		} while( pb.length > 0);
+
+		return t;
+	}
+
+	public function getPath()
+	{
+		initChildren();
+
+		var p = name;
+		while( parent != null )
+		{
+			p = '${parent.name}${pathChar}${p}';
+			parent = parent.parent;
+		}
+
+		return p;
 	}
 	#end
 
@@ -272,6 +323,8 @@ import hxd.res.Resource;
 @:structInit class CUIFile {
 	public var version: Int;
 	public var root: CUIObject;
+	@serializeType("cerastes.timeline.Timeline")
+	public var timelines: Array<Timeline> = [];
 }
 
 class CUIResource extends Resource
@@ -369,6 +422,19 @@ class CUIResource extends Resource
 		var ent: UIEntity = Std.downcast( target, UIEntity );
 		if( ent != null )
 			ent.initialize( ent.getScene() );
+
+	}
+
+	public static function recursiveUpdateObjects( entry: CUIObject, target: Object )
+	{
+		recursiveSetProperties(target, entry);
+
+		var ent: UIEntity = Std.downcast( target, UIEntity );
+		if( ent != null )
+			ent.initialize( ent.getScene() );
+
+		for( c in entry.children )
+			recursiveUpdateObjects( c, c.handle );
 
 	}
 
@@ -870,13 +936,14 @@ class CUIResource extends Resource
 
 
 
-	public static function writeObject( def: CUIObject, obj: Object, file: String )
+	public static function writeObject( def: CUIObject, timelines: Array<cerastes.ui.Timeline>, obj: Object, file: String )
 	{
 
 		#if hl
 		var cui: CUIFile = {
 			version: version,
-			root: def
+			root: def,
+			timelines: timelines,
 		};
 
 		//var s = new haxe.Serializer();

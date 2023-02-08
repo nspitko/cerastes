@@ -1,6 +1,7 @@
 
 package cerastes.tools;
 
+import cerastes.ui.Timeline;
 import cerastes.macros.Metrics;
 import cerastes.ui.UIEntity;
 #if hlimgui
@@ -32,6 +33,12 @@ import cerastes.tools.ImguiTools.IG;
 import imgui.ImGuiMacro.wref;
 import imgui.NeoSequencer;
 
+enum UIEInspectorMode
+{
+	Element;
+	Timeline;
+}
+
 @:keep
 @multiInstance(true)
 class UIEditor extends ImguiTool
@@ -47,10 +54,14 @@ class UIEditor extends ImguiTool
 
 	var fileName: String = null;
 	var rootDef: CUIObject;
+	var timelines: Array<Timeline>;
 
 	var treeIdx = 0;
 	var selectedInspectorTree: CUIObject;
 	var selectedDragDrop: CUIObject;
+	var selectedTimeline: Timeline;
+	var selectedTimelineOperation: TimelineOperation;
+	var inspectorMode: UIEInspectorMode = Element;
 
 	var scaleFactor = Utils.getDPIScaleFactor();
 
@@ -95,6 +106,7 @@ class UIEditor extends ImguiTool
 			name:"root",
 			children: []
 		};
+		timelines = [];
 
 		updateScene();
 	}
@@ -108,6 +120,7 @@ class UIEditor extends ImguiTool
 			var res = new cerastes.fmt.CUIResource( hxd.Res.loader.load(fileName).entry );
 			var data = res.getData();
 			rootDef = data.root;
+			timelines = data.timelines != null ? data.timelines : [];
 			CUIResource.recursiveUpgradeObjects( rootDef, data.version  );
 			updateScene();
 		} catch(e)
@@ -140,61 +153,127 @@ class UIEditor extends ImguiTool
 		Metrics.end();
 	}
 
+	function updateDefRecursive( e: Object, o: CUIObject )
+	{
+		Metrics.begin();
+		cerastes.fmt.CUIResource.recursiveUpdateObjects(o, e);
+		@:privateAccess e.onContentChanged();
+		Metrics.end();
+	}
+
 	function inspectorColumn()
 	{
 		ImGui.setNextWindowDockId( dockspaceIdLeft, dockCond );
-		ImGui.begin('Inspector##${windowID()}');
-		handleShortcuts();
-
-		// Buttons
-		if( ImGui.button("Add") )
+		if( ImGui.begin('Inspector##${windowID()}') )
 		{
-			ImGui.openPopup("uie_additem");
-		}
+			handleShortcuts();
 
-		if( ImGui.beginPopup("uie_additem") )
-		{
-			var types = ["h2d.Object", "h2d.Text", "h2d.Bitmap", "h2d.Anim", "h2d.Flow", "h2d.Mask", "h2d.Interactive", "h2d.ScaleGrid", "cerastes.ui.Button", "cerastes.ui.BitmapButton", "cerastes.ui.ScaleGridButton", "cerastes.ui.TextButton", "cerastes.ui.AdvancedText", "cerastes.ui.Reference"];
-
-			for( t in types )
+			// Buttons
+			if( ImGui.button("Add") )
 			{
-				if( ImGui.menuItem( '${getIconForType(t)} ${getNameForType(t)}') )
-					addItem(t);
+				ImGui.openPopup("uie_additem");
 			}
 
-			ImGui.endPopup();
-		}
-		ImGui.sameLine();
-
-		if( ImGui.button("Delete") && selectedInspectorTree != null )
-		{
-			var parent = getDefParent( selectedInspectorTree );
-			if( parent == null )
+			if( ImGui.beginPopup("uie_additem") )
 			{
-				Utils.error("?????");
+				var types = ["h2d.Object", "h2d.Text", "h2d.Bitmap", "h2d.Anim", "h2d.Flow", "h2d.Mask", "h2d.Interactive", "h2d.ScaleGrid", "cerastes.ui.Button", "cerastes.ui.BitmapButton", "cerastes.ui.ScaleGridButton", "cerastes.ui.TextButton", "cerastes.ui.AdvancedText", "cerastes.ui.Reference"];
+
+				for( t in types )
+				{
+					if( ImGui.menuItem( '${getIconForType(t)} ${getNameForType(t)}') )
+						addItem(t);
+				}
+
+				ImGui.endPopup();
 			}
-			else
+			ImGui.sameLine();
+
+			if( ImGui.button("Delete") && selectedInspectorTree != null )
 			{
-				parent.children.remove(selectedInspectorTree);
-				selectedInspectorTree = null;
-				updateScene();
+				var parent = getDefParent( selectedInspectorTree );
+				if( parent == null )
+				{
+					Utils.error("?????");
+				}
+				else
+				{
+					parent.children.remove(selectedInspectorTree);
+					selectedInspectorTree = null;
+					updateScene();
+				}
+
+
 			}
 
+
+			ImGui.beginChild("uie_inspector_tree",null, false, ImGuiWindowFlags.AlwaysAutoResize);
+
+			populateInspector();
+
+			ImGui.endChild();
+
+
+
+			//ImGui.endChild();
 
 		}
-
-
-		ImGui.beginChild("uie_inspector_tree",null, false, ImGuiWindowFlags.AlwaysAutoResize);
-
-		populateInspector();
-
-		ImGui.endChild();
-
-
-
-		//ImGui.endChild();
 		ImGui.end();
 	}
+
+	function timelineColumn()
+	{
+		ImGui.setNextWindowDockId( dockspaceIdLeft, dockCond );
+		if( ImGui.begin('Timelines##${windowID()}') )
+		{
+			handleShortcuts();
+
+			// Buttons
+			if( ImGui.button("Add") )
+			{
+				var t: Timeline = {};
+				t.name = "New Timeline";
+				timelines.push( t );
+			}
+
+
+			ImGui.sameLine();
+
+			if( ImGui.button("Delete") && selectedTimeline != null )
+			{
+				timelines.remove(selectedTimeline);
+				selectedTimeline = null;
+			}
+
+
+			ImGui.beginChild("uie_timeline_list",null, false, ImGuiWindowFlags.AlwaysAutoResize);
+
+			for( t in timelines)
+			{
+				var flags = ImGuiTreeNodeFlags.Leaf | ImGuiTreeNodeFlags.DefaultOpen;
+
+				if( selectedTimeline == t )
+					flags |= ImGuiTreeNodeFlags.Selected;
+
+				var name = t.name;
+				var isOpen: Bool = ImGui.treeNodeEx( name, flags );
+
+				if( ImGui.isItemClicked() )
+				{
+					selectedTimeline = t;
+					inspectorMode = Timeline;
+				}
+
+				if( isOpen )
+					ImGui.treePop();
+			}
+
+			ImGui.endChild();
+
+
+		}
+		ImGui.end();
+	}
+
 
 	var frame: Int = 0;
 
@@ -204,36 +283,103 @@ class UIEditor extends ImguiTool
 		ImGui.begin('Timeline##${windowID()}', null, ImGuiWindowFlags.NoMove);
 		handleShortcuts();
 
+		var lastFrame = frame;
 
-		//var frame: Int = 0;
-		var startFrame: Int = 0;
-		var endFrame: Int = 100;
 
-		var region = ImGui.getWindowContentRegionMax();
-
-		var size: ImVec2S = {x: 0, y: region.y};
-
-		var flags = ImGuiNeoSequencerFlags.EnableSelection | ImGuiNeoSequencerFlags.Selection_EnableDragging | ImGuiNeoSequencerFlags.AlwaysShowHeader | ImGuiNeoSequencerFlags.AllowLengthChanging;
-
-		if( NeoSequencer.begin('Test Sequencer##${windowID()}', frame, startFrame, endFrame, size, flags) )
+		if( selectedTimeline != null )
 		{
+			//var frame: Int = 0;
+			var startFrame: Int = 0;
+//			var endFrame: Int = 100;
 
-			if( NeoSequencer.beginTimeline("test timeline") )
+			var region = ImGui.getWindowContentRegionMax();
+
+			var size: ImVec2S = {x: 0, y: region.y};
+
+			var flags = ImGuiNeoSequencerFlags.EnableSelection | ImGuiNeoSequencerFlags.Selection_EnableDragging | ImGuiNeoSequencerFlags.AlwaysShowHeader | ImGuiNeoSequencerFlags.AllowLengthChanging;
+
+
+			var groups= new Map<String, Array<TimelineOperation>>();
+			for( o in selectedTimeline.operations )
 			{
-				for( i in 0 ... 25 )
-				{
-					var pos = i * 2;
-					NeoSequencer.keyframe( pos );
+				var key = '${o.target}';
+				if( !groups.exists( key ) )
+					groups.set(key,[]);
 
+				groups[key].push(o);
+			}
+
+			var keyFramesToDelete: Array<TimelineOperation> =[];
+
+			if( NeoSequencer.begin('NeoTimeline##${windowID()}', frame, startFrame, selectedTimeline.frames, size, flags) )
+			{
+
+				var idx: Int = 0;
+				for(k => v in groups )
+				{
+					if( NeoSequencer.beginTimeline(k) )
+					{
+						for( o in v )
+						{
+							idx++;
+
+							NeoSequencer.keyframe( o.frame );
+							if( NeoSequencer.isKeyframeSelected() )
+							{
+								inspectorMode = Timeline;
+								selectedTimelineOperation = o;
+							}
+
+
+
+							if( NeoSequencer.isKeyframeRightClicked() )
+							{
+								ImGui.openPopup('${idx}_ns_rc_popup');
+							}
+
+
+							if( ImGui.beginPopup('${idx}_ns_rc_popup') )
+							{
+								if( ImGui.menuItem( 'Delete') )
+								{
+									keyFramesToDelete.push(o);
+								}
+							}
+
+
+						}
+
+						NeoSequencer.endTimeline();
+					}
 
 				}
 
+
+
+
+				NeoSequencer.end();
 			}
 
-			NeoSequencer.endTimeline();
-
-			NeoSequencer.end();
+			for( k in keyFramesToDelete )
+			{
+				selectedTimeline.operations.remove( k );
+			}
 		}
+		else
+		{
+			ImGui.text("No timeline selected...");
+		}
+
+		if( lastFrame != frame )
+		{
+			if( lastFrame > frame )
+			{
+				updateDefRecursive( rootDef.handle,rootDef );
+			}
+			selectedTimeline.ui = rootDef.handle;
+			selectedTimeline.setFrame(frame);
+		}
+		lastFrame = frame;
 
 
 		//ImGui.endChild();
@@ -247,13 +393,28 @@ class UIEditor extends ImguiTool
 		ImGui.begin('Editor##${windowID()}');
 		handleShortcuts();
 
-		if( selectedInspectorTree == null )
+		if( inspectorMode == Element )
 		{
-			ImGui.text("No item selected...");
+
+			if( selectedInspectorTree == null )
+			{
+				ImGui.text("No item selected...");
+			}
+			else
+			{
+				populateEditor();
+			}
 		}
-		else
+		else if( inspectorMode == Timeline )
 		{
-			populateEditor();
+			if( selectedTimelineOperation == null )
+			{
+				ImGui.text("No keyframe selected...");
+			}
+			else
+			{
+				populateKeyframeEditor();
+			}
 		}
 
 		//ImGui.endChild();
@@ -271,7 +432,7 @@ class UIEditor extends ImguiTool
 		if( newFile != null )
 		{
 			fileName = Utils.toLocalFile( newFile );
-			CUIResource.writeObject(rootDef, preview,newFile);
+			CUIResource.writeObject(rootDef, timelines, preview,newFile);
 
 			cerastes.tools.AssetBrowser.needsReload = true;
 			lastSaved = Sys.time() * 1000;
@@ -287,7 +448,7 @@ class UIEditor extends ImguiTool
 			return;
 		}
 
-		CUIResource.writeObject(rootDef,preview,fileName);
+		CUIResource.writeObject(rootDef,timelines,preview,fileName);
 
 		lastSaved = Sys.time() * 1000;
 		ImGuiToolManager.showPopup("File saved",'Wrote ${fileName} successfully.', Info);
@@ -364,6 +525,7 @@ class UIEditor extends ImguiTool
 		processSelection();
 
 		inspectorColumn();
+		timelineColumn();
 
 		timeline();
 
@@ -675,7 +837,10 @@ class UIEditor extends ImguiTool
 			var isOpen = ImGui.treeNodeEx( name, flags );
 
 			if( ImGui.isItemClicked() )
+			{
 				selectedInspectorTree = c;
+				inspectorMode = Element;
+			}
 
 			if( ImGui.isItemClicked( ImGuiMouseButton.Right ) )
 				ImGui.openPopup('${c.name}_uie_context');
@@ -794,6 +959,14 @@ class UIEditor extends ImguiTool
 					updateScene();
 				}
 
+				if( selectedTimeline != null && ImGui.menuItem('\uf084 Keyframe here') )
+				{
+					var t: TimelineOperation = {};
+					t.target = c.getPath();
+					t.frame = frame;
+					selectedTimeline.operations.push(t);
+				}
+
 				ImGui.endPopup();
 			}
 
@@ -881,6 +1054,135 @@ class UIEditor extends ImguiTool
 				replaceDef( start.children[i], search, replace );
 			}
 		}
+
+	}
+
+	function populateKeyframeEditor()
+	{
+		//var frame = populateKeyframeEditor.frame;
+
+		for( o in selectedTimeline.operations )
+		{
+			if( o.frame == selectedTimelineOperation.frame && o.target == selectedTimelineOperation.target )
+			{
+				populateOp( o );
+			}
+		}
+	}
+
+	function populateOp( o: TimelineOperation )
+	{
+		var validTarget = preview.getObjectByName( o.target ) != null;
+		if( !validTarget )
+			ImGui.pushStyleColor( ImGuiCol.Text, {x: 1, y: 0, z: 0, w: 1} );
+
+		var nt = IG.textInput( "Target", o.target );
+		if( nt != null && nt.length > 0 )
+		{
+			var isValid = preview.getObjectByName( o.target ) != null;
+			if( isValid )
+				o.target = nt;
+		}
+
+		if( !validTarget )
+			ImGui.popStyleColor();
+
+		// Figure out what properties we can control
+		var def = rootDef.getObjectByPath(o.target);
+		if( def == null )
+			return;
+
+		if( def.filter != null )
+		{
+
+			if( ImGui.beginCombo("Field Group", o.targetType == Filter ? "Filter" : "Properties") )
+			{
+				if( ImGui.selectable("Object", 	o.targetType == Object) )		o.targetType = Object;
+				if( ImGui.selectable("Filter", 	o.targetType == Filter) )		o.targetType = Filter;
+
+				ImGui.endCombo();
+			}
+			if( ImGui.isItemHovered() )
+			{
+				ImGui.beginTooltip();
+				ImGui.text("Select \"Filter\" to adjust filter properties, else use Object for everything else");
+				ImGui.endTooltip();
+			}
+		}
+
+		var td: Dynamic = o.targetType == Filter ? def.filter : def;
+
+		var canTween: Bool = false;
+		
+		if( def != null )
+		{
+			if( ImGui.beginCombo( "Field", o.key ) )
+			{
+				var fields = Reflect.fields( td );
+				for( f in fields )
+				{
+					var fv = Reflect.field(td,f);
+					if( fv is Int || fv is Float || fv is Bool )
+					{
+						if( ImGui.selectable(f, f == o.key) )
+						{
+							o.key = f;
+							o.value = fv;
+						}
+					}
+				}
+				ImGui.endCombo();
+			}
+
+
+			var fv = Reflect.field(td, o.key);
+			if( fv is Int )
+			{
+				var v: Int = o.value;
+				if( ImGui.inputInt( o.key, v, 1,10 ) )
+					o.value = v;
+
+				canTween = true;
+			}
+			else if( fv is Float )
+			{
+				var v: Float = o.value;
+				if( ImGui.inputDouble( o.key, v, 0.1, 1, "%.4f") )
+					o.value = v;
+
+				canTween = true;
+			}
+			else if( fv is Bool )
+			{
+				var v: Bool = o.value;
+				if( ImGui.checkbox( o.key, v ) )
+					o.value = v;
+			}
+
+
+			trace(Std.string( o.value ));
+		}
+
+		ImGui.inputInt("Frame", o.frame );
+
+		if( canTween )
+		{
+			if( ImGui.beginCombo("Tween type", o.type.toString() ) )
+			{
+				if( ImGui.selectable( OperationType.None.toString(), 		o.type == None ) )		o.type = None;
+				if( ImGui.selectable( OperationType.Linear.toString(), 		o.type == Linear ) )	o.type = Linear;
+				if( ImGui.selectable( OperationType.ExpoIn.toString(), 		o.type == ExpoIn ) )	o.type = ExpoIn;
+				if( ImGui.selectable( OperationType.ExpoOut.toString(), 	o.type == ExpoOut ) )	o.type = ExpoOut;
+				if( ImGui.selectable( OperationType.ExpoInOut.toString(), 	o.type == ExpoInOut ) )	o.type = ExpoInOut;
+
+				ImGui.endCombo();
+			}
+		}
+
+		ImGui.inputInt("Duration", o.duration );
+
+
+		ImGui.separator();
 
 	}
 

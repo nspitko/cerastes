@@ -1,5 +1,6 @@
 package cerastes.fmt;
 
+import haxe.rtti.Meta;
 import cerastes.ui.Timeline;
 import cerastes.ui.Timeline.TimelineOperation;
 import cerastes.ui.Button.ButtonType;
@@ -36,13 +37,13 @@ import hxd.res.Resource;
 	public var name: String = null;
 	public var children: Array<CUIObject> = null;
 
-	public var x: Float = 0;
-	public var y: Float = 0;
-	public var rotation: Float = 0;
-	public var scaleX: Float = 1;
-	public var scaleY: Float = 1;
+	@et("Float") public var x: Float = 0;
+	@et("Float") public var y: Float = 0;
+	@et("Float") public var rotation: Float = 0;
+	@et("Float") public var scaleX: Float = 1;
+	@et("Float") public var scaleY: Float = 1;
 
-	public var visible: Bool = true;
+	@et("Bool") public var visible: Bool = true;
 
 	public var filter: CUIFilterDef = null;
 
@@ -83,7 +84,39 @@ import hxd.res.Resource;
 		return inst;
 	}
 
-	function initChildren()
+	public static function getMetaForField( f: String, m: String, cls: Class<Dynamic> ) : Any
+	{
+		var meta: haxe.DynamicAccess<Dynamic> = null;
+		if( cls != null )
+			meta = Meta.getFields( cls );
+
+		if( meta != null && meta.exists( f ) )
+		{
+			var metadata: haxe.DynamicAccess<Dynamic> = meta.get(f);
+
+			if( metadata.exists(m) )
+			{
+				var val = metadata.get(m);
+				if( val == null )
+					return true;
+				else
+					return val[0];
+			}
+
+		}
+
+		if( cls == null )
+			return null;
+
+		cls = Type.getSuperClass( cls );
+		if( cls != null )
+			return getMetaForField(f, m, cls );
+
+		return null;
+
+	}
+
+	public function initChildren()
 	{
 		for( c in children )
 		{
@@ -96,34 +129,43 @@ import hxd.res.Resource;
 
 	public function getObjectByPath( path: String )
 	{
+		if( name == path )
+			return this;
+
 		var pb = path.split(pathChar);
 		var t = this;
 		var id = pb.shift();
-		if( t.name == id )
+
+		for( c in children )
+		{
+			if( c.name == id )
+				return c.getObjectByPath( pb.join("/") );
+		}
+
+		return null;
+	}
+
+	public function getObjectByName( id: String )
+	{
+		if( name == id )
 			return this;
 
-		do
+		for( c in children )
 		{
-			for( c in t.children )
-			{
-				if( id == c.name )
-				{
-					id = pb.shift();
-					t = c;
-					break;
-				}
-			}
-		} while( pb.length > 0);
+			var ret = c.getObjectByName( id );
+			if( ret != null  )
+				return ret;
+		}
 
-		return t;
+		return null;
 	}
+
 
 	public function getPath()
 	{
-		initChildren();
-
 		var p = name;
-		while( parent != null )
+		// Hack: Never store the root object's name in our path.
+		while( parent != null && parent.parent != null )
 		{
 			p = '${parent.name}${pathChar}${p}';
 			parent = parent.parent;
@@ -149,11 +191,11 @@ import hxd.res.Resource;
 
 @:structInit class CUIInteractive extends CUIDrawable {
 	public var cursor: hxd.Cursor = hxd.Cursor.Default;
-	public var isEllipse: Bool = false ;
+	@et("Bool") public var isEllipse: Bool = false ;
 	//public var backgroundColor: Int = 0xFFFFFFFF;
 
-	public var width: Float = 0;
-	public var height: Float = 0;
+	@et("Float") public var width: Float = 0;
+	@et("Float") public var height: Float = 0;
 }
 
 @:structInit class CUIText extends CUIDrawable {
@@ -166,33 +208,34 @@ import hxd.res.Resource;
 
 	public var textAlign: h2d.Text.Align = Left;
 
-	public var maxWidth: Float = -1;
+	@et("Float") public var maxWidth: Float = -1;
 }
 
 @:structInit class CUIAdvancedText extends CUIText {
-	public var ellipsis: Bool = false;
-	public var maxLines: Int = 0;
+	@et("Bool") public var ellipsis: Bool = false;
+	@et("Int") public var maxLines: Int = 0;
 	public var boldFont: String = null;
 }
 
 
 @:structInit class CUIBitmap extends CUIDrawable {
 	public var tile: String = "#FF00FF";
-	public var width: Float = -1;
-	public var height: Float = -1;
+	@et("Float") public var width: Float = -1;
+	@et("Float") public var height: Float = -1;
 }
 
 @:structInit class CUIAdvancedBitmap extends CUIBitmap {
-	public var scrollX: Int = 0;
-	public var scrollY: Int = 0;
-	public var clipX: Int = 0;
-	public var clipY: Int = 0;
+	@et("Int") public var scrollX: Int = 0;
+	@et("Int") public var scrollY: Int = 0;
+	@et("Int") public var clipX: Int = 0;
+	@et("Int") public var clipY: Int = 0;
 }
 
 @:structInit class CUIAnim extends CUIDrawable {
 	public var entry: String = "#FF00FF";
-	public var speed: Float = 15;
-	public var loop: Bool = true;
+	@et("Float") public var speed: Float = 15;
+	@et("Bool") public var loop: Bool = true;
+	@et("Bool") public var autoplay: Bool = true;
 }
 
 @:structInit class CUIButton extends CUIFlow {
@@ -214,7 +257,7 @@ import hxd.res.Resource;
 	public var text: String = null;
 	public var font: String = null;
 
-	public var ellipsis: Bool = false;
+	@et("Bool") public var ellipsis: Bool = false;
 
 	public var bitmapMode: BitmapMode = ButtonTile;
 	public var buttonMode: ButtonType = Momentary;
@@ -269,52 +312,52 @@ import hxd.res.Resource;
 	public var horizontalAlign: h2d.Flow.FlowAlign = Left;
 	public var overflow: h2d.Flow.FlowOverflow = Limit;
 
-	public var minWidth: Int = -1;
-	public var minHeight: Int = -1;
-	public var maxWidth: Int = -1;
-	public var maxHeight: Int = -1;
+	@et("Int") public var minWidth: Int = -1;
+	@et("Int") public var minHeight: Int = -1;
+	@et("Int") public var maxWidth: Int = -1;
+	@et("Int") public var maxHeight: Int = -1;
 
-	public var paddingTop: Int = 0;
-	public var paddingRight: Int = 0;
-	public var paddingBottom: Int = 0;
-	public var paddingLeft: Int = 0;
+	@et("Int") public var paddingTop: Int = 0;
+	@et("Int") public var paddingRight: Int = 0;
+	@et("Int") public var paddingBottom: Int = 0;
+	@et("Int") public var paddingLeft: Int = 0;
 
-	public var horizontalSpacing: Int = 0;
-	public var verticalSpacing: Int = 0;
+	@et("Int") public var horizontalSpacing: Int = 0;
+	@et("Int") public var verticalSpacing: Int = 0;
 
 	public var backgroundTile: String = "";
 
-	public var borderWidth: Int = 0;
-	public var borderHeight: Int = 0;
+	@et("Int") public var borderWidth: Int = 0;
+	@et("Int") public var borderHeight: Int = 0;
 
-	public var multiline: Bool = true;
+	@et("Bool") public var multiline: Bool = true;
 }
 
 
 
 @:structInit class CUIMask extends CUIObject {
 
-	public var width: Int = 10;
-	public var height: Int = 10;
+	@et("Int") public var width: Int = 10;
+	@et("Int") public var height: Int = 10;
 
-	public var scrollX: Float = 0;
-	public var scrollY: Float = 0;
+	@et("Float") public var scrollX: Float = 0;
+	@et("Float") public var scrollY: Float = 0;
 }
 
 @:structInit class CUIScaleGrid extends CUIDrawable {
 
-	public var borderLeft: Int = 1;
-	public var borderRight: Int = 1;
-	public var borderTop: Int = 1;
-	public var borderBottom: Int = 1;
-	public var borderWidth: Int = 1;
-	public var borderHeight: Int = 1;
+	@et("Int") public var borderLeft: Int = 1;
+	@et("Int") public var borderRight: Int = 1;
+	@et("Int") public var borderTop: Int = 1;
+	@et("Int") public var borderBottom: Int = 1;
+	@et("Int") public var borderWidth: Int = 1;
+	@et("Int") public var borderHeight: Int = 1;
 
-	public var width: Float = 10;
-	public var height: Float = 10;
+	@et("Float") public var width: Float = 10;
+	@et("Float") public var height: Float = 10;
 
-	public var tileBorders: Bool = true;
-	public var ignoreScale: Bool = true;
+	@et("Bool") public var tileBorders: Bool = true;
+	@et("Bool") public var ignoreScale: Bool = true;
 
 	public var contentTile: String = "#FF00FF";
 }

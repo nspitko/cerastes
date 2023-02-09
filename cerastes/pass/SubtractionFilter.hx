@@ -14,7 +14,7 @@ class SubtractionShader extends h3d.shader.ScreenShader {
 	static var SRC = {
 
 		@param var texture : Sampler2D;
-		@param var amount : Float;
+		@param var amount : Float = 0.0;
 
 		function fragment()
 		{
@@ -28,7 +28,7 @@ class SubtractionShader extends h3d.shader.ScreenShader {
 
 @:structInit class SubtractionFilterDef extends cerastes.fmt.CUIResource.CUIFilterDef
 {
-	public var amount: Float = 0;
+	@et("Float") public var amount: Float = 0;
 }
 
 class SubtractionFilter extends Filter implements SelectableFilter
@@ -45,7 +45,7 @@ class SubtractionFilter extends Filter implements SelectableFilter
 
 	public var amount(get, set): Float;
 
-	public function get_amount() { return pass.amount; }
+	@:keep public function get_amount() { return pass.amount; }
 	@:keep public function set_amount( v ) { pass.amount = v; return v; }
 
 	public function new( ?def: SubtractionFilterDef  ) {

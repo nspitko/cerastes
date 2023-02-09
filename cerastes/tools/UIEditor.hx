@@ -1,6 +1,7 @@
 
 package cerastes.tools;
 
+import h3d.scene.Object.ObjectFlags;
 import cerastes.ui.Timeline;
 import cerastes.macros.Metrics;
 import cerastes.ui.UIEntity;
@@ -85,6 +86,8 @@ class UIEditor extends ImguiTool
 
 	var lastSaved: Float = 0;
 
+	var timelinePlay = false;
+
 	public function new()
 	{
 		var size = haxe.macro.Compiler.getDefine("windowSize");
@@ -120,6 +123,7 @@ class UIEditor extends ImguiTool
 			var res = new cerastes.fmt.CUIResource( hxd.Res.loader.load(fileName).entry );
 			var data = res.getData();
 			rootDef = data.root;
+
 			timelines = data.timelines != null ? data.timelines : [];
 			CUIResource.recursiveUpgradeObjects( rootDef, data.version  );
 			updateScene();
@@ -135,6 +139,7 @@ class UIEditor extends ImguiTool
 		preview.removeChildren();
 		//previewRoot = new Object(preview);
 		var res = new CUIResource(null);
+		rootDef.initChildren();
 		previewRoot = res.defToObject(rootDef);
 		preview.addChild(previewRoot);
 
@@ -283,11 +288,16 @@ class UIEditor extends ImguiTool
 		ImGui.begin('Timeline##${windowID()}', null, ImGuiWindowFlags.NoMove);
 		handleShortcuts();
 
+
 		var lastFrame = frame;
 
 
 		if( selectedTimeline != null )
 		{
+			if( timelinePlay )
+				frame = selectedTimeline.frame;
+
+
 			//var frame: Int = 0;
 			var startFrame: Int = 0;
 //			var endFrame: Int = 100;
@@ -313,6 +323,10 @@ class UIEditor extends ImguiTool
 
 			if( NeoSequencer.begin('NeoTimeline##${windowID()}', frame, startFrame, selectedTimeline.frames, size, flags) )
 			{
+				if( inspectorMode != Timeline )
+				{
+					NeoSequencer.clearSelection();
+				}
 
 				var idx: Int = 0;
 				for(k => v in groups )
@@ -344,6 +358,8 @@ class UIEditor extends ImguiTool
 								{
 									keyFramesToDelete.push(o);
 								}
+
+								ImGui.endPopup();
 							}
 
 
@@ -370,7 +386,7 @@ class UIEditor extends ImguiTool
 			ImGui.text("No timeline selected...");
 		}
 
-		if( lastFrame != frame )
+		if( lastFrame != frame && !timelinePlay )
 		{
 			if( lastFrame > frame )
 			{
@@ -584,6 +600,42 @@ class UIEditor extends ImguiTool
 		}
 
 		processSceneMouse( delta );
+
+		if( !ImGui.wantCaptureKeyboard() )
+		{
+			if( Key.isPressed( Key.SPACE ) && selectedTimeline != null )
+			{
+				timelinePlay = !timelinePlay;
+
+				if( timelinePlay )
+				{
+					for( o in selectedTimeline.operations )
+						o.targetHandle = null;
+
+					selectedTimeline.ui = rootDef.handle;
+				}
+
+
+				selectedTimeline.setFrame( frame );
+			}
+		}
+
+		if( timelinePlay && selectedTimeline != null )
+		{
+			try
+			{
+				if( selectedTimeline.frame > selectedTimeline.frames )
+				{
+					selectedTimeline.time = -1;
+				}
+				selectedTimeline.tick(delta);
+			}
+			catch(e)
+			{
+				Utils.warning("Timeline crashed. :(");
+			}
+		}
+
 
 
 	}
@@ -962,7 +1014,7 @@ class UIEditor extends ImguiTool
 				if( selectedTimeline != null && ImGui.menuItem('\uf084 Keyframe here') )
 				{
 					var t: TimelineOperation = {};
-					t.target = c.getPath();
+					t.target = c.name;
 					t.frame = frame;
 					selectedTimeline.operations.push(t);
 				}
@@ -1061,25 +1113,33 @@ class UIEditor extends ImguiTool
 	{
 		//var frame = populateKeyframeEditor.frame;
 
+		var idx = 0;
+		var opsToDelete = [];
 		for( o in selectedTimeline.operations )
 		{
 			if( o.frame == selectedTimelineOperation.frame && o.target == selectedTimelineOperation.target )
 			{
-				populateOp( o );
+				ImGui.pushID('op${idx++}');
+				if( populateOp( o ) )
+					opsToDelete.push(o);
+				ImGui.popID();
 			}
 		}
+		for( o in opsToDelete)
+			selectedTimeline.operations.remove(o);
 	}
 
 	function populateOp( o: TimelineOperation )
 	{
-		var validTarget = preview.getObjectByName( o.target ) != null;
+		var def = rootDef.getObjectByName(o.target);
+		var validTarget = def != null;
 		if( !validTarget )
 			ImGui.pushStyleColor( ImGuiCol.Text, {x: 1, y: 0, z: 0, w: 1} );
 
 		var nt = IG.textInput( "Target", o.target );
 		if( nt != null && nt.length > 0 )
 		{
-			var isValid = preview.getObjectByName( o.target ) != null;
+			var isValid = preview.getObjectByName( nt ) != null;
 			if( isValid )
 				o.target = nt;
 		}
@@ -1088,9 +1148,8 @@ class UIEditor extends ImguiTool
 			ImGui.popStyleColor();
 
 		// Figure out what properties we can control
-		var def = rootDef.getObjectByPath(o.target);
 		if( def == null )
-			return;
+			return false;
 
 		if( def.filter != null )
 		{
@@ -1113,11 +1172,15 @@ class UIEditor extends ImguiTool
 		var td: Dynamic = o.targetType == Filter ? def.filter : def;
 
 		var canTween: Bool = false;
-		
+		var mType: String = null;
+
 		if( def != null )
 		{
 			if( ImGui.beginCombo( "Field", o.key ) )
 			{
+				if( ImGui.selectable("None", o.key == null ) )
+					o.key = null;
+
 				var fields = Reflect.fields( td );
 				for( f in fields )
 				{
@@ -1134,36 +1197,62 @@ class UIEditor extends ImguiTool
 				ImGui.endCombo();
 			}
 
-
-			var fv = Reflect.field(td, o.key);
-			if( fv is Int )
+			if( o.key != null )
 			{
-				var v: Int = o.value;
-				if( ImGui.inputInt( o.key, v, 1,10 ) )
-					o.value = v;
+				mType = CUIObject.getMetaForField(o.key, "et", Type.getClass( td ) );
 
-				canTween = true;
+				if( mType == "Float" )
+				{
+					var v: Float = o.value;
+					if( ImGui.inputDouble( o.key, v, 0.1, 1, "%.4f") )
+						o.value = v;
+
+					canTween = true;
+				}
+				else if( mType == "Int" )
+				{
+					var v: Int = o.value;
+					if( ImGui.inputInt( o.key, v, 1,10 ) )
+						o.value = v;
+
+					canTween = true;
+				}
+				else if( mType == "Bool" )
+				{
+					var v: Bool = o.value;
+					if( ImGui.checkbox( o.key, v ) )
+						o.value = v;
+				}
+
 			}
-			else if( fv is Float )
+			else
 			{
-				var v: Float = o.value;
-				if( ImGui.inputDouble( o.key, v, 0.1, 1, "%.4f") )
-					o.value = v;
+				// Self referencing properties
+				var anim = Std.downcast( def, CUIAnim );
+				if( anim != null )
+				{
+					if( ImGui.beginCombo("Event type", o.type.toString() ) )
+					{
+						if( ImGui.selectable( OperationType.AnimPlay.toString(), 		o.type == AnimPlay ) )		o.type = AnimPlay;
+						if( ImGui.selectable( OperationType.AnimPause.toString(), 		o.type == AnimPause ) )		o.type = AnimPause;
+						if( ImGui.selectable( OperationType.AnimSetFrame.toString(), 	o.type == AnimSetFrame ) )	o.type = AnimSetFrame;
 
-				canTween = true;
+						ImGui.endCombo();
+					}
+
+					if( o.type == AnimSetFrame )
+					{
+						var v: Int = o.value;
+						if( ImGui.inputInt( "Anim Frame", v, 1,10 ) )
+							o.value = v;
+					}
+				}
 			}
-			else if( fv is Bool )
-			{
-				var v: Bool = o.value;
-				if( ImGui.checkbox( o.key, v ) )
-					o.value = v;
-			}
-
-
-			trace(Std.string( o.value ));
 		}
 
-		ImGui.inputInt("Frame", o.frame );
+
+
+		ImGui.inputInt("Timeline Frame", o.frame );
 
 		if( canTween )
 		{
@@ -1177,12 +1266,71 @@ class UIEditor extends ImguiTool
 
 				ImGui.endCombo();
 			}
+
+			if( o.type != None )
+			{
+				ImGui.inputInt("Duration", o.duration );
+				if( ImGui.isItemHovered() )
+				{
+					ImGui.beginTooltip();
+					ImGui.text("In timeline frames, so if your timeline is set to 10fps, a duration of 10 means 1s duration.");
+					ImGui.endTooltip();
+				}
+
+				ImGui.inputDouble("Step Rate", o.stepRate, 1/15, 1/60, "%.4f" );
+				if( ImGui.isItemHovered() )
+				{
+					ImGui.beginTooltip();
+					ImGui.text("Sets how much time (in seconds) must pass before a transition is updated when playing. examples: 60fps -> 1/60 -> 0.016. 15fps -> 1/15 -> 0.06. By default (0) it will update every (screen) frame.");
+					ImGui.endTooltip();
+				}
+
+				var hasInitialValue = o.initialValue != null;
+				ImGui.checkbox("Specify start value", hasInitialValue);
+				if( hasInitialValue )
+				{
+					ImGui.pushID("initialval");
+					if( o.initialValue == null )
+						o.initialValue = 0;
+
+					if( mType == "Float" )
+					{
+						var v: Float = o.initialValue;
+						if( ImGui.inputDouble( o.key, v, 0.1, 1, "%.4f") )
+							o.initialValue = v;
+
+						canTween = true;
+					}
+					else if( mType == "Int" )
+					{
+						var v: Int = o.initialValue;
+						if( ImGui.inputInt( o.key, v, 1,10 ) )
+							o.initialValue = v;
+
+						canTween = true;
+					}
+					else if( mType == "Bool" )
+					{
+						var v: Bool = o.initialValue;
+						if( ImGui.checkbox( o.key, v ) )
+							o.initialValue = v;
+					}
+					ImGui.popID();
+				}
+				else
+				{
+					o.initialValue = null;
+				}
+			}
 		}
 
-		ImGui.inputInt("Duration", o.duration );
+
+		if( ImGui.button("Delete"))
+			return true;
 
 
 		ImGui.separator();
+		return false;
 
 	}
 
@@ -1484,7 +1632,8 @@ class UIEditor extends ImguiTool
 					d.entry = newTile;
 
 				wref( ImGui.inputDouble("Speed", _, 1, 5, "%.1f" ),  d.speed );
-				wref( ImGui.checkbox("Loop", _ ), d.loop );
+				ImGui.checkbox("Loop", d.loop );
+				ImGui.checkbox("Autoplay", d.autoplay );
 
 			case "h2d.Flow":
 				var d: CUIFlow = cast def;

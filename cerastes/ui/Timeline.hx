@@ -12,6 +12,11 @@ abstract OperationType(Int) from Int to Int {
 	var ExpoOut = 102;
 	var ExpoInOut = 103;
 
+	// Events
+	var AnimPlay = 200;
+	var AnimPause = 201;
+	var AnimSetFrame = 203;
+
 	public function toString()
 	{
 		return switch( this )
@@ -21,6 +26,11 @@ abstract OperationType(Int) from Int to Int {
 			case ExpoIn: "Exponential In";
 			case ExpoOut: "Exponential Out";
 			case ExpoInOut: "Exponential In/Out";
+			//
+			case AnimPlay: "Play";
+			case AnimPause: "Pause";
+			case AnimSetFrame: "Set Frame";
+
 			default: "Unknown";
 		}
 
@@ -41,8 +51,10 @@ abstract TargetType(Int) {
 @:structInit class TimelineOperation
 {
 	public var target: String = null; // The element we're going to change
+	public var targetType: TargetType = Object; // What are we actually pointing to
 	public var key: String = null; // Key to modify
 	public var value: Dynamic = null; // Value to set
+	public var initialValue: Dynamic = null; // For tweens, the start value.
 	public var frame: Int = 0;
 
 	public var duration: Int = 0;
@@ -53,7 +65,7 @@ abstract TargetType(Int) {
 	@noSerialize public var startValue: Dynamic = null; // If not null, specifies the value we start from. If null, use current value.
 	@noSerialize public var stepTimer: Float = 0;
 	@noSerialize public var targetHandle: Dynamic = null;
-	@noSerialize public var targetType: TargetType = Object;
+
 }
 
 @:structInit class Timeline
@@ -72,7 +84,7 @@ abstract TargetType(Int) {
 	#end
 
 	@noSerialize public var frame(get, never): Int;
-	@noSerialize public var time: Float = 0;
+	@noSerialize public var time: Float = -1;
 	@noSerialize public var ui: h2d.Object = null;
 
 	function get_frame() { return timeToFrame(time); }
@@ -82,8 +94,17 @@ abstract TargetType(Int) {
 		var t = frameToTime( f );
 		if( t < time )
 		{
-			time = 0;
+			time = -1;
 		}
+		else
+		{
+			// Force re-simulate the last two frames just to be sure we're in a good state.
+			time = time -2;
+		}
+
+		// Clear out handles since we probably screwed with the scene in the editor.
+		for( o in operations )
+			o.targetHandle = null;
 
 		while( frame < f  )
 		{
@@ -103,6 +124,10 @@ abstract TargetType(Int) {
 			var start = frameToTime(op.frame);
 			var adjTime = time - start;
 			var adjLastTime = tLast - start;
+
+			// Fixup saveload drama
+			if( op.value == null )
+				op.value = 0;
 
 			var duration = op.duration / frameRate;
 
@@ -136,6 +161,7 @@ abstract TargetType(Int) {
 
 
 			var target = op.targetHandle;
+
 			var changed: Bool = false;
 
 			switch( op.type )
@@ -144,46 +170,77 @@ abstract TargetType(Int) {
 					Reflect.setProperty(target, op.key, op.value);
 					changed = true;
 
-				default:
-					if( Utils.assert( op.duration > 0, 'Tween Operation has invalid duration ${op.duration}, defaulting to 1' ))
-						op.duration = 1;
+				case AnimPlay:
+					var anim = Std.downcast(target, h2d.Anim );
+ 					if( anim != null )
+					{
+						anim.currentFrame = 0;
+						anim.pause = false;
+					}
+
+				case AnimPause:
+					var anim = Std.downcast(target, h2d.Anim );
+					if( anim != null )
+						anim.pause = true;
+
+				case AnimSetFrame:
+					var anim = Std.downcast(target, h2d.Anim );
+					if( anim != null )
+						anim.currentFrame = op.value;
+
+
+				case Linear | ExpoIn | ExpoOut | ExpoInOut:
+					if( op.key == null )
+						continue;
+
+					if( Utils.assert( duration > 0, 'Tween Operation has invalid duration ${op.duration}, defaulting to 1' ))
+						duration = 1 * frameRate;
 
 					if( firstFrame && op.startValue == null )
 					{
-						op.startValue = Reflect.field( target, op.key );
+						if( op.initialValue != null )
+							op.startValue = op.initialValue;
+						else
+							op.startValue = Reflect.getProperty( target, op.key );
 					}
 
 					if( lastFrame )
 					{
 						Reflect.setProperty(target, op.key, op.value);
+						trace(op.value);
 						changed = true;
-						continue;
 					}
-
-					if( op.stepRate > 0 )
+					else
 					{
-						op.stepTimer += d;
+						if( op.stepRate > 0 )
+						{
+							op.stepTimer += d;
 
-						if( op.stepTimer < op.stepRate )
-							continue;
+							if( op.stepTimer < op.stepRate )
+								continue;
 
-						op.stepTimer -= op.stepRate;
+							op.stepTimer -= op.stepRate;
+						}
+
+						var tweenFunc = switch( op.type )
+						{
+							case Linear: Easing.linear;
+							case ExpoIn: Easing.expoIn;
+							case ExpoOut: Easing.expoOut;
+							case ExpoInOut: Easing.expoInOut;
+							default: Easing.linear; // Fallback
+						}
+
+						var f = tweenFunc( adjTime / duration );
+						var v = ( f * ( op.value - op.startValue ) ) + op.startValue;
+
+						Reflect.setProperty(target, op.key, v);
+						//trace(v);
+						changed = true;
 					}
 
-					var tweenFunc = switch( op.type )
-					{
-						case Linear: Easing.linear;
-						case ExpoIn: Easing.expoIn;
-						case ExpoOut: Easing.expoOut;
-						case ExpoInOut: Easing.expoInOut;
-						default: Easing.linear; // Fallback
-					}
-
-					var f = tweenFunc( adjTime / duration );
-					var v = ( f * ( op.value - op.startValue ) ) + op.startValue;
-
-					Reflect.setProperty(target, op.key, v);
-					changed = true;
+				default:
+					Utils.warning('Unhandled timeline event ${op.type}');
 
 			}
 

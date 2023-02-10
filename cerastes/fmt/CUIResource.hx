@@ -177,6 +177,10 @@ import hxd.res.Resource;
 
 }
 
+@:structInit class CUISound extends CUIObject {
+	public var cue: String = null;
+}
+
 @:structInit class CUIEntity extends CUIObject {
 	public var cls: String = null;
 }
@@ -536,6 +540,10 @@ class CUIResource extends Resource
 				var d : CUIReference = cast entry;
 				obj = new cerastes.ui.Reference( d.file );
 
+			case "cerastes.ui.Sound":
+				//var d: CUISound = cast entry;
+				obj = new cerastes.ui.Sound( );
+
 			default:
 
 				var opts = CompileTime.getAllClasses(UIEntity);
@@ -855,6 +863,12 @@ class CUIResource extends Resource
 
 				if( e.file != null && hxd.Res.loader.exists( e.file ) )
 					o.load( e.file );
+
+			case "cerastes.ui.Sound":
+				var o = cast(obj, cerastes.ui.Sound);
+				var e: CUISound = cast entry;
+
+				o.cue = e.cue;
 
 
 			default:

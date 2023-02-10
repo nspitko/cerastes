@@ -87,6 +87,7 @@ class UIEditor extends ImguiTool
 	var lastSaved: Float = 0;
 
 	var timelinePlay = false;
+	var keyframeContext: TimelineOperation = null;
 
 	public function new()
 	{
@@ -181,7 +182,7 @@ class UIEditor extends ImguiTool
 
 			if( ImGui.beginPopup("uie_additem") )
 			{
-				var types = ["h2d.Object", "h2d.Text", "h2d.Bitmap", "h2d.Anim", "h2d.Flow", "h2d.Mask", "h2d.Interactive", "h2d.ScaleGrid", "cerastes.ui.Button", "cerastes.ui.BitmapButton", "cerastes.ui.ScaleGridButton", "cerastes.ui.TextButton", "cerastes.ui.AdvancedText", "cerastes.ui.Reference"];
+				var types = ["h2d.Object", "h2d.Text", "h2d.Bitmap", "h2d.Anim", "h2d.Flow", "h2d.Mask", "h2d.Interactive", "h2d.ScaleGrid", "cerastes.ui.Button", "cerastes.ui.BitmapButton", "cerastes.ui.ScaleGridButton", "cerastes.ui.TextButton", "cerastes.ui.AdvancedText", "cerastes.ui.Reference", "cerastes.ui.Sound"];
 
 				for( t in types )
 				{
@@ -285,11 +286,15 @@ class UIEditor extends ImguiTool
 	function timeline()
 	{
 		ImGui.setNextWindowDockId( dockspaceIdBottom, dockCond );
-		ImGui.begin('Timeline##${windowID()}', null, ImGuiWindowFlags.NoMove);
+		ImGui.begin('Timeline##${windowID()}', null);
 		handleShortcuts();
 
 
 		var lastFrame = frame;
+		var popupIdRC = 'timeline_rc${windowID()}';
+		var popupIdKeyframeContext = 'timeline_kf_context${windowID()}';
+
+		var isPopupOpen = ImGui.isPopupOpen( popupIdRC ) || ImGui.isPopupOpen( popupIdKeyframeContext );
 
 
 		if( selectedTimeline != null )
@@ -306,7 +311,9 @@ class UIEditor extends ImguiTool
 
 			var size: ImVec2S = {x: 0, y: region.y};
 
-			var flags = ImGuiNeoSequencerFlags.EnableSelection | ImGuiNeoSequencerFlags.Selection_EnableDragging | ImGuiNeoSequencerFlags.AlwaysShowHeader | ImGuiNeoSequencerFlags.AllowLengthChanging;
+			var flags = ImGuiNeoSequencerFlags.AlwaysShowHeader | ImGuiNeoSequencerFlags.AllowLengthChanging;
+			if( !isPopupOpen )
+				flags |= ImGuiNeoSequencerFlags.EnableSelection | ImGuiNeoSequencerFlags.Selection_EnableDragging;
 
 
 			var groups= new Map<String, Array<TimelineOperation>>();
@@ -348,19 +355,11 @@ class UIEditor extends ImguiTool
 
 							if( NeoSequencer.isKeyframeRightClicked() )
 							{
-								ImGui.openPopup('${idx}_ns_rc_popup');
+								ImGui.openPopup(popupIdKeyframeContext);
+								keyframeContext = o;
 							}
 
 
-							if( ImGui.beginPopup('${idx}_ns_rc_popup') )
-							{
-								if( ImGui.menuItem( 'Delete') )
-								{
-									keyFramesToDelete.push(o);
-								}
-
-								ImGui.endPopup();
-							}
 
 
 						}
@@ -376,9 +375,32 @@ class UIEditor extends ImguiTool
 				NeoSequencer.end();
 			}
 
-			for( k in keyFramesToDelete )
+			if( false && ImGui.isItemClicked( ImGuiMouseButton.Right ) && !isPopupOpen )
 			{
-				selectedTimeline.operations.remove( k );
+				ImGui.openPopup( popupIdRC );
+			}
+
+			if( ImGui.beginPopup( popupIdRC ) )
+			{
+				if( ImGui.menuItem( '\uf084 Add keyframe here') )
+				{
+					var t: TimelineOperation = {};
+					t.target = "";
+					t.frame = frame;
+					selectedTimeline.operations.push(t);
+				}
+				ImGui.endPopup();
+			}
+
+
+			if( ImGui.beginPopup(popupIdKeyframeContext) )
+			{
+				if( ImGui.menuItem( 'Delete') )
+				{
+					selectedTimeline.operations.remove(keyframeContext);
+				}
+
+				ImGui.endPopup();
 			}
 		}
 		else
@@ -616,7 +638,7 @@ class UIEditor extends ImguiTool
 				}
 
 
-				selectedTimeline.setFrame( frame );
+				selectedTimeline.setFrame( frame-1 );
 			}
 		}
 
@@ -1245,6 +1267,18 @@ class UIEditor extends ImguiTool
 						var v: Int = o.value;
 						if( ImGui.inputInt( "Anim Frame", v, 1,10 ) )
 							o.value = v;
+					}
+				}
+
+				var sound = Std.downcast( def, CUISound );
+				if( sound != null )
+				{
+					if( ImGui.beginCombo("Event type", o.type.toString() ) )
+					{
+						if( ImGui.selectable( OperationType.SoundPlay.toString(), 		o.type == SoundPlay ) )		o.type = SoundPlay;
+						if( ImGui.selectable( OperationType.SoundStop.toString(), 		o.type == SoundStop ) )		o.type = SoundStop;
+
+						ImGui.endCombo();
 					}
 				}
 			}
@@ -1955,7 +1989,12 @@ class UIEditor extends ImguiTool
 					ImGui.endDragDropTarget();
 				}
 
+			case "cerastes.ui.Sound":
+				var d : CUISound = cast def;
 
+				var newCue = IG.textInput( "Cue", d.cue );
+				if( newCue != null )
+					d.cue = newCue;
 
 			case "h2d.Interactive":
 				var d : CUIInteractive = cast def;
@@ -2046,10 +2085,12 @@ class UIEditor extends ImguiTool
 			case "h2d.Interactive": return "\uf125";
 			case "h2d.ScaleGrid": return "\uf00a";
 			case "cerastes.ui.ScaleGridButton": return "\uf04d";
+			case "cerastes.ui.Button": return "\uf04d";
 			case "cerastes.ui.BitmapButton": return "\uf04d";
 			case "cerastes.ui.TextButton": return "\uf04d";
 			case "cerastes.ui.AdvancedText": return "\uf033";
 			case "cerastes.ui.Reference": return "\uf07c";
+			case "cerastes.ui.Sound": return "\uf001";
 			default:
 				var cl = Type.resolveClass(type);
 				var fn = Reflect.field(cl, "getEditorIcon");
@@ -2185,6 +2226,15 @@ class UIEditor extends ImguiTool
 
 			case "cerastes.ui.Reference":
 				var def: CUIReference = {
+					type: type,
+					name: getAutoName(type),
+					children: []
+				};
+
+				parent.children.push(def);
+
+			case "cerastes.ui.Sound":
+				var def: CUISound = {
 					type: type,
 					name: getAutoName(type),
 					children: []

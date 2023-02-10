@@ -17,6 +17,9 @@ abstract OperationType(Int) from Int to Int {
 	var AnimPause = 201;
 	var AnimSetFrame = 203;
 
+	var SoundPlay = 210;
+	var SoundStop = 211;
+
 	public function toString()
 	{
 		return switch( this )
@@ -30,6 +33,9 @@ abstract OperationType(Int) from Int to Int {
 			case AnimPlay: "Play";
 			case AnimPause: "Pause";
 			case AnimSetFrame: "Set Frame";
+			//
+			case SoundPlay: "Play";
+			case SoundStop: "Stop";
 
 			default: "Unknown";
 		}
@@ -81,6 +87,8 @@ abstract TargetType(Int) {
 
 	#if hlimgui
 	public var name: String = "Unnamed Timeline";
+
+	@noSerialize var playingSounds: Array<Sound> = [];
 	#end
 
 	@noSerialize public var frame(get, never): Int;
@@ -91,6 +99,9 @@ abstract TargetType(Int) {
 
 	public function setFrame( f: Int )
 	{
+		if( f == frame )
+			return;
+
 		var t = frameToTime( f );
 		if( t < time )
 		{
@@ -110,6 +121,18 @@ abstract TargetType(Int) {
 		{
 			tick( 1/frameRate );
 		}
+		stop();
+	}
+
+	public function stop()
+	{
+		if( playingSounds == null )
+			return;
+
+		for( s in playingSounds )
+			s.stop();
+
+		playingSounds = [];
 	}
 
 	public function tick(d: Float )
@@ -167,6 +190,9 @@ abstract TargetType(Int) {
 			switch( op.type )
 			{
 				case None:
+					if( op.key == null )
+						continue;
+
 					Reflect.setProperty(target, op.key, op.value);
 					changed = true;
 
@@ -188,6 +214,22 @@ abstract TargetType(Int) {
 					if( anim != null )
 						anim.currentFrame = op.value;
 
+				case SoundPlay:
+					var sound = Std.downcast(target, cerastes.ui.Sound );
+					if( sound != null )
+					{
+						sound.play();
+						if( playingSounds == null )
+							playingSounds = [];
+						playingSounds.push(sound);
+					}
+
+				case SoundStop:
+					var sound = Std.downcast(target, cerastes.ui.Sound );
+					if( sound != null )
+						sound.stop();
+
+
 
 				case Linear | ExpoIn | ExpoOut | ExpoInOut:
 					if( op.key == null )
@@ -207,7 +249,6 @@ abstract TargetType(Int) {
 					if( lastFrame )
 					{
 						Reflect.setProperty(target, op.key, op.value);
-						trace(op.value);
 						changed = true;
 					}
 					else
@@ -235,7 +276,6 @@ abstract TargetType(Int) {
 						var v = ( f * ( op.value - op.startValue ) ) + op.startValue;
 
 						Reflect.setProperty(target, op.key, v);
-						//trace(v);
 						changed = true;
 					}
 

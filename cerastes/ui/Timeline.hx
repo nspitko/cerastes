@@ -61,6 +61,7 @@ abstract TargetType(Int) {
 	public var key: String = null; // Key to modify
 	public var value: Dynamic = null; // Value to set
 	public var initialValue: Dynamic = null; // For tweens, the start value.
+	public var hasInitialValue: Bool = false; // To handle zero start values...
 	public var frame: Int = 0;
 
 	public var duration: Int = 0;
@@ -259,7 +260,7 @@ abstract TargetType(Int) {
 
 					if( firstFrame && op.startValue == null )
 					{
-						if( op.initialValue != null )
+						if( op.hasInitialValue )
 							op.startValue = op.initialValue;
 						else
 							op.startValue = Reflect.getProperty( target, op.key );

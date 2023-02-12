@@ -309,7 +309,7 @@ class UIEditor extends ImguiTool
 
 			var region = ImGui.getWindowContentRegionMax();
 
-			var size: ImVec2S = {x: 0, y: region.y};
+			var size: ImVec2S = {x: 0, y: 0};
 
 			var flags = ImGuiNeoSequencerFlags.AlwaysShowHeader | ImGuiNeoSequencerFlags.AllowLengthChanging;
 			if( !isPopupOpen )
@@ -1319,9 +1319,8 @@ class UIEditor extends ImguiTool
 					ImGui.endTooltip();
 				}
 
-				var hasInitialValue = o.initialValue != null;
-				ImGui.checkbox("Specify start value", hasInitialValue);
-				if( hasInitialValue )
+				ImGui.checkbox("Specify start value", o.hasInitialValue );
+				if( o.hasInitialValue )
 				{
 					ImGui.pushID("initialval");
 					if( o.initialValue == null )

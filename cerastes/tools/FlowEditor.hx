@@ -114,28 +114,33 @@ class FlowEditor extends ImguiTool
 			ImGui.setNextWindowFocus();
 		}
 		ImGui.setNextWindowSize({x: windowWidth * 0.7, y: windowHeight * 0.7}, ImGuiCond.Once);
-		ImGui.begin('\uf1e0 Flow Editor ${fileName != null ? fileName : ""}###${windowID()}', isOpenRef, ImGuiWindowFlags.NoDocking | ImGuiWindowFlags.MenuBar);
+		if( ImGui.begin('\uf1e0 Flow Editor ${fileName != null ? fileName : ""}###${windowID()}', isOpenRef, ImGuiWindowFlags.NoDocking | ImGuiWindowFlags.MenuBar) )
+		{
 
-		menuBar();
+			menuBar();
 
-		dockSpace();
+			dockSpace();
 
-		ImGui.dockSpace( dockspaceId, null );
+			ImGui.dockSpace( dockspaceId, null );
 
-		ImGui.end();
+			ImGui.end();
+		}
 
 		//ImGui.dockSpace(dockID);
 		//ImGui.setNextWindowDockId(dockID, Once);
 
 		ImGui.setNextWindowDockId( dockspaceIdCenter, dockCond );
-		ImGui.begin('View##${windowID()}', null, ImGuiWindowFlags.NoMove | ImGuiWindowFlags.HorizontalScrollbar );
-		handleShortcuts();
+		if( ImGui.begin('View##${windowID()}', null, ImGuiWindowFlags.NoMove | ImGuiWindowFlags.HorizontalScrollbar  ) )
+		{
+			handleShortcuts();
 
-		nodes.render();
-		processMouse();
+			nodes.render();
+
+			processMouse();
 
 
-		ImGui.end();
+			ImGui.end();
+		}
 
 		commandPalette();
 		inspector();
@@ -209,19 +214,21 @@ class FlowEditor extends ImguiTool
 	function commandPalette()
 	{
 		ImGui.setNextWindowDockId( dockspaceIdLeft, dockCond );
-		ImGui.begin('Command Palette##${windowID()}');
-		handleShortcuts();
+		if( ImGui.begin('Command Palette##${windowID()}') )
+		{
+			handleShortcuts();
 
-		ImGui.text("HI");
+			ImGui.text("HI");
 
-		if( ImGui.button("Select") ) mode = Select;
-		if( ImGui.button("Add Node") ) mode = AddNode;
-		if( ImGui.button("Add Group") ) mode = AddComment;
-		if( ImGui.button("Add Note") ) mode = AddNote;
+			if( ImGui.button("Select") ) mode = Select;
+			if( ImGui.button("Add Node") ) mode = AddNode;
+			if( ImGui.button("Add Group") ) mode = AddComment;
+			if( ImGui.button("Add Note") ) mode = AddNote;
 
 
 
-		ImGui.end();
+			ImGui.end();
+		}
 
 	}
 
@@ -229,76 +236,78 @@ class FlowEditor extends ImguiTool
 	function inspector()
 	{
 		ImGui.setNextWindowDockId( dockspaceIdRight, dockCond );
-		ImGui.begin('Inspector##${windowID()}');
-		handleShortcuts();
-
-		var node: FlowNode = Std.downcast( nodes.getSelectedNode(), FlowNode );
-		var link: FlowLink = Std.downcast( nodes.getSelectedLink( ), FlowLink );
-		if( node != null )
+		if( ImGui.begin('Inspector##${windowID()}') )
 		{
-			node.renderProps();
-			selectedNode = node;
-		}
-		else if( link != null )
-		{
-			var n = 0;
-			if( link.conditions != null )
-				n = link.conditions.length;
+			handleShortcuts();
 
-			var idToRemove = -1;
-
-			var i = 0;
-			if( link.conditions != null && link.conditions.length > 0 )
+			var node: FlowNode = Std.downcast( nodes.getSelectedNode(), FlowNode );
+			var link: FlowLink = Std.downcast( nodes.getSelectedLink( ), FlowLink );
+			if( node != null )
 			{
-				for( i in 0 ... link.conditions.length )
-				{
-					var c = link.conditions[i];
-					var newVal = IG.textInput('##${i}', c );
-					if( newVal != null )
-						link.conditions[i] = newVal;
-
-					ImGui.sameLine();
-					if( ImGui.button("\uf55a"))
-						idToRemove = i;
-
-					runChecker( link.conditions[i] );
-				}
-
-				i = link.conditions.length;
+				node.renderProps();
+				selectedNode = node;
 			}
-
-			if( idToRemove != -1 )
+			else if( link != null )
 			{
-				link.conditions.splice(idToRemove,1);
-				if( link.conditions.length == 0 )
-				{
-					link.conditions = null;
-				}
-				decorateLink( link );
-			}
-
-			if( ImGui.button('\u002b') )
-			{
+				var n = 0;
 				if( link.conditions != null )
-					link.conditions.push('');
-				else
+					n = link.conditions.length;
+
+				var idToRemove = -1;
+
+				var i = 0;
+				if( link.conditions != null && link.conditions.length > 0 )
 				{
-					link.conditions = [''];
+					for( i in 0 ... link.conditions.length )
+					{
+						var c = link.conditions[i];
+						var newVal = IG.textInput('##${i}', c );
+						if( newVal != null )
+							link.conditions[i] = newVal;
+
+						ImGui.sameLine();
+						if( ImGui.button("\uf55a"))
+							idToRemove = i;
+
+						runChecker( link.conditions[i] );
+					}
+
+					i = link.conditions.length;
 				}
 
-				decorateLink( link );
+				if( idToRemove != -1 )
+				{
+					link.conditions.splice(idToRemove,1);
+					if( link.conditions.length == 0 )
+					{
+						link.conditions = null;
+					}
+					decorateLink( link );
+				}
+
+				if( ImGui.button('\u002b') )
+				{
+					if( link.conditions != null )
+						link.conditions.push('');
+					else
+					{
+						link.conditions = [''];
+					}
+
+					decorateLink( link );
+				}
+
+			}
+			else
+			{
+				ImGui.text("No item selected");
 			}
 
+
+
+
+			ImGui.end();
 		}
-		else
-		{
-			ImGui.text("No item selected");
-		}
-
-
-
-
-		ImGui.end();
 
 	}
 

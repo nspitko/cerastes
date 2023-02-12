@@ -80,11 +80,11 @@ class ImGuiNodes
 	public var shouldNavigateToContent = false;
 	public var canSuspend = false;
 
+	var firstRender = true;
+
 	public function new()
 	{
 		editor = NodeEditor.createEditor();
-
-
 	}
 
 	public function regenerateData()
@@ -171,18 +171,10 @@ class ImGuiNodes
 
 	public function render()
 	{
-
-
-
 		// HACK: Do not do shit while minimized, it breaks the world.
 		if( hxd.Window.getInstance().width == 0 || hxd.Window.getInstance().height == 0 )
 			return;
 
-		if( iconWidth == 0 )
-		{
-			var size: ImVec2 = ImGui.calcTextSize("\uf04e");
-			iconWidth = size.x;
-		}
 
 		NodeEditor.setCurrentEditor( editor );
 
@@ -192,7 +184,21 @@ class ImGuiNodes
 		style.NodeRounding = 0;
 
 
-		NodeEditor.begin("test");
+		if( firstRender )
+		{
+			// Hack
+			NodeEditor.begin("test", {x: 1000, y: 1000});
+			firstRender = false;
+		}
+		else
+			NodeEditor.begin("test");
+
+		if( iconWidth == 0 )
+		{
+			var size: ImVec2 = ImGui.calcTextSize("\uf04e");
+			iconWidth = size.x;
+		}
+
 
 		for( node in nodes )
 		{
@@ -511,7 +517,7 @@ class ImGuiNodes
 
 		node.render();
 
-		
+
 
 		//ImGui.dummy(size);
 

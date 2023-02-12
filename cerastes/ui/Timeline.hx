@@ -85,9 +85,10 @@ abstract TargetType(Int) {
 	inline function frameToTime( frame: Int ): Float { return frame / frameRate; }
 	inline function timeToFrame( time: Float ): Int { return Math.floor( time * frameRate ); }
 
-	#if hlimgui
 	public var name: String = "Unnamed Timeline";
 
+
+	#if hlimgui
 	@noSerialize var playingSounds: Array<Sound> = [];
 	#end
 
@@ -95,8 +96,11 @@ abstract TargetType(Int) {
 	@noSerialize public var time: Float = -1;
 	@noSerialize public var ui: h2d.Object = null;
 
+	@noSerialize public var onComplete: Void -> Void = null;
+
 	function get_frame() { return timeToFrame(time); }
 
+	#if hlimgui
 	public function setFrame( f: Int )
 	{
 		if( f == frame )
@@ -124,8 +128,10 @@ abstract TargetType(Int) {
 		stop();
 	}
 
+
 	public function stop()
 	{
+
 		if( playingSounds == null )
 			return;
 
@@ -134,6 +140,7 @@ abstract TargetType(Int) {
 
 		playingSounds = [];
 	}
+	#end
 
 	public function tick(d: Float )
 	{
@@ -141,6 +148,16 @@ abstract TargetType(Int) {
 		time += d;
 
 		var lastFrame = frame;
+
+		if( frame > frames  )
+		{
+			if( onComplete != null )
+				onComplete();
+
+			onComplete = null;
+
+			return;
+		}
 
 		for( op in operations )
 		{
@@ -154,7 +171,7 @@ abstract TargetType(Int) {
 
 			var duration = op.duration / frameRate;
 
-			var firstFrame = adjTime >= 0 && adjLastTime < 0;
+			var firstFrame = adjTime >= 0 && ( adjLastTime < 0 || tLast == 0 );
 			var lastFrame = adjTime >= duration && adjLastTime < duration;
 
 			var active = ( adjTime > 0 && adjTime <= duration ) || firstFrame || lastFrame;
@@ -219,9 +236,11 @@ abstract TargetType(Int) {
 					if( sound != null )
 					{
 						sound.play();
+						#if hlimgui
 						if( playingSounds == null )
 							playingSounds = [];
 						playingSounds.push(sound);
+						#end
 					}
 
 				case SoundStop:
@@ -257,10 +276,14 @@ abstract TargetType(Int) {
 						{
 							op.stepTimer += d;
 
-							if( op.stepTimer < op.stepRate )
-								continue;
+							if( !firstFrame )
+							{
 
-							op.stepTimer -= op.stepRate;
+								if( op.stepTimer < op.stepRate )
+									continue;
+
+								op.stepTimer -= op.stepRate;
+							}
 						}
 
 						var tweenFunc = switch( op.type )

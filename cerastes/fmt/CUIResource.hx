@@ -383,6 +383,20 @@ class CUIResource extends Resource
 
 	var entsToInitialize: Array<UIEntity> = [];
 
+	public function toTimeline(ui: h2d.Object, name: String )
+	{
+		var data = getData();
+
+		for( t in data.timelines )
+			if( t.name == name )
+			{
+				t.ui = ui;
+				return t;
+			}
+
+		return null;
+	}
+
 	public function toObject(?parent: h2d.Object = null)
 	{
 
@@ -480,8 +494,10 @@ class CUIResource extends Resource
 		if( ent != null )
 			ent.initialize( ent.getScene() );
 
+		#if hlimgui
 		for( c in entry.children )
 			recursiveUpdateObjects( c, c.handle );
+		#end
 
 	}
 

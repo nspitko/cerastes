@@ -2,6 +2,10 @@ package cerastes.file;
 
 import haxe.rtti.Meta;
 
+interface CDObject {
+	public function initialize(): Void;
+}
+
 class CDParser {
 	/**
 		Parse a Cerastes Key Values file. This format is roughly similar to JSON (and indeed the parser
@@ -58,6 +62,11 @@ class CDParser {
 							obj = Type.createInstance(cls, []);
 						else
 							obj = Type.createEmptyInstance(cls);
+
+
+						var cd: CDObject = Std.downcast(  obj, CDObject );
+						if( cd != null )
+							obj.initialize();
 
 					}
 
@@ -139,6 +148,11 @@ class CDParser {
 						obj = Type.createInstance(cls, []);
 					else
 						obj = Type.createEmptyInstance(cls);
+
+					var cd: CDObject = Std.downcast(  obj, CDObject );
+					if( cd != null )
+						obj.initialize();
+
 
 					var field = new StringBuf();
 					while (true) {
@@ -289,6 +303,7 @@ class CDParser {
 		return null;
 
 	}
+
 
 	function parseType()
 	{

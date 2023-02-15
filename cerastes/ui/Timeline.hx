@@ -1,5 +1,6 @@
 package cerastes.ui;
 
+import h2d.Object;
 import tweenxcore.Tools.Easing;
 
 
@@ -69,10 +70,15 @@ abstract TargetType(Int) {
 
 	public var stepRate: Float = 0; // If > 0, step at this reduced speed
 
-	@noSerialize public var startValue: Dynamic = null; // If not null, specifies the value we start from. If null, use current value.
-	@noSerialize public var stepTimer: Float = 0;
-	@noSerialize public var targetHandle: Dynamic = null;
 
+
+}
+
+@:structInit class TimelineState
+{
+	public var startValue: Dynamic = null;
+	public var stepTimer: Float = 0;
+	public var targetHandle: Dynamic = null;
 }
 
 @:structInit class Timeline
@@ -83,10 +89,22 @@ abstract TargetType(Int) {
 	public var frames: Int = 100;
 	public var frameRate: Int = 10;
 
-	inline function frameToTime( frame: Int ): Float { return frame / frameRate; }
-	inline function timeToFrame( time: Float ): Int { return Math.floor( time * frameRate ); }
-
 	public var name: String = "Unnamed Timeline";
+
+}
+
+class TimelineRunner
+{
+
+	var timeline: Timeline;
+	var timelineState: Array<TimelineState> = [];
+
+	public var finished: Bool = false;
+
+
+	inline function frameToTime( frame: Int ): Float { return frame / timeline.frameRate; }
+	inline function timeToFrame( time: Float ): Int { return Math.floor( time * timeline.frameRate ); }
+
 
 
 	#if hlimgui
@@ -94,14 +112,23 @@ abstract TargetType(Int) {
 	#end
 
 	@noSerialize public var frame(get, never): Int;
-	@noSerialize public var time: Float = -1;
+	@noSerialize public var time: Float = 0;
 	@noSerialize public var ui: h2d.Object = null;
 
 	@noSerialize public var onComplete: Void -> Void = null;
 
 	function get_frame() { return timeToFrame(time); }
 
+	public function new( t: Timeline, u: Object )
+	{
+		ui = u;
+		timeline = t;
+		for( i in 0 ... t.operations.length )
+			timelineState.push({});
+	}
+
 	#if hlimgui
+
 	public function setFrame( f: Int )
 	{
 		if( f == frame )
@@ -119,12 +146,16 @@ abstract TargetType(Int) {
 		}
 
 		// Clear out handles since we probably screwed with the scene in the editor.
-		for( o in operations )
-			o.targetHandle = null;
+		for( i in  0 ... timeline.operations.length )
+		{
+			if( i >= timelineState.length )
+				timelineState.push({});
+			timelineState[i].targetHandle = null;
+		}
 
 		while( frame < f  )
 		{
-			tick( 1/frameRate );
+			tick( 1 / timeline.frameRate );
 		}
 		stop();
 	}
@@ -145,23 +176,31 @@ abstract TargetType(Int) {
 
 	public function tick(d: Float )
 	{
+		if( finished )
+			return;
+
 		var tLast = time;
 		time += d;
 
 		var lastFrame = frame;
 
-		if( frame > frames  )
+		if( frame > timeline.frames  )
 		{
 			if( onComplete != null )
 				onComplete();
 
 			onComplete = null;
+			finished = true;
 
 			return;
 		}
 
-		for( op in operations )
+
+		for( i in 0 ... timeline.operations.length )
 		{
+			var op = timeline.operations[i];
+			var state = timelineState[i];
+
 			var start = frameToTime(op.frame);
 			var adjTime = time - start;
 			var adjLastTime = tLast - start;
@@ -170,7 +209,7 @@ abstract TargetType(Int) {
 			if( op.value == null )
 				op.value = 0;
 
-			var duration = op.duration / frameRate;
+			var duration = op.duration / timeline.frameRate;
 
 			var firstFrame = adjTime >= 0 && ( adjLastTime < 0 || tLast == 0 );
 			var lastFrame = adjTime >= duration && adjLastTime < duration;
@@ -182,7 +221,7 @@ abstract TargetType(Int) {
 			if( op.target == null )
 				continue;
 
-			if( op.targetHandle == null )
+			if( state.targetHandle == null )
 			{
 				var targetName = op.target;
 
@@ -193,7 +232,7 @@ abstract TargetType(Int) {
 					continue;
 				}
 
-				op.targetHandle = switch( op.targetType )
+				state.targetHandle = switch( op.targetType )
 				{
 					case Filter: target.filter;
 					default: target;
@@ -201,7 +240,7 @@ abstract TargetType(Int) {
 			}
 
 
-			var target = op.targetHandle;
+			var target = state.targetHandle;
 
 			var changed: Bool = false;
 
@@ -256,14 +295,14 @@ abstract TargetType(Int) {
 						continue;
 
 					if( Utils.assert( duration > 0, 'Tween Operation has invalid duration ${op.duration}, defaulting to 1' ))
-						duration = 1 * frameRate;
+						duration = 1 * timeline.frameRate;
 
-					if( firstFrame && op.startValue == null )
+					if( firstFrame && state.startValue == null )
 					{
 						if( op.hasInitialValue )
-							op.startValue = op.initialValue;
+							state.startValue = op.initialValue != null ? op.initialValue : 0;
 						else
-							op.startValue = Reflect.getProperty( target, op.key );
+							state.startValue = Reflect.getProperty( target, op.key );
 					}
 
 					if( lastFrame )
@@ -275,15 +314,15 @@ abstract TargetType(Int) {
 					{
 						if( op.stepRate > 0 )
 						{
-							op.stepTimer += d;
+							state.stepTimer += d;
 
 							if( !firstFrame )
 							{
 
-								if( op.stepTimer < op.stepRate )
+								if( state.stepTimer < op.stepRate )
 									continue;
 
-								op.stepTimer -= op.stepRate;
+								state.stepTimer -= op.stepRate;
 							}
 						}
 
@@ -297,7 +336,7 @@ abstract TargetType(Int) {
 						}
 
 						var f = tweenFunc( adjTime / duration );
-						var v = ( f * ( op.value - op.startValue ) ) + op.startValue;
+						var v = ( f * ( op.value - state.startValue ) ) + state.startValue;
 
 						Reflect.setProperty(target, op.key, v);
 						changed = true;

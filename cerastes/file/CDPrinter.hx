@@ -234,22 +234,32 @@ class CDPrinter {
 
 			if( !alwaysSerialize )
 			{
-				switch (Type.typeof(value))
+				var d = getMetaForField(f, "default", Type.getClass(v) );
+
+				if( d != null )
 				{
-					case TNull:
+					if( d == value  )
 						continue;
-					case TInt:
-						if( value == 0 )
+				}
+				else
+				{
+					switch (Type.typeof(value))
+					{
+						case TNull:
 							continue;
-					case TFloat:
-						if( value == 0.0 )
-							continue;
-					case TBool:
-						if( value == false )
-							continue;
+						case TInt:
+							if( value == 0 )
+								continue;
+						case TFloat:
+							if( value == 0.0 )
+								continue;
+						case TBool:
+							if( value == false )
+								continue;
 
-					default:
+						default:
 
+					}
 				}
 			}
 

@@ -88,6 +88,7 @@ class UIEditor extends ImguiTool
 
 	var timelinePlay = false;
 	var keyframeContext: TimelineOperation = null;
+	var timelineRunner: TimelineRunner;
 
 	public function new()
 	{
@@ -266,6 +267,7 @@ class UIEditor extends ImguiTool
 				if( ImGui.isItemClicked() )
 				{
 					selectedTimeline = t;
+					timelineRunner = new TimelineRunner( t, rootDef.handle );
 					inspectorMode = Timeline;
 				}
 
@@ -286,7 +288,7 @@ class UIEditor extends ImguiTool
 	function timeline()
 	{
 		ImGui.setNextWindowDockId( dockspaceIdBottom, dockCond );
-		ImGui.begin('Timeline##${windowID()}', null);
+		ImGui.begin('Timeline##${windowID()}', null, ImGuiWindowFlags.NoMove);
 		handleShortcuts();
 
 
@@ -300,7 +302,7 @@ class UIEditor extends ImguiTool
 		if( selectedTimeline != null )
 		{
 			if( timelinePlay )
-				frame = selectedTimeline.frame;
+				frame = timelineRunner.frame;
 
 
 			//var frame: Int = 0;
@@ -414,8 +416,8 @@ class UIEditor extends ImguiTool
 			{
 				updateDefRecursive( rootDef.handle,rootDef );
 			}
-			selectedTimeline.ui = rootDef.handle;
-			selectedTimeline.setFrame(frame);
+			@:privateAccess timelineRunner.ui = rootDef.handle;
+			timelineRunner.setFrame(frame);
 		}
 		lastFrame = frame;
 
@@ -631,14 +633,18 @@ class UIEditor extends ImguiTool
 
 				if( timelinePlay )
 				{
-					for( o in selectedTimeline.operations )
-						o.targetHandle = null;
+					for( i in 0 ... selectedTimeline.operations.length )
+					{
+						var s = @:privateAccess timelineRunner.timelineState[i];
+						if( s != null )
+							s.targetHandle = null;
+					}
 
-					selectedTimeline.ui = rootDef.handle;
+					@:privateAccess timelineRunner.ui = rootDef.handle;
 				}
 
 
-				selectedTimeline.setFrame( frame-1 );
+				timelineRunner.setFrame( frame-1 );
 			}
 		}
 
@@ -646,11 +652,11 @@ class UIEditor extends ImguiTool
 		{
 			try
 			{
-				if( selectedTimeline.frame > selectedTimeline.frames )
+				if( timelineRunner.frame > selectedTimeline.frames )
 				{
-					selectedTimeline.time = -1;
+					timelineRunner.time = -1;
 				}
-				selectedTimeline.tick(delta);
+				timelineRunner.tick(delta);
 			}
 			catch(e)
 			{
@@ -1551,6 +1557,8 @@ class UIEditor extends ImguiTool
 				var nc = IG.inputColorInt( d.color );
 				if( nc != null )
 					d.color = nc;
+
+				ImGui.inputDouble("Alpha", d.alpha);
 
 			case "h2d.Text":
 				var d: CUIText = cast def;

@@ -31,7 +31,7 @@ import hxd.res.Resource;
 
 // Cerastes UI
 @:keepSub
-@:structInit class CUIObject {
+@:structInit class CUIObject implements CDObject {
 
 	public var type: String = null;
 	public var name: String = null;
@@ -40,12 +40,18 @@ import hxd.res.Resource;
 	@et("Float") public var x: Float = 0;
 	@et("Float") public var y: Float = 0;
 	@et("Float") public var rotation: Float = 0;
-	@et("Float") public var scaleX: Float = 1;
-	@et("Float") public var scaleY: Float = 1;
+	@default(1) @et("Float") public var scaleX: Float = 1;
+	@default(1) @et("Float") public var scaleY: Float = 1;
 
 	@et("Bool") public var visible: Bool = true;
 
 	public var filter: CUIFilterDef = null;
+
+	public function initialize()
+	{
+		scaleX = 1;
+		scaleY = 1;
+	}
 
 	#if hlimgui
 	@noSerialize public var handle: h2d.Object = null;
@@ -187,6 +193,14 @@ import hxd.res.Resource;
 
 @:structInit class CUIDrawable extends CUIObject {
 	public var color: Int = 0xFFFFFFFF;
+	@default(1) @et("Float") public var alpha: Float = 1;
+
+	public override function initialize()
+	{
+		super.initialize();
+
+		alpha = 1;
+	}
 }
 
 @:structInit class CUIReference extends CUIObject {
@@ -390,8 +404,8 @@ class CUIResource extends Resource
 		for( t in data.timelines )
 			if( t.name == name )
 			{
-				t.ui = ui;
-				return t;
+				var r = new TimelineRunner(t, ui);
+				return r;
 			}
 
 		return null;
@@ -634,6 +648,8 @@ class CUIResource extends Resource
 			case "h2d.Drawable":
 				var e: CUIDrawable = cast entry;
 				var o: h2d.Drawable = cast obj;
+
+				o.alpha = e.alpha;
 
 				var text = Std.downcast( obj, AdvancedText );
 				if( text != null )

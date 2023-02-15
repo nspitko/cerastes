@@ -144,6 +144,11 @@ class Button extends h2d.Flow implements IButton
 	function setTile( t: String, c: Int )
 	{
 		var isValid = t != null && t.length > 0;
+		if( !isValid && ( c & 0xFF000000 ) == 0 )
+		{
+			backgroundTile = null;
+			return;
+		}
 		var t = isValid ? CUIResource.getTile( t ) : h2d.Tile.fromColor( c );
 
 

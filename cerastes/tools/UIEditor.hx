@@ -654,7 +654,7 @@ class UIEditor extends ImguiTool
 			{
 				if( timelineRunner.frame > selectedTimeline.frames )
 				{
-					timelineRunner.time = -1;
+					timelineRunner.setFrame(0);
 				}
 				timelineRunner.tick(delta);
 			}

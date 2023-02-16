@@ -134,6 +134,8 @@ class TimelineRunner
 		if( f == frame )
 			return;
 
+		finished = false;
+
 		var t = frameToTime( f );
 		if( t < time )
 		{

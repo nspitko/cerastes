@@ -82,6 +82,8 @@ class UIEditor extends ImguiTool
 	var mouseDragStartPos: ImVec2;
 	var hasFocus = false;
 
+	var showMarkers = true;
+
 	var zoom: Int = 1;
 
 	var lastSaved: Float = 0;
@@ -576,6 +578,8 @@ class UIEditor extends ImguiTool
 		ImGui.begin('Preview##${windowID()}', null, ImGuiWindowFlags.NoMove | ImGuiWindowFlags.HorizontalScrollbar );
 		handleShortcuts();
 
+		ImGui.checkbox("Show markers", showMarkers );
+
 		ImGui.image(sceneRT, { x: viewportWidth * zoom, y: viewportHeight * zoom }, null, null, null, {x: 1, y: 1, z:1, w:1} );
 
 		if( ImGui.isWindowHovered() )
@@ -672,6 +676,9 @@ class UIEditor extends ImguiTool
 	{
 		selectedItemBorder.clear();
 		if( selectedInspectorTree == null )
+			return;
+
+		if( !showMarkers )
 			return;
 
 		var o = selectedInspectorTree.handle;
@@ -1875,6 +1882,13 @@ class UIEditor extends ImguiTool
 					if( nc != null )
 						d.disabledTextColor = nc;
 
+				}
+
+				if( ImGui.collapsingHeader( "Sounds" ) )
+				{
+
+					var newSound = IG.textInput( "Sound", d.hoverSound );
+					if( newSound != null ) d.hoverSound = newSound;
 				}
 
 

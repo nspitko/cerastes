@@ -1,5 +1,6 @@
 package cerastes.ui;
 
+import h2d.Object;
 import hxd.res.BitmapFont;
 import hxd.res.DefaultFont;
 import cerastes.fmt.CUIResource;
@@ -82,6 +83,9 @@ class Button extends h2d.Flow implements IButton
 	public var onMouseOver : (hxd.Event) -> Void;
 	public var onMouseOut : (hxd.Event) -> Void;
 
+	// Sounds
+	public var hoverSound: String;
+
 	public var enabled(default, set): Bool = true;
 	public var toggled(default, set): Bool = false;
 
@@ -153,21 +157,7 @@ class Button extends h2d.Flow implements IButton
 
 
 		backgroundTile = t;
-		reflow();
-
-		return;
-
-		if( bitmapMode == ButtonTile )
-		{
-			if( bitmap == null )
-				bitmap = new h2d.Bitmap( t, this);
-			else
-				bitmap.tile = t;
-		}
-		else
-		{
-			backgroundTile = t;
-		}
+		//reflow();
 	}
 
 	function set_hidden(v)
@@ -254,12 +244,13 @@ class Button extends h2d.Flow implements IButton
 
 			var drawable = Std.downcast(c, h2d.Drawable);
 			if( drawable != null )
-				drawable.color.setColor(bitmapColor);
+				drawable.color.setColor((textColor & 0xFFFFFF) + 0xFF000000);
 		}
 	}
 
 	public override function onBeforeReflow()
 	{
+
 		for( c in children )
 		{
 			if( c == this.interactive || c == bitmap || c == elText || c == background )
@@ -268,6 +259,13 @@ class Button extends h2d.Flow implements IButton
 			var props = getProperties(c);
 			props.isAbsolute = true;
 		}
+	}
+
+	public override function contentChanged(s: Object)
+	{
+		super.contentChanged(s);
+		// Force tints to be reset
+		set_state( state );
 	}
 
 
@@ -285,8 +283,21 @@ class Button extends h2d.Flow implements IButton
 
 			state = Hover;
 
-			if( onMouseOver != null && !hidden )
-				onMouseOver(_);
+			if( !hidden )
+			{
+
+				if( onMouseOver != null )
+					onMouseOver(_);
+
+				if( hoverSound != null )
+				{
+					#if hlwwise
+					var evt = wwise.Api.Event.make(hoverSound);
+					wwise.Api.postEvent(evt);
+					#end
+				}
+
+			}
 		}
 		interactive.onOut = function(_) {
 			if( !enabled )

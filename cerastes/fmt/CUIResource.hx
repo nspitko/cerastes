@@ -64,7 +64,7 @@ import hxd.res.Resource;
 		var fields = Type.getInstanceFields(cls);
 		for (field in fields)
 		{
-			if( field == "children")
+			if( field == "children" || field.length == 0) // Fixes a bug in HL when inheriting interfaces
 			{
 				continue;
 			}
@@ -279,6 +279,8 @@ import hxd.res.Resource;
 
 	public var bitmapMode: BitmapMode = ButtonTile;
 	public var buttonMode: ButtonType = Momentary;
+
+	public var hoverSound: String = null;
 }
 
 
@@ -811,6 +813,7 @@ class CUIResource extends Resource
 				o.disabledColor = e.disabledColor;
 				o.disabledTextColor = e.disabledTextColor;
 				o.disabledTile = e.disabledTile;
+				o.hoverSound = e.hoverSound;
 
 				if( e.ellipsis )
 					o.ellipsis = true;

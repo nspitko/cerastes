@@ -24,6 +24,8 @@ class AdvancedText extends h2d.Text
 	var boldGlyphs : h2d.TileGroup;
 	public var desiredColor: Vector = new Vector(1,1,1,1);
 
+	public var displayedText: String;
+
 	function set_boldFont(font)
 	{
 		if( boldFont == font )
@@ -231,6 +233,8 @@ class AdvancedText extends h2d.Text
 
 	override function initGlyphs( text : String, rebuild = true ) : Void
 	{
+		if( rebuild )
+			text = wrapText(text);
 
 
 		if( rebuild )
@@ -443,10 +447,6 @@ class AdvancedText extends h2d.Text
 
 	override function set_text(t : String) {
 		var t = t == null ? "null" : t;
-		if( t == this.text ) return t;
-
-		t = wrapText( t );
-
 		return super.set_text(t);
 	}
 

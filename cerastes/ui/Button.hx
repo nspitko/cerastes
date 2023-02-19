@@ -250,6 +250,10 @@ class Button extends h2d.Flow implements IButton
 
 	public override function onBeforeReflow()
 	{
+		if( elText != null && maxWidth > 0 )
+		{
+			elText.maxWidth = maxWidth - paddingLeft - paddingRight;
+		}
 
 		for( c in children )
 		{
@@ -325,7 +329,8 @@ class Button extends h2d.Flow implements IButton
 			if( !enabled )
 				return;
 
-			state = Default;
+
+			//state = Default;
 		}
 
 

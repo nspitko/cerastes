@@ -89,7 +89,7 @@ class ScaleGridButton extends h2d.Flow
 				if( hoverColor != null )
 					this.background.color = hoverColor;
 
-			case Default:
+			case Default | UnHover:
 				this.backgroundTile = defaultTile;
 
 				if( visited && visitedColor != null )

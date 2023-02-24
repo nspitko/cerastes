@@ -85,7 +85,7 @@ class BitmapButton extends h2d.Interactive
 
 				setTint( hoverColor );
 
-			case Default:
+			case Default | UnHover:
 				bitmap.tile = defaultTile;
 
 				setTint( defaultColor );
@@ -99,7 +99,7 @@ class BitmapButton extends h2d.Interactive
 
 				if( disabledColor != null )
 					setTint( disabledColor );
-				
+
 			case On:
 				Utils.error("STUB");
 

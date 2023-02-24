@@ -1,5 +1,6 @@
 package cerastes.fmt;
 
+import cerastes.ui.Button.ButtonHoverTween;
 import haxe.rtti.Meta;
 import cerastes.ui.Timeline;
 import cerastes.ui.Timeline.TimelineOperation;
@@ -192,7 +193,7 @@ import hxd.res.Resource;
 }
 
 @:structInit class CUIDrawable extends CUIObject {
-	public var color: Int = 0xFFFFFFFF;
+	@default(0xFFFFFFFF) public var color: Int = 0xFFFFFFFF;
 	@default(1) @et("Float") public var alpha: Float = 1;
 
 	public override function initialize()
@@ -262,15 +263,15 @@ import hxd.res.Resource;
 	public var onTile: String = "";
 	public var disabledTile: String = "";
 
-	public var defaultColor: Int = 0xFFFFFFFF;
-	public var hoverColor: Int = 0xFFFFFFFF;
-	public var onColor: Int = 0xFFFFFFFF;
-	public var disabledColor: Int = 0xFFFFFFFF;
+	@default(0xFFFFFFFF) public var defaultColor: Int = 0xFFFFFFFF;
+	@default(0xFFFFFFFF) public var hoverColor: Int = 0xFFFFFFFF;
+	@default(0xFFFFFFFF) public var onColor: Int = 0xFFFFFFFF;
+	@default(0xFFFFFFFF) public var disabledColor: Int = 0xFFFFFFFF;
 
-	public var defaultTextColor: Int = 0x000000FF;
-	public var hoverTextColor: Int = 0x000000FF;
-	public var onTextColor: Int = 0x000000FF;
-	public var disabledTextColor: Int = 0x000000FF;
+	public var defaultTextColor: Int = 0x00000000;
+	public var hoverTextColor: Int = 0x00000000;
+	public var onTextColor: Int = 0x00000000;
+	public var disabledTextColor: Int = 0x00000000;
 
 	public var text: String = null;
 	public var font: String = null;
@@ -281,6 +282,10 @@ import hxd.res.Resource;
 	public var buttonMode: ButtonType = Momentary;
 
 	public var hoverSound: String = null;
+
+	public var tweenModeHover: ButtonHoverTween = None;
+	public var tweenModeUnHover: ButtonHoverTween = None;
+	public var tweenDuration: Float = 0;
 }
 
 
@@ -828,6 +833,10 @@ class CUIResource extends Resource
 
 				if( e.font != null && e.font.length > 0 )
 					o.font = e.font;
+
+				o.tweenDuration = e.tweenDuration;
+				o.tweenHoverEndMode = e.tweenModeUnHover;
+				o.tweenHoverStartMode = e.tweenModeHover;
 
 				o.state = Default;
 

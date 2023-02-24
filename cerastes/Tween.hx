@@ -1,5 +1,6 @@
 package cerastes;
 
+import tweenxcore.color.RgbColor;
 import tweenxcore.Tools.Easing;
 import cerastes.macros.Metrics;
 
@@ -78,6 +79,9 @@ class Tween
 
 	public function tick( delta: Float )
 	{
+		if( finished )
+			return;
+
 		time += delta;
 		updateFunc( this.get() );
 		if( finished && completeFunc != null )
@@ -112,5 +116,54 @@ class Tween
 			var rate = func( time / duration );
 			return start * (1 - rate) + end * rate;
 		}
+	}
+}
+
+class ColorTween extends Tween
+{
+	public override function get()
+	{
+		if( time / duration >= 1 )
+		{
+			if( loop )
+			{
+				time -= duration;
+				return get();
+			}
+			else
+			{
+				finished = true;
+			}
+			return end;
+		}
+		else
+		{
+			var rate = func( time / duration );
+
+			var r = lerpComponent( 16, rate );
+			var g = lerpComponent( 8, rate );
+			var b = lerpComponent( 0, rate );
+			var a = lerpComponent( 24, rate );
+
+			trace(a);
+
+			return r | g | b | a;
+		}
+
+	}
+
+	function lerpComponent( shift: Int, rate: Float )
+	{
+		// Note of warning: Shift operation is important here!
+		// If you mask then shift you end up carrying the high
+		// bit in the alpha channel unless you use >>>!
+		var sc = ( Std.int( start ) >> shift ) & 0xFF;
+		var ec = ( Std.int( end   ) >> shift ) & 0xFF;
+
+		var v: Int = Std.int( sc * (1 - rate) + ec * rate );
+
+		return v << shift;
+
+
 	}
 }

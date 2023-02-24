@@ -1891,6 +1891,19 @@ class UIEditor extends ImguiTool
 					if( newSound != null ) d.hoverSound = newSound;
 				}
 
+				if( ImGui.collapsingHeader( "Tweens" ) )
+				{
+
+					var e: cerastes.ui.Button.ButtonHoverTween = IG.combo("Tween Hover Start", d.tweenModeHover, cerastes.ui.Button.ButtonHoverTween );
+					if( e != null ) d.tweenModeHover = e;
+
+					var e: cerastes.ui.Button.ButtonHoverTween = IG.combo("Tween Hover End", d.tweenModeUnHover, cerastes.ui.Button.ButtonHoverTween );
+					if( e != null ) d.tweenModeUnHover = e;
+
+					 ImGui.inputDouble("Tween Duration",d.tweenDuration ,0.1,1,"%.2f");
+
+				}
+
 
 
 			case "cerastes.ui.ScaleGridButton":

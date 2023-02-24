@@ -1,5 +1,8 @@
 package cerastes.ui;
 
+import cerastes.Tween.ColorTween;
+import tweenxcore.color.RgbColor;
+import tweenxcore.Tools.Easing;
 import h2d.Object;
 import hxd.res.BitmapFont;
 import hxd.res.DefaultFont;
@@ -12,6 +15,7 @@ enum ButtonState
 	Default; // Can also be seen as an "off" state.
 	On;
 	Hover;
+	UnHover;
 	Disabled;
 }
 
@@ -25,6 +29,21 @@ enum BitmapMode
 {
 	ButtonTile;
 	ButtonScalegrid;
+}
+
+enum ButtonHoverTween
+{
+	None;
+	Linear;
+	CircIn;
+	CircOut;
+	CircInOut;
+	ExpoIn;
+	ExpoOut;
+	ExpoInOut;
+	BounceIn;
+	BounceOut;
+	BounceInOut;
 }
 
 @:keep
@@ -83,6 +102,10 @@ class Button extends h2d.Flow implements IButton
 	public var onMouseOver : (hxd.Event) -> Void;
 	public var onMouseOut : (hxd.Event) -> Void;
 
+	// Tweens
+	public var tweenHoverStartMode: ButtonHoverTween = None;
+	public var tweenHoverEndMode: ButtonHoverTween = None;
+	public var tweenDuration: Float = 0.3;
 	// Sounds
 	public var hoverSound: String;
 
@@ -98,6 +121,8 @@ class Button extends h2d.Flow implements IButton
 
 	var elText: cerastes.ui.AdvancedText = null;
 	var bitmap: h2d.Bitmap = null;
+
+	var tweenTimers: Array<Tween> = [];
 
 	function set_defaultTile(v)
 	{
@@ -145,18 +170,31 @@ class Button extends h2d.Flow implements IButton
 	}
 
 
-	function setTile( t: String, c: Int )
+	function setTile( t: String, c: Int, expoFunc: Float->Float )
 	{
 		var isValid = t != null && t.length > 0;
-		if( !isValid && ( c & 0xFF000000 ) == 0 )
+		// @todo: There's probably a less dumb way to do this?
+		if( !isValid && ( c & 0xFF000000 ) == 0 && tweenDuration == 0 )
 		{
 			backgroundTile = null;
 			return;
 		}
-		var t = isValid ? CUIResource.getTile( t ) : h2d.Tile.fromColor( c );
 
+		var t = isValid ? CUIResource.getTile( t ) : h2d.Tile.fromColor( 0xFFFFFF );
 
 		backgroundTile = t;
+
+
+		if( expoFunc != null && tweenDuration > 0 )
+			tweenTimers.push( new ColorTween(tweenDuration, background.color.toColor(), c, (v) -> {
+				background.color.setColor( Std.int( v ) );
+				var a = ( Std.int(v) & 0xFF000000 ) >> 24;
+				trace(a);
+			}, expoFunc ) );
+		else
+			background.color.setColor( c );
+
+
 		//reflow();
 	}
 
@@ -206,16 +244,20 @@ class Button extends h2d.Flow implements IButton
 		switch( v )
 		{
 			case Default:
-				setTints( defaultTile, defaultColor, defaultTextColor );
+				setTints( defaultTile, defaultColor, defaultTextColor, None );
+
+			case UnHover:
+				setTints( defaultTile, defaultColor, defaultTextColor, tweenHoverEndMode );
+				v = Default;
 
 			case Hover:
-				setTints( hoverTile, hoverColor, hoverTextColor );
+				setTints( hoverTile, hoverColor, hoverTextColor, tweenHoverStartMode );
 
 			case Disabled:
-				setTints( disabledTile, disabledColor, disabledTextColor );
+				setTints( disabledTile, disabledColor, disabledTextColor, None );
 
 			case On:
-				setTints( onTile, onColor, onTextColor );
+				setTints( onTile, onColor, onTextColor, None );
 		}
 
 		state = v;
@@ -227,14 +269,39 @@ class Button extends h2d.Flow implements IButton
 		set_state(state);
 	}
 
-	function setTints( bitmapTile: String, bitmapColor: Int, textColor: Int )
+	function setTints( bitmapTile: String, bitmapColor: Int, textColor: Int, tweenMode: ButtonHoverTween )
 	{
-		setTile(bitmapTile, bitmapColor);
+		var expoFunc = switch( tweenMode )
+		{
+			case None | null: null;
+			case Linear: Easing.linear;
+			case CircIn: Easing.circIn;
+			case CircOut: Easing.circOut;
+			case CircInOut: Easing.circInOut;
+			case ExpoInOut: Easing.expoInOut;
+			case ExpoIn: Easing.expoIn;
+			case ExpoOut: Easing.expoOut;
+			case BounceIn: Easing.bounceIn;
+			case BounceOut: Easing.bounceOut;
+			case BounceInOut: Easing.bounceInOut;
+		}
+
+		for( t in tweenTimers )
+			t.abort();
+
+		tweenTimers = [];
+
+
+		setTile(bitmapTile, bitmapColor, expoFunc);
+
 
 
 		if( elText != null )
 		{
-			elText.textColor = textColor;
+			if( expoFunc == null || tweenDuration == 0 )
+				elText.textColor = textColor;
+			else
+				tweenTimers.push( new ColorTween(tweenDuration, elText.desiredColor.toColor(), textColor, (v) -> { elText.textColor = Std.int( v ); }, expoFunc ) );
 		}
 
 		for( c in children )
@@ -244,7 +311,12 @@ class Button extends h2d.Flow implements IButton
 
 			var drawable = Std.downcast(c, h2d.Drawable);
 			if( drawable != null )
-				drawable.color.setColor((textColor & 0xFFFFFF) + 0xFF000000);
+			{
+				if( expoFunc == null || tweenDuration == 0 )
+					drawable.color.setColor((textColor & 0xFFFFFF) + 0xFF000000);
+				else
+					tweenTimers.push( new ColorTween(tweenDuration, drawable.color.toColor(), (textColor & 0xFFFFFF) + 0xFF000000, (v) -> {  drawable.color.setColor( Std.int( v )); }, expoFunc ) );
+			}
 		}
 	}
 
@@ -307,7 +379,7 @@ class Button extends h2d.Flow implements IButton
 			if( !enabled )
 				return;
 
-			state = Default;
+			state = UnHover;
 
 			if( onMouseOut != null && !hidden )
 				onMouseOut(_);

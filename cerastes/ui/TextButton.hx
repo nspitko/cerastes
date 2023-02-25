@@ -2,8 +2,8 @@ package cerastes.ui;
 
 import h3d.Vector;
 import h2d.Bitmap;
-import cerastes.ui.ScaleGridButton.Orientation;
-import cerastes.ui.ScaleGridButton.ButtonState;
+import cerastes.ui.Button.Orientation;
+import cerastes.ui.Button.ButtonState;
 
 
 @:keep

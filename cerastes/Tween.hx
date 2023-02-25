@@ -145,8 +145,6 @@ class ColorTween extends Tween
 			var b = lerpComponent( 0, rate );
 			var a = lerpComponent( 24, rate );
 
-			trace(a);
-
 			return r | g | b | a;
 		}
 

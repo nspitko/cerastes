@@ -10,6 +10,18 @@ import cerastes.fmt.CUIResource;
 import h3d.Vector;
 import h2d.Bitmap;
 
+enum Orientation
+{
+	None;
+	CW;
+	CW180;
+	CCW;
+	FlipX;
+	FlipY;
+	FlipXY;
+}
+
+
 enum ButtonState
 {
 	Default; // Can also be seen as an "off" state.
@@ -189,7 +201,6 @@ class Button extends h2d.Flow implements IButton
 			tweenTimers.push( new ColorTween(tweenDuration, background.color.toColor(), c, (v) -> {
 				background.color.setColor( Std.int( v ) );
 				var a = ( Std.int(v) & 0xFF000000 ) >> 24;
-				trace(a);
 			}, expoFunc ) );
 		else
 			background.color.setColor( c );

@@ -304,7 +304,7 @@ import hxd.res.Resource;
 	public var disabledColor: Vector = new Vector(1,1,1,1);
 
 
-	public var orientation: cerastes.ui.ScaleGridButton.Orientation = None;
+	public var orientation: cerastes.ui.Button.Orientation = None;
 }
 
 @:structInit class CUIBButton extends CUIInteractive {
@@ -318,7 +318,7 @@ import hxd.res.Resource;
 	public var pressColor: Vector = new Vector(1,1,1,1);
 	public var disabledColor: Vector = new Vector(1,1,1,1);
 
-	public var orientation: cerastes.ui.ScaleGridButton.Orientation = None;
+	public var orientation: cerastes.ui.Button.Orientation = None;
 }
 
 @:structInit class CUITButton extends CUIFlow {
@@ -557,10 +557,6 @@ class CUIResource extends Resource
 			case "h2d.ScaleGrid":
 				var d : CUIScaleGrid = cast entry;
 				obj = new h2d.ScaleGrid(getTile(d.contentTile),d.borderLeft, d.borderTop);
-
-			case "cerastes.ui.ScaleGridButton":
-				//var props: CUISGButton = cast entry;
-				obj = new cerastes.ui.ScaleGridButton();
 
 			case "cerastes.ui.Button":
 				obj = new cerastes.ui.Button();
@@ -840,37 +836,6 @@ class CUIResource extends Resource
 
 				o.state = Default;
 
-			case "cerastes.ui.ScaleGridButton":
-				var o = cast(obj, cerastes.ui.ScaleGridButton);
-				var e: CUISGButton = cast entry;
-
-				o.hoverTile = getTile( e.hoverTile );
-				o.pressTile = getTile( e.pressTile );
-				o.disabledTile = getTile( e.disabledTile );
-				o.defaultTile = getTile( e.defaultTile );
-
-				if( e.defaultColor != null )
-				{
-					o.defaultColor = e.defaultColor;
-					o.pressColor = e.pressColor;
-					o.hoverColor = e.hoverColor;
-
-					o.visitedColor = e.visitedColor;
-					o.disabledColor = e.disabledColor;
-				}
-
-				if( e.orientation == null ) e.orientation = None;
-
-				o.orientation = e.orientation;
-
-
-				if( o.defaultTile != null )
-				{
-					o.minWidth = Math.ceil(o.defaultTile.width);
-					o.minHeight = Math.ceil(o.defaultTile.height);
-				}
-
-				o.reflow();
 
 			case "cerastes.ui.BitmapButton":
 				var o = cast(obj, cerastes.ui.BitmapButton);

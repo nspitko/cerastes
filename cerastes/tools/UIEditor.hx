@@ -185,7 +185,7 @@ class UIEditor extends ImguiTool
 
 			if( ImGui.beginPopup("uie_additem") )
 			{
-				var types = ["h2d.Object", "h2d.Text", "h2d.Bitmap", "h2d.Anim", "h2d.Flow", "h2d.Mask", "h2d.Interactive", "h2d.ScaleGrid", "cerastes.ui.Button", "cerastes.ui.BitmapButton", "cerastes.ui.ScaleGridButton", "cerastes.ui.TextButton", "cerastes.ui.AdvancedText", "cerastes.ui.Reference", "cerastes.ui.Sound"];
+				var types = ["h2d.Object", "h2d.Text", "h2d.Bitmap", "h2d.Anim", "h2d.Flow", "h2d.Mask", "h2d.Interactive", "h2d.ScaleGrid", "cerastes.ui.Button", "cerastes.ui.BitmapButton", "cerastes.ui.TextButton", "cerastes.ui.AdvancedText", "cerastes.ui.Reference", "cerastes.ui.Sound"];
 
 				for( t in types )
 				{
@@ -1904,61 +1904,6 @@ class UIEditor extends ImguiTool
 
 				}
 
-
-
-			case "cerastes.ui.ScaleGridButton":
-				var d : CUISGButton = cast def;
-
-
-				var newTile = IG.inputTile( "Default Tile", d.defaultTile );
-				if( newTile != null )
-					d.defaultTile = newTile;
-
-				var newTile = IG.inputTile( "Hover Tile", d.hoverTile );
-				if( newTile != null )
-					d.hoverTile = newTile;
-
-				var newTile = IG.inputTile( "Disabled Tile", d.disabledTile );
-				if( newTile != null )
-					d.disabledTile = newTile;
-
-				if( ImGui.collapsingHeader("Tints") )
-				{
-					var nc = IG.inputColorHVec( d.defaultColor, "defaultColor" );
-					if( nc != null )
-						d.defaultColor = nc;
-
-					ImGui.text("Visited Color");
-					var nc = IG.inputColorHVec( d.visitedColor, "visitedColor" );
-					if( nc != null )
-						d.visitedColor = nc;
-
-					ImGui.text("Disabled Color");
-					var nc = IG.inputColorHVec( d.disabledColor, "disabledColor" );
-					if( nc != null )
-						d.disabledColor = nc;
-
-
-
-					var nc = IG.inputColorHVec( d.hoverColor, "hoverColor" );
-					if( nc != null )
-						d.hoverColor = nc;
-
-					var newTile = IG.inputTile( "Press Tile", d.pressTile );
-					if( newTile != null )
-						d.pressTile = newTile;
-
-					var nc = IG.inputColorHVec( d.pressColor, "pressColor" );
-					if( nc != null )
-						d.pressColor = nc;
-				}
-
-				var orientation = IG.combo("Orientation", d.orientation, cerastes.ui.ScaleGridButton.Orientation );
-				if( orientation != null )
-				{
-					d.orientation = orientation;
-				}
-
 			case "cerastes.ui.BitmapButton":
 				var d : CUIBButton = cast def;
 
@@ -2001,7 +1946,7 @@ class UIEditor extends ImguiTool
 						d.pressColor = nc;
 				}
 
-				var orientation = IG.combo("Orientation", d.orientation, cerastes.ui.ScaleGridButton.Orientation );
+				var orientation = IG.combo("Orientation", d.orientation, cerastes.ui.Button.Orientation );
 				if( orientation != null )
 				{
 					d.orientation = orientation;
@@ -2118,7 +2063,6 @@ class UIEditor extends ImguiTool
 			case "h2d.Mask": return "\uf125";
 			case "h2d.Interactive": return "\uf125";
 			case "h2d.ScaleGrid": return "\uf00a";
-			case "cerastes.ui.ScaleGridButton": return "\uf04d";
 			case "cerastes.ui.Button": return "\uf04d";
 			case "cerastes.ui.BitmapButton": return "\uf04d";
 			case "cerastes.ui.TextButton": return "\uf04d";
@@ -2229,16 +2173,6 @@ class UIEditor extends ImguiTool
 				};
 
 				parent.children.push(def);
-
-			case "cerastes.ui.ScaleGridButton":
-				var def: CUISGButton = {
-					type: type,
-					name: getAutoName(type),
-					children: []
-				};
-
-				parent.children.push(def);
-
 
 			case "cerastes.ui.BitmapButton":
 				var def: CUIBButton = {

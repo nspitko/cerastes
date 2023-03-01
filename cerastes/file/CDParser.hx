@@ -3,7 +3,7 @@ package cerastes.file;
 import haxe.rtti.Meta;
 
 interface CDObject {
-	public function initialize(): Void;
+
 }
 
 class CDParser {
@@ -61,13 +61,11 @@ class CDParser {
 						if( assumeType == "haxe.ds.StringMap" || assumeType == "haxe.ds.IntMap")
 							obj = Type.createInstance(cls, []);
 						else
+						{
 							obj = Type.createEmptyInstance(cls);
+							setDefaults(obj, cls);
 
-
-						var cd: CDObject = Std.downcast(  obj, CDObject );
-						if( cd != null )
-							obj.initialize();
-
+						}
 					}
 
 					var field = new StringBuf();
@@ -149,9 +147,8 @@ class CDParser {
 					else
 						obj = Type.createEmptyInstance(cls);
 
-					var cd: CDObject = Std.downcast(  obj, CDObject );
-					if( cd != null )
-						obj.initialize();
+					setDefaults( obj, cls );
+
 
 
 					var field = new StringBuf();
@@ -301,6 +298,39 @@ class CDParser {
 			return getMetaForField(f, m, cls );
 
 		return null;
+
+	}
+
+	function setDefaults( obj: Dynamic, cls: Class<Dynamic> )
+	{
+		var meta: haxe.DynamicAccess<Dynamic> = null;
+		if( cls != null )
+			meta = Meta.getFields( cls );
+
+		if( meta != null )
+		{
+			for( k => m in meta )
+			{
+				if( m == null )
+					continue;
+
+				var ma: haxe.DynamicAccess<Dynamic> = m;
+
+				if( ma.exists( "default" ) )
+				{
+					var val = ma.get("default");
+					if( val != null )
+						Reflect.setField( obj, k, val[0] );
+				}
+			}
+
+
+		}
+
+		cls = Type.getSuperClass( cls );
+		if( cls != null )
+			setDefaults(obj, cls );
+
 
 	}
 

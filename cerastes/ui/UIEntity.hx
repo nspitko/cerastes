@@ -1,5 +1,6 @@
 package cerastes.ui;
 
+import hxd.res.DefaultFont;
 import h2d.Object;
 import cerastes.Entity.EntityManager;
 import cerastes.macros.Callbacks.ClassKey;
@@ -9,6 +10,8 @@ class UIEntity extends h2d.Object implements Entity
 	public var lookupId: String;
 	var trackedCallbacks = new Array<(ClassKey -> Bool)>();
 	var destroyed = false;
+
+	var errorText: h2d.Text;
 
 	#if tools
 	public static function getEditorIcon()
@@ -36,11 +39,25 @@ class UIEntity extends h2d.Object implements Entity
 		remove();
 	}
 
+	/**
+	 * Called when initialization fails due to a missing object.
+	 */
+	public function initError(err: String)
+	{
+		Utils.warning('$name failed to initialize: $err');
+		errorText = new h2d.Text( DefaultFont.get(), this);
+		errorText.text = err;
+	}
+
 	//
 
 	public function initialize( root: h2d.Object )
 	{
-
+		if( errorText != null )
+		{
+			errorText.remove();
+			errorText = null;
+		}
 	}
 
 	function trackCallback( success: Bool, unregisterFunction: ( ClassKey -> Bool ) )
@@ -63,5 +80,4 @@ class UIEntity extends h2d.Object implements Entity
 		for( cb in trackedCallbacks )
             cb( this );
 	}
-
 }

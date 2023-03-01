@@ -48,12 +48,6 @@ import hxd.res.Resource;
 
 	public var filter: CUIFilterDef = null;
 
-	public function initialize()
-	{
-		scaleX = 1;
-		scaleY = 1;
-	}
-
 	#if hlimgui
 	@noSerialize public var handle: h2d.Object = null;
 	@noSerialize public var parent: CUIObject = null;
@@ -195,14 +189,6 @@ import hxd.res.Resource;
 @:structInit class CUIDrawable extends CUIObject {
 	@default(0xFFFFFFFF) public var color: Int = 0xFFFFFFFF;
 	@default(1) @et("Float") public var alpha: Float = 1;
-
-	public override function initialize()
-	{
-		super.initialize();
-
-		alpha = 1;
-		color = 0xFFFFFFFF;
-	}
 }
 
 @:structInit class CUIReference extends CUIObject {
@@ -287,16 +273,6 @@ import hxd.res.Resource;
 	public var tweenModeHover: ButtonHoverTween = None;
 	public var tweenModeUnHover: ButtonHoverTween = None;
 	public var tweenDuration: Float = 0;
-
-	public override function initialize()
-	{
-		super.initialize();
-
-		defaultColor = 0xFFFFFFFF;
-		hoverColor = 0xFFFFFFFF;
-		onColor = 0xFFFFFFFF;
-		disabledColor = 0xFFFFFFFF;
-	}
 }
 
 

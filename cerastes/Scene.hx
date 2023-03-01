@@ -28,6 +28,8 @@ class Scene
 
     @:callback public function onSceneReady( );
 
+    var exiting = false;
+
 
     public function new( a : Main )
     {
@@ -198,37 +200,53 @@ class Scene
 
     public function switchToScene( other:Scene )
     {
-        // @todo Move preload into another function, allow current scene to spin until target is ready
-        other.preload();
-        this.exit();
-        Main.currentScene = other;
-        other.enter();
-        this.unload();
+		if( exiting )
+			return;
 
-        @:privateAccess other.s2d.onAdd();
+		exiting = true;
+
+		other.preload();
+
+		fadeOut( () -> {
+            exit();
+            Main.currentScene = other;
+            other.enter();
+            other.fadeIn( () -> { other.transitionComplete(); } );
+
+            unload();
+		});
+    }
+
+    public function fadeOut( onComplete: Void -> Void )
+    {
+        onComplete();
+    }
+
+    public function fadeIn( onComplete: Void -> Void )
+    {
+        onComplete();
     }
 
     public function switchToNewScene( className: String )
     {
-        #if butai
-        var type = Type.resolveClass( "game.scenes." + className);
-        #else
-        var type = Type.resolveClass( className);
-        #end
+		#if butai
+		var type = Type.resolveClass( "game.scenes." + className);
+		#else
+		var type = Type.resolveClass( className);
+		#end
 
-        var other: Scene = Type.createInstance(type, [app]);
-        other.preload();
-        this.exit();
-        Main.currentScene = other;
-        other.enter();
+		var other: Scene = Type.createInstance(type, [app]);
+		switchToScene( other );
+		return other;
 
-        @:privateAccess other.s2d.onAdd();
+    }
 
-        // Delay these until after tick
-        new Timer(0, () -> { other.onSceneReady(); this.unload(); });
-
-        return other;
-
+    /**
+	 * Called when the transition (if any) finishes.
+	 */
+	public function transitionComplete()
+    {
+        onSceneReady();
     }
 
 

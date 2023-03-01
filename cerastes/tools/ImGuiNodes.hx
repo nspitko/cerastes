@@ -93,11 +93,14 @@ class ImGuiNodes
 		{
 			var startPinId32 = l.sourceId;
 			var startNode = queryPin( startPinId32 );
+			if( startNode != null )
+			{
 
-			var startPinDef = startNode.getPinDefForPin(startPinId32);
+				var startPinDef = startNode.getPinDefForPin(startPinId32);
 
-			if( startPinDef.color != 0 )
-				l.color = IG.colorToImVec4( startPinDef.color );
+				if( startPinDef.color != 0 )
+					l.color = IG.colorToImVec4( startPinDef.color );
+			}
 
 		}
 	}

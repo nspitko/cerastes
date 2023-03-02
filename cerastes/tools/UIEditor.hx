@@ -1887,8 +1887,15 @@ class UIEditor extends ImguiTool
 				if( ImGui.collapsingHeader( "Sounds" ) )
 				{
 
-					var newSound = IG.textInput( "Sound", d.hoverSound );
+					var newSound = IG.textInput( "Hover", d.hoverSound );
 					if( newSound != null ) d.hoverSound = newSound;
+
+					var newSound = IG.textInput( "Activate", d.activateSound );
+					if( newSound != null ) d.activateSound = newSound;
+
+					var newSound = IG.textInput( "Deactivate", d.deactivateSound );
+					if( newSound != null ) d.deactivateSound = newSound;
+
 				}
 
 				if( ImGui.collapsingHeader( "Tweens" ) )

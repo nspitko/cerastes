@@ -486,4 +486,21 @@ class Utils
 	{
 		return 15; // Hack
 	}
+
+	public static function getFont( file: String, ?e: { sdfSize: Int, sdfAlpha: Float, sdfSmoothing: Float } ) : h2d.Font
+	{
+		// Font shenanigans
+		var isSDF = StringTools.endsWith( file, ".msdf.fnt" );
+
+		if( !isSDF )
+		{
+			return hxd.Res.loader.loadCache( file, hxd.res.BitmapFont).toFont();
+		}
+		else if( e != null )
+		{
+			return hxd.Res.loader.loadCache( file, hxd.res.BitmapFont).toSdfFont(e.sdfSize,4,e.sdfAlpha,1/e.sdfSmoothing);
+		}
+
+		return hxd.res.DefaultFont.get();
+	}
 }

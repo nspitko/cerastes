@@ -120,6 +120,8 @@ class Button extends h2d.Flow implements IButton
 	public var tweenDuration: Float = 0.3;
 	// Sounds
 	public var hoverSound: String;
+	public var activateSound: String;
+	public var deactivateSound: String;
 
 	public var enabled(default, set): Bool = true;
 	public var toggled(default, set): Bool = false;
@@ -231,9 +233,9 @@ class Button extends h2d.Flow implements IButton
 	function set_toggled( v: Bool )
 	{
 		if( v )
-			state = On;
+			set_state( On );
 		else
-			state = Default;
+			set_state( Default );
 
 		toggled = v;
 		return v;
@@ -258,11 +260,21 @@ class Button extends h2d.Flow implements IButton
 				setTints( defaultTile, defaultColor, defaultTextColor, None );
 
 			case UnHover:
-				setTints( defaultTile, defaultColor, defaultTextColor, tweenHoverEndMode );
-				v = Default;
+				if( toggled )
+				{
+					setTints( onTile, onColor, onTextColor, None );
+					v = On;
+				}
+				else
+				{
+					setTints( defaultTile, defaultColor, defaultTextColor, tweenHoverEndMode );
+					v = Default;
+				}
+
 
 			case Hover:
 				setTints( hoverTile, hoverColor, hoverTextColor, tweenHoverStartMode );
+
 
 			case Disabled:
 				setTints( disabledTile, disabledColor, disabledTextColor, None );
@@ -401,7 +413,34 @@ class Button extends h2d.Flow implements IButton
 			if( !enabled )
 				return;
 
-			//state = Press;
+			if( buttonType == Toggle )
+			{
+				toggled = !toggled;
+				if( toggled )
+				{
+					#if hlwwise
+					var evt = wwise.Api.Event.make(activateSound);
+					wwise.Api.postEvent(evt);
+					#end
+				}
+				else
+				{
+					#if hlwwise
+					var evt = wwise.Api.Event.make(deactivateSound);
+					wwise.Api.postEvent(evt);
+					#end
+				}
+			}
+			else
+			{
+				if( hoverSound != null )
+				{
+					#if hlwwise
+					var evt = wwise.Api.Event.make(activateSound);
+					wwise.Api.postEvent(evt);
+					#end
+				}
+			}
 
 			if( onActivate != null && !hidden )
 				onActivate(_);

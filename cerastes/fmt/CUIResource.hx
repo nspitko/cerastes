@@ -269,6 +269,8 @@ import hxd.res.Resource;
 	public var buttonMode: ButtonType = Momentary;
 
 	public var hoverSound: String = null;
+	public var activateSound: String = null;
+	public var deactivateSound: String = null;
 
 	public var tweenModeHover: ButtonHoverTween = None;
 	public var tweenModeUnHover: ButtonHoverTween = None;
@@ -801,7 +803,10 @@ class CUIResource extends Resource
 				o.disabledColor = e.disabledColor;
 				o.disabledTextColor = e.disabledTextColor;
 				o.disabledTile = e.disabledTile;
+
 				o.hoverSound = e.hoverSound;
+				o.activateSound = e.activateSound;
+				o.deactivateSound = e.deactivateSound;
 
 				if( e.ellipsis )
 					o.ellipsis = true;

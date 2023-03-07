@@ -424,7 +424,7 @@ class CUIResource extends Resource
 		return defToObject( data.root, parent );
 	}
 
-	public function defToObject(def: CUIObject, ?parent: h2d.Object )
+	public function defToObject(def: CUIObject, ?parent: h2d.Object, ?initialize = true )
 	{
 		entsToInitialize = [];
 
@@ -437,8 +437,11 @@ class CUIResource extends Resource
 		if( parent != null )
 			parent.addChild(root);
 
-		for( e in entsToInitialize )
-			e.initialize(root);
+		if( initialize )
+		{
+			for( e in entsToInitialize )
+				e.initialize(root);
+		}
 
 		return root;
 
@@ -486,27 +489,27 @@ class CUIResource extends Resource
 			entsToInitialize.push(ent);
 	}
 
-	public static function updateObject( entry: CUIObject, target: Object )
+	public static function updateObject( entry: CUIObject, target: Object, ?initialize = true )
 	{
 		recursiveSetProperties(target, entry);
 
 		var ent: UIEntity = Std.downcast( target, UIEntity );
-		if( ent != null )
+		if( initialize && ent != null )
 			ent.initialize( ent.getScene() );
 
 	}
 
-	public static function recursiveUpdateObjects( entry: CUIObject, target: Object )
+	public static function recursiveUpdateObjects( entry: CUIObject, target: Object, ?initialize = true )
 	{
 		recursiveSetProperties(target, entry);
 
 		var ent: UIEntity = Std.downcast( target, UIEntity );
-		if( ent != null )
+		if( initialize && ent != null )
 			ent.initialize( ent.getScene() );
 
 		#if hlimgui
 		for( c in entry.children )
-			recursiveUpdateObjects( c, c.handle );
+			recursiveUpdateObjects( c, c.handle, initialize );
 		#end
 
 	}

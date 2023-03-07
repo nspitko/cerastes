@@ -89,7 +89,7 @@ class Button extends h2d.Flow implements IButton
 	public var text(get, set): String;
 
 	public var bitmapMode: BitmapMode = ButtonTile;
-	public var font(never, set): String;
+	public var font(default, set): String;
 	public var buttonType: ButtonType;
 
 	public var defaultColor: Int = 0xFFFFFFFF;
@@ -131,7 +131,7 @@ class Button extends h2d.Flow implements IButton
 
 	public var state(default,set): ButtonState = Default;
 
-	public var ellipsis(never, set): Bool;
+	public var ellipsis(default, set): Bool;
 
 	var elText: cerastes.ui.AdvancedText = null;
 	var bitmap: h2d.Bitmap = null;
@@ -151,6 +151,7 @@ class Button extends h2d.Flow implements IButton
 			elText = new AdvancedText( DefaultFont.get(), this );
 
 		elText.ellipsis = v;
+		ellipsis = v;
 
 		return v;
 	}
@@ -163,21 +164,34 @@ class Button extends h2d.Flow implements IButton
 		else
 			elText.font = fnt;
 
+		font = v;
+
 		return v;
 	}
 
 	function set_text(v)
 	{
-		if( elText == null )
-			elText = new AdvancedText( DefaultFont.get(), this );
+		if( v == null )
+		{
+			if( elText != null )
+			{
+				elText.remove();
+				elText = null;
+			}
+		}
+		else
+		{
+			if( elText == null )
+				elText = new AdvancedText( DefaultFont.get(), this );
 
-		elText.text = v;
+			elText.text = v;
+		}
 		return v;
 	}
 
 	function get_text()
 	{
-		if( Utils.assert( elText != null, 'Tried to set text on button ${name} but it doesn\'t have an initialized text object!') )
+		if( elText == null )
 			return null;
 
 		return elText.text;
@@ -416,14 +430,14 @@ class Button extends h2d.Flow implements IButton
 			if( buttonType == Toggle )
 			{
 				toggled = !toggled;
-				if( toggled )
+				if( toggled && activateSound != null )
 				{
 					#if hlwwise
 					var evt = wwise.Api.Event.make(activateSound);
 					wwise.Api.postEvent(evt);
 					#end
 				}
-				else
+				else if( !toggled && deactivateSound != null )
 				{
 					#if hlwwise
 					var evt = wwise.Api.Event.make(deactivateSound);
@@ -433,7 +447,7 @@ class Button extends h2d.Flow implements IButton
 			}
 			else
 			{
-				if( hoverSound != null )
+				if( activateSound != null )
 				{
 					#if hlwwise
 					var evt = wwise.Api.Event.make(activateSound);
@@ -455,6 +469,70 @@ class Button extends h2d.Flow implements IButton
 			//state = Default;
 		}
 
+
+	}
+
+	public function clone( ?parent: h2d.Object )
+	{
+		var b = new Button( parent );
+
+		// button
+		b.text = text;
+
+		b.bitmapMode = bitmapMode;
+		b.font = font;
+		b.buttonType = buttonType;
+
+		b.defaultColor = defaultColor;
+		b.defaultTextColor = defaultTextColor;
+		b.defaultTile = defaultTile;
+
+		b.hoverColor = hoverColor;
+		b.hoverTextColor = hoverTextColor;
+		b.hoverTile = hoverTile;
+
+		b.onColor = onColor;
+		b.onTextColor = onTextColor;
+		b.onTile = onTile;
+
+		b.disabledColor = disabledColor;
+		b.disabledTextColor = disabledTextColor;
+		b.disabledTile = disabledTile;
+
+		b.colorChildren = colorChildren;
+
+		b.tweenHoverStartMode = tweenHoverStartMode;
+		b.tweenHoverEndMode = tweenHoverEndMode;
+		b.tweenDuration = tweenDuration;
+
+		b.hoverSound = hoverSound;
+		b.activateSound = activateSound;
+		b.deactivateSound = deactivateSound;
+
+		b.enabled = enabled;
+		b.state = state;
+		b.ellipsis = ellipsis;
+
+		// flow
+		b.minWidth = minWidth;
+		b.minHeight = minHeight;
+		b.maxWidth = maxWidth;
+		b.maxHeight = maxHeight;
+		b.multiline = multiline;
+		b.visible = visible;
+		b.layout = layout;
+		b.overflow = overflow;
+		b.verticalAlign = verticalAlign;
+		b.horizontalAlign = horizontalAlign;
+
+		b.paddingLeft = paddingLeft;
+		b.paddingRight = paddingRight;
+		b.paddingTop = paddingTop;
+		b.paddingBottom = paddingBottom;
+
+
+
+		return b;
 
 	}
 

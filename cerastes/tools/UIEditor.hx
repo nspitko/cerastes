@@ -83,6 +83,7 @@ class UIEditor extends ImguiTool
 	var hasFocus = false;
 
 	var showMarkers = true;
+	var initializeObjects = true;
 
 	var zoom: Int = 1;
 
@@ -144,7 +145,7 @@ class UIEditor extends ImguiTool
 		//previewRoot = new Object(preview);
 		var res = new CUIResource(null);
 		rootDef.initChildren();
-		previewRoot = res.defToObject(rootDef);
+		previewRoot = res.defToObject(rootDef, null, initializeObjects);
 		preview.addChild(previewRoot);
 
 		//selectedItemBorder = new Graphics();
@@ -157,7 +158,7 @@ class UIEditor extends ImguiTool
 	function updateDef( e: Object, o: CUIObject )
 	{
 		Metrics.begin();
-		cerastes.fmt.CUIResource.updateObject(o, e);
+		cerastes.fmt.CUIResource.updateObject(o, e, initializeObjects);
 		@:privateAccess e.onContentChanged();
 		Metrics.end();
 	}
@@ -165,7 +166,7 @@ class UIEditor extends ImguiTool
 	function updateDefRecursive( e: Object, o: CUIObject )
 	{
 		Metrics.begin();
-		cerastes.fmt.CUIResource.recursiveUpdateObjects(o, e);
+		cerastes.fmt.CUIResource.recursiveUpdateObjects(o, e, initializeObjects);
 		@:privateAccess e.onContentChanged();
 		Metrics.end();
 	}
@@ -579,6 +580,9 @@ class UIEditor extends ImguiTool
 		handleShortcuts();
 
 		ImGui.checkbox("Show markers", showMarkers );
+		ImGui.sameLine();
+		if( ImGui.checkbox("Initialize Objects", initializeObjects ) )
+			updateScene();
 
 		ImGui.image(sceneRT, { x: viewportWidth * zoom, y: viewportHeight * zoom }, null, null, null, {x: 1, y: 1, z:1, w:1} );
 

@@ -272,6 +272,7 @@ class UIEditor extends ImguiTool
 					selectedTimeline = t;
 					timelineRunner = new TimelineRunner( t, rootDef.handle );
 					inspectorMode = Timeline;
+					selectedTimelineOperation = null;
 				}
 
 				if( isOpen )
@@ -452,7 +453,7 @@ class UIEditor extends ImguiTool
 		{
 			if( selectedTimelineOperation == null )
 			{
-				ImGui.text("No keyframe selected...");
+				populateTimelineEditor();
 			}
 			else
 			{
@@ -567,8 +568,9 @@ class UIEditor extends ImguiTool
 		// Selected Border stuff
 		processSelection();
 
-		inspectorColumn();
+
 		timelineColumn();
+		inspectorColumn();
 
 		timeline();
 
@@ -1166,6 +1168,15 @@ class UIEditor extends ImguiTool
 		}
 		for( o in opsToDelete)
 			selectedTimeline.operations.remove(o);
+	}
+
+	function populateTimelineEditor()
+	{
+		var nt = IG.textInput( "Name", selectedTimeline.name );
+		if( nt != null && nt.length > 0 )
+		{
+			selectedTimeline.name = nt;
+		}
 	}
 
 	function populateOp( o: TimelineOperation )

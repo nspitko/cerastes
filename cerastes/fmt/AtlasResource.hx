@@ -166,6 +166,30 @@ enum PackMode {
 	@noSerialize var trimMutex = new Mutex();
 	@noSerialize var resMutex = new Mutex();
 
+	public function add( file: String )
+	{
+		var t = hxd.Res.loader.load( file ).toImage();
+		var info = t.getInfo();
+		var e: AtlasEntry = {};
+		e.atlas = this;
+
+		var f: AtlasFrame = {};
+		f.atlas = this;
+		f.file = file;
+
+		e.size = {
+			x: info.width,
+			y: info.height,
+		}
+
+		e.frames = [ f ];
+
+		var r = ~/\/([^\/]*)\./;
+		r.match(file);
+		var name = r.matched(1);
+
+		entries[name] = e;
+	}
 
 	public function pack( file: String, ?onComplete: Void -> Void )
 	{

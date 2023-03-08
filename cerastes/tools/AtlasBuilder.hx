@@ -453,9 +453,23 @@ class AtlasBuilder  extends  ImguiTool
 		#else
 		ImGuiToolManager.showPopup("Save failure",'Not build with binpacker!', Error);
 		#end
+	}
 
+	function addSprite()
+	{
+		var newFile = UI.loadFile({
+			title:"Add Sprite...",
+			filters:[
+			{name:"Images", exts:["png"]}
+			]
+		});
+		if( newFile != null )
+		{
+			var fileName = Utils.toLocalFile( newFile );
 
-
+			trace(fileName);
+			atlas.add(fileName);
+		}
 	}
 
 	function handleShortcuts()
@@ -480,6 +494,11 @@ class AtlasBuilder  extends  ImguiTool
 		{
 			if( ImGui.beginMenu("File", true) )
 			{
+				if ( ImGui.menuItem("Add...", "Ctrl+N"))
+				{
+					addSprite();
+				}
+
 				if ( fileName != null && ImGui.menuItem("Save", "Ctrl+S"))
 				{
 					save();

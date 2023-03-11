@@ -271,6 +271,7 @@ class UIEditor extends ImguiTool
 				{
 					selectedTimeline = t;
 					timelineRunner = new TimelineRunner( t, rootDef.handle );
+					timelineRunner.playing = true;
 					inspectorMode = Timeline;
 					selectedTimelineOperation = null;
 				}
@@ -639,9 +640,9 @@ class UIEditor extends ImguiTool
 		{
 			if( Key.isPressed( Key.SPACE ) && selectedTimeline != null )
 			{
-				timelinePlay = !timelinePlay;
-
-				if( timelinePlay )
+				if( timelineRunner.playing )
+					timelineRunner.stop();
+				else
 				{
 					for( i in 0 ... selectedTimeline.operations.length )
 					{
@@ -651,22 +652,26 @@ class UIEditor extends ImguiTool
 					}
 
 					@:privateAccess timelineRunner.ui = rootDef.handle;
+					timelineRunner.play();
+					timelineRunner.setFrame( frame );
+					timelineRunner.loop = true;
 				}
-
-
-				timelineRunner.setFrame( frame-1 );
 			}
 		}
 
-		if( timelinePlay && selectedTimeline != null )
+		if( timelineRunner != null )
 		{
 			try
 			{
-				if( timelineRunner.frame > selectedTimeline.frames )
-				{
-					timelineRunner.setFrame(0);
-				}
 				timelineRunner.tick(delta);
+				if( timelineRunner.playing )
+				{
+					frame = Utils.clampInt( timelineRunner.frame, 0, selectedTimeline.frames );
+				}
+				else
+				{
+					timelineRunner.setFrame( frame );
+				}
 			}
 			catch(e)
 			{

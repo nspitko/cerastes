@@ -101,6 +101,9 @@ class TimelineRunner
 
 	public var finished: Bool = false;
 
+	public var playing: Bool = false;
+	public var loop: Bool = false;
+
 
 	inline function frameToTime( frame: Int ): Float { return frame / timeline.frameRate; }
 	inline function timeToFrame( time: Float ): Int { return Math.floor( time * timeline.frameRate ); }
@@ -127,6 +130,32 @@ class TimelineRunner
 			timelineState.push({});
 	}
 
+	public function play()
+	{
+		playing = true;
+	}
+
+
+	public function stop()
+	{
+		playing = false;
+
+		#if hlimgui
+		if( playingSounds == null )
+			return;
+
+		for( s in playingSounds )
+			s.stop();
+
+		playingSounds = [];
+		#end
+	}
+
+	public function pause()
+	{
+		playing = !playing;
+	}
+
 	#if hlimgui
 
 	public function setFrame( f: Int )
@@ -144,7 +173,7 @@ class TimelineRunner
 		else
 		{
 			// Force re-simulate the last two frames just to be sure we're in a good state.
-			time = time -2;
+			//time = time -2;
 		}
 
 		// Clear out handles since we probably screwed with the scene in the editor.
@@ -155,30 +184,21 @@ class TimelineRunner
 			timelineState[i].targetHandle = null;
 		}
 
+		playing = true;
+		finished = false;
 		while( frame < f  )
 		{
 			tick( 1 / timeline.frameRate );
 		}
+
 		stop();
 	}
 
-
-	public function stop()
-	{
-
-		if( playingSounds == null )
-			return;
-
-		for( s in playingSounds )
-			s.stop();
-
-		playingSounds = [];
-	}
 	#end
 
 	public function tick(d: Float )
 	{
-		if( finished )
+		if( !playing || finished )
 			return;
 
 		var tLast = time;
@@ -192,7 +212,15 @@ class TimelineRunner
 				onComplete();
 
 			onComplete = null;
-			finished = true;
+
+			if( loop )
+			{
+				time = 0;
+			}
+			else
+			{
+				finished = true;
+			}
 
 			return;
 		}
@@ -358,7 +386,20 @@ class TimelineRunner
 						switch( op.key )
 						{
 							case "x" | "y" | "scaleX" | "scaleY" | "rotation":
+								// setters
+								var target: h2d.Object = state.targetHandle;
 								@:privateAccess target.posChanged = true;
+
+								// @todo: perf? Not sure we need to change this every frame for some of these cases.
+								// onContentChanged();
+								if( @:privateAccess target.parentContainer != null )
+									@:privateAccess target.parentContainer.contentChanged(target);
+
+							case "visible":
+								var target: h2d.Object = state.targetHandle;
+								// onContentChanged();
+								if( @:privateAccess target.parentContainer != null )
+									@:privateAccess target.parentContainer.contentChanged(target);
 							default:
 						}
 					default:

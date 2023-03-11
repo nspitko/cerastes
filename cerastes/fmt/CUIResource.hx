@@ -764,6 +764,9 @@ class CUIResource extends Resource
 				//o.backgroundColor = e.backgroundColor;
 				o.cursor = e.cursor;
 
+				o.width = e.width;
+				o.height = e.height;
+
 			case "h2d.ScaleGrid":
 				var o = cast(obj, h2d.ScaleGrid);
 				var e: CUIScaleGrid = cast entry;

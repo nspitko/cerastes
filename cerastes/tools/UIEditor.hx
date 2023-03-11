@@ -705,17 +705,20 @@ class UIEditor extends ImguiTool
 		var colMins = 0x66ff66;
 		var colMaxs = 0xff6666;
 
+		final lineWidth = 1;
+		final lineAlpha = 0.75;
+
 		if( bounds.getSize().x > 0 || bounds.getSize().y > 0 )
 		{
-			selectedItemBorder.lineStyle(4,colBounds, 0.5);
+			selectedItemBorder.lineStyle( lineWidth,colBounds, lineAlpha);
 			selectedItemBorder.drawRect(bounds.xMin, bounds.yMin, bounds.width, bounds.height);
 
 			var flow: CUIFlow = Std.downcast( selectedInspectorTree, CUIFlow );
 			if( flow != null )
 			{
-				selectedItemBorder.lineStyle(4,colMins, 0.5);
+				selectedItemBorder.lineStyle( lineWidth,colMins, lineAlpha);
 				selectedItemBorder.drawRect(bounds.xMin, bounds.yMin, flow.minWidth, flow.minHeight);
-				selectedItemBorder.lineStyle(4,colMaxs, 0.5);
+				selectedItemBorder.lineStyle( lineWidth,colMaxs, lineAlpha);
 				selectedItemBorder.drawRect(bounds.xMin, bounds.yMin, flow.maxWidth, flow.maxHeight);
 			}
 			else
@@ -724,7 +727,7 @@ class UIEditor extends ImguiTool
 				if( text != null )
 				{
 					var t: h2d.Text = cast o;
-					selectedItemBorder.lineStyle(4,colMaxs, 0.5);
+					selectedItemBorder.lineStyle( lineWidth,colMaxs, lineAlpha);
 					selectedItemBorder.drawRect(bounds.xMin, bounds.yMin, text.maxWidth, t.textHeight);
 				}
 				else
@@ -735,8 +738,12 @@ class UIEditor extends ImguiTool
 					size.y += o.y;
 					if( size.width != bounds.width || size.height != bounds.height )
 					{
-						selectedItemBorder.lineStyle(4,colMaxs, 0.5);
+						selectedItemBorder.lineStyle( lineWidth, colBounds, lineAlpha);
+						selectedItemBorder.drawRect(bounds.xMin, bounds.yMin, bounds.width, bounds.height);
+
+						selectedItemBorder.lineStyle( lineWidth, colMaxs, lineAlpha);
 						selectedItemBorder.drawRect(size.xMin, size.yMin, size.width, size.height);
+
 					}
 
 				}
@@ -746,16 +753,24 @@ class UIEditor extends ImguiTool
 
 
 		}
+		else if( size.xMax > 0 || size.yMax > 0 )
+		{
+			selectedItemBorder.lineStyle( lineWidth,colBounds, lineWidth);
+			selectedItemBorder.drawRect(bounds.xMin, bounds.yMin, bounds.width, bounds.height);
+
+			selectedItemBorder.lineStyle( lineWidth,colMaxs, lineWidth);
+			selectedItemBorder.drawRect(bounds.xMin, bounds.yMin, size.width, size.height);
+		}
 		else if( Std.downcast( selectedInspectorTree, CUIMask ) != null )
 		{
 			var mask: h2d.Mask = cast o;
-			selectedItemBorder.lineStyle(4,colBounds, 0.5);
+			selectedItemBorder.lineStyle( lineWidth,colBounds, lineWidth);
 			selectedItemBorder.drawRect(bounds.xMin, bounds.yMin, mask.width, mask.height);
 
 		}
 		else
 		{
-			selectedItemBorder.lineStyle(4,colBounds, 0.5);
+			selectedItemBorder.lineStyle( lineWidth,colBounds, lineWidth);
 			selectedItemBorder.drawRect(bounds.x, bounds.y, 1, 1);
 		}
 
@@ -1491,7 +1506,9 @@ class UIEditor extends ImguiTool
 		var s =  Type.getSuperClass( Type.getClass( obj ) );
 		while( s != null )
 		{
-			populateEditorFields( obj, def, Type.getClassName(s) );
+			var nt = Type.getClassName(s);
+			if( nt != def.type )
+				populateEditorFields( obj, def, Type.getClassName(s) );
 			s = Type.getSuperClass( s );
 		}
 

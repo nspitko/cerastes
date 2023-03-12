@@ -44,7 +44,7 @@ import hxd.res.Resource;
 	@default(1) @et("Float") public var scaleX: Float = 1;
 	@default(1) @et("Float") public var scaleY: Float = 1;
 
-	@et("Bool") public var visible: Bool = true;
+	@default(true) @et("Bool") public var visible: Bool = true;
 
 	public var filter: CUIFilterDef = null;
 
@@ -205,16 +205,16 @@ import hxd.res.Resource;
 }
 
 @:structInit class CUIText extends CUIDrawable {
-	public var text: String = "";
+	@default("") public var text: String = "";
 	public var font: String = "fnt/kodenmanhou16.fnt";
 	// sdf
-	public var sdfSize: Int = 12;
-	public var sdfAlpha: Float = 0.5;
-	public var sdfSmoothing: Float = 10;
+	@default(12) public var sdfSize: Int = 12;
+	@default(0.5) public var sdfAlpha: Float = 0.5;
+	@default(10) public var sdfSmoothing: Float = 10;
 
 	public var textAlign: h2d.Text.Align = Left;
 
-	@et("Float") public var maxWidth: Float = -1;
+	@default(-1) @et("Float") public var maxWidth: Float = -1;
 }
 
 @:structInit class CUIAdvancedText extends CUIText {
@@ -226,8 +226,8 @@ import hxd.res.Resource;
 
 @:structInit class CUIBitmap extends CUIDrawable {
 	public var tile: String = "#FF00FF";
-	@et("Float") public var width: Float = -1;
-	@et("Float") public var height: Float = -1;
+	@default(-1) @et("Float") public var width: Float = -1;
+	@default(-1) @et("Float") public var height: Float = -1;
 }
 
 @:structInit class CUIAdvancedBitmap extends CUIBitmap {
@@ -245,10 +245,10 @@ import hxd.res.Resource;
 }
 
 @:structInit class CUIButton extends CUIFlow {
-	public var defaultTile: String = "";
-	public var hoverTile: String = "";
-	public var onTile: String = "";
-	public var disabledTile: String = "";
+	@default("") public var defaultTile: String = "";
+	@default("") public var hoverTile: String = "";
+	@default("") public var onTile: String = "";
+	@default("") public var disabledTile: String = "";
 
 	@default(0xFFFFFFFF) public var defaultColor: Int = 0xFFFFFFFF;
 	@default(0xFFFFFFFF) public var hoverColor: Int = 0xFFFFFFFF;
@@ -312,10 +312,10 @@ import hxd.res.Resource;
 
 @:structInit class CUITButton extends CUIFlow {
 
-	public var defaultColor: Int = 0xFFFFFFFF;
-	public var hoverColor: Int = 0xFFFFFFFF;
-	public var onColor: Int = 0xFFFFFFFF;
-	public var disabledColor: Int = 0xFFFFFFFF;
+	@default(0xFFFFFFFF) public var defaultColor: Int = 0xFFFFFFFF;
+	@default(0xFFFFFFFF) public var hoverColor: Int = 0xFFFFFFFF;
+	@default(0xFFFFFFFF) public var onColor: Int = 0xFFFFFFFF;
+	@default(0xFFFFFFFF) public var disabledColor: Int = 0xFFFFFFFF;
 
 	public var text: String = "";
 }
@@ -326,10 +326,10 @@ import hxd.res.Resource;
 	public var horizontalAlign: h2d.Flow.FlowAlign = Left;
 	public var overflow: h2d.Flow.FlowOverflow = Limit;
 
-	@et("Int") public var minWidth: Int = -1;
-	@et("Int") public var minHeight: Int = -1;
-	@et("Int") public var maxWidth: Int = -1;
-	@et("Int") public var maxHeight: Int = -1;
+	@default(-1) @et("Int") public var minWidth: Int = -1;
+	@default(-1) @et("Int") public var minHeight: Int = -1;
+	@default(-1) @et("Int") public var maxWidth: Int = -1;
+	@default(-1) @et("Int") public var maxHeight: Int = -1;
 
 	@et("Int") public var paddingTop: Int = 0;
 	@et("Int") public var paddingRight: Int = 0;
@@ -339,12 +339,12 @@ import hxd.res.Resource;
 	@et("Int") public var horizontalSpacing: Int = 0;
 	@et("Int") public var verticalSpacing: Int = 0;
 
-	public var backgroundTile: String = "";
+	@default("") public var backgroundTile: String = "";
 
 	@et("Int") public var borderWidth: Int = 0;
 	@et("Int") public var borderHeight: Int = 0;
 
-	@et("Bool") public var multiline: Bool = true;
+	@default(true) @et("Bool") public var multiline: Bool = true;
 }
 
 
@@ -370,8 +370,8 @@ import hxd.res.Resource;
 	@et("Float") public var width: Float = 10;
 	@et("Float") public var height: Float = 10;
 
-	@et("Bool") public var tileBorders: Bool = true;
-	@et("Bool") public var ignoreScale: Bool = true;
+	@default(true) @et("Bool") public var tileBorders: Bool = true;
+	@default(true) @et("Bool") public var ignoreScale: Bool = true;
 
 	public var contentTile: String = "#FF00FF";
 }
@@ -389,7 +389,7 @@ class CUIResource extends Resource
 	var data: CUIFile;
 
 	static var minVersion = 1;
-	static var version = 2;
+	static var version = 3;
 
 	var entsToInitialize: Array<UIEntity> = [];
 

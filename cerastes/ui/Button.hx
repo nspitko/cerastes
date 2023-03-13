@@ -91,6 +91,7 @@ class Button extends h2d.Flow implements IButton
 	public var bitmapMode: BitmapMode = ButtonTile;
 	public var font(default, set): String;
 	public var buttonType: ButtonType;
+	public var orientation(default, set): Orientation = None;
 
 	public var defaultColor: Int = 0xFFFFFFFF;
 	public var defaultTextColor: Int = 0xFFFFFFFF;
@@ -103,6 +104,8 @@ class Button extends h2d.Flow implements IButton
 	public var onColor: Int = 0xFFFFFFFF;
 	public var onTextColor: Int = 0xFFFFFFFF;
 	public var onTile: String;
+
+	public var onHoverColor: Int = 0xFFFFFFFF;
 
 	public var disabledColor: Int = 0xFFFFFFFF;
 	public var disabledTextColor: Int = 0xFFFFFFFF;
@@ -143,6 +146,13 @@ class Button extends h2d.Flow implements IButton
 		defaultTile = v;
 		updateTiles();
 		return v;
+	}
+
+	function set_orientation(v)
+	{
+		orientation = v;
+		needReflow = true;
+		return orientation;
 	}
 
 	function set_ellipsis(v)
@@ -216,10 +226,14 @@ class Button extends h2d.Flow implements IButton
 		if( expoFunc != null && tweenDuration > 0 )
 			tweenTimers.push( new ColorTween(tweenDuration, background.color.toColor(), c, (v) -> {
 				background.color.setColor( Std.int( v ) );
-				var a = ( Std.int(v) & 0xFF000000 ) >> 24;
+				var a = ( Std.int(v) & 0xFF000000 ) >>> 24;
 			}, expoFunc ) );
 		else
+		{
 			background.color.setColor( c );
+			var a = ( Std.int(c) & 0xFF000000 ) >>> 24;
+			background.alpha = a/255;
+		}
 
 
 		//reflow();
@@ -287,16 +301,20 @@ class Button extends h2d.Flow implements IButton
 
 
 			case Hover:
-				setTints( hoverTile, hoverColor, hoverTextColor, tweenHoverStartMode );
+				if( toggled )
+					setTints( hoverTile, onHoverColor, hoverTextColor, tweenHoverStartMode );
+				else
+					setTints( hoverTile, hoverColor, hoverTextColor, tweenHoverStartMode );
 
 
-			case Disabled:
+		case Disabled:
 				setTints( disabledTile, disabledColor, disabledTextColor, None );
 
 			case On:
 				setTints( onTile, onColor, onTextColor, None );
 		}
 
+		needReflow = true;
 		state = v;
 		return v;
 	}
@@ -371,6 +389,42 @@ class Button extends h2d.Flow implements IButton
 
 			var props = getProperties(c);
 			props.isAbsolute = true;
+		}
+
+		// If we aren't specifying min dimensions and have no text, infer from our base tile
+		if(  minWidth == null && minHeight == null && elText == null && backgroundTile != null )
+		{
+			minWidth = Math.floor( backgroundTile.width );
+			minHeight = Math.floor( backgroundTile.height );
+		}
+
+		if( background != null )
+		{
+			switch( orientation )
+			{
+				case None:
+				case CW:
+					background.rotation = Math.PI / 2;
+					background.x = background.tile.height;
+				case CW180:
+					background.rotation = Math.PI;
+					background.x = background.tile.width;
+					background.y = background.tile.height;
+				case CCW:
+					background.rotation = -Math.PI / 2;
+					background.y = background.tile.width;
+				case FlipX:
+					background.scaleX = -1;
+					background.x = background.tile.width;
+				case FlipY:
+					background.scaleY = -1;
+					background.y = background.tile.height;
+				case FlipXY:
+					background.scaleX = -1;
+					background.scaleY = -1;
+					background.x = background.tile.width;
+					background.y = background.tile.height;
+			}
 		}
 	}
 

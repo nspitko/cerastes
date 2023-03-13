@@ -253,6 +253,7 @@ import hxd.res.Resource;
 	@default(0xFFFFFFFF) public var defaultColor: Int = 0xFFFFFFFF;
 	@default(0xFFFFFFFF) public var hoverColor: Int = 0xFFFFFFFF;
 	@default(0xFFFFFFFF) public var onColor: Int = 0xFFFFFFFF;
+	@default(0xFFFFFFFF) public var onHoverColor: Int = 0xFFFFFFFF;
 	@default(0xFFFFFFFF) public var disabledColor: Int = 0xFFFFFFFF;
 
 	public var defaultTextColor: Int = 0x00000000;
@@ -275,6 +276,9 @@ import hxd.res.Resource;
 	public var tweenModeHover: ButtonHoverTween = None;
 	public var tweenModeUnHover: ButtonHoverTween = None;
 	public var tweenDuration: Float = 0;
+
+	public var orientation: cerastes.ui.Button.Orientation = None;
+	@default(true) public var colorChildren: Bool = true;
 }
 
 
@@ -803,6 +807,7 @@ class CUIResource extends Resource
 				o.hoverTextColor = e.hoverTextColor;
 
 				o.onColor = e.onColor;
+				o.onHoverColor = e.onHoverColor;
 				o.onTextColor = e.onTextColor;
 				o.onTile = e.onTile;
 
@@ -813,6 +818,8 @@ class CUIResource extends Resource
 				o.hoverSound = e.hoverSound;
 				o.activateSound = e.activateSound;
 				o.deactivateSound = e.deactivateSound;
+
+				o.colorChildren = e.colorChildren;
 
 				if( e.ellipsis )
 					o.ellipsis = true;
@@ -831,6 +838,8 @@ class CUIResource extends Resource
 				o.tweenDuration = e.tweenDuration;
 				o.tweenHoverEndMode = e.tweenModeUnHover;
 				o.tweenHoverStartMode = e.tweenModeHover;
+
+				if( e.orientation != null ) o.orientation = e.orientation;
 
 				o.state = Default;
 

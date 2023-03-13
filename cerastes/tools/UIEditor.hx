@@ -1,11 +1,14 @@
 
 package cerastes.tools;
 
+
+#if hlimgui
+
 import h3d.scene.Object.ObjectFlags;
 import cerastes.ui.Timeline;
 import cerastes.macros.Metrics;
 import cerastes.ui.UIEntity;
-#if hlimgui
+import cerastes.tools.ImguiTool.ImGuiPopupType;
 import hxd.Key;
 import hxd.res.Font;
 import hxd.res.BitmapFont;
@@ -134,6 +137,8 @@ class UIEditor extends ImguiTool
 			updateScene();
 		} catch(e)
 		{
+			Utils.warning('Failed to open ${f}: $e');
+			ImGuiToolManager.showPopup('Failed to load $f', 'Hit an exception: $e', ImGuiPopupType.Error);
 			// do nothing
 		}
 	}
@@ -720,6 +725,13 @@ class UIEditor extends ImguiTool
 				selectedItemBorder.drawRect(bounds.xMin, bounds.yMin, flow.minWidth, flow.minHeight);
 				selectedItemBorder.lineStyle( lineWidth,colMaxs, lineAlpha);
 				selectedItemBorder.drawRect(bounds.xMin, bounds.yMin, flow.maxWidth, flow.maxHeight);
+
+				var fe: h2d.Flow = Std.downcast( o, h2d.Flow );
+
+				selectedItemBorder.lineStyle( lineWidth,0xffff00, lineAlpha);
+				selectedItemBorder.drawRect(bounds.xMin, bounds.yMin, @:privateAccess fe.calculatedWidth, @:privateAccess  fe.calculatedHeight);
+
+
 			}
 			else
 			{
@@ -742,7 +754,7 @@ class UIEditor extends ImguiTool
 						selectedItemBorder.drawRect(bounds.xMin, bounds.yMin, bounds.width, bounds.height);
 
 						selectedItemBorder.lineStyle( lineWidth, colMaxs, lineAlpha);
-						selectedItemBorder.drawRect(size.xMin, size.yMin, size.width, size.height);
+						selectedItemBorder.drawRect(bounds.xMin, bounds.yMin, bounds.xMin + size.width, bounds.yMin + size.height);
 
 					}
 
@@ -1825,6 +1837,11 @@ class UIEditor extends ImguiTool
 
 				if( ImGui.collapsingHeader( "Tiles" ) )
 				{
+					var orientation = IG.combo("Orientation", d.orientation, cerastes.ui.Button.Orientation );
+					if( orientation != null )
+					{
+						d.orientation = orientation;
+					}
 
 					var newTile = IG.inputTile( "Default Tile", d.defaultTile );
 					if( newTile != null )
@@ -1832,7 +1849,7 @@ class UIEditor extends ImguiTool
 
 					if( d.buttonMode == Toggle )
 					{
-						var newTile = IG.inputTile( "Toggled (on) Tile", d.defaultTile );
+						var newTile = IG.inputTile( "Toggled (on) Tile", d.onTile );
 						if( newTile != null )
 							d.onTile = newTile;
 					}
@@ -1848,6 +1865,8 @@ class UIEditor extends ImguiTool
 
 				if( ImGui.collapsingHeader("Tints") )
 				{
+					wref( ImGui.checkbox( "Color Children", _ ), d.colorChildren );
+
 					var nc = IG.inputColorInt( d.defaultColor, "Default Color" );
 					if( nc != null )
 						d.defaultColor = nc;
@@ -1864,6 +1883,14 @@ class UIEditor extends ImguiTool
 					var nc = IG.inputColorInt( d.hoverColor, "Hover Color" );
 					if( nc != null )
 						d.hoverColor = nc;
+
+					if( d.buttonMode == Toggle )
+					{
+						ImGui.text("Toggled (on) hover color");
+						var nc = IG.inputColorInt( d.onHoverColor, "On Hover Color" );
+						if( nc != null )
+							d.onHoverColor = nc;
+					}
 
 					ImGui.text("Disabled Color");
 					var nc = IG.inputColorInt( d.disabledColor, "Disabled Color" );

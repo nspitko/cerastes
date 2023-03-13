@@ -384,7 +384,7 @@ class ImGuiTools {
 			}
 		}
 
-		if( newTile != null && Utils.isValidTexture(newTile) )
+		if( newTile != null && CUIResource.getTile(newTile) != null )
 			return newTile;
 
 		if( ImGui.beginDragDropTarget() )

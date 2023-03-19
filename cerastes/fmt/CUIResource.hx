@@ -438,6 +438,10 @@ class CUIResource extends Resource
 
 		root = root.getChildAt(0);
 
+		// CUI root specific shit
+		if( data != null)
+			root.timelineDefs = data.timelines;
+
 		if( parent != null )
 			parent.addChild(root);
 

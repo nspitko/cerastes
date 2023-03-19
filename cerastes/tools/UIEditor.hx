@@ -1209,6 +1209,15 @@ class UIEditor extends ImguiTool
 		{
 			selectedTimeline.name = nt;
 		}
+
+		ImGui.inputInt( "Frame rate", selectedTimeline.frameRate );
+		if( ImGui.isItemHovered() )
+		{
+			ImGui.beginTooltip();
+			ImGui.textWrapped("Number of timeline to run per game frame. 10 is usually fine. Note this does NOT affect how smooth animations are, just how often we update the timline.");
+			ImGui.endTooltip();
+		}
+
 	}
 
 	function populateOp( o: TimelineOperation )

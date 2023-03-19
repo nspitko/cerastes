@@ -132,6 +132,7 @@ class TimelineRunner
 
 	public function play()
 	{
+		time = 0;
 		playing = true;
 	}
 

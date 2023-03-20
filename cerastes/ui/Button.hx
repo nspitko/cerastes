@@ -114,6 +114,7 @@ class Button extends h2d.Flow implements IButton
 	public var colorChildren: Bool = true;
 
 	public var onActivate : (hxd.Event) -> Void;
+	public var onRelease : (hxd.Event) -> Void;
 	public var onMouseOver : (hxd.Event) -> Void;
 	public var onMouseOut : (hxd.Event) -> Void;
 
@@ -520,7 +521,8 @@ class Button extends h2d.Flow implements IButton
 				return;
 
 
-			//state = Default;
+			if( onRelease != null && !hidden )
+				onRelease(_);
 		}
 
 

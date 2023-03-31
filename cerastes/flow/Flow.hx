@@ -1,5 +1,6 @@
 package cerastes.flow;
 
+import cerastes.Tickable.TimeManager;
 import cerastes.data.Nodes;
 import cerastes.GameState.FlowState;
 import game.GameState;
@@ -661,7 +662,7 @@ class FlowNode extends Node
 				FlowDebugger.addHistory(runner, this, target, pin);
 				#end
 
-				target.process( runner );
+				runner.queue( target );
 			}
 		}
 	}
@@ -984,7 +985,7 @@ class FlowContext
 
 @:allow(cerastes.flow.FlowNode)
 @:build(cerastes.macros.Callbacks.CallbackGenerator.build())
-class FlowRunner
+class FlowRunner implements cerastes.Tickable
 {
 	var nodes: Array<FlowNode>;
 	var links: Array<FlowLink>;
@@ -992,7 +993,7 @@ class FlowRunner
 	var labels: Map<String, FlowNode> = [];
 
 	var root: FlowNode;
-	var stack: List<FlowNode>;
+	var stack: List<FlowNode> = new List<FlowNode>();
 
 	var res: FlowResource;
 	var context: FlowContext;
@@ -1009,6 +1010,9 @@ class FlowRunner
 
 	// If set, points to the runner that created this one
 	public var parent: FlowRunner = null;
+
+	public var finished( get, null ): Bool = false;
+	function get_finished() { return finished; }
 
 	/**
 	 * OnExit is called when a flow reaches it's exit node.
@@ -1036,6 +1040,16 @@ class FlowRunner
 
 		for( n in nodes )
 			n.register(this);
+
+		registerOnExit( this, (handled) -> {
+			finished = true;
+			unregisterOnExit(this);
+			TimeManager.unregister( this );
+			return handled;
+		} );
+
+		TimeManager.register(this);
+
 	}
 
 	public function setVar( name: String, value: Dynamic )
@@ -1053,14 +1067,30 @@ class FlowRunner
 		if( nodeId != 0 )
 		{
 			var target = lookupNodeById( nodeId );
-			target.process( this );
+			queue( target );
 		}
 		else if( label != null )
 		{
-			jump( label);
+			jump( label );
 		}
 		else
-			root.process( this );
+		{
+			queue( root );
+		}
+	}
+
+	public function tick( delta: Float )
+	{
+		while( stack.first() != null )
+		{
+			var n = stack.pop();
+			n.process( this );
+		}
+	}
+
+	public function queue( node: FlowNode )
+	{
+		stack.add(node);
 	}
 
 	public function jump( id: String )
@@ -1072,7 +1102,7 @@ class FlowRunner
 		}
 
 		var node = labels.get(id);
-		node.process( this );
+		queue( node );
 
 
 	}

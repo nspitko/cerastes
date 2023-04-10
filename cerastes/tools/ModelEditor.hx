@@ -671,7 +671,7 @@ class ModelEditor extends ImguiTool
 		ImGui.popStyleColor();
 		ImGui.popStyleColor();
 
-		ImGuiToolManager.updatePreviewEvents( startPos, events );
+		ImGuiToolManager.updatePreviewEvents( startPos, texSize, events );
 		#if imguizmo
 		ImGuizmo.setRect(startPos.x, startPos.y, size.x, size.x);
 		#end

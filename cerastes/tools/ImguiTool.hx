@@ -2,6 +2,7 @@
 package cerastes.tools;
 
 
+import hxd.Window;
 #if hlimgui
 import hxd.Key;
 import hxd.SceneEvents;
@@ -180,18 +181,29 @@ class ImGuiToolManager
 
 	}
 
+	static var previewScale: Int = 1;
 	public static function drawScene()
 	{
 		ImGui.begin("\uf3fa Scene", null, ImGuiWindowFlags.AlwaysAutoResize );
+
+		if( ImGui.beginCombo("Scale", Std.string('${previewScale}x') ) )
+		{
+			if( ImGui.selectable( "1x", previewScale == 1 ) ) previewScale = 1;
+			if( ImGui.selectable( "2x", previewScale == 2 ) ) previewScale = 2;
+			if( ImGui.selectable( "4x", previewScale == 4 ) ) previewScale = 4;
+
+			ImGui.endCombo();
+		}
+
 		var pos = ImGui.getCursorPos();
-		var screenPos = ImGui.getCursorScreenPos();
-		var size: ImVec2S = { x: viewportWidth, y: viewportHeight };
+		var windowPos = pos + ImGui.getWindowPos();
+		var size: ImVec2S = { x: viewportWidth * previewScale, y: viewportHeight * previewScale };
 
 		ImGui.button("dummy", size );
 		ImGui.setCursorPos( pos );
 		ImGui.image(sceneRT, size );
 
-		updatePreviewEvents( screenPos, viewportScale, previewEvents );
+		updatePreviewEvents( windowPos, size, previewEvents );
 
 		ImGui.end();
 
@@ -394,8 +406,9 @@ class ImGuiToolManager
 		Utils.info('Font atlas built: ${fontInfo.width}x${fontInfo.height}');
 	}
 
+	static var g: h2d.Graphics;
 
-	public static function updatePreviewEvents( startPos: ImVec2, scale: Int = 1, previewEvents: SceneEvents )
+	public static function updatePreviewEvents( startPos: ImVec2S, size: ImVec2S, previewEvents: SceneEvents )
 	{
 		#if hlimgui
 		var hovered = ImGui.isItemHovered();
@@ -409,24 +422,51 @@ class ImGuiToolManager
 		}
 
 
-		var endPos: ImVec2 = ImGui.getCursorScreenPos();
-		var mousePos: ImVec2 = ImGui.getMousePos();
+		var style = ImGui.getStyle();
 
-		var height = endPos.y - startPos.y ;
+		var mouseX = Window.getInstance().mouseX;
+		var mouseY = Window.getInstance().mouseY;
 
-		var mouseScenePos = {x: ( mousePos.x - endPos.x), y: ( mousePos.y - endPos.y + height ) };
+		//var c = ImGui.getForegroundDrawList();
+		//c.addLine({ x: mouseX-5, y: mouseY }, { x: mouseX+5, y: mouseY }, 0xFFFF00FF);
+		//c.addLine({ x: mouseX, y: mouseY-5 }, { x: mouseX, y: mouseY+5 }, 0xFFFF00FF);
 
-		// rescale to engine size
 
-		var viewportDimensions = IG.getViewportDimensions();
-		var viewportWidth = viewportDimensions.width;
-		var viewportHeight = viewportDimensions.height;
+		var scaleX = Engine.getCurrent().width / size.x;
+		var scaleY = Engine.getCurrent().height / size.y;
 
-		var engine = Engine.getCurrent();
-		mouseScenePos.x *= scale;
-		mouseScenePos.y *= scale;
+		if( mouseX < startPos.x || mouseY < startPos.y )
+			return;
+
+		if( mouseX > startPos.x + size.x || mouseY > startPos.y + size.y )
+			return;
+
+		var mouseScenePos = {x: mouseX - startPos.x, y: mouseY - startPos.y };
+
+
+		mouseScenePos.x *= scaleX;
+		mouseScenePos.y *= scaleY;
+
+		var windowHeight = Engine.getCurrent().height;
+		var viewportScale =  size.y / windowHeight;
+
+		var windowSizeX = Engine.getCurrent().width;
+		var windowSizeY = Engine.getCurrent().height;
+
+
+
 
 		var event = new hxd.Event(EMove, mouseScenePos.x, mouseScenePos.y);
+
+		if( g == null )
+			g = new h2d.Graphics( Main.currentScene.s2d );
+
+		Main.currentScene.s2d.addChild(g);
+
+		g.clear();
+		g.lineStyle(1,0xFF0000);
+		g.drawRect( mouseScenePos.x * scaleX -5, mouseScenePos.y * scaleY - 5, 10, 10 );
+
 
 		if( ImGui.isMouseClicked( ImGuiMouseButton.Left ) )
 		{
@@ -461,7 +501,7 @@ class ImGuiToolManager
 
 
 		@:privateAccess previewEvents.emitEvent( event );
-		previewEvents.setMousePos( event.relX * 1/viewportScale, event.relY * 1/viewportScale );
+		previewEvents.setMousePos( event.relX * viewportScale, event.relY * viewportScale );
 
 		//preview.dispatchListeners( event );
 

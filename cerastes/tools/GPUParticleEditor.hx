@@ -487,7 +487,7 @@ class GPUParticleEditor extends ImguiTool
 		ImGui.popStyleColor();
 		ImGui.popStyleColor();
 
-		ImGuiToolManager.updatePreviewEvents( startPos, events );
+		ImGuiToolManager.updatePreviewEvents( startPos, texSize, events );
 
 		//var viewPos: ImVec2 = {x: startPos.x + 25, y: startPos.y + 25}; // {x: size.x - viewSize.x - viewPadding.x, y: viewPadding.y };
 		var viewSize: ImVec2 = {x: 128, y: 128};

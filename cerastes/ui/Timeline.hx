@@ -134,6 +134,10 @@ class TimelineRunner
 	{
 		time = 0;
 		playing = true;
+
+		// Hack: Immediately play first frame so we can set out initial state
+		// (else we might go visible for one frame in the wrong state)
+		tick(0);
 	}
 
 

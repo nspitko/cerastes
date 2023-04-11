@@ -491,10 +491,12 @@ class ImGuiToolManager
 			previewEvents.emitEvent( event );
 
 			var scene: h2d.Scene = cast previewEvents.scenes[0];
-			var vsx = scene.width / windowSizeX;
-			var vsy = scene.height / windowSizeY;
-			previewEvents.setMousePos( event.relX * vsx, event.relY * vsy );
-
+			if( scene != null )
+			{
+				var vsx = scene.width / windowSizeX;
+				var vsy = scene.height / windowSizeY;
+				previewEvents.setMousePos( event.relX * vsx, event.relY * vsy );
+			}
 
 		}
 

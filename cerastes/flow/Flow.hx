@@ -971,6 +971,8 @@ class FlowContext
 		interp.variables.set("hasItem", GameState.hasItem );
 		interp.variables.set("addItem", GameState.addItem );
 		interp.variables.set("removeItem", GameState.removeItem );
+
+		FlowRunner.onContextCreated(this);
 		//interp.variables.set("seenNode", seenNode );
 
 	}
@@ -1021,6 +1023,14 @@ class FlowRunner implements cerastes.Tickable
 	 */
 	@:callback
 	public function onExit(): Bool;
+
+	/**
+	 * Called when a new runner is created. This lets us hook our own interp state and functions in
+	 * @param runner
+	 * @return Bool
+	 */
+	@:callbackStatic
+	public static function onContextCreated(context: FlowContext): Bool;
 
 
 	public function new( res: FlowResource, ?ctx: FlowContext, ?pos:haxe.PosInfos )

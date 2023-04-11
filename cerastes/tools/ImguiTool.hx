@@ -427,10 +427,6 @@ class ImGuiToolManager
 		var mouseX = Window.getInstance().mouseX;
 		var mouseY = Window.getInstance().mouseY;
 
-		//var c = ImGui.getForegroundDrawList();
-		//c.addLine({ x: mouseX-5, y: mouseY }, { x: mouseX+5, y: mouseY }, 0xFFFF00FF);
-		//c.addLine({ x: mouseX, y: mouseY-5 }, { x: mouseX, y: mouseY+5 }, 0xFFFF00FF);
-
 
 		var scaleX = Engine.getCurrent().width / size.x;
 		var scaleY = Engine.getCurrent().height / size.y;
@@ -447,8 +443,6 @@ class ImGuiToolManager
 		mouseScenePos.x *= scaleX;
 		mouseScenePos.y *= scaleY;
 
-		var windowHeight = Engine.getCurrent().height;
-		var viewportScale =  size.y / windowHeight;
 
 		var windowSizeX = Engine.getCurrent().width;
 		var windowSizeY = Engine.getCurrent().height;
@@ -456,16 +450,8 @@ class ImGuiToolManager
 
 
 
+
 		var event = new hxd.Event(EMove, mouseScenePos.x, mouseScenePos.y);
-
-		if( g == null )
-			g = new h2d.Graphics( Main.currentScene.s2d );
-
-		Main.currentScene.s2d.addChild(g);
-
-		g.clear();
-		g.lineStyle(1,0xFF0000);
-		g.drawRect( mouseScenePos.x * scaleX -5, mouseScenePos.y * scaleY - 5, 10, 10 );
 
 
 		if( ImGui.isMouseClicked( ImGuiMouseButton.Left ) )
@@ -500,8 +486,19 @@ class ImGuiToolManager
 		}
 
 
-		@:privateAccess previewEvents.emitEvent( event );
-		previewEvents.setMousePos( event.relX * viewportScale, event.relY * viewportScale );
+		@:privateAccess {
+
+			previewEvents.emitEvent( event );
+
+			var scene: h2d.Scene = cast previewEvents.scenes[0];
+			var vsx = scene.width / windowSizeX;
+			var vsy = scene.height / windowSizeY;
+			previewEvents.setMousePos( event.relX * vsx, event.relY * vsy );
+
+
+		}
+
+
 
 		//preview.dispatchListeners( event );
 

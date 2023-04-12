@@ -1566,6 +1566,9 @@ class UIEditor extends ImguiTool
 
 				wref( ImGui.checkbox( "Visible", _ ), def.visible );
 
+				ImGui.inputDouble("Alpha", def.alpha);
+
+
 				var classList = CompileTime.getAllClasses(cerastes.pass.SelectableFilter);
 
 				var curFilterName: String = null;
@@ -1622,8 +1625,6 @@ class UIEditor extends ImguiTool
 				var nc = IG.inputColorInt( d.color );
 				if( nc != null )
 					d.color = nc;
-
-				ImGui.inputDouble("Alpha", d.alpha);
 
 			case "h2d.Text":
 				var d: CUIText = cast def;

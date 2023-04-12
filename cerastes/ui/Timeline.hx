@@ -93,13 +93,15 @@ abstract TargetType(Int) {
 
 }
 
-class TimelineRunner
+class TimelineRunner implements Tickable
 {
 
 	var timeline: Timeline;
 	var timelineState: Array<TimelineState> = [];
 
-	public var finished: Bool = false;
+	public var finished(get, null): Bool = false;
+
+	function get_finished() { return finished; }
 
 	public var playing: Bool = false;
 	public var loop: Bool = false;
@@ -134,6 +136,14 @@ class TimelineRunner
 	{
 		time = 0;
 		playing = true;
+
+		// Fix case where we changed the timeline after creation
+		if( timeline.operations.length != timelineState.length )
+		{
+			timelineState = [];
+			for( i in 0 ... timeline.operations.length )
+				timelineState.push({});
+		}
 
 		// Hack: Immediately play first frame so we can set out initial state
 		// (else we might go visible for one frame in the wrong state)

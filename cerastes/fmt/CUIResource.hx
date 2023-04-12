@@ -43,6 +43,7 @@ import hxd.res.Resource;
 	@et("Float") public var rotation: Float = 0;
 	@default(1) @et("Float") public var scaleX: Float = 1;
 	@default(1) @et("Float") public var scaleY: Float = 1;
+	@default(1) @et("Float") public var alpha: Float = 1;
 
 	@default(true) @et("Bool") public var visible: Bool = true;
 
@@ -188,7 +189,6 @@ import hxd.res.Resource;
 
 @:structInit class CUIDrawable extends CUIObject {
 	@default(0xFFFFFFFF) public var color: Int = 0xFFFFFFFF;
-	@default(1) @et("Float") public var alpha: Float = 1;
 }
 
 @:structInit class CUIReference extends CUIObject {
@@ -641,6 +641,9 @@ class CUIResource extends Resource
 
 				obj.visible = entry.visible;
 
+				obj.alpha = entry.alpha;
+
+
 				if( entry.filter != null )
 				{
 					var t = Type.resolveClass( entry.filter.type );
@@ -652,7 +655,6 @@ class CUIResource extends Resource
 				var e: CUIDrawable = cast entry;
 				var o: h2d.Drawable = cast obj;
 
-				o.alpha = e.alpha;
 
 				var text = Std.downcast( obj, AdvancedText );
 				if( text != null )

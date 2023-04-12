@@ -307,7 +307,7 @@ class AdvancedText extends h2d.Text
 		var curFont = font;
 		var lineCount = 0;
 
-		while( i < t.length && ( characters == -1 || characterIndex <= characters ) )
+		while( i < t.length && ( characters == -1 || characterIndex < characters ) )
 		{
 			var c = t.substr(i,1);
 			var cc = t.charCodeAt(i);

@@ -722,6 +722,7 @@ class CUIResource extends Resource
 				@:privateAccess o.frames = getTiles( e.entry );
 				o.speed = e.speed;
 				o.loop = e.loop;
+				o.pause = !e.autoplay;
 
 			case "h2d.Flow":
 				var o = cast(obj, h2d.Flow);

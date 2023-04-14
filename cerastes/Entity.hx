@@ -27,17 +27,16 @@ class EntityManager
 	public function tick( delta: Float )
 	{
 		Metrics.begin();
-		var ents = entities.copy();
-		var i = ents.length;
+
+		var i = entities.length;
+
 		while( i-- > 0 )
 		{
-			if( ents[i].isDestroyed() )
-				ents.splice(i,1);
+			if( entities[i].isDestroyed() )
+				entities.splice(i,1);
 			else
-				ents[i].tick(delta);
+				entities[i].tick(delta);
 		}
-
-		entities = ents;
 
 		var t = haxe.Timer.stamp();
 		while( scheduledFunctions.length > 0 && scheduledFunctions[0].time < t )

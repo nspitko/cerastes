@@ -255,7 +255,7 @@ class FlowNote extends FlowNode
 	public var note: String;
 
 	@noSerialize
-	public final maxWidth = 250;
+	public static final maxWidth = 250;
 
 	static final d: NodeDefinition = {
 		name:"Note",

@@ -306,10 +306,11 @@ class AssetBrowser  extends  ImguiTool
 
 			case "ui":
 				asset.scene = new h2d.Scene();
-				var res = new cerastes.fmt.CUIResource( hxd.Res.loader.load(asset.file).entry );
 
 				try
 				{
+					var res = new cerastes.fmt.CUIResource( hxd.Res.loader.load(asset.file).entry );
+
 					var obj = res.toObject();
 
 					var scale = previewWidth / viewportWidth;

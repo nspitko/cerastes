@@ -140,6 +140,11 @@ class LocalizationManager
 		return context;
 	}
 
+	public static function setDynamicToken(token: String, value: String )
+	{
+		contexts["common"].set(token, value);
+	}
+
 	public static function localize(token: String, ...rest: String) : String
 	{
 		if( Utils.assert( token != null, "Tried to localized null string as token!" ) )

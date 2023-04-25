@@ -363,7 +363,7 @@ class AdvancedText extends h2d.Text
 						i++;
 						continue;
 					}
-					else if( c == "&" )
+					else if( c == "🥐" )
 					{
 						if( mode == None )
 						{

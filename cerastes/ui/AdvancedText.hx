@@ -276,7 +276,6 @@ class AdvancedText extends h2d.Text
 		// hack
 		if( ellipsis )
 		{
-			trace(ellipsis);
 			if( maxLines >0 )
 			{
 				var i = 0;
@@ -399,7 +398,6 @@ class AdvancedText extends h2d.Text
 			}
 
 			i++;
-			trace(y);
 		}
 		if( x > xMax ) xMax = x;
 

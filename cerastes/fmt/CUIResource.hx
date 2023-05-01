@@ -264,6 +264,11 @@ import hxd.res.Resource;
 	public var text: String = null;
 	public var font: String = null;
 
+	// sdf
+	@default(12) public var sdfSize: Int = 12;
+	@default(0.5) public var sdfAlpha: Float = 0.5;
+	@default(10) public var sdfSmoothing: Float = 10;
+
 	@et("Bool") public var ellipsis: Bool = false;
 
 	public var bitmapMode: BitmapMode = ButtonTile;
@@ -459,8 +464,9 @@ class CUIResource extends Resource
 	{
 		upgradeObject(object, version);
 
-		for( c in object.children )
-			recursiveUpgradeObjects( c, version );
+		if( object.children != null)
+			for( c in object.children )
+				recursiveUpgradeObjects( c, version );
 	}
 
 	static function upgradeObject(object: CUIObject, version: Int )
@@ -802,6 +808,10 @@ class CUIResource extends Resource
 				var o = cast(obj, cerastes.ui.Button);
 				var e: CUIButton = cast entry;
 
+				o.sdfSize = e.sdfSize;
+				o.sdfSmoothing = e.sdfSmoothing;
+				o.sdfAlpha = e.sdfAlpha;
+
 				o.bitmapMode = e.bitmapMode;
 				o.buttonType = e.buttonMode;
 
@@ -900,7 +910,7 @@ class CUIResource extends Resource
 		}
 	}
 
-	static function getFont( file: String, e: { sdfSize: Int, sdfAlpha: Float, sdfSmoothing: Float } )
+	public static function getFont( file: String, e: { sdfSize: Int, sdfAlpha: Float, sdfSmoothing: Float } )
 	{
 		// Font shenanigans
 		var isSDF = StringTools.endsWith( file, ".msdf.fnt" );
@@ -940,7 +950,7 @@ class CUIResource extends Resource
 		}
 		else if ( file.indexOf(".atlas") != -1 )
 		{
-			var atlasPos = file.indexOf(".atlas") + 7;
+			var atlasPos = file.indexOf(".atlas") + 6;
 			var atlasName = file.substr( 0, atlasPos );
 			var tileName = file.substr(atlasPos + 1);
 

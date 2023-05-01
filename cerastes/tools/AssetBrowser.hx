@@ -492,34 +492,41 @@ class AssetBrowser  extends  ImguiTool
 					if( data == null )
 						return;
 
-					var resample: hxd.snd.WavData = cast data.resample(8000, UI8, data.channels );
-
-					var sampleCount = resample.duration * resample.samplingRate;
-
-
-
-
-					g.moveTo(0, previewHeight / 2);
-					g.lineStyle(1,0xAAAAAA);
-					var scale = 4;
-					for( i in 0 ... previewWidth )
+					try
 					{
+						var resample: hxd.snd.WavData = cast data.resample(8000, UI8, data.channels );
 
-						var pct = i / previewWidth;
-						var loc = pct * resample.duration;
-						var idx = Math.floor( loc * resample.samplingRate );
-						var min = 0.;
-						var max = 0.;
-						for( i in 0 ... 25 )
+						var sampleCount = resample.duration * resample.samplingRate;
+
+						g.moveTo(0, previewHeight / 2);
+						g.lineStyle(1,0xAAAAAA);
+						var scale = 4;
+						for( i in 0 ... previewWidth )
 						{
-							var val = ( ( @:privateAccess resample.rawData.get(idx + i*2) / 255.) - 0.5 ) * previewHeight;
-							min = Math.min(min, val);
-							max = Math.max(max, val);
+
+							var pct = i / previewWidth;
+							var loc = pct * resample.duration;
+							var idx = Math.floor( loc * resample.samplingRate );
+							var min = 0.;
+							var max = 0.;
+							for( i in 0 ... 25 )
+							{
+								var val = ( ( @:privateAccess resample.rawData.get(idx + i*2) / 255.) - 0.5 ) * previewHeight;
+								min = Math.min(min, val);
+								max = Math.max(max, val);
+							}
+							g.lineTo(i,min + previewHeight / 2);
+							g.lineTo(i,max + previewHeight / 2);
 						}
-						g.lineTo(i,min + previewHeight / 2);
-						g.lineTo(i,max + previewHeight / 2);
+						asset.dirty = true;
 					}
-					asset.dirty = true;
+					catch(e)
+					{
+						// :shrug:
+						asset.dirty = true;
+					}
+
+
 				});
 
 			default:
@@ -597,7 +604,7 @@ class AssetBrowser  extends  ImguiTool
 			for( label => value in filterTypes )
 			{
 				if( ImGui.menuItem(label,"", value) )
-					filterTypes[label] = !value;
+					filterTypes[label] = value;
 			}
 
 			ImGui.endPopup();

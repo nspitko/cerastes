@@ -1470,49 +1470,52 @@ class UIEditor extends ImguiTool
 		{
 			// Add custom objects
 			var classList = CompileTime.getAllClasses(UIEntity);
-			var options = [ for(c in classList) Type.getClassName(c) ];
-
-			if( ImGui.beginCombo( "Class", def.type ) )
+			if( classList != null )
 			{
-				if( ImGui.selectable( "h2d.Object", "h2d.Object" == def.type ) )
-				{
-					def.type = "h2d.Object";
-					updateScene();
-				}
+				var options = [ for(c in classList) Type.getClassName(c) ];
 
-				for( c in classList )
+				if( ImGui.beginCombo( "Class", def.type ) )
 				{
-					var cls = Type.getClassName(c);
-					if( ImGui.selectable( cls, cls == def.type ) )
+					if( ImGui.selectable( "h2d.Object", "h2d.Object" == def.type ) )
 					{
-						var fn = Reflect.field(c, "getDef");
-						if( fn != null )
-						{
-							var newDef = fn();
-							newDef.children = def.children;
-							newDef.name = def.name;
-							newDef.type = cls;
-							newDef.x = def.x;
-							newDef.y = def.y;
-							newDef.scaleX = def.scaleX;
-							newDef.scaleY = def.scaleY;
-							newDef.rotation = def.rotation;
-							newDef.visible = def.visible;
-
-							if( def == rootDef )
-							{
-								rootDef = newDef;
-							}
-							else
-							{
-								replaceDef(rootDef, def, newDef );
-							}
-							updateScene();
-						}
-
+						def.type = "h2d.Object";
+						updateScene();
 					}
+
+					for( c in classList )
+					{
+						var cls = Type.getClassName(c);
+						if( ImGui.selectable( cls, cls == def.type ) )
+						{
+							var fn = Reflect.field(c, "getDef");
+							if( fn != null )
+							{
+								var newDef = fn();
+								newDef.children = def.children;
+								newDef.name = def.name;
+								newDef.type = cls;
+								newDef.x = def.x;
+								newDef.y = def.y;
+								newDef.scaleX = def.scaleX;
+								newDef.scaleY = def.scaleY;
+								newDef.rotation = def.rotation;
+								newDef.visible = def.visible;
+
+								if( def == rootDef )
+								{
+									rootDef = newDef;
+								}
+								else
+								{
+									replaceDef(rootDef, def, newDef );
+								}
+								updateScene();
+							}
+
+						}
+					}
+					ImGui.endCombo();
 				}
-				ImGui.endCombo();
 			}
 
 		}
@@ -1927,6 +1930,13 @@ class UIEditor extends ImguiTool
 							d.font = payload;
 
 						ImGui.endDragDropTarget();
+					}
+
+					if( d.font != null && StringTools.endsWith( d.font, ".msdf.fnt" ) )
+					{
+						wref( ImGui.inputInt( "Font Size", _ ), d.sdfSize );
+						wref( ImGui.inputDouble( "Alpha Cutoff", _ ), d.sdfAlpha );
+						wref( ImGui.inputDouble( "Smoothing", _ ), d.sdfSmoothing );
 					}
 
 					wref( ImGui.checkbox( "Ellipsis", _ ), d.ellipsis );

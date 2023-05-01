@@ -1,7 +1,6 @@
 package cerastes.macros;
 
 import haxe.DynamicAccess;
-import sys.io.File;
 import haxe.macro.Printer;
 import haxe.macro.ComplexTypeTools;
 import haxe.macro.Type.ClassField;

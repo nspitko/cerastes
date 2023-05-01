@@ -1124,7 +1124,7 @@ class FlowRunner implements cerastes.Tickable
 		if( file == null || !hxd.Res.loader.exists( file ) )
 		{
 			Utils.error('Tried to jump to invalid file ${file}!');
-			return;
+			return null;
 		}
 
 		var childRunner = hxd.Res.loader.loadCache( file, FlowResource ).toFlow( context );
@@ -1139,6 +1139,8 @@ class FlowRunner implements cerastes.Tickable
 			return handled;
 		} );
 		childRunner.run(nodeId, label);
+
+		return childRunner;
 	}
 
 	function lookupNodeByPin( pinId: PinId32 )

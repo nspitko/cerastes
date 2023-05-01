@@ -1,11 +1,10 @@
 package cerastes.tools;
 
-
+#if hlimgui
 import cerastes.fmt.CUIResource;
 import cerastes.fmt.AtlasResource.PackMode;
 import hl.UI;
 import hxd.Key;
-#if hlimgui
 import imgui.ImGuiMacro.wref;
 import cerastes.file.CDParser;
 import cerastes.fmt.AtlasResource.Atlas;

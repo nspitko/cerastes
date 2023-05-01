@@ -118,6 +118,10 @@ class Button extends h2d.Flow implements IButton
 	public var onMouseOver : (hxd.Event) -> Void;
 	public var onMouseOut : (hxd.Event) -> Void;
 
+	public var sdfSize: Int = 12;
+	public var sdfAlpha: Float = 0.5;
+	public var sdfSmoothing: Float = 10;
+
 	// Tweens
 	public var tweenHoverStartMode: ButtonHoverTween = None;
 	public var tweenHoverEndMode: ButtonHoverTween = None;
@@ -169,7 +173,7 @@ class Button extends h2d.Flow implements IButton
 
 	function set_font(v)
 	{
-		var fnt = hxd.Res.loader.loadCache(v, BitmapFont ).toFont();
+		var fnt = CUIResource.getFont(v, {sdfSize: sdfSize, sdfAlpha: sdfAlpha, sdfSmoothing: sdfSmoothing});
 		if( elText == null )
 			elText = new AdvancedText( fnt, this );
 		else

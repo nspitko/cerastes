@@ -112,7 +112,6 @@ class AdvancedText extends h2d.Text
 		var isBold = false;
 		var skipChars = 0;
 
-
 		//while( i < text.length )
 		for( i in 0 ... text.length)
 		{
@@ -277,6 +276,7 @@ class AdvancedText extends h2d.Text
 		// hack
 		if( ellipsis )
 		{
+			trace(ellipsis);
 			if( maxLines >0 )
 			{
 				var i = 0;
@@ -317,7 +317,7 @@ class AdvancedText extends h2d.Text
 
 			// if the next word goes past the max width, change it into a newline
 
-			if( cc == '\n'.code && (maxLines == 0 || lineCount < maxLines-1) ) {
+			if( cc == '\n'.code && (maxLines == 0 #if js || maxLines == null #end || lineCount < maxLines-1) ) {
 				if( x > xMax ) xMax = x;
 				switch( align ) {
 				case Left:
@@ -399,6 +399,7 @@ class AdvancedText extends h2d.Text
 			}
 
 			i++;
+			trace(y);
 		}
 		if( x > xMax ) xMax = x;
 

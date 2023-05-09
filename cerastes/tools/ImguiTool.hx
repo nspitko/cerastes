@@ -2,6 +2,7 @@
 package cerastes.tools;
 
 
+import sys.FileSystem;
 import hxd.Window;
 #if hlimgui
 import hxd.Key;
@@ -165,7 +166,7 @@ class ImGuiToolManager
 		// Default font
 		ImGuiToolManager.defaultFont = ImGuiToolManager.addFont("res/tools/Ruda-Bold.ttf", 14, true);
 		ImGuiToolManager.headingFont = ImGuiToolManager.addFont("res/tools/Ruda-Bold.ttf", 21, true);
-		ImGuiToolManager.consoleFont = ImGuiToolManager.defaultFont; //ImGuiToolManager.addFont("res/tools/console.ttf", 14);
+		ImGuiToolManager.consoleFont = ImGuiToolManager.addFont("res/tools/console.ttf", 14);
 		ImGuiToolManager.buildFonts();
 
 		var viewportDimensions = IG.getViewportDimensions();
@@ -333,6 +334,9 @@ class ImGuiToolManager
 
 	public static function addFont( file: String, size: Float, includeGlyphs: Bool = false )
 	{
+		Utils.assert( FileSystem.exists( file ), 'Missing ImGui font ${file}' );
+
+
 		var dpiScale = Utils.getDPIScaleFactor();
 		Utils.info('Add font: ${file} ${size*dpiScale}px');
 

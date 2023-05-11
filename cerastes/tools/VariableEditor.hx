@@ -99,6 +99,12 @@ class VariableEditor extends ImguiTool
 		for( k => v in GameState.data.kv )
 		{
 
+			if( filter != null && filter.length > 0)
+			{
+				if( !StringTools.contains(k, filter) )
+					continue;
+			}
+
 			ImGui.tableNextRow();
 
 			ImGui.tableNextColumn();

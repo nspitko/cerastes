@@ -949,7 +949,7 @@ class FlowFile
 class FlowContext
 {
 	public var parser = new hscript.Parser();
-	public var interp = new hscript.Interp();
+	public var interp = new cerastes.StrictInterp();
 
 	// Used to disambiguate dialogue seen states between rooms.
 	public var key: String;

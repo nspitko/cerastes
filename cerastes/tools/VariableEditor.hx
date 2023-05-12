@@ -95,9 +95,12 @@ class VariableEditor extends ImguiTool
 		scrollToBottom = autoScroll && Utils.log.length != lastLen;
 		lastLen = Utils.log.length;
 
+		var keys = [ for(k => v in GameState.data.kv) k ];
+		keys.sort( (a: String, b: String ) -> { return a < b ? -1 : 1; } );
 
-		for( k => v in GameState.data.kv )
+		for( k in keys )
 		{
+			var v = GameState.data.kv[k];
 
 			if( filter != null && filter.length > 0)
 			{
@@ -108,6 +111,7 @@ class VariableEditor extends ImguiTool
 			ImGui.tableNextRow();
 
 			ImGui.tableNextColumn();
+
 			ImGui.text( k );
 
 			if( ImGui.isItemClicked( ImGuiMouseButton.Left ) && ImGui.isMouseDoubleClicked( ImGuiMouseButton.Left ) )
@@ -136,13 +140,22 @@ class VariableEditor extends ImguiTool
 						if( ImGui.checkbox( '##${k}', r ) )
 							GameState.data.kv[k] = r.get();
 
+					case TClass( String ):
+						var r = v;
+						if( ImGui.inputText( '##${k}', r ) )
+							GameState.data.kv[k] = r.get();
+
 					case _:
-						trace('Unhandled type ${Type.typeof( v )}');
+						Utils.info('Unhandled type ${Type.typeof( v )}');
 				}
 			}
 			else
 			{
-				ImGui.text( Std.string( v )  );
+				var displayStr: Dynamic = v;
+				if( v == "" )
+					displayStr = "<Unset>";
+
+				ImGui.text( Std.string( displayStr )  );
 			}
 
 			//if( flags | ImGuiTableColumnFlags.IsVisible != 0 && ImGui.isItemHovered() )

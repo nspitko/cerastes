@@ -24,7 +24,7 @@ class Test
 		Utils.info('Beginning test: ${ t.name }');
 
 		if( !t.func( t ) )
-			Utils.warning('Test failed!!!');
+			Utils.warning('Test ${t.name} failed!!!');
 		else
 			Utils.info('Test Passed.');
 

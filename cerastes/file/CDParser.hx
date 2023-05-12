@@ -564,11 +564,30 @@ class CDParser {
 	}
 
 	inline function parseComment() {
-		while (true) {
-			var c = nextChar();
-			if( c == '\n'.code )
-				break;
+
+		var c = nextChar();
+		switch( c )
+		{
+			case '/'.code:
+				while (true) {
+					var c = nextChar();
+					if( c == '\n'.code )
+						break;
+				}
+			case '*'.code:
+				while (true) {
+					var c = nextChar();
+					if( c == '*'.code && nextChar() == '/'.code )
+						break;
+				}
+
+
+			default:
+				invalidChar();
+
 		}
+
+
 	}
 
 	inline function nextCharNonWS() {

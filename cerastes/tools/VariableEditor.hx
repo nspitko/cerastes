@@ -74,6 +74,7 @@ class VariableEditor extends ImguiTool
 	@:access(cerastes.Utils)
 	function variableList()
 	{
+		final ttw = 300;
 
 
 		ImGui.beginTable( "textTable", 3, ImGuiTableFlags.Resizable | ImGuiTableFlags.SizingStretchProp | ImGuiTableFlags.Hideable );
@@ -114,6 +115,18 @@ class VariableEditor extends ImguiTool
 
 			ImGui.text( k );
 
+			if( ImGui.isItemHovered() )
+			{
+				var cs = getCommentString(k);
+				if( cs != null )
+				{
+					ImGui.setNextWindowSize( {x: ttw * scaleFactor, y: 0 } );
+					ImGui.beginTooltip();
+					ImGui.textMarkdown( cs );
+					ImGui.endTooltip();
+				}
+			}
+
 			if( ImGui.isItemClicked( ImGuiMouseButton.Left ) && ImGui.isMouseDoubleClicked( ImGuiMouseButton.Left ) )
 			{
 				editorField = k;
@@ -141,8 +154,8 @@ class VariableEditor extends ImguiTool
 							GameState.data.kv[k] = r.get();
 
 					case TClass( String ):
-						var r = v;
-						if( ImGui.inputText( '##${k}', r ) )
+						var r: Ref<String> = v;
+						if( ImGui.inputText( '##${k}', r ) && r != null )
 							GameState.data.kv[k] = r.get();
 
 					case _:
@@ -158,8 +171,17 @@ class VariableEditor extends ImguiTool
 				ImGui.text( Std.string( displayStr )  );
 			}
 
-			//if( flags | ImGuiTableColumnFlags.IsVisible != 0 && ImGui.isItemHovered() )
-			//	ImGui.setTooltip('${line.pos.fileName}:${line.pos.lineNumber}\n${line.pos.className}::${line.pos.methodName}()');
+			if( ImGui.isItemHovered() )
+			{
+				var cs = getCommentString(k);
+				if( cs != null )
+				{
+					ImGui.setNextWindowSize( {x: ttw * scaleFactor, y: 0 } );
+					ImGui.beginTooltip();
+					ImGui.textMarkdown( cs );
+					ImGui.endTooltip();
+				}
+			}
 
 
 
@@ -174,6 +196,33 @@ class VariableEditor extends ImguiTool
 
 		ImGui.endTable();
 
+	}
+
+	function getCommentString( k: String )
+	{
+		var d = getDef( k );
+		var comment: String = null;
+
+		if( d != null && d.comment != null )
+		{
+			var bits = d.comment.split("\n");
+			for( i in 0 ... bits.length )
+				bits[i] = StringTools.trim(bits[i]);
+			comment = bits.join("\n");
+		}
+
+		return comment;
+	}
+
+	function getDef( k: String )
+	{
+		for( def in GameState.config.interpVariables)
+		{
+			if( def.name == k )
+				return def;
+		}
+
+		return null;
 	}
 
 	function buttonRow()

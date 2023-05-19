@@ -276,6 +276,9 @@ class Button extends h2d.Flow implements IButton
 
 	function set_enabled( v: Bool )
 	{
+		if( v == enabled )
+			return v ;
+
 		if( v )
 			state = Default;
 		else

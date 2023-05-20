@@ -2,6 +2,7 @@
 package cerastes.tools;
 
 
+import game.SaveLoad;
 import game.GameState;
 import cerastes.ui.Console.GlobalConsole;
 #if hlimgui
@@ -63,7 +64,7 @@ class VariableEditor extends ImguiTool
 				if( ImGui.selectable('Slot ${i}', i == saveSlot ))
 				{
 					Utils.info('Loading dev save ${i}');
-					GameState.load(i,Dev);
+					SaveLoad.load(i,Dev);
 					saveSlot = i;
 				}
 			}
@@ -74,7 +75,7 @@ class VariableEditor extends ImguiTool
 
 		if( saveSlot != -1 && ImGui.button("Write") )
 		{
-			GameState.save(saveSlot, Dev);
+			SaveLoad.save(saveSlot, Dev);
 		}
 
 		ImGui.separator();

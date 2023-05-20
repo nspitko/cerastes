@@ -20,6 +20,8 @@ class CerastesResources
 		#end
 		Config.extensions["glb,gltf"] = "hxd.res.Model";
 
+		Config.ignoredDirs["raw_sprites"] = true;
+
 
 	}
 	#end

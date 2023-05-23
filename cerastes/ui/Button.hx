@@ -216,6 +216,14 @@ class Button extends h2d.Flow implements IButton
 	function setTile( t: String, c: Int, expoFunc: Float->Float )
 	{
 		var isValid = t != null && t.length > 0;
+
+		// We probably don't ever want to hover/disable to a solid color from a valid tile.
+		// But if we do, we should figure out a better way to solve this, as we may want to
+		// simple not react to hover, for example, and specifying a tile would override
+		// the disabled tile state.
+		if( backgroundTile != null && !isValid )
+			return;
+
 		// @todo: There's probably a less dumb way to do this?
 		if( !isValid && ( c & 0xFF000000 ) == 0 && tweenDuration == 0 )
 		{
@@ -226,6 +234,14 @@ class Button extends h2d.Flow implements IButton
 		var t = isValid ? CUIResource.getTile( t ) : h2d.Tile.fromColor( 0xFFFFFF );
 
 		backgroundTile = t;
+
+
+		if( expoFunc == null && calculatedWidth == 0 && calculatedHeight == 0 && minWidth == 0 && minHeight == 0  )
+		{
+			// Inherit our dimensions from initial sprite if we didn't have anything set already
+			minWidth = Std.int( t.width );
+			minHeight = Std.int( t.height );
+		}
 
 
 		if( expoFunc != null && tweenDuration > 0 )
@@ -367,18 +383,21 @@ class Button extends h2d.Flow implements IButton
 				tweenTimers.push( new ColorTween(tweenDuration, elText.desiredColor.toColor(), textColor, (v) -> { elText.textColor = Std.int( v ); }, expoFunc ) );
 		}
 
-		for( c in children )
+		if( colorChildren )
 		{
-			if( c == this.interactive || c == bitmap || c == elText || c == background )
-				continue;
-
-			var drawable = Std.downcast(c, h2d.Drawable);
-			if( drawable != null )
+			for( c in children )
 			{
-				if( expoFunc == null || tweenDuration == 0 )
-					drawable.color.setColor((textColor & 0xFFFFFF) + 0xFF000000);
-				else
-					tweenTimers.push( new ColorTween(tweenDuration, drawable.color.toColor(), (textColor & 0xFFFFFF) + 0xFF000000, (v) -> {  drawable.color.setColor( Std.int( v )); }, expoFunc ) );
+				if( c == this.interactive || c == bitmap || c == elText || c == background )
+					continue;
+
+				var drawable = Std.downcast(c, h2d.Drawable);
+				if( drawable != null )
+				{
+					if( expoFunc == null || tweenDuration == 0 )
+						drawable.color.setColor((textColor & 0xFFFFFF) + 0xFF000000);
+					else
+						tweenTimers.push( new ColorTween(tweenDuration, drawable.color.toColor(), (textColor & 0xFFFFFF) + 0xFF000000, (v) -> {  drawable.color.setColor( Std.int( v )); }, expoFunc ) );
+				}
 			}
 		}
 	}

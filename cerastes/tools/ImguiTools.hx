@@ -371,7 +371,8 @@ class ImGuiTools {
 
 	public static function inputTile(title: String, tile: String): Null<String>
 	{
-		var newTile = IG.textInput( title, tile );
+		var newTile = tile;
+		var changed = ImGui.inputText( title, newTile );
 
 		if( ImGui.isItemHovered() && tile != null && tile.length > 0 )
 		{
@@ -383,9 +384,6 @@ class ImGuiTools {
 				ImGui.endTooltip();
 			}
 		}
-
-		if( newTile != null && CUIResource.getTile(newTile) != null )
-			return newTile;
 
 		if( ImGui.beginDragDropTarget() )
 		{
@@ -402,7 +400,13 @@ class ImGuiTools {
 			ImGui.endDragDropTarget();
 		}
 
-		return null;
+		if( !changed )
+			return null;
+
+		if( CUIResource.getTile(newTile) != null )
+			return newTile;
+
+		return "";
 	}
 
 	public static function inputTexture(title: String, texture: String, path: String = "tex"): Null<String>

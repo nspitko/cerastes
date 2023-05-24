@@ -24,29 +24,44 @@ class UIPopulator
 	macro static public function populateObjects():Expr
 	{
 		// Grab the variables accessible in the context the macro was called.
-		var fields = Context.getLocalClass().get().fields.get();
+		var cls = Context.getLocalClass().get();
+		var fields = cls.fields.get();
 
 		var exprs:Array<Expr> = [];
-		for ( field in fields )
+		do
 		{
-			if( field.meta.has(":obj") )
-			{
-				var fname = field.name; // string
-				var ftype = field.type.getClass().pack.concat([field.type.getClass().name]);
-				var cname = Context.getLocalClass().get().name;
 
-				exprs.push(macro this.$fname = Std.downcast( root.getObjectByName( cerastes.macros.UIPopulator.camelToSnake( $v{fname} ) ), $p{ftype} ) );
-				exprs.push(macro {
-					if( this.$fname == null )
-					{
-						initError("missing expected sub-object " + cerastes.macros.UIPopulator.camelToSnake( $v{fname} ) + "(" + $v{field.type.toString()} + ")");
-						return;
-					}
-				});
+			for ( field in fields )
+			{
+				if( field.meta.has(":obj") )
+				{
+					var fname = field.name; // string
+					var ftype = field.type.getClass().pack.concat([field.type.getClass().name]);
+					var cname = Context.getLocalClass().get().name;
+
+					exprs.push(macro this.$fname = Std.downcast( root.getObjectByName( cerastes.macros.UIPopulator.camelToSnake( $v{fname} ) ), $p{ftype} ) );
+					exprs.push(macro {
+						if( this.$fname == null )
+						{
+							initError("missing expected sub-object " + cerastes.macros.UIPopulator.camelToSnake( $v{fname} ) + "(" + $v{field.type.toString()} + ")");
+							return;
+						}
+					});
+				}
+
+
 			}
 
-
+			if( cls.superClass != null )
+			{
+				cls = cls.superClass.t.get();
+				fields = cls.fields.get();
+			}
+			else
+				fields = null;
 		}
+		while( fields != null );
+
 		// Generates a block expression from the given expression array
 		return macro $b{exprs};
 	}

@@ -257,6 +257,10 @@ class CDPrinter {
 							if( value == false )
 								continue;
 
+						case TClass(String):
+							if( value == null || value == "" )
+								continue;
+
 						default:
 
 					}

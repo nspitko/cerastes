@@ -24,10 +24,10 @@ class UIEntityBuilder
 			access: [APrivate],
 			kind: FieldType.FVar( ftype, macro null),
 			pos: Context.currentPos(),
-			meta: [{ name:"def", pos: Context.currentPos() }],
+			meta: [{ name:":keep", pos: Context.currentPos() }],
 		});
 
-		if( !hasField("new") )
+		if( !hasField("new", fields) )
 		{
 
 			var constructor:Function = {
@@ -45,11 +45,11 @@ class UIEntityBuilder
 				access: [APublic],
 				kind: FieldType.FFun( constructor ),
 				pos: Context.currentPos(),
-				meta: [{ name:"new", pos: Context.currentPos() }],
+				meta: [{ name:":keep", pos: Context.currentPos() }],
 			});
 		}
 
-		if( !hasField("getDef") )
+		if( !hasField("getDef", fields) )
 		{
 			var getDef:Function = {
 				expr: macro {
@@ -64,17 +64,17 @@ class UIEntityBuilder
 				access: [APublic, AStatic],
 				kind: FieldType.FFun( getDef ),
 				pos: Context.currentPos(),
-				meta: [{ name:"getDef", pos: Context.currentPos() }],
+				meta: [{ name:":keep", pos: Context.currentPos() }],
 			});
 		}
 
-		if( !hasField("getEditorIcon") )
+		if( !hasField("getEditorIcon", fields) )
 		{
 			var getEditorIcon:Function = {
 				expr: macro {
 					return "\uf07c";
 				},
-				ret: macro String,
+				ret: macro: String,
 				args:[]
 			};
 
@@ -83,18 +83,18 @@ class UIEntityBuilder
 				access: [APublic, AStatic],
 				kind: FieldType.FFun( getEditorIcon ),
 				pos: Context.currentPos(),
-				meta: [{ name:"getEditorIcon", pos: Context.currentPos() }],
+				meta: [{ name:":keep", pos: Context.currentPos() }],
 			});
 		}
 
-		if( !hasField("getInspector") )
+		if( !hasField("getInspector", fields) )
 		{
 			var getInspector:Function = {
 				expr: macro {
 
 				},
 				//ret: macro String,
-				args:[]
+				args:[{ name:'def', type:ftype }]
 			};
 
 			fields.push({
@@ -102,7 +102,7 @@ class UIEntityBuilder
 				access: [APublic, AStatic],
 				kind: FieldType.FFun( getInspector ),
 				pos: Context.currentPos(),
-				meta: [{ name:"getInspector", pos: Context.currentPos() }],
+				meta: [{ name:":keep", pos: Context.currentPos() }],
 			});
 		}
 

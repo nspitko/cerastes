@@ -80,4 +80,11 @@ class UIEntity extends h2d.Object implements Entity
 		for( cb in trackedCallbacks )
             cb( this );
 	}
+
+	public function getTopmostParent()
+	{
+		var p: h2d.Object = this;
+		while( p.parent != null ) p = p.parent;
+		return p;
+	}
 }

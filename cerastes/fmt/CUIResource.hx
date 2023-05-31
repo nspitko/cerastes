@@ -509,7 +509,7 @@ class CUIResource extends Resource
 
 		var ent: UIEntity = Std.downcast( target, UIEntity );
 		if( initialize && ent != null )
-			ent.initialize( ent.getScene() );
+			ent.initialize( ent.getTopmostParent() );
 
 	}
 
@@ -519,7 +519,7 @@ class CUIResource extends Resource
 
 		var ent: UIEntity = Std.downcast( target, UIEntity );
 		if( initialize && ent != null )
-			ent.initialize( ent.getScene() );
+			ent.initialize( ent.getTopmostParent() );
 
 		#if hlimgui
 		for( c in entry.children )

@@ -221,7 +221,6 @@ class FlowEditor extends ImguiTool
 			ImGui.text("HI");
 
 			if( ImGui.button("Select") ) mode = Select;
-			if( ImGui.button("Add Node") ) mode = AddNode;
 			if( ImGui.button("Add Group") ) mode = AddComment;
 			if( ImGui.button("Add Note") ) mode = AddNote;
 

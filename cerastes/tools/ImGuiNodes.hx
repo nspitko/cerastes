@@ -697,6 +697,21 @@ class ImGuiNodes
 				//NodeEditor.resume();
 			}
 
+			if( NodeEditor.showBackgroundContextMenu() )
+			{
+				//NodeEditor.suspend();
+				queryPinId = -1;
+
+				var pos: ImVec2 = ImGui.getMousePos();
+				lastPos.x = pos.x;
+				lastPos.y = pos.y;
+
+				ImGui.openPopup("link_drop_rc");
+				//NodeEditor.resume();
+			}
+
+
+
 			NodeEditor.resume();
 		}
 
@@ -804,7 +819,7 @@ class ImGuiNodes
 					addNode( n, pos.x, pos.y );
 
 					var targetPinId32 = n.getDefaultInputPinId32();
-					if( targetPinId32 != -1 )
+					if( targetPinId32 != -1 && queryPinId != -1 )
 					{
 						var link = createLink(queryPinId, targetPinId32, getNextId());
 

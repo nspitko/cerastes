@@ -2,6 +2,7 @@
 package cerastes.tools;
 
 
+import game.GameState;
 import sys.FileSystem;
 import hxd.Window;
 #if hlimgui
@@ -17,6 +18,8 @@ import imgui.ImGui.ImFont;
 import cerastes.macros.Metrics;
 import haxe.rtti.Meta;
 import haxe.macro.Expr;
+import game.GameState.GameActions;
+import cerastes.input.ControllerAccess;
 
 @:keepSub
 class ImguiTool
@@ -77,6 +80,10 @@ class ImGuiToolManager
 	static var viewportScale: Int;
 
 	static var previewEvents: SceneEvents;
+
+	static var inputAccess: ControllerAccess<GameActions>;
+	static var hasExclusiveAccess = false;
+
 
 
 	static function set_enabled(v)
@@ -185,6 +192,9 @@ class ImGuiToolManager
 	static var previewScale: Int = 1;
 	public static function drawScene()
 	{
+		if( inputAccess == null )
+			inputAccess = GameState.input.createAccess();
+
 		ImGui.begin("\uf3fa Scene", null, ImGuiWindowFlags.AlwaysAutoResize );
 
 		if( ImGui.beginCombo("Scale", Std.string('${previewScale}x') ) )
@@ -204,9 +214,20 @@ class ImGuiToolManager
 		ImGui.setCursorPos( pos );
 		ImGui.image(sceneRT, size );
 
-		updatePreviewEvents( windowPos, size, previewEvents );
+		var active = updatePreviewEvents( windowPos, size, previewEvents );
 
 		ImGui.end();
+
+		if( active && hasExclusiveAccess )
+		{
+			inputAccess.releaseExclusivity();
+			hasExclusiveAccess = false;
+		}
+		else if( !active && !hasExclusiveAccess )
+		{
+			inputAccess.takeExclusivity();
+			hasExclusiveAccess = true;
+		}
 
 
 
@@ -415,15 +436,10 @@ class ImGuiToolManager
 	public static function updatePreviewEvents( startPos: ImVec2S, size: ImVec2S, previewEvents: SceneEvents )
 	{
 		#if hlimgui
-		var hovered = ImGui.isItemHovered();
+		var hovered = ImGui.isItemHovered( ImGuiHoveredFlags.AllowWhenBlockedByActiveItem );
 
-		//InputManager.enabled = hovered;
-		// Click prevents
 		if( !hovered )
-		{
-//			trace("no hover");
-//			return;
-		}
+			return false;
 
 
 		var style = ImGui.getStyle();
@@ -436,10 +452,10 @@ class ImGuiToolManager
 		var scaleY = Engine.getCurrent().height / size.y;
 
 		if( mouseX < startPos.x || mouseY < startPos.y )
-			return;
+			return false;
 
 		if( mouseX > startPos.x + size.x || mouseY > startPos.y + size.y )
-			return;
+			return false;
 
 		var mouseScenePos = {x: mouseX - startPos.x, y: mouseY - startPos.y };
 
@@ -505,6 +521,7 @@ class ImGuiToolManager
 		}
 
 
+		return true;
 
 		//preview.dispatchListeners( event );
 

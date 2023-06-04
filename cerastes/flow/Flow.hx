@@ -1007,6 +1007,8 @@ class FlowRunner implements cerastes.Tickable
 	static var runnerIdx = 0;
 	public var runnerId(default, null): Int = 0;
 
+	var lastNodeId: NodeId;
+
 	// If set, indicates what created us
 	public var instigator(default, null): haxe.PosInfos;
 
@@ -1060,6 +1062,38 @@ class FlowRunner implements cerastes.Tickable
 
 		TimeManager.register(this);
 
+		#if tools
+		res.watch(() -> {
+			try
+			{
+				var targetNodeId = lastNodeId;
+				this.nodes = res.getData(false).nodes;
+				this.links = res.getData().links;
+				var target = lookupNodeById( targetNodeId );
+				if( target != null )
+					queue(target);
+				else
+				{
+					Utils.warning("Previous node ID is invalid; attempting to start from entry...");
+					var target = lookupNodeByType( EntryNode );
+					if( target != null )
+						queue(target)
+					else
+						Utils.error("Live reload failed: Could not find a valid entry point.");
+				}
+
+				#if hlimgui
+				ImGuiToolManager.showPopup('Live Reload','Successfully reloaded ${res.name}. Execution will attempt to continue from the last node.', ImGuiPopupType.Info);
+				#end
+			}
+			catch( e )
+			{
+				Utils.warning('Live reload of ${res.name} failed!');
+			}
+		});
+
+		#end
+
 	}
 
 	public function setVar( name: String, value: Dynamic )
@@ -1094,6 +1128,7 @@ class FlowRunner implements cerastes.Tickable
 		while( stack.first() != null )
 		{
 			var n = stack.pop();
+			lastNodeId = n.id;
 			n.process( this );
 		}
 	}
@@ -1150,6 +1185,20 @@ class FlowRunner implements cerastes.Tickable
 			for( portId => otherPinId32 in n.pins )
 				if( otherPinId32 == pinId )
 					return n;
+		}
+
+		return null;
+	}
+
+	// You *really* don't want to do this outside of a few very specific cases, almost entirely tool based "oh no" ones.
+	function lookupNodeByType( type: Class<FlowNode> )
+	{
+		for( n in nodes )
+		{
+			if( Std.isOfType(n, type ) )
+			{
+				return n;
+			}
 		}
 
 		return null;

@@ -221,7 +221,10 @@ class Button extends h2d.Flow implements IButton
 		// But if we do, we should figure out a better way to solve this, as we may want to
 		// simple not react to hover, for example, and specifying a tile would override
 		// the disabled tile state.
-		if( backgroundTile != null && !isValid )
+		//
+		// 6/4/23: Adding a really shitty workaround for non-tile buttons by just null checking
+		// default tile. This needs redesigned...
+		if( backgroundTile != null && !isValid && defaultTile != "" )
 			return;
 
 		// @todo: There's probably a less dumb way to do this?

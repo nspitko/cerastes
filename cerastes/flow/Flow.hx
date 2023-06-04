@@ -1067,8 +1067,11 @@ class FlowRunner implements cerastes.Tickable
 			try
 			{
 				var targetNodeId = lastNodeId;
-				this.nodes = res.getData(false).nodes;
+				@:privateAccess res.data = null;
+
+				this.nodes = res.getData().nodes;
 				this.links = res.getData().links;
+
 				var target = lookupNodeById( targetNodeId );
 				if( target != null )
 					queue(target);

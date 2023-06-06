@@ -201,6 +201,12 @@ class ImGuiToolManager
 		if( inputAccess == null )
 			inputAccess = GameState.input.createAccess();
 
+		if( nextWindowFocus == "root_Scene" )
+		{
+			nextWindowFocus = null;
+			ImGui.setNextWindowFocus();
+		}
+
 		ImGui.begin("\uf3fa Scene", null, ImGuiWindowFlags.AlwaysAutoResize );
 
 		if( ImGui.beginCombo("Scale", Std.string('${previewScale}x') ) )
@@ -258,6 +264,9 @@ class ImGuiToolManager
 		ImGui.pushFont( headingFont );
 
 		//ImGui.beginChildFrame(taskbarId, { x: 150 * scaleFactor, y: size.y });
+
+		if( ImGui.button("\uf3fa Scene") )
+			nextWindowFocus = "root_Scene";
 
 		for( t in tools )
 		{

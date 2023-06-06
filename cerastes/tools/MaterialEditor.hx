@@ -64,6 +64,8 @@ class MaterialEditor extends ImguiTool
 
 	var materialDef : MaterialDef = null;
 
+	public override function getName() { return "\uf1de Material Editor"; }
+
 	public function new()
 	{
 

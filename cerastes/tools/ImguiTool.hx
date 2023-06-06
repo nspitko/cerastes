@@ -36,6 +36,8 @@ class ImguiTool
 	{
 		return 'INVALID${toolId}';
 	}
+
+	public function getName() {	return "Untitled"; }
 }
 
 enum ImGuiPopupType
@@ -83,6 +85,11 @@ class ImGuiToolManager
 
 	static var inputAccess: ControllerAccess<GameActions>;
 	static var hasExclusiveAccess = false;
+
+	static var previewScale: Int = 1;
+	static var menubarHeight: Float;
+
+	static var nextWindowFocus: String = null;
 
 
 
@@ -189,7 +196,6 @@ class ImGuiToolManager
 
 	}
 
-	static var previewScale: Int = 1;
 	public static function drawScene()
 	{
 		if( inputAccess == null )
@@ -234,9 +240,82 @@ class ImGuiToolManager
 
 	}
 
+	static function drawTaskBar()
+	{
+
+		var flags = ImGuiWindowFlags.NoDecoration | ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoDocking |
+					ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoBackground |
+					ImGuiWindowFlags.AlwaysAutoResize;
+
+		var height = viewportHeight;
+		var width = 100 * viewportScale;
+		var style = ImGui.getStyle();
+
+		ImGui.setNextWindowPos( {x: 0, y: menubarHeight } );
+		//ImGui.setNextWindowSize( { x: width, y: height });
+		ImGui.begin("root_taskbar", null, flags );
+
+		ImGui.pushFont( headingFont );
+
+		//ImGui.beginChildFrame(taskbarId, { x: 150 * scaleFactor, y: size.y });
+
+		for( t in tools )
+		{
+			if( ImGui.button( t.getName() ) )
+			{
+				nextWindowFocus = t.windowID();
+			}
+		}
+
+		ImGui.popFont();
+
+		ImGui.end();
+
+	}
+
+
 	public static function update( delta: Float )
 	{
 		Metrics.begin();
+
+		// Set global font
+		ImGui.pushFont( ImGuiToolManager.defaultFont );
+
+		// Menu bar
+		if( ImGui.beginMainMenuBar() )
+		{
+			var size = ImGui.getWindowSize();
+			menubarHeight = size.y;
+			if( ImGui.beginMenu("Tools", true) )
+			{
+				if (ImGui.menuItem("Perf", "Alt+P"))
+					ImGuiToolManager.showTool("Perf");
+
+				if (ImGui.menuItem("UI Editor", "Alt+U"))
+					ImGuiToolManager.showTool("UIEditor");
+
+				if (ImGui.menuItem("Flow Editor", "Alt+U"))
+					ImGuiToolManager.showTool("FlowEditor");
+
+				if (ImGui.menuItem("Asset Browser", "Alt+B"))
+					ImGuiToolManager.showTool("AssetBrowser");
+
+				if (ImGui.menuItem("Material Editor"))
+					ImGuiToolManager.showTool("MaterialEditor");
+
+				ImGui.endMenu();
+			}
+			ImGui.endMainMenuBar();
+		}
+
+		Metrics.begin("ImGui.showDemoWindow");
+		//ImGui.showDemoWindow();
+		Metrics.end();
+
+		drawTaskBar();
+
+		// Draw preview window
+		ImGuiToolManager.drawScene();
 
 		// Make sure there aren't any tool ID collisions
 		var toolMap: Map<String, ImguiTool> = [];
@@ -252,6 +331,12 @@ class ImGuiToolManager
 			}
 
 			toolMap.set(tool.windowID(), tool);
+
+			if( nextWindowFocus == tool.windowID() )
+			{
+				ImGui.setNextWindowFocus();
+				nextWindowFocus = null;
+			}
 			tool.update( delta );
 		}
 
@@ -281,6 +366,8 @@ class ImGuiToolManager
 		}
 
 
+
+		ImGui.popFont();
 
 		Metrics.end();
 	}

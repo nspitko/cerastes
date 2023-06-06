@@ -83,6 +83,7 @@ class AudioEditor extends ImguiTool
 
 	var cueInstance: CueInstance;
 
+	public override function getName() { return "\uf569 Audio Editor"; }
 
 	public function new()
 	{

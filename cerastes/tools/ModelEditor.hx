@@ -98,6 +98,8 @@ class ModelEditor extends ImguiTool
 
 	var showScaleBox = true;
 
+	public override function getName() { return "\uf183 Model Editor"; }
+
 	public function new()
 	{
 
@@ -297,7 +299,7 @@ class ModelEditor extends ImguiTool
 			ImGui.setNextWindowFocus();
 		}
 		ImGui.setNextWindowSize({x: windowWidth * 0.9, y: windowHeight * 0.9}, ImGuiCond.Once);
-		ImGui.begin('\uf183 Model  Editor - ${ fileName != null ? fileName : "Untitled" }###${windowID()}', isOpenRef, ImGuiWindowFlags.NoDocking | ImGuiWindowFlags.MenuBar);
+		ImGui.begin('\uf183 Model Editor - ${ fileName != null ? fileName : "Untitled" }###${windowID()}', isOpenRef, ImGuiWindowFlags.NoDocking | ImGuiWindowFlags.MenuBar);
 
 		menuBar();
 

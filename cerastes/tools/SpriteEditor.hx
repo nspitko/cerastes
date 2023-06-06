@@ -104,6 +104,7 @@ class SpriteEditor extends ImguiTool
 	var graphics: Graphics;
 	var drawOrigin: Bool = false;
 
+	public override function getName() { return '\uf6be Sprite Editor (${fileName})'; }
 
 	public function new()
 	{

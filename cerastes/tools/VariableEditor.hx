@@ -48,6 +48,8 @@ class VariableEditor extends ImguiTool
 
 	static var saveSlot: Int = -1;
 
+	public override function getName() { return '\uf328 Variables'; }
+
 	override public function update( delta: Float )
 	{
 		Metrics.begin();

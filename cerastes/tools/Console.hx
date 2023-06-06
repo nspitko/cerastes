@@ -44,6 +44,8 @@ class Console extends ImguiTool
 	var historyPos: Int = -1;
 	var history: Array<String> = [];
 
+	public override function getName() { return "\uf120 Console"; }
+
 	override public function update( delta: Float )
 	{
 		Metrics.begin();

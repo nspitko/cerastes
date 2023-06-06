@@ -69,6 +69,7 @@ class GPUParticleEditor extends ImguiTool
 	var drawAxis = true;
 	var drawGrid = false;
 
+	public override function getName() { return "\uf183 GPU Particle Editor"; }
 
 	public function new()
 	{

@@ -96,6 +96,8 @@ class BulletLevelEditor extends ImguiTool
 
 	var startRunPos: Float = 0;
 
+	public override function getName() { return "\uf279 Bullet Level Editor"; }
+
 
 	public function new()
 	{

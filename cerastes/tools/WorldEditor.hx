@@ -81,6 +81,8 @@ class WorldEditor extends ImguiTool
 	var worldDef: WorldDef;
 	var world: World;
 
+	public override function getName() { return '\uf557 World Editor'; }
+
 	public function new()
 	{
 

@@ -41,6 +41,8 @@ class Perf extends ImguiTool
 
 	var vsync: Bool = true;
 
+	public override function getName() { return "\uf201 Performance"; }
+
 	override public function update( delta: Float )
 	{
 		Metrics.begin();

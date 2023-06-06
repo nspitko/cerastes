@@ -54,6 +54,7 @@ class FlowDebugger extends ImguiTool
 
 	var selectedItem: FlowHistoryElement = null;
 
+	public override function getName() { return "\uf1de Flow debugger"; }
 
 	public function new()
 	{

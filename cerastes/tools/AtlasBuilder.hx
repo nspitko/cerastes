@@ -64,6 +64,8 @@ class AtlasBuilder  extends  ImguiTool
 	static var globalIndex = 0;
 	var index = 0;
 
+	public override function getName() { return '\uf247 Atlas Editor (${fileName})'; }
+
 	public function new()
 	{
 		var size = haxe.macro.Compiler.getDefine("windowSize");

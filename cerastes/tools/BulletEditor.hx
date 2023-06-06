@@ -69,6 +69,8 @@ class BulletEditor extends ImguiTool
 
 	var graphics: Graphics;
 
+	public override function getName() { return "\uf185 Bullet Editor"; }
+
 	public function new()
 	{
 		var viewportDimensions = IG.getViewportDimensions();

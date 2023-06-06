@@ -96,6 +96,8 @@ class UIEditor extends ImguiTool
 	var keyframeContext: TimelineOperation = null;
 	var timelineRunner: TimelineRunner;
 
+	public override function getName() { return '\uf108 UI Editor ${fileName != null ? '($fileName)' : ""}'; }
+
 	public function new()
 	{
 		var size = haxe.macro.Compiler.getDefine("windowSize");

@@ -75,6 +75,8 @@ class AssetBrowser  extends  ImguiTool
 
 	public static var needsReload = false;
 
+	public override function getName() { return "\uf07c Asset Browser"; }
+
 	public function new()
 	{
 		var size = haxe.macro.Compiler.getDefine("windowSize");

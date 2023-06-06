@@ -65,6 +65,7 @@ class FlowEditor extends ImguiTool
 	 */
 	@:callbackStatic public static function onDebugJump( );
 
+	public override function getName() { return '\uf1e0 Flow Editor ${fileName != null ? '($fileName)' : ""}'; }
 
 	public function new()
 	{
@@ -108,11 +109,6 @@ class FlowEditor extends ImguiTool
 		var isOpen = true;
 		var isOpenRef = hl.Ref.make(isOpen);
 
-		if( forceFocus )
-		{
-			forceFocus = false;
-			ImGui.setNextWindowFocus();
-		}
 		ImGui.setNextWindowSize({x: windowWidth * 0.7, y: windowHeight * 0.7}, ImGuiCond.Once);
 		if( ImGui.begin('\uf1e0 Flow Editor ${fileName != null ? fileName : ""}###${windowID()}', isOpenRef, ImGuiWindowFlags.NoDocking | ImGuiWindowFlags.MenuBar) )
 		{
@@ -124,36 +120,37 @@ class FlowEditor extends ImguiTool
 			ImGui.dockSpace( dockspaceId, null );
 
 			ImGui.end();
-		}
-
-		//ImGui.dockSpace(dockID);
-		//ImGui.setNextWindowDockId(dockID, Once);
-
-		ImGui.setNextWindowDockId( dockspaceIdCenter, dockCond );
-		if( ImGui.begin('View##${windowID()}', null, ImGuiWindowFlags.NoMove | ImGuiWindowFlags.HorizontalScrollbar  ) )
-		{
-			handleShortcuts();
-
-			nodes.render();
-
-			processMouse();
 
 
-			ImGui.end();
-		}
+			//ImGui.dockSpace(dockID);
+			//ImGui.setNextWindowDockId(dockID, Once);
 
-		commandPalette();
-		inspector();
+			ImGui.setNextWindowDockId( dockspaceIdCenter, dockCond );
+			if( ImGui.begin('View##${windowID()}', null, ImGuiWindowFlags.NoMove | ImGuiWindowFlags.HorizontalScrollbar  ) )
+			{
+				handleShortcuts();
 
-		if( selectedNode != null )
-		{
-			selectedNode.updatePreviewWindow( windowID() );
-		}
+				nodes.render();
+
+				processMouse();
 
 
-		if( !isOpenRef.get() )
-		{
-			ImGuiToolManager.closeTool( this );
+				ImGui.end();
+			}
+
+			commandPalette();
+			inspector();
+
+			if( selectedNode != null )
+			{
+				selectedNode.updatePreviewWindow( windowID() );
+			}
+
+
+			if( !isOpenRef.get() )
+			{
+				ImGuiToolManager.closeTool( this );
+			}
 		}
 
 
@@ -394,8 +391,8 @@ class FlowEditor extends ImguiTool
 
 			var idOut = hl.Ref.make( dockspaceId );
 
-			dockspaceIdLeft = ImGui.dockBuilderSplitNode(idOut.get(), ImGuiDir.Left, 0.20, null, idOut);
-			dockspaceIdRight = ImGui.dockBuilderSplitNode(idOut.get(), ImGuiDir.Right, 0.3, null, idOut);
+			dockspaceIdLeft = ImGui.dockBuilderSplitNode(idOut.get(), ImGuiDir.Left, 0.10, null, idOut);
+			dockspaceIdRight = ImGui.dockBuilderSplitNode(idOut.get(), ImGuiDir.Right, 0.25, null, idOut);
 			dockspaceIdCenter = idOut.get();
 
 

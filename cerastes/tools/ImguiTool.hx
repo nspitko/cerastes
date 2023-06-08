@@ -593,12 +593,12 @@ class ImGuiToolManager
 		if( Key.isPressed( Key.MOUSE_WHEEL_DOWN ) )
 		{
 			event.kind = EWheel;
-			event.wheelDelta = -1;
+			event.wheelDelta = 1;
 		}
 		else if( Key.isPressed( Key.MOUSE_WHEEL_UP ) )
 		{
 			event.kind = EWheel;
-			event.wheelDelta = 1;
+			event.wheelDelta = -1;
 		}
 
 

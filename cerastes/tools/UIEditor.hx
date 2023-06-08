@@ -659,8 +659,8 @@ class UIEditor extends ImguiTool
 					}
 
 					@:privateAccess timelineRunner.ui = rootDef.handle;
-					timelineRunner.play();
-					timelineRunner.setFrame( frame );
+
+					timelineRunner.setFrame( frame, true );
 					timelineRunner.loop = true;
 				}
 			}

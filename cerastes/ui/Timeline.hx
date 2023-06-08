@@ -173,8 +173,12 @@ class TimelineRunner implements Tickable
 
 	#if hlimgui
 
-	public function setFrame( f: Int )
+	public function setFrame( f: Int, shouldPlay: Bool = false )
 	{
+
+		if( shouldPlay )
+			play();
+
 		if( f == frame )
 			return;
 
@@ -206,7 +210,9 @@ class TimelineRunner implements Tickable
 			tick( 1 / timeline.frameRate );
 		}
 
-		stop();
+
+		if( !shouldPlay )
+			stop();
 	}
 
 	#end

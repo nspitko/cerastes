@@ -251,7 +251,7 @@ class ImGuiToolManager
 
 		var flags = ImGuiWindowFlags.NoDecoration | ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoDocking |
 					ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoBackground |
-					ImGuiWindowFlags.AlwaysAutoResize;
+					ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoBringToFrontOnFocus;
 
 		var height = viewportHeight;
 		var width = 100 * viewportScale;

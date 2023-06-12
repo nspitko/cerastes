@@ -51,30 +51,32 @@ class Console extends ImguiTool
 		Metrics.begin();
 
 		ImGui.setNextWindowSize( { x: 400, y: 250 }, ImGuiCond.FirstUseEver );
-		ImGui.begin("\uf120 Console");
-
-		if( wref( ImGui.inputTextWithHint("##filter","Filter...",_ ), filter ) )
+		if( ImGui.begin("\uf120 Console") )
 		{
-			/// Update filter...
+
+			if( wref( ImGui.inputTextWithHint("##filter","Filter...",_ ), filter ) )
+			{
+				/// Update filter...
+			}
+
+			buttonRow();
+
+			var spaceToReserve = ImGui.getStyle().ItemSpacing.y + ImGui.getFrameHeightWithSpacing();
+			ImGui.beginChild("text", {x: 0, y: -spaceToReserve});
+			consoleText();
+			ImGui.endChild();
+
+			var command = "";
+
+			var flags = ImGuiInputTextFlags.CallbackCompletion | ImGuiInputTextFlags.EnterReturnsTrue | ImGuiInputTextFlags.CallbackHistory;
+			if( wref( ImGui.inputTextWithHint("##command","Command",_, flags, commandHint ), command ) )
+			{
+				runCommand( command );
+				ImGui.setKeyboardFocusHere(-1);
+			}
+
+			ImGui.end();
 		}
-
-		buttonRow();
-
-		var spaceToReserve = ImGui.getStyle().ItemSpacing.y + ImGui.getFrameHeightWithSpacing();
-		ImGui.beginChild("text", {x: 0, y: -spaceToReserve});
-		consoleText();
-		ImGui.endChild();
-
-		var command = "";
-
-		var flags = ImGuiInputTextFlags.CallbackCompletion | ImGuiInputTextFlags.EnterReturnsTrue | ImGuiInputTextFlags.CallbackHistory;
-		if( wref( ImGui.inputTextWithHint("##command","Command",_, flags, commandHint ), command ) )
-		{
-			runCommand( command );
-			ImGui.setKeyboardFocusHere(-1);
-		}
-
-		ImGui.end();
 		Metrics.end();
 	}
 

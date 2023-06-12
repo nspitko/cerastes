@@ -124,9 +124,11 @@ class VariableEditor extends ImguiTool
 		var keys = [ for(k => v in GameState.data.kv) k ];
 		keys.sort( (a: String, b: String ) -> { return a < b ? -1 : 1; } );
 
+		var kv = @:privateAccess GameState.flow.context.interp.variables;
+
 		for( k in keys )
 		{
-			var v = GameState.data.kv[k];
+			var v = kv[k];
 
 			if( filter != null && filter.length > 0)
 			{
@@ -166,22 +168,22 @@ class VariableEditor extends ImguiTool
 					case TInt:
 						var r = v;
 						if( ImGui.inputInt( '##${k}', r ) )
-							GameState.data.kv[k] = r.get();
+							kv[k] = r.get();
 
 					case TFloat:
 						var r = v;
 						if( ImGui.inputDouble( '##${k}', r ) )
-							GameState.data.kv[k] = r.get();
+							kv[k] = r.get();
 
 					case TBool:
 						var r = v;
 						if( ImGui.checkbox( '##${k}', r ) )
-							GameState.data.kv[k] = r.get();
+							kv[k] = r.get();
 
 					case TClass( String ):
 						var r: Ref<String> = v;
 						if( ImGui.inputText( '##${k}', r ) && r != null )
-							GameState.data.kv[k] = r.get();
+							kv[k] = r.get();
 
 					case _:
 						Utils.info('Unhandled type ${Type.typeof( v )}');

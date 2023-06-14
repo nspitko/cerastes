@@ -55,42 +55,43 @@ class VariableEditor extends ImguiTool
 		Metrics.begin();
 
 		ImGui.setNextWindowSize( { x: 400, y: 250 }, ImGuiCond.FirstUseEver );
-		ImGui.begin("\uf328 Variables");
-
-		wref( ImGui.inputTextWithHint("##filter","Filter...",_ ), filter );
-
-		if( ImGui.beginCombo( "Save slot", saveSlot != -1 ? 'Slot ${saveSlot}' : "Select..." ) )
+		if( ImGui.begin("\uf328 Variables") )
 		{
-			for( i in 0 ... 5 )
+			wref( ImGui.inputTextWithHint("##filter","Filter...",_ ), filter );
+
+			if( ImGui.beginCombo( "Save slot", saveSlot != -1 ? 'Slot ${saveSlot}' : "Select..." ) )
 			{
-				if( ImGui.selectable('Slot ${i}', i == saveSlot ))
+				for( i in 0 ... 5 )
 				{
-					Utils.info('Loading dev save ${i}');
-					SaveLoad.load(i,Dev);
-					saveSlot = i;
+					if( ImGui.selectable('Slot ${i}', i == saveSlot ))
+					{
+						Utils.info('Loading dev save ${i}');
+						SaveLoad.load(i,Dev);
+						saveSlot = i;
+					}
 				}
+				ImGui.endCombo();
 			}
-			ImGui.endCombo();
+
+			ImGui.sameLine();
+
+			if( saveSlot != -1 && ImGui.button("Write") )
+			{
+				SaveLoad.save(saveSlot, Dev);
+			}
+
+			ImGui.separator();
+
+			buttonRow();
+
+			var spaceToReserve = ImGui.getStyle().ItemSpacing.y + ImGui.getFrameHeightWithSpacing();
+			ImGui.beginChild("text", {x: 0, y: -spaceToReserve});
+			variableList();
+			ImGui.endChild();
+
+
+			ImGui.end();
 		}
-
-		ImGui.sameLine();
-
-		if( saveSlot != -1 && ImGui.button("Write") )
-		{
-			SaveLoad.save(saveSlot, Dev);
-		}
-
-		ImGui.separator();
-
-		buttonRow();
-
-		var spaceToReserve = ImGui.getStyle().ItemSpacing.y + ImGui.getFrameHeightWithSpacing();
-		ImGui.beginChild("text", {x: 0, y: -spaceToReserve});
-		variableList();
-		ImGui.endChild();
-
-
-		ImGui.end();
 		Metrics.end();
 	}
 

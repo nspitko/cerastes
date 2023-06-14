@@ -82,6 +82,8 @@ package cerastes;
 	var CSIDL_FLAG_MASK                 = 0xFF00;        // mask for all possible flag values
 }
 
+private typedef HWND = hl.Abstract<"dx_window">;
+
 @:hlNative("cerastes")
 class Native
 {
@@ -89,4 +91,6 @@ class Native
 	public static inline function getFolderPath( cisdl: CSIDL ) : String {
 		return @:privateAccess String.fromUTF8( get_folder_path( cisdl ) );
 	}
+
+	public static function getDpiForWindow( hwnd: HWND ) : Int { return 0; };
 }

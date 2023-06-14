@@ -66,7 +66,7 @@ class ImGuiToolManager
 	public static var headingFont: ImFont;
 	public static var consoleFont: ImFont;
 
-	public static var scaleFactor = Utils.getDPIScaleFactor();
+	public static var scaleFactor: Float = 1;
 
 	public static var toolIdx = 0;
 
@@ -170,11 +170,11 @@ class ImGuiToolManager
 	{
 		ImGui.setConfigFlags( DockingEnable );
 
-		var dpiScale = Utils.getDPIScaleFactor();
-		if( dpiScale > 1 )
+		scaleFactor = Utils.getDPIScaleFactor();
+		if( scaleFactor > 1 )
 		{
 			var style: ImGuiStyle = ImGui.getStyle();
-			style.scaleAllSizes( dpiScale );
+			style.scaleAllSizes( scaleFactor );
 		}
 
 		// Default font

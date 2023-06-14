@@ -1,4 +1,8 @@
 package cerastes;
+#if hlimgui
+import cerastes.tools.ImguiTool.ImGuiPopupType;
+import cerastes.tools.ImguiTool.ImGuiToolManager;
+#end
 import game.GameState;
 import cerastes.file.CDParser;
 import haxe.Json;
@@ -95,11 +99,32 @@ class LocalizationManager
 
 	public static function loadFile( file: String, context: String )
 	{
-		var loc: LocalizationFile = CDParser.parse( hxd.Res.loader.load( file ).entry.getText(), LocalizationFile );
+		var res =  hxd.Res.loader.load( file );
+		var loc: LocalizationFile = CDParser.parse( res.entry.getText(), LocalizationFile );
 		loc.file = file;
 
 		addToContext(context, loc);
 		//contexts.set(context, loc);
+
+		#if tools
+		res.watch(() -> {
+			try
+			{
+				var res =  hxd.Res.loader.load( file );
+				var loc: LocalizationFile = CDParser.parse( res.entry.getText(), LocalizationFile );
+
+				addToContext(context, loc);
+
+				#if hlimgui
+				ImGuiToolManager.showPopup('Live Reload','Successfully reloaded ${res.name}.', ImGuiPopupType.Info);
+				#end
+			}
+			catch( e )
+			{
+				Utils.warning('Live reload of ${res.name} failed!');
+			}
+		});
+		#end
 
 	}
 

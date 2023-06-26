@@ -1,5 +1,6 @@
 package cerastes.fmt;
 
+import haxe.io.Path;
 import h2d.Tile;
 import cerastes.file.CDParser;
 import cerastes.file.CDPrinter;
@@ -128,6 +129,12 @@ enum PackMode {
 		{
 			tile = null;
 		}
+
+		rebuildLinks();
+	}
+
+	public function rebuildLinks()
+	{
 		for( name => entry in entries )
 		{
 			entry.name = name;
@@ -141,7 +148,7 @@ enum PackMode {
 	public function ensureLoaded()
 	{
 		#if hlimgui
-		if( !hxd.Res.loader.exists( textureFile ) )
+		if( textureFile == null || !hxd.Res.loader.exists( textureFile ) )
 		{
 			pack( atlasFile );
 			tile = Utils.invalidTile();
@@ -189,10 +196,24 @@ enum PackMode {
 		var name = r.matched(1);
 
 		entries[name] = e;
+
+		rebuildLinks();
 	}
 
 	public function pack( file: String, ?onComplete: Void -> Void )
 	{
+		// Don't pack if we don't have a filename
+		if( file == null )
+		{
+			Utils.info('Refusing to pack sprite sheet: No filename is set. Please save first!');
+			return;
+		}
+
+		if( Path.extension(file) != "catlas" )
+		{
+			file = Path.withExtension( Path.withoutExtension( file ), "catlas" );
+		}
+
 		//jobWorkerThread = Thread.create(jobWorker);
 		fileName = file;
 		jobWorker( onComplete );

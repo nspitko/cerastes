@@ -83,6 +83,8 @@ class AtlasBuilder  extends  ImguiTool
 
 		index = globalIndex++;
 
+		atlas = {};
+
 		// TESTING
 		//openFile("atlases/TextureGroup1.catlas");
 	}
@@ -162,6 +164,15 @@ class AtlasBuilder  extends  ImguiTool
 			ImGui.text( selectedEntry.name );
 			ImGui.popFont();
 
+			var oldName = selectedEntry.name;
+			var name = selectedEntry.name;
+			if( ImGui.inputText( "ID", name ) )
+			{
+				selectedEntry.name = name;
+				atlas.entries[name] = selectedEntry;
+				atlas.entries.remove(oldName);
+			}
+
 			ImGui.text("Frames");
 			ImGui.separator();
 			ImGui.beginChildFrame( ImGui.getID( "frames" ), {x: -1, y: 100 * ImGuiToolManager.scaleFactor});
@@ -203,7 +214,7 @@ class AtlasBuilder  extends  ImguiTool
 
 				if( ImGui.menuItem( 'Add...') )
 				{
-					//var file =
+					addFrame( selectedEntry );
 				}
 
 				ImGui.endPopup();
@@ -248,7 +259,10 @@ class AtlasBuilder  extends  ImguiTool
 		if( out != null )
 			atlas.packMode = out;
 
-		IG.image( CUIResource.getTile( atlas.textureFile) );
+		if( atlas.textureFile != null )
+			IG.image( CUIResource.getTile( atlas.textureFile) );
+		else
+			ImGui.text("No atlas built.");
 
 		ImGui.end();
 	}
@@ -471,6 +485,27 @@ class AtlasBuilder  extends  ImguiTool
 			trace(fileName);
 			atlas.add(fileName);
 		}
+	}
+
+	function addFrame( entry: AtlasEntry )
+	{
+		var newFile = UI.loadFile({
+			title:"Add Frame...",
+			filters:[
+			{name:"Images", exts:["png"]}
+			]
+		});
+		if( newFile != null )
+		{
+			var fileName = Utils.toLocalFile( newFile );
+			var frame: AtlasFrame = {
+				file: Utils.toLocalFile( newFile )
+			};
+
+			entry.frames.push( frame );
+		}
+
+		atlas.rebuildLinks();
 	}
 
 	function handleShortcuts()

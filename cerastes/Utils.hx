@@ -64,8 +64,18 @@ class Utils
 	private static var logStart: Float = -1;
 	#end
 
+	static var recentLogs: Array<String> = [];
+
+
 	public inline static function writeLog(str: String, ?level: Spew, ?pos:haxe.PosInfos )
 	{
+		if( recentLogs.indexOf(str) != -1 )
+			return;
+
+		recentLogs.push(str);
+		if( recentLogs.length > 10 )
+			recentLogs.shift();
+
 		//str = ( Main.host.isAuth ? "[S]" : "[C]" ) + str;
 		#if hl
 		if( WRITE_LOG )
@@ -197,7 +207,7 @@ class Utils
 		}
 		#if debug
 		#if client
-		GlobalConsole.instance.console.externalLog("Warning: " + msg, 0xFFFF00);
+		//GlobalConsole.instance.console.externalLog("Warning: " + msg, 0xFFFF00);
 		#end
 		#end
 	}

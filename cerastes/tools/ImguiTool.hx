@@ -312,6 +312,9 @@ class ImGuiToolManager
 				if (ImGui.menuItem("Material Editor"))
 					ImGuiToolManager.showTool("MaterialEditor");
 
+				if (ImGui.menuItem("Atlas Builder"))
+					ImGuiToolManager.showTool("AtlasBuilder");
+
 				ImGui.endMenu();
 			}
 			ImGui.endMainMenuBar();

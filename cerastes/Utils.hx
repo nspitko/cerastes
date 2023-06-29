@@ -1,6 +1,7 @@
 package cerastes;
 
 
+import h2d.Tile;
 import cerastes.fmt.AtlasResource;
 import cerastes.fmt.AtlasResource.AtlasEntry;
 import h3d.mat.Texture;
@@ -512,5 +513,104 @@ class Utils
 		}
 
 		return hxd.res.DefaultFont.get();
+	}
+
+	public static function getTile( file: String )
+	{
+		if( file == null || file == "")
+			return null;
+
+		if(file.charAt(0) == "#" )
+			return Tile.fromColor( Std.parseInt( '0x${file.substr(1)}' ) );
+		else if ( file.indexOf(".catlas") != -1 )
+		{
+			var atlasPos = file.indexOf(".catlas") + 7;
+			var atlasName = file.substr( 0, atlasPos );
+			var tileName = file.substr(atlasPos + 1);
+
+			var res = hxd.Res.loader.loadCache(atlasName, AtlasResource );
+			if( res != null )
+			{
+				var entry = res.getData().entries[tileName];
+				if( entry == null )
+					return Utils.invalidTile();
+
+				return entry.tile;
+			}
+		}
+		else if ( file.indexOf(".atlas") != -1 )
+		{
+			var atlasPos = file.indexOf(".atlas") + 6;
+			var atlasName = file.substr( 0, atlasPos );
+			var tileName = file.substr(atlasPos + 1);
+
+			var res = hxd.Res.loader.loadCache(atlasName, hxd.res.Atlas );
+			if( res != null )
+				return res.get( tileName );
+		}
+		else
+		{
+			try
+			{
+				var res = hxd.Res.loader.loadCache( file, hxd.res.Image );
+				if( res == null || res.entry.isDirectory )
+					return null;
+
+				return res.toTile();
+			}
+			catch(e)
+			{
+				return null;
+			}
+		}
+
+		return null;
+
+	}
+
+	public static function getTiles( file: String ): Array<Tile>
+	{
+		if( file == null || file == "")
+			return [ Utils.invalidTile() ];
+
+		if(file.charAt(0) == "#" )
+			return [ Tile.fromColor( Std.parseInt( '0x${file.substr(1)}' ) ) ];
+		else if ( file.indexOf(".catlas") != -1 )
+		{
+			var atlasPos = file.indexOf(".catlas") + 7;
+			var atlasName = file.substr( 0, atlasPos );
+			var tileName = file.substr(atlasPos + 1);
+
+			var res = hxd.Res.loader.loadCache(atlasName, AtlasResource );
+			if( res != null )
+			{
+				var entry = res.getData().entries[tileName];
+				if( entry == null )
+					return [ Utils.invalidTile() ];
+
+				return entry.tiles;
+			}
+		}
+		else if ( file.indexOf(".atlas") != -1 )
+		{
+			var atlasPos = file.indexOf(".atlas") + 7;
+			var atlasName = file.substr( 0, atlasPos );
+			var tileName = file.substr(atlasPos + 1);
+
+			var res = hxd.Res.loader.loadCache(atlasName, hxd.res.Atlas );
+			if( res != null )
+				return res.getAnim( tileName );
+		}
+		else
+		{
+			var res = hxd.Res.loader.loadCache( file, hxd.res.Image );
+			if( res == null || res.entry.isDirectory )
+				return null;
+
+			return [ res.toTile() ];
+		}
+
+		return [ Utils.invalidTile() ];
+
 	}
 }

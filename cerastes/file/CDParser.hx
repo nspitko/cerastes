@@ -320,7 +320,16 @@ class CDParser {
 				{
 					var val = ma.get("default");
 					if( val != null )
-						Reflect.setField( obj, k, val[0] );
+					{
+						// Objects must be copied else we end up with tons of tangled references
+						if( val[0] is Array  )
+						{
+							var arr: Array<Any> = cast val[0];
+							Reflect.setField( obj, k, arr.copy() );
+						}
+						else
+							Reflect.setField( obj, k, val[0] );
+					}
 				}
 			}
 

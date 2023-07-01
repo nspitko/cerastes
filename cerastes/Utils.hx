@@ -68,14 +68,17 @@ class Utils
 	static var recentLogs: Array<String> = [];
 
 
-	public inline static function writeLog(str: String, ?level: Spew, ?pos:haxe.PosInfos )
+	public static function writeLog(str: String, ?level: Spew, ?pos:haxe.PosInfos, ?always = false )
 	{
-		if( recentLogs.indexOf(str) != -1 )
-			return;
+		if( !always )
+		{
+			if( recentLogs.indexOf(str) != -1 )
+				return;
 
-		recentLogs.push(str);
-		if( recentLogs.length > 10 )
-			recentLogs.shift();
+			recentLogs.push(str);
+			if( recentLogs.length > 10 )
+				recentLogs.shift();
+		}
 
 		//str = ( Main.host.isAuth ? "[S]" : "[C]" ) + str;
 		#if hl
@@ -261,7 +264,8 @@ class Utils
 		Debug.debugWrite("log",json);
 		#end
 
-		writeLog('${msg} ', INFO, pos);
+		// Always write duplicate log entries.
+		writeLog('${msg} ', INFO, pos, true);
 	}
 
 	/**

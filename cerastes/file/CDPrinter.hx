@@ -236,7 +236,8 @@ class CDPrinter {
 			{
 				var d = getMetaForField(f, "default", Type.getClass(v) );
 
-				if( d != null )
+				// Don't use == comparisons for objects, it doesn't work
+				if( d != null && !Reflect.isObject( value ) )
 				{
 					if( d == value  )
 						continue;
@@ -259,6 +260,15 @@ class CDPrinter {
 
 						case TClass(String):
 							if( value == null || value == "" )
+								continue;
+
+						case TClass(Array):
+							var arr: Array<Any> = cast value;
+							// This is kind of goofy, we want to support encoding default empty arrays
+							// but don't want to always prune them if a default isn't set
+							// This doesn't correctly support cases where we have a default that's NOT empty array
+							// so uhh fix that eventually I guess.
+							if( arr == null || ( d != null && arr.length == 0 ) )
 								continue;
 
 						default:

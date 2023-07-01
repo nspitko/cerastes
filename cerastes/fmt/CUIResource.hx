@@ -36,7 +36,7 @@ import hxd.res.Resource;
 
 	public var type: String = null;
 	public var name: String = null;
-	public var children: Array<CUIObject> = null;
+	@default([]) public var children: Array<CUIObject> = null;
 
 	@et("Float") public var x: Float = 0;
 	@et("Float") public var y: Float = 0;

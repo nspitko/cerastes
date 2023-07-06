@@ -607,7 +607,21 @@ class ImGuiToolManager
 
 		@:privateAccess {
 
-			previewEvents.emitEvent( event );
+			var propagate = true;
+
+			if( previewEvents.currentDrag != null && (previewEvents.currentDrag.ref == null || previewEvents.currentDrag.ref == event.touchId) )
+			{
+				event.propagate = true;
+				event.cancel = false;
+				previewEvents.currentDrag.f(event);
+				event.relX = event.relX;
+				event.relY = event.relY;
+				if( !event.propagate )
+					propagate = false;
+			}
+
+			if( propagate )
+				previewEvents.emitEvent( event );
 
 			var scene: h2d.Scene = cast previewEvents.scenes[0];
 			if( scene != null )

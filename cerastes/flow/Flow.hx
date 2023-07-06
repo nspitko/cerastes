@@ -1007,7 +1007,7 @@ class FlowRunner implements cerastes.Tickable
 	static var runnerIdx = 0;
 	public var runnerId(default, null): Int = 0;
 
-	var lastNodeId: NodeId;
+	var lastNodeId: NodeId32;
 
 	// If set, indicates what created us
 	public var instigator(default, null): haxe.PosInfos;

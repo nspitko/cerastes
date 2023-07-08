@@ -11,11 +11,22 @@ class UIEntity extends h2d.Object implements Entity
 {
 	// Statics
 	public static var draggingEntity: UIEntity;
+	public static var draggingEntityKey: Int = -1;
 	public static var draggingTarget: UIEntity;
 
-	public function queryDrag( bounds: Bounds )
+	/**
+	 * For key, create your own int enum to pass into here if you want to
+	 * disambiguate multiple drag sources
+	 *
+	 * @param bounds
+	 * @param key
+	 */
+	public function queryDrag( bounds: Bounds, key: Int = -1 )
 	{
 		if( draggingEntity == null )
+			return false;
+
+		if( key != draggingEntityKey && key != -1 )
 			return false;
 
 		var dragBounds = draggingEntity.getBounds();
@@ -46,6 +57,7 @@ class UIEntity extends h2d.Object implements Entity
 	var dragCallback: ( Event ) -> Void;
 	var dragStartX: Float;
 	var dragStartY: Float;
+	var dragKey: Int;
 
 	#if tools
 	public static function getEditorIcon()
@@ -64,7 +76,6 @@ class UIEntity extends h2d.Object implements Entity
 		if( !postInit && getScene() != null )
 		{
 			postInit = true;
-			onAfterInitialize();
 		}
 	}
 
@@ -79,11 +90,12 @@ class UIEntity extends h2d.Object implements Entity
 		remove();
 	}
 
-	public function registerDrag( int: h2d.Interactive, cb: ( Event ) -> Void )
+	public function registerDrag( int: h2d.Interactive, cb: ( Event ) -> Void, ?dragKey: Int = -1 )
 	{
 		dragInteractive = int;
 		dragInteractive.onPush = onDragStart;
 		dragCallback = cb;
+		this.dragKey = dragKey;
 	}
 
 
@@ -108,6 +120,7 @@ class UIEntity extends h2d.Object implements Entity
 		}, onDragEnd );
 
 		UIEntity.draggingEntity = this;
+		UIEntity.draggingEntityKey = dragKey;
 	}
 
 	public function onDragEnd()

@@ -34,7 +34,7 @@ class EntityManager
 		{
 			if( entities[i].isDestroyed() )
 				entities.splice(i,1);
-			else
+			else if( entities[i].initialized )
 				entities[i].tick(delta);
 		}
 
@@ -100,6 +100,8 @@ interface Entity {
 
 	public var lookupId: String;
 
+	public var initialized(get, never): Bool;
+
 	public function tick( delta: Float ): Void;
 	public function destroy(): Void;
 
@@ -112,6 +114,13 @@ class BaseEntity #if network implements Replicated #end implements Entity
 {
 	// used by the client to find entities
 	public var lookupId: String = "";
+
+	public var initialized(get, never): Bool;
+
+	function get_initialized()
+	{
+		return true;
+	}
 
 	#if network
 	//@:noCompletion public var _repl_netid : UI16 = -1;

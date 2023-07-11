@@ -400,6 +400,8 @@ class CUIResource extends Resource
 	static var minVersion = 1;
 	static var version = 3;
 
+	public static var initializeEntities: Bool = true;
+
 	var entsToInitialize: Array<UIEntity> = [];
 
 	public function toTimeline(ui: h2d.Object, name: String )
@@ -433,7 +435,7 @@ class CUIResource extends Resource
 		return defToObject( data.root, parent );
 	}
 
-	public function defToObject(def: CUIObject, ?parent: h2d.Object, ?initialize = true )
+	public function defToObject(def: CUIObject, ?parent: h2d.Object )
 	{
 		entsToInitialize = [];
 
@@ -450,7 +452,7 @@ class CUIResource extends Resource
 		if( parent != null )
 			parent.addChild(root);
 
-		if( initialize )
+		if( initializeEntities )
 		{
 			for( e in entsToInitialize )
 				e.initialize(root);

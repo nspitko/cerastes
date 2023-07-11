@@ -42,7 +42,7 @@ class CVec2
 
 // --------------------------------------------------------------------------------------------------
 @:forward
-abstract Vec2(CVec2) {
+abstract Vec2(CVec2) from CVec2 {
 	public inline function new(x:Float, y:Float)
 	{
 		this = new CVec2(x, y);

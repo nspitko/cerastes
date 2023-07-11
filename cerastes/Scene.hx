@@ -61,6 +61,10 @@ class Scene
         cerastes.c3d.DebugDraw.tick(0); // Hack
         s3d.addChild( cerastes.c3d.DebugDraw.g );
         s2d.addChild( cerastes.c3d.DebugDraw.t );
+
+        s2d.addChild( cerastes.c2d.DebugDraw.g );
+
+
         #if hlimgui
         if( ImGuiToolManager.enabled )
         {

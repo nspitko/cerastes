@@ -1,5 +1,7 @@
 package cerastes.ui;
 
+import cerastes.c2d.DebugDraw;
+import cerastes.c2d.Vec2;
 import h2d.col.Bounds;
 import hxd.Event;
 import hxd.res.DefaultFont;
@@ -10,10 +12,19 @@ import cerastes.macros.Callbacks.ClassKey;
 class UIEntity extends h2d.Object implements Entity
 {
 	// Statics
-	public static var draggingEntity: UIEntity;
-	public static var draggingEntityKey: Int = -1;
+	static var draggingEntity: UIEntity;
+	static var draggingEntityKey: Int = -1;
 	public static var draggingTarget: UIEntity;
 
+	public var initialized(get, null): Bool = false;
+
+	function get_initialized() { return initialized; }
+
+	public function beginDrag( entity: UIEntity, ?key: Int = -1, ?bounds: Bounds = null)
+	{
+		draggingEntity = entity;
+		draggingEntityKey = key;
+	}
 	/**
 	 * For key, create your own int enum to pass into here if you want to
 	 * disambiguate multiple drag sources
@@ -29,9 +40,12 @@ class UIEntity extends h2d.Object implements Entity
 		if( key != draggingEntityKey && key != -1 )
 			return false;
 
-		var dragBounds = draggingEntity.getBounds();
-		if( getBounds().intersects( dragBounds ) )
+		var dragBounds = draggingEntity.getDragBounds();
+		if( dragBounds.intersects( bounds ) )
 		{
+			//DebugDraw.bounds( dragBounds );
+			//DebugDraw.bounds( bounds, 0x00FF00 );
+
 			draggingTarget = this;
 			return true;
 		}
@@ -40,6 +54,22 @@ class UIEntity extends h2d.Object implements Entity
 			draggingTarget = null;
 
 		return false;
+	}
+
+	public function getDragBounds()
+	{
+		return getBounds();
+	}
+
+	public function queryDragPoint( point: Vec2, key: Int = -1 )
+	{
+		var b = new Bounds();
+		b.addPoint( point );
+		point.x++;
+		point.y++;
+		b.addPoint( point );
+		//DebugDraw.bounds( b, 0x0000FF);
+		return queryDrag( b, key );
 	}
 
 	// -----------------------------------------------------------------
@@ -65,6 +95,7 @@ class UIEntity extends h2d.Object implements Entity
 		return "\uf07c";
 	}
 	#end
+
 
 	public function new()
 	{
@@ -159,7 +190,11 @@ class UIEntity extends h2d.Object implements Entity
 		{
 			errorText.remove();
 			errorText = null;
+			return;
 		}
+
+		initialized = true;
+
 	}
 
 	function trackCallback( success: Bool, unregisterFunction: ( ClassKey -> Bool ) )
@@ -171,7 +206,9 @@ class UIEntity extends h2d.Object implements Entity
 	public override function onAdd()
 	{
 		super.onAdd();
-		EntityManager.instance.register(this);
+
+		if( initialized )
+			EntityManager.instance.register(this);
 	}
 
 	public override function onRemove()

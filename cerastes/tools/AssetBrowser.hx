@@ -313,7 +313,8 @@ class AssetBrowser  extends  ImguiTool
 				{
 					var res = new cerastes.fmt.CUIResource( hxd.Res.loader.load(asset.file).entry );
 
-					var obj = res.toObject();
+					cerastes.fmt.CUIResource.initializeEntities = false;
+					var obj = res.defToObject( @:privateAccess res.getData().root, null );
 
 					var scale = previewWidth / viewportWidth;
 					obj.scale( scale );
@@ -327,6 +328,8 @@ class AssetBrowser  extends  ImguiTool
 				{
 
 				}
+
+				cerastes.fmt.CUIResource.initializeEntities = true;
 
 				var t = new h2d.Text( hxd.Res.fnt.kodenmanhou16.toFont(), asset.scene);
 

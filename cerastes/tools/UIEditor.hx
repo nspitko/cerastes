@@ -152,12 +152,15 @@ class UIEditor extends ImguiTool
 		//previewRoot = new Object(preview);
 		var res = new CUIResource(null);
 		rootDef.initChildren();
-		previewRoot = res.defToObject(rootDef, null, initializeObjects);
+		cerastes.fmt.CUIResource.initializeEntities = initializeObjects;
+		previewRoot = res.defToObject(rootDef, null);
 		preview.addChild(previewRoot);
 
 		//selectedItemBorder = new Graphics();
 		preview.addChild(selectedItemBorder);
 		preview.addChild(cursor);
+
+		cerastes.fmt.CUIResource.initializeEntities = true;
 		Metrics.end();
 
 	}
@@ -165,16 +168,20 @@ class UIEditor extends ImguiTool
 	function updateDef( e: Object, o: CUIObject )
 	{
 		Metrics.begin();
-		cerastes.fmt.CUIResource.updateObject(o, e, initializeObjects);
+		cerastes.fmt.CUIResource.initializeEntities = initializeObjects;
+		cerastes.fmt.CUIResource.updateObject(o, e);
 		@:privateAccess e.onContentChanged();
+		cerastes.fmt.CUIResource.initializeEntities = true;
 		Metrics.end();
 	}
 
 	function updateDefRecursive( e: Object, o: CUIObject )
 	{
 		Metrics.begin();
-		cerastes.fmt.CUIResource.recursiveUpdateObjects(o, e, initializeObjects);
+		cerastes.fmt.CUIResource.initializeEntities = initializeObjects;
+		cerastes.fmt.CUIResource.recursiveUpdateObjects(o, e);
 		@:privateAccess e.onContentChanged();
+		cerastes.fmt.CUIResource.initializeEntities = true;
 		Metrics.end();
 	}
 

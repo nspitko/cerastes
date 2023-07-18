@@ -369,7 +369,7 @@ class SceneNode extends FlowNode
 
 	public override function process( runner: FlowRunner )
 	{
-		var scene: cerastes.Scene = Main.currentScene.switchToNewScene( scene );
+		var scene: cerastes.Scene = cerastes.App.currentScene.switchToNewScene( scene );
 		scene.registerOnSceneReady(this, ( handled ) -> {
 			nextAll( runner );
 			scene.unregisterOnSceneReady(this);
@@ -980,7 +980,7 @@ class FlowContext
 	public static function changeScene( className: String )
 	{
 		#if client
-		Main.currentScene.switchToNewScene( className );
+		App.currentScene.switchToNewScene( className );
 		#end
 	}
 }

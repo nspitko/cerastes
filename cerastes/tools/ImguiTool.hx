@@ -107,14 +107,14 @@ class ImGuiToolManager
 			#end
 
 			@:privateAccess hxd.Window.getInstance().window.maximize();
-			Main.currentScene.disableEvents();
+			cerastes.App.currentScene.disableEvents();
 
 			hxd.System.setNativeCursor( hxd.Cursor.Default );
 		}
 		else
 		{
 			@:privateAccess hxd.Window.getInstance().window.restore();
-			Main.currentScene.enableEvents();
+			cerastes.App.currentScene.enableEvents();
 
 
 			// Clear imgui context
@@ -367,7 +367,7 @@ class ImGuiToolManager
 			offset = renderPopup( popup, i, offset );
 		}
 
-		var s2d = Main.currentScene.s2d;
+		var s2d = cerastes.App.currentScene.s2d;
 		@:privateAccess
 		{
 			if( previewEvents.scenes.length == 1 && previewEvents.scenes[0] != s2d )
@@ -445,7 +445,7 @@ class ImGuiToolManager
 		e.pushTarget( sceneRT );
 		e.clear(0,1);
 		Metrics.begin("currentScene.render");
-		Main.currentScene.render(e);
+		cerastes.App.currentScene.render(e);
 
 		Metrics.end();
 		e.popTarget();

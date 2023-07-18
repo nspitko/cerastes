@@ -108,7 +108,7 @@ class CollisionManager
 		if(Utils.SHOW_BULLET_AABBS)
 		{
 			if(debugGraphics.parent == null )
-				Main.currentScene.s2d.addChild(debugGraphics);
+				cerastes.App.currentScene.s2d.addChild(debugGraphics);
 			debugGraphics.clear();
 			for( o in objects )
 			{

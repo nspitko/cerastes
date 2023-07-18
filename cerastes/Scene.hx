@@ -16,7 +16,7 @@ import cerastes.tools.ImguiTool.ImGuiToolManager;
 class Scene
 {
 
-    public var app(default,null) : Main;
+    public var app(default,null) : cerastes.App;
     public var engine(default,null) : h3d.Engine;
 	public var s3d(default,null) : h3d.scene.Scene;
 	public var s2d(default,null) : h2d.Scene;
@@ -31,7 +31,7 @@ class Scene
     var exiting = false;
 
 
-    public function new( a : Main )
+    public function new( a : cerastes.App )
     {
         app = a;
         s3d = new h3d.scene.Scene();
@@ -68,8 +68,8 @@ class Scene
         #if hlimgui
         if( ImGuiToolManager.enabled )
         {
-            Main.instance.sceneEvents.removeScene( s2d );
-            Main.instance.sceneEvents.removeScene( s3d );
+            cerastes.App.instance.sceneEvents.removeScene( s2d );
+            cerastes.App.instance.sceneEvents.removeScene( s3d );
         }
         else
         #end
@@ -169,8 +169,8 @@ class Scene
         #if hlimgui
         if( ImGuiToolManager.enabled )
         {
-            Main.instance.sceneEvents.removeScene( s2d );
-            Main.instance.sceneEvents.removeScene( s3d );
+            cerastes.App.instance.sceneEvents.removeScene( s2d );
+            cerastes.App.instance.sceneEvents.removeScene( s3d );
         }
         #end
 
@@ -213,7 +213,7 @@ class Scene
 
 		fadeOut( () -> {
             exit();
-            Main.currentScene = other;
+            cerastes.App.currentScene = other;
             other.enter();
             other.fadeIn( () -> { other.transitionComplete(); } );
 

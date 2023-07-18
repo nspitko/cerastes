@@ -247,12 +247,6 @@ class App extends hxd.App {
 		client.updateTimeout(0.010);
 		Metrics.end();
 		#end
-		#if butai
-		Metrics.begin("Butai.tick");
-		if( GameState.butai != null )
-			GameState.butai.tick(dt);
-		Metrics.end();
-		#end
 
 		TimerManager.instance.tick(dt);
 
@@ -262,7 +256,6 @@ class App extends hxd.App {
 
 		TweenManager.instance.tick(dt);
 		EntityManager.instance.tick(dt);
-		//GameState.collisionManager.tick(dt);
 		#if cannonml
 		BulletManager.tick(dt);
 		#end

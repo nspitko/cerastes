@@ -1,6 +1,5 @@
 package cerastes.collision;
 
-import game.GameState.CollisionGroup;
 
 // 2d vector
 @:structInit
@@ -195,6 +194,13 @@ abstract ColliderType(Int) from Int to Int
 			default: "Unknown";
 		}
 	}
+}
+
+@:enum
+abstract CollisionGroup(Int) from Int to Int {
+  var None = 0;
+
+  var LastEngineGroup;
 }
 
 

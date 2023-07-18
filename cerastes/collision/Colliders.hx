@@ -1,5 +1,6 @@
 package cerastes.collision;
 
+import cerastes.collision.Collision.CollisionGroup;
 import cerastes.collision.Collision.CRaycast;
 import cerastes.collision.Collision.CRay;
 import cerastes.collision.Collision.CCapsule;
@@ -8,8 +9,6 @@ import cerastes.collision.Collision.CCircle;
 import cerastes.collision.Collision.ColliderType;
 import cerastes.collision.Collision.CollisionMask;
 import cerastes.collision.Collision.CVector;
-import game.GameState.CollisionGroup;
-
 
 interface CollisionObject
 {

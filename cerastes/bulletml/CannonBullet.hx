@@ -3,7 +3,6 @@ package cerastes.bulletml;
 import game.GameState;
 import cerastes.collision.Colliders.Circle;
 import cerastes.collision.Collision.CAABB;
-import game.GameState.CollisionGroup;
 import cerastes.collision.Collision.CollisionMask;
 import cerastes.collision.Colliders.Collider;
 import cerastes.collision.Collision.CCircle;

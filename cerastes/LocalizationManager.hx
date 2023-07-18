@@ -72,12 +72,6 @@ class LocalizationManager
 		// Always load the common context.
 		loadFile('data/localization_${language}.loc', "common");
 
-		for( f in GameState.config.localizationFiles )
-		{
-			loadFile('data/${f}_${language}.loc', "common");
-		}
-
-
 	}
 
 	#if tools

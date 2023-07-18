@@ -5,7 +5,6 @@ import haxe.ds.Vector;
 import cerastes.collision.Collision.CAABB;
 import cerastes.collision.Collision.ColliderType;
 import cerastes.collision.Collision.CollisionMask;
-import game.GameState.CollisionGroup;
 import h2d.RenderContext;
 import h2d.Tile;
 import hxd.res.Atlas;
@@ -14,8 +13,6 @@ import h2d.Object;
 import cerastes.fmt.SpriteResource;
 import cerastes.collision.Colliders;
 using tweenxcore.Tools;
-
-
 
 /**
  * Sprites altomatically self-register with SpriteManager
@@ -106,7 +103,7 @@ class Sprite extends h2d.Drawable implements CollisionObject
 	public var colliders(default, null): haxe.ds.Vector<Collider>;
 
 	public var collisionMask: CollisionMask = cast 0;
-	public var collisionType(default, set): CollisionGroup = 0;
+	public var collisionType(default, set): CollisionGroup = None;
 	public var mute: Bool = false;
 
 	function set_collisionType(v) { collisionType = v;  return v; }

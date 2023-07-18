@@ -2,6 +2,7 @@
 package cerastes.tools;
 
 
+import cerastes.flow.Flow.FlowRunner;
 import game.SaveLoad;
 import game.GameState;
 import cerastes.ui.Console.GlobalConsole;
@@ -48,7 +49,16 @@ class VariableEditor extends ImguiTool
 
 	static var saveSlot: Int = -1;
 
+	var runner: FlowRunner;
+	var defs: Array<InterpVariable>;
+
 	public override function getName() { return '\uf328 Variables'; }
+
+	public function setup( r: FlowRunner, d: Array<InterpVariable>)
+	{
+		runner = r;
+		defs = d;
+	}
 
 	override public function update( delta: Float )
 	{
@@ -100,6 +110,9 @@ class VariableEditor extends ImguiTool
 	@:access(cerastes.Utils)
 	function variableList()
 	{
+		if(runner == null)
+			return;
+
 		final ttw = 300;
 
 
@@ -122,10 +135,10 @@ class VariableEditor extends ImguiTool
 		scrollToBottom = autoScroll && Utils.log.length != lastLen;
 		lastLen = Utils.log.length;
 
-		var keys = [ for(k => v in GameState.data.kv) k ];
+		var keys = [ for(k in defs) k.name ];
 		keys.sort( (a: String, b: String ) -> { return a < b ? -1 : 1; } );
 
-		var kv = @:privateAccess GameState.flow.context.interp.variables;
+		var kv = @:privateAccess runner.context.interp.variables;
 
 		for( k in keys )
 		{
@@ -244,7 +257,7 @@ class VariableEditor extends ImguiTool
 
 	function getDef( k: String )
 	{
-		for( def in GameState.config.interpVariables)
+		for( def in defs)
 		{
 			if( def.name == k )
 				return def;

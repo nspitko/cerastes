@@ -18,7 +18,6 @@ import imgui.ImGui.ImFont;
 import cerastes.macros.Metrics;
 import haxe.rtti.Meta;
 import haxe.macro.Expr;
-import game.GameState.GameActions;
 import cerastes.input.ControllerAccess;
 
 @:keepSub
@@ -83,7 +82,7 @@ class ImGuiToolManager
 
 	static var previewEvents: SceneEvents;
 
-	static var inputAccess: ControllerAccess<GameActions>;
+	static var inputAccess: ControllerAccess<Dynamic>;
 	static var hasExclusiveAccess = false;
 
 	static var previewScale: Int = 1;
@@ -198,8 +197,6 @@ class ImGuiToolManager
 
 	public static function drawScene()
 	{
-		if( inputAccess == null )
-			inputAccess = GameState.input.createAccess();
 
 		if( nextWindowFocus == "root_Scene" )
 		{
@@ -230,19 +227,19 @@ class ImGuiToolManager
 
 		ImGui.end();
 
-		if( active && hasExclusiveAccess )
+		if( inputAccess != null )
 		{
-			inputAccess.releaseExclusivity();
-			hasExclusiveAccess = false;
+			if( active && hasExclusiveAccess )
+			{
+				inputAccess.releaseExclusivity();
+				hasExclusiveAccess = false;
+			}
+			else if( !active && !hasExclusiveAccess )
+			{
+				inputAccess.takeExclusivity();
+				hasExclusiveAccess = true;
+			}
 		}
-		else if( !active && !hasExclusiveAccess )
-		{
-			inputAccess.takeExclusivity();
-			hasExclusiveAccess = true;
-		}
-
-
-
 
 	}
 

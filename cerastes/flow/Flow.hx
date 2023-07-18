@@ -368,12 +368,19 @@ class SceneNode extends FlowNode
 
 	public override function process( runner: FlowRunner )
 	{
-		var scene: cerastes.Scene = cerastes.App.currentScene.switchToNewScene( scene );
-		scene.registerOnSceneReady(this, ( handled ) -> {
-			nextAll( runner );
-			scene.unregisterOnSceneReady(this);
-			return handled;
-		});
+		var scene: cerastes.Scene = cerastes.App.currentScene.switchToNewScene( scene, true );
+		if( scene == null )
+		{
+			nextAll(runner);
+		}
+		else
+		{
+			scene.registerOnSceneReady(this, ( handled ) -> {
+				nextAll( runner );
+				scene.unregisterOnSceneReady(this);
+				return handled;
+			});
+		}
 	}
 
 	#if hlimgui

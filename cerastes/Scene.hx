@@ -207,6 +207,8 @@ class Scene
 		if( exiting )
 			return;
 
+        Utils.info('Switch to scene: ${other}');
+
 		exiting = true;
 
 		other.preload();
@@ -231,13 +233,21 @@ class Scene
         onComplete();
     }
 
-    public function switchToNewScene( className: String )
+    /**
+     * Switches to a new scene by string name.
+     * @param className
+     * @param onlyIfNew = false; If true, don't switch if we're already at that scene.
+     */
+    public function switchToNewScene( className: String, ?onlyIfNew = false )
     {
 		#if butai
 		var type = Type.resolveClass( "game.scenes." + className);
 		#else
 		var type = Type.resolveClass( className);
 		#end
+
+        if( Std.isOfType(this,type ) )
+            return null;
 
 		var other: Scene = Type.createInstance(type, [app]);
 		switchToScene( other );

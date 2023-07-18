@@ -7,7 +7,6 @@ import h2d.Graphics;
 import cerastes.collision.Collision.CRaycast;
 import cerastes.collision.Collision.CollisionMask;
 import cerastes.collision.Collision.CRay;
-import game.GameState.CollisionGroup;
 import cerastes.collision.Collision.ColliderType;
 import haxe.ds.Vector;
 import cerastes.collision.Colliders.CollisionObject;

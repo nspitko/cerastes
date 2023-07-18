@@ -85,6 +85,7 @@ class BaseEntity extends Object implements cerastes.Entity
 
 	var destroyed = false;
 	public var world(get, null): cerastes.c3d.World;
+	public var initialized(get, never): Bool;
 	#if bullet
 	public var body: cerastes.c3d.BulletBody = null;
 	public var bodyOrigin = new Vec3(0,0,0);
@@ -96,6 +97,11 @@ class BaseEntity extends Object implements cerastes.Entity
 	public function get_world() : cerastes.c3d.World
 	{
 		return world;
+	}
+
+	function get_initialized() : Bool
+	{
+		return true;
 	}
 
 	// This is a function instead of a property for dumb haxe reasons

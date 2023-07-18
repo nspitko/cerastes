@@ -49,7 +49,7 @@ class DebugDraw
 
 	public static var colorAdd = 0;
 
-	public static function tick( delta: Float )
+	public static function init()
 	{
 		if( g == null )
 		{
@@ -65,6 +65,11 @@ class DebugDraw
 
 			t = new h2d.Text( DefaultFont.get() );
 		}
+	}
+
+	public static function tick( delta: Float )
+	{
+
 
 		var i = lines.length - 1;
 		while( i >= 0 )

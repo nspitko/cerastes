@@ -426,8 +426,17 @@ class Q3BSPBrush extends BaseBrush
 
 			// @todo: need more context upstream to derive this
 			var texFile = '${bsp.fileName.substr(0, bsp.fileName.length - 4)}/lm_${ StringTools.lpad(""+surface.lightMapIndex,"0",4) }.tga';
-			trace(texFile);
-			var lmTex = hxd.Res.loader.load( texFile ).toTexture();
+
+			var lmTex: Texture;
+			try
+			{
+				lmTex = hxd.Res.loader.load( texFile ).toTexture();
+			}
+			catch(e)
+			{
+				Utils.error('Failed to load lightmap ${texFile}: $e');
+				lmTex = Utils.invalidTexture();
+			}
 			lmShader.texture = lmTex;
 
 			//shader.lightMapTexture = lmTex;

@@ -1,7 +1,6 @@
 package cerastes;
 
 import cerastes.Tickable.TimeManager;
-import game.CursorManager;
 import hxd.BitmapData;
 import cerastes.fmt.CUIResource;
 import hxd.SceneEvents;
@@ -93,7 +92,7 @@ class App extends hxd.App {
 	#end
 
 
-	public var launchOptions: Map<String, String> = [];
+	public static var launchOptions: Map<String, String> = [];
 
 
 
@@ -116,6 +115,10 @@ class App extends hxd.App {
 		sceneEvents = new SceneEvents();
 
 		#end
+
+
+		cerastes.c2d.DebugDraw.init();
+		cerastes.c3d.DebugDraw.init();
 
 
 		/*
@@ -292,7 +295,7 @@ class App extends hxd.App {
 		Metrics.end();
 		#end
 
-		CursorManager.tick(dt);
+
 
 
 		#if hlimgui

@@ -147,7 +147,7 @@ enum PackMode {
 
 	public function ensureLoaded()
 	{
-		#if hlimgui
+		#if ( tools && binpacking )
 		if( textureFile == null || !hxd.Res.loader.exists( textureFile ) )
 		{
 			pack( atlasFile );

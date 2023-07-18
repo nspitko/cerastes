@@ -2,7 +2,6 @@ package cerastes.flow;
 
 import cerastes.Tickable.TimeManager;
 import cerastes.data.Nodes;
-import cerastes.GameState.FlowState;
 import game.GameState;
 import cerastes.fmt.FlowResource;
 #if hlimgui
@@ -946,6 +945,22 @@ class FlowFile
 	public var links: Array<FlowLink>;
 }
 
+class FlowState
+{
+	public static var seen: Array<String> = [];
+	public static var usedSelectors: Array<NodeId32> = [];
+	public static var doneActions: Array<String> = [];
+
+	public static function reset()
+	{
+		seen = [];
+		usedSelectors = [];
+		doneActions = [];
+	}
+
+}
+
+@:allow(FlowRunner)
 class FlowContext
 {
 	public var parser = new hscript.Parser();
@@ -965,12 +980,8 @@ class FlowContext
 
 		interp.variables.set("changeScene", changeScene );
 
-		interp.variables.set("set", GameState.set );
-		interp.variables.set("get", GameState.get );
-
-		interp.variables.set("hasItem", GameState.hasItem );
-		interp.variables.set("addItem", GameState.addItem );
-		interp.variables.set("removeItem", GameState.removeItem );
+		interp.variables.set("set", set );
+		interp.variables.set("get", get );
 
 		FlowRunner.onContextCreated(this);
 		//interp.variables.set("seenNode", seenNode );
@@ -982,6 +993,16 @@ class FlowContext
 		#if client
 		App.currentScene.switchToNewScene( className );
 		#end
+	}
+
+	public function get(key: String) : Dynamic
+	{
+		return interp.variables.get(key);
+	}
+
+	public function set(key: String, value: Dynamic)
+	{
+		interp.variables.set(key, value);
 	}
 }
 
@@ -998,7 +1019,7 @@ class FlowRunner implements cerastes.Tickable
 	var stack: List<FlowNode> = new List<FlowNode>();
 
 	var res: FlowResource;
-	var context: FlowContext;
+	public var context: FlowContext;
 
 	var file: String;
 	// Just the name of the file, no path/ext

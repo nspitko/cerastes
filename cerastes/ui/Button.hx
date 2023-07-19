@@ -284,6 +284,14 @@ class Button extends h2d.Flow implements IButton
 
 	function set_toggled( v: Bool )
 	{
+		// This is questionable; it prevents us from ever tracking state while the button
+		// is disabled. However, the converse requires us to track the enable state of
+		// buttons at the logic layer when toggling them from upstream actions (such as
+		// ganged button rows). I THINK this is the better option, but when i revert
+		// this later, WELP.
+		if( !enabled )
+			return false;
+
 		if( v )
 			set_state( On );
 		else
@@ -334,7 +342,7 @@ class Button extends h2d.Flow implements IButton
 					setTints( hoverTile, hoverColor, hoverTextColor, tweenHoverStartMode );
 
 
-		case Disabled:
+			case Disabled:
 				setTints( disabledTile, disabledColor, disabledTextColor, None );
 
 			case On:

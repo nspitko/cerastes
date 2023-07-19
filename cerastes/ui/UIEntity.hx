@@ -11,6 +11,9 @@ import cerastes.macros.Callbacks.ClassKey;
 
 class UIEntity extends h2d.Object implements Entity
 {
+	// Debug
+	final debugDrag = false;
+
 	// Statics
 	static var draggingEntity: UIEntity;
 	static var draggingEntityKey: Int = -1;
@@ -43,8 +46,11 @@ class UIEntity extends h2d.Object implements Entity
 		var dragBounds = draggingEntity.getDragBounds();
 		if( dragBounds.intersects( bounds ) )
 		{
-			//DebugDraw.bounds( dragBounds );
-			//DebugDraw.bounds( bounds, 0x00FF00 );
+			if( debugDrag )
+			{
+				DebugDraw.bounds( dragBounds, 0xFF0000 );
+				DebugDraw.bounds( bounds, 0x00FF00 );
+			}
 
 			draggingTarget = this;
 			return true;
@@ -68,7 +74,10 @@ class UIEntity extends h2d.Object implements Entity
 		point.x++;
 		point.y++;
 		b.addPoint( point );
-		//DebugDraw.bounds( b, 0x0000FF);
+
+		if( debugDrag )
+			DebugDraw.bounds( b, 0x0000FF);
+
 		return queryDrag( b, key );
 	}
 

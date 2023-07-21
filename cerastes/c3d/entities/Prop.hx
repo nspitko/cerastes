@@ -82,7 +82,7 @@ class PropTest extends Entity
 		sp.addUVs();
 		sp.addTangents();
 
-		var tex = hxd.Res.spr.placeholder.toTexture();
+		var tex = Utils.invalidTexture();
 		var mat = h3d.mat.Material.create(tex);
 		var mesh = new h3d.scene.Mesh(sp, mat, this );
 

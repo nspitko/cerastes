@@ -3,7 +3,6 @@ package cerastes.tools;
 #if ( hlimgui )
 import hxd.Key;
 import sys.io.File;
-import game.GameState;
 import cerastes.data.Nodes.Link;
 import cerastes.file.CDParser;
 import cerastes.file.CDPrinter;
@@ -63,7 +62,7 @@ class FlowEditor extends ImguiTool
 	/**
 	 * Called when doing a debug jump.
 	 */
-	@:callbackStatic public static function onDebugJump( );
+	@:callbackStatic public static function onDebugJump( filename: String, nodeId: NodeId32 );
 
 	public override function getName() { return '\uf1e0 Flow Editor ${fileName != null ? '($fileName)' : ""}'; }
 
@@ -95,8 +94,7 @@ class FlowEditor extends ImguiTool
 		{
 			if( fileName != null && ImGui.menuItem( 'Live Jump') )
 			{
-				onDebugJump();
-				GameState.flow.jumpFile( fileName, nodeId );
+				onDebugJump( fileName, nodeId );
 			}
 		}
 	}

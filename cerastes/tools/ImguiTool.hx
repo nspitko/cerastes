@@ -1,8 +1,6 @@
 
 package cerastes.tools;
 
-
-import game.GameState;
 import sys.FileSystem;
 import hxd.Window;
 #if hlimgui
@@ -440,7 +438,7 @@ class ImGuiToolManager
 		sceneRT.clear( 0 );
 
 		e.pushTarget( sceneRT );
-		e.clear(0,1);
+		e.clear(0xFF000000,1);
 		Metrics.begin("currentScene.render");
 		cerastes.App.currentScene.render(e);
 

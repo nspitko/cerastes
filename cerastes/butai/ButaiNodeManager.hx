@@ -3,7 +3,6 @@ package cerastes.butai;
 #if butai
 import haxe.Json;
 
-import game.GameState;
 import cerastes.ui.Console.GlobalConsole;
 import cerastes.butai.ButaiTypeBuilder.ButaiNode;
 import cerastes.butai.ButaiDialogController;

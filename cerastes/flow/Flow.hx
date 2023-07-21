@@ -2,7 +2,6 @@ package cerastes.flow;
 
 import cerastes.Tickable.TimeManager;
 import cerastes.data.Nodes;
-import game.GameState;
 import cerastes.fmt.FlowResource;
 #if hlimgui
 import imgui.ImGuiMacro.wref;
@@ -982,7 +981,6 @@ class FlowContext
 	{
 		this.runner = runner;
 
-		interp.variables.set("GS", GameState );
 		interp.variables.set("Std", Std );
 
 		interp.variables.set("changeScene", changeScene );

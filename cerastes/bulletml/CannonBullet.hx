@@ -1,6 +1,5 @@
 package cerastes.bulletml;
 #if cannonml
-import game.GameState;
 import cerastes.collision.Colliders.Circle;
 import cerastes.collision.Collision.CAABB;
 import cerastes.collision.Collision.CollisionMask;

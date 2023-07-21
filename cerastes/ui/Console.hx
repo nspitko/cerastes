@@ -54,7 +54,8 @@ class GlobalConsole
 
 	public function init()
 	{
-		console = new CerastesConsole(hxd.Res.fnt.kodenmanhou16.toFont());
+		// @todo: Allow this to be configurable.
+		console = new CerastesConsole( cerastes.App.defaultFont );
 
 		console.shortKeyChar = "`".code;
 	}

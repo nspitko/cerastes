@@ -3,7 +3,6 @@ package cerastes;
 import cerastes.tools.ImguiTool.ImGuiPopupType;
 import cerastes.tools.ImguiTool.ImGuiToolManager;
 #end
-import game.GameState;
 import cerastes.file.CDParser;
 import haxe.Json;
 import cerastes.Utils.*;

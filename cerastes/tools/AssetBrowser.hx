@@ -77,7 +77,7 @@ class AssetBrowser  extends  ImguiTool
 
 	public override function getName() { return "\uf07c Asset Browser"; }
 
-	public function new()
+	public function new( fnt: h2d.Font )
 	{
 		var size = haxe.macro.Compiler.getDefine("windowSize");
 		var viewportDimensions = IG.getViewportDimensions();
@@ -161,7 +161,7 @@ class AssetBrowser  extends  ImguiTool
 
 
 				// Label
-				var t = new h2d.Text( hxd.Res.fnt.kodenmanhou16.toFont(), asset.scene);
+				var t = new h2d.Text( cerastes.App.defaultFont, asset.scene);
 
 				t.text = Path.withoutDirectory( Path.withoutExtension(asset.file) );
 				t.textAlign = Center;
@@ -181,7 +181,7 @@ class AssetBrowser  extends  ImguiTool
 
 
 				// Label
-				var t = new h2d.Text( hxd.Res.fnt.kodenmanhou16.toFont(), asset.scene);
+				var t = new h2d.Text( cerastes.App.defaultFont, asset.scene);
 
 				t.text = Path.withoutDirectory( Path.withoutExtension(asset.file) );
 				t.textAlign = Center;
@@ -279,7 +279,7 @@ class AssetBrowser  extends  ImguiTool
 					asset.dirty = true;
 				});
 
-				var t = new h2d.Text( hxd.Res.fnt.kodenmanhou16.toFont(), asset.scene);
+				var t = new h2d.Text( cerastes.App.defaultFont, asset.scene);
 
 				t.text = Path.withoutDirectory( Path.withoutExtension(asset.file) );
 				t.textAlign = Center;
@@ -296,7 +296,7 @@ class AssetBrowser  extends  ImguiTool
 				bmp.width = previewWidth;
 				bmp.height = previewHeight;
 
-				var t = new h2d.Text( hxd.Res.fnt.kodenmanhou16.toFont(), asset.scene);
+				var t = new h2d.Text( cerastes.App.defaultFont, asset.scene);
 
 				t.text = Path.withoutDirectory( Path.withoutExtension(asset.file) );
 				t.textAlign = Center;
@@ -331,7 +331,7 @@ class AssetBrowser  extends  ImguiTool
 
 				cerastes.fmt.CUIResource.initializeEntities = true;
 
-				var t = new h2d.Text( hxd.Res.fnt.kodenmanhou16.toFont(), asset.scene);
+				var t = new h2d.Text( cerastes.App.defaultFont, asset.scene);
 
 				t.text = Path.withoutDirectory( Path.withoutExtension(asset.file) );
 				t.textAlign = Center;
@@ -360,7 +360,7 @@ class AssetBrowser  extends  ImguiTool
 				obj.x = previewWidth / 2 - center.x;
 				obj.y = previewHeight / 2 - center.y;
 
-				var t = new h2d.Text( hxd.Res.fnt.kodenmanhou16.toFont(), asset.scene);
+				var t = new h2d.Text( cerastes.App.defaultFont, asset.scene);
 
 				t.text = Path.withoutDirectory( Path.withoutExtension(asset.file) );
 				t.textAlign = Center;
@@ -392,7 +392,7 @@ class AssetBrowser  extends  ImguiTool
 						break;
 				}
 
-				var t = new h2d.Text( hxd.Res.fnt.kodenmanhou16.toFont(), asset.scene);
+				var t = new h2d.Text( cerastes.App.defaultFont, asset.scene);
 
 				t.text = Path.withoutDirectory( Path.withoutExtension(asset.file) );
 				t.textAlign = Center;
@@ -424,7 +424,7 @@ class AssetBrowser  extends  ImguiTool
 						break;
 				}
 
-				var t = new h2d.Text( hxd.Res.fnt.kodenmanhou16.toFont(), asset.scene);
+				var t = new h2d.Text( cerastes.App.defaultFont, asset.scene);
 
 				t.text = Path.withoutDirectory( Path.withoutExtension(asset.file) );
 				t.textAlign = Center;
@@ -448,7 +448,7 @@ class AssetBrowser  extends  ImguiTool
 
 				}
 
-				var t = new h2d.Text( hxd.Res.fnt.kodenmanhou16.toFont(), asset.scene);
+				var t = new h2d.Text( cerastes.App.defaultFont, asset.scene);
 
 				t.text = Path.withoutDirectory( Path.withoutExtension(asset.file) );
 				t.textAlign = Center;
@@ -462,7 +462,7 @@ class AssetBrowser  extends  ImguiTool
 
 				asset.scene = new h2d.Scene();
 				var g = new Graphics(asset.scene);
-				var t = new h2d.Text( hxd.Res.fnt.kodenmanhou16.toFont(), asset.scene);
+				var t = new h2d.Text( cerastes.App.defaultFont, asset.scene);
 				t.dropShadow = { dx:1, dy : 1, color : 0, alpha : 1 };
 
 				t.text = Path.withoutDirectory( Path.withoutExtension(asset.file) );
@@ -540,7 +540,7 @@ class AssetBrowser  extends  ImguiTool
 				bmp.width = previewWidth;
 				bmp.height = previewHeight;
 
-				var t = new h2d.Text( hxd.Res.fnt.kodenmanhou16.toFont(), asset.scene);
+				var t = new h2d.Text( cerastes.App.defaultFont, asset.scene);
 				t.dropShadow = { dx:1, dy : 1, color : 0, alpha : 1 };
 
 				t.text = Path.withoutDirectory( Path.withoutExtension(asset.file) );

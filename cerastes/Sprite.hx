@@ -1,6 +1,5 @@
 package cerastes;
 
-import game.GameState;
 import haxe.ds.Vector;
 import cerastes.collision.Collision.CAABB;
 import cerastes.collision.Collision.ColliderType;

@@ -3,7 +3,6 @@ package cerastes;
 #if cannonml
 
 import cerastes.butai.ButaiNodeManager;
-import game.GameState;
 import cerastes.InputManager.InputListener;
 import cerastes.InputManager.InputButton;
 import cerastes.InputManager.InputState;

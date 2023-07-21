@@ -16,15 +16,12 @@ import hxd.System;
 import h3d.mat.Texture;
 import h2d.Object;
 import cerastes.butai.Debug;
-import game.GameState;
 import h3d.Engine;
 import h2d.Bitmap;
 #if client
 import cerastes.ui.Console;
 #end
 import hxd.res.Loader;
-
-import game.scenes.PreloadScene;
 
 import cerastes.InputManager;
 import cerastes.Entity.EntityManager;
@@ -69,6 +66,7 @@ class App extends hxd.App {
 	public static var useScanlines = true;
 
 	public static var instance: App;
+	public static var defaultFont: h2d.Font;
 
 	#if network
 	public static var client: client.ClientConnection;
@@ -94,6 +92,8 @@ class App extends hxd.App {
 
 	public static var launchOptions: Map<String, String> = [];
 
+	public static var saveload: cerastes.SaveLoad;
+
 
 
 	function new()
@@ -103,7 +103,9 @@ class App extends hxd.App {
 
 	override function init()
 	{
+		saveload = new cerastes.SaveLoad();
 		parseArgs();
+		defaultFont = hxd.res.DefaultFont.get();
 
 		hxd.Window.getInstance().vsync = true;
 		#if hlimgui
@@ -150,16 +152,9 @@ class App extends hxd.App {
 //        sevents.removeScene(this.s3d);
 //        sevents.removeScene(this.s2d);
 
-		//loadDatabase();
-		var preload =  new PreloadScene( this );
-		currentScene = preload;
+		currentScene = new cerastes.Scene( this );
+		currentScene.preload();
 
-		preload.preload();
-
-
-
-
-		preload.enter();
 		engine.backgroundColor = 0x0;
 		onResize();
 
@@ -187,8 +182,6 @@ class App extends hxd.App {
 		ImGuiToolManager.showTool("Perf");
 		ImGuiToolManager.showTool("AssetBrowser");
 		ImGuiToolManager.showTool("Console");
-		ImGuiToolManager.showTool("VariableEditor");
-
 		#end
 	}
 

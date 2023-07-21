@@ -8,7 +8,6 @@ import cerastes.tools.ImguiTools.IG;
 
 import hxd.Key;
 import sys.io.File;
-import game.GameState;
 import cerastes.data.Nodes.Link;
 import cerastes.file.CDParser;
 import cerastes.file.CDPrinter;

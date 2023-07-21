@@ -2,9 +2,8 @@
 package cerastes.tools;
 
 
+import cerastes.StrictInterp.InterpVariable;
 import cerastes.flow.Flow.FlowRunner;
-import game.SaveLoad;
-import game.GameState;
 import cerastes.ui.Console.GlobalConsole;
 #if hlimgui
 import h2d.Console.ConsoleArg;
@@ -54,7 +53,7 @@ class VariableEditor extends ImguiTool
 
 	public override function getName() { return '\uf328 Variables'; }
 
-	public function setup( r: FlowRunner, d: Array<InterpVariable>)
+	public function setup( r: FlowRunner, d: Array<InterpVariable> )
 	{
 		runner = r;
 		defs = d;
@@ -76,7 +75,7 @@ class VariableEditor extends ImguiTool
 					if( ImGui.selectable('Slot ${i}', i == saveSlot ))
 					{
 						Utils.info('Loading dev save ${i}');
-						SaveLoad.load(i,Dev);
+						cerastes.App.saveload.load(i,Dev);
 						saveSlot = i;
 					}
 				}
@@ -87,7 +86,7 @@ class VariableEditor extends ImguiTool
 
 			if( saveSlot != -1 && ImGui.button("Write") )
 			{
-				SaveLoad.save(saveSlot, Dev);
+				cerastes.App.saveload.save(saveSlot, Dev);
 			}
 
 			ImGui.separator();

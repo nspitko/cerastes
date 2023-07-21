@@ -5,7 +5,7 @@
 	"tags": [],
 	"description": "Comfyengine.",
 	"version": "0.0.1",
-	"classPath": "cerastes/src/",
+	"classPath": "cerastes/",
 	"releasenote": "Forever in development",
 	"contributors": ["nspitko"],
 	"dependencies": {

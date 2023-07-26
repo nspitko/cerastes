@@ -198,86 +198,85 @@ class Console extends ImguiTool
 	@:access(cerastes.Utils)
 	function consoleText()
 	{
-
-
-		ImGui.beginTable( "textTable", 3, ImGuiTableFlags.Resizable | ImGuiTableFlags.SizingStretchProp | ImGuiTableFlags.Hideable );
-
-		var c: ImVec4 = {x: 0.8, y: 0.8, z: 0.8, w: 1.0 };
-
-		var first = true;
-		var precision: Float = 10000;
-
-		ImGui.pushFont( ImGuiToolManager.consoleFont );
-
-
-		//ImGui.tableSetColumnEnabled( 0, showTime );
-		ImGui.tableSetupColumn("Timestamp", ImGuiTableColumnFlags.WidthFixed, 50 * scaleFactor );
-		//var flags = ImGui.tableGetColumnFlags();
-
-		//ImGui.tableSetColumnEnabled( 1, showPos );
-		ImGui.tableSetupColumn("Pos", ImGuiTableColumnFlags.WidthFixed | ImGuiTableColumnFlags.DefaultHide , 175 * scaleFactor );
-		//var flags = ImGui.tableGetColumnFlags();
-
-		ImGui.tableSetupColumn("Text", ImGuiTableColumnFlags.WidthStretch );
-
-		ImGui.tableHeadersRow();
-
-		scrollToBottom = autoScroll && Utils.log.length != lastLen;
-		lastLen = Utils.log.length;
-
-
-		for( line in Utils.log )
+		if( ImGui.beginTable( "textTable", 3, ImGuiTableFlags.Resizable | ImGuiTableFlags.SizingStretchProp | ImGuiTableFlags.Hideable ) )
 		{
-			switch( line.level )
+			var c: ImVec4 = {x: 0.8, y: 0.8, z: 0.8, w: 1.0 };
+
+			var first = true;
+			var precision: Float = 10000;
+
+			ImGui.pushFont( ImGuiToolManager.consoleFont );
+
+
+			//ImGui.tableSetColumnEnabled( 0, showTime );
+			ImGui.tableSetupColumn("Timestamp", ImGuiTableColumnFlags.WidthFixed, 50 * scaleFactor );
+			//var flags = ImGui.tableGetColumnFlags();
+
+			//ImGui.tableSetColumnEnabled( 1, showPos );
+			ImGui.tableSetupColumn("Pos", ImGuiTableColumnFlags.WidthFixed | ImGuiTableColumnFlags.DefaultHide , 175 * scaleFactor );
+			//var flags = ImGui.tableGetColumnFlags();
+
+			ImGui.tableSetupColumn("Text", ImGuiTableColumnFlags.WidthStretch );
+
+			ImGui.tableHeadersRow();
+
+			scrollToBottom = autoScroll && Utils.log.length != lastLen;
+			lastLen = Utils.log.length;
+
+
+			for( line in Utils.log )
 			{
-				case INFO:
-					ImGui.pushStyleColor( ImGuiCol.Text, 0xFFDEDEDE );
+				switch( line.level )
+				{
+					case INFO:
+						ImGui.pushStyleColor( ImGuiCol.Text, 0xFFDEDEDE );
 
-				case ALWAYS:
-					ImGui.pushStyleColor( ImGuiCol.Text, 0xFFFFFFFF );
+					case ALWAYS:
+						ImGui.pushStyleColor( ImGuiCol.Text, 0xFFFFFFFF );
 
-				case WARNING:
-					ImGui.pushStyleColor( ImGuiCol.Text, 0xFFFFFF33 );
+					case WARNING:
+						ImGui.pushStyleColor( ImGuiCol.Text, 0xFFFFFF33 );
 
-				case ERROR:
-					ImGui.pushStyleColor( ImGuiCol.Text, 0xFFFF3333 );
+					case ERROR:
+						ImGui.pushStyleColor( ImGuiCol.Text, 0xFFFF3333 );
 
-				default:
-					ImGui.pushStyleColor( ImGuiCol.Text, 0xFFDEDEDE );
+					default:
+						ImGui.pushStyleColor( ImGuiCol.Text, 0xFFDEDEDE );
 
+				}
+
+				ImGui.tableNextRow();
+
+				ImGui.tableNextColumn();
+				ImGui.text('${ Math.round( line.time * precision ) / precision}'  );
+
+				ImGui.tableNextColumn();
+				var p = line.pos.fileName.lastIndexOf('/');
+				ImGui.text('${line.pos.fileName.substr(p+1)}:${line.pos.lineNumber}' );
+				var flags = ImGui.tableGetColumnFlags();
+
+				ImGui.tableNextColumn();
+				ImGui.textWrapped(line.line  );
+
+				ImGui.popStyleColor();
+
+				if( flags | ImGuiTableColumnFlags.IsVisible != 0 && ImGui.isItemHovered() )
+					ImGui.setTooltip('${line.pos.fileName}:${line.pos.lineNumber}\n${line.pos.className}::${line.pos.methodName}()');
+
+
+
+				first = false;
 			}
 
-			ImGui.tableNextRow();
+			ImGui.popFont();
 
-			ImGui.tableNextColumn();
-			ImGui.text('${ Math.round( line.time * precision ) / precision}'  );
+			ImGui.endTable();
 
-			ImGui.tableNextColumn();
-			var p = line.pos.fileName.lastIndexOf('/');
-			ImGui.text('${line.pos.fileName.substr(p+1)}:${line.pos.lineNumber}' );
-			var flags = ImGui.tableGetColumnFlags();
+			if ( scrollToBottom )
+				ImGui.setScrollHereY(1.);
 
-			ImGui.tableNextColumn();
-			ImGui.textWrapped(line.line  );
-
-			ImGui.popStyleColor();
-
-			if( flags | ImGuiTableColumnFlags.IsVisible != 0 && ImGui.isItemHovered() )
-				ImGui.setTooltip('${line.pos.fileName}:${line.pos.lineNumber}\n${line.pos.className}::${line.pos.methodName}()');
-
-
-
-			first = false;
+			scrollToBottom = false;
 		}
-
-		ImGui.popFont();
-
-		ImGui.endTable();
-
-		if ( scrollToBottom )
-            ImGui.setScrollHereY(1.);
-
-        scrollToBottom = false;
 	}
 
 	function buttonRow()

@@ -63,8 +63,6 @@ class AudioEditor extends ImguiTool
 
 	var selectMode: AESelectMode = Cue;
 
-	var fileName: String = null;
-
 	var windowWidth: Float = 0;
 	var windowHeight: Float = 0;
 

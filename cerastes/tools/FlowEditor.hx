@@ -47,8 +47,6 @@ class FlowEditor extends ImguiTool
 
 	var nodes : ImGuiNodes;
 
-	var fileName: String = null;
-
 	var windowWidth: Float = 0;
 	var windowHeight: Float = 0;
 

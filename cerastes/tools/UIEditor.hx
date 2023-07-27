@@ -56,7 +56,6 @@ class UIEditor extends ImguiTool
 	var sceneRT: Texture;
 	var sceneRTId: Int;
 
-	var fileName: String = null;
 	var rootDef: CUIObject;
 	var timelines: Array<Timeline>;
 

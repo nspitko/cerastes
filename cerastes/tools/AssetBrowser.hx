@@ -661,49 +661,7 @@ class AssetBrowser  extends  ImguiTool
 		}
 	}
 
-	function openAssetEditor( asset: AssetBrowserPreviewItem )
-	{
-		var ext = Path.extension( asset.file );
-		switch( ext )
-		{
-			#if cannonml
-			case "cml":
-				var t: BulletEditor = cast ImGuiToolManager.showTool("BulletEditor");
-				t.openFile( asset.file );
-			case "cbl":
-				var t: BulletLevelEditor = cast ImGuiToolManager.showTool("BulletLevelEditor");
-				t.openFile( asset.file );
-			#end
-			case "ui":
-				var t: UIEditor = cast ImGuiToolManager.showTool("UIEditor");
-				t.openFile( asset.file );
-			#if spritemeta
-			case "csd":
-				var t: SpriteEditor = cast ImGuiToolManager.showTool("SpriteEditor");
-				t.openFile( asset.file );
-			#end
-			case "atlas":
-				var t: AtlasBrowser = cast ImGuiToolManager.showTool("AtlasBrowser");
-				t.openFile( asset.file );
-			case "catlas":
-				var t: AtlasBuilder = cast ImGuiToolManager.showTool("AtlasBuilder");
-				t.openFile( asset.file );
-			case "flow":
-				var t: FlowEditor = cast ImGuiToolManager.showTool("FlowEditor");
-				t.openFile( asset.file );
-			case "audio":
-				var t: AudioEditor = cast ImGuiToolManager.showTool("AudioEditor");
-				t.openFile( asset.file );
-			case "material":
-				var t: MaterialEditor = cast ImGuiToolManager.showTool("MaterialEditor");
-				t.openFile( asset.file );
-			case "model":
-				var t: ModelEditor = cast ImGuiToolManager.showTool("ModelEditor");
-				t.openFile( asset.file );
-			case "wav" | "ogg" | "mp3":
-				hxd.Res.load( asset.file ).toSound().play();
-		}
-	}
+
 
 	function populateAssets()
 	{
@@ -743,7 +701,7 @@ class AssetBrowser  extends  ImguiTool
 					if( ImGui.isMouseDoubleClicked( ImGuiMouseButton.Left ) )
 					{
 						//Utils.info('Asset open: ${preview.file}');
-						openAssetEditor( preview );
+						ImGuiToolManager.openAssetEditor( preview.file );
 					}
 				}
 

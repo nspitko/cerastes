@@ -82,8 +82,6 @@ class ModelEditor extends ImguiTool
 	var windowWidth: Float = 0;
 	var windowHeight: Float = 0;
 
-	var fileName: String = null;
-
 	var modelDef : ModelDef = null;
 
 

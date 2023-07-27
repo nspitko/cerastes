@@ -203,6 +203,10 @@ class App extends hxd.App {
 		}
 		#end
 
+		#if hlimgui
+		cerastes.tools.ImGuiToolManager.saveState();
+		#end
+
 
 		hxd.System.exit();
 		#end

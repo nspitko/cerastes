@@ -53,8 +53,6 @@ class GPUParticleEditor extends ImguiTool
 	var windowWidth: Float = 0;
 	var windowHeight: Float = 0;
 
-	var fileName: String = null;
-
 	var particleDef : cerastes.c3d.GPUParticle.GPUParticleDef = null;
 	var particle: GpuParticles = null;
 

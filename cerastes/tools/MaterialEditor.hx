@@ -60,8 +60,6 @@ class MaterialEditor extends ImguiTool
 	var windowWidth: Float = 0;
 	var windowHeight: Float = 0;
 
-	var fileName: String = null;
-
 	var materialDef : MaterialDef = null;
 
 	public override function getName() { return "\uf1de Material Editor"; }

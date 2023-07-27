@@ -1,6 +1,10 @@
 
 package cerastes.tools;
 
+import haxe.io.Path;
+import cerastes.file.CDPrinter;
+import sys.io.File;
+import cerastes.file.CDParser;
 import sys.FileSystem;
 import hxd.Window;
 #if hlimgui
@@ -23,6 +27,7 @@ class ImguiTool
 {
 	public var toolId: Int = 0;
 	public var forceFocus: Bool = false;
+	public var fileName: String = null;
 
 	public function update( delta: Float ) {}
 	public function render( e: h3d.Engine)	{}
@@ -53,6 +58,12 @@ class ImGuiPopup
 
 	public var spawnTime: Float = 0;
 	public var duration: Float = 5;
+}
+
+@:structInit
+class ImGuiToolManagerState
+{
+	public var openFiles: Array<String> = [];
 }
 
 class ImGuiToolManager
@@ -87,8 +98,6 @@ class ImGuiToolManager
 	static var menubarHeight: Float;
 
 	static var nextWindowFocus: String = null;
-
-
 
 	static function set_enabled(v)
 	{
@@ -163,6 +172,37 @@ class ImGuiToolManager
 		tools.remove(t);
 	}
 
+	public static function saveState()
+	{
+		var s: ImGuiToolManagerState = {};
+		for( t in tools )
+		{
+			if( t.fileName != null )
+				s.openFiles.push( t.fileName );
+		}
+
+		sys.io.File.saveContent( "cerastesToolState.sav", CDPrinter.print( s ) );
+	}
+
+	public static function restoreState()
+	{
+		try
+		{
+			var s  = CDParser.parse( File.getContent( "cerastesToolState.sav" ), ImGuiToolManagerState );
+			if( s != null )
+			{
+				for( f in s.openFiles )
+				{
+					openAssetEditor( f );
+				}
+			}
+		}
+		catch(e)
+		{
+			Utils.warning("Failed to restore ImGuiToolManager state.");
+		}
+	}
+
 	public static function init()
 	{
 		ImGui.setConfigFlags( DockingEnable );
@@ -189,7 +229,7 @@ class ImGuiToolManager
 
 		previewEvents = new SceneEvents();
 
-
+		restoreState();
 
 	}
 
@@ -634,6 +674,50 @@ class ImGuiToolManager
 		//preview.dispatchListeners( event );
 
 		#end
+	}
+
+	public static function openAssetEditor( file: String )
+	{
+		var ext = Path.extension( file );
+		switch( ext )
+		{
+			#if cannonml
+			case "cml":
+				var t: BulletEditor = cast ImGuiToolManager.showTool("BulletEditor");
+				t.openFile( file );
+			case "cbl":
+				var t: BulletLevelEditor = cast ImGuiToolManager.showTool("BulletLevelEditor");
+				t.openFile( file );
+			#end
+			case "ui":
+				var t: UIEditor = cast ImGuiToolManager.showTool("UIEditor");
+				t.openFile( file );
+			#if spritemeta
+			case "csd":
+				var t: SpriteEditor = cast ImGuiToolManager.showTool("SpriteEditor");
+				t.openFile( file );
+			#end
+			case "atlas":
+				var t: AtlasBrowser = cast ImGuiToolManager.showTool("AtlasBrowser");
+				t.openFile( file );
+			case "catlas":
+				var t: AtlasBuilder = cast ImGuiToolManager.showTool("AtlasBuilder");
+				t.openFile( file );
+			case "flow":
+				var t: FlowEditor = cast ImGuiToolManager.showTool("FlowEditor");
+				t.openFile( file );
+			case "audio":
+				var t: AudioEditor = cast ImGuiToolManager.showTool("AudioEditor");
+				t.openFile( file );
+			case "material":
+				var t: MaterialEditor = cast ImGuiToolManager.showTool("MaterialEditor");
+				t.openFile( file );
+			case "model":
+				var t: ModelEditor = cast ImGuiToolManager.showTool("ModelEditor");
+				t.openFile( file );
+			case "wav" | "ogg" | "mp3":
+				hxd.Res.load( file ).toSound().play();
+		}
 	}
 }
 

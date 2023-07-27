@@ -49,8 +49,6 @@ class AtlasBuilder  extends  ImguiTool
 
 	var scaleFactor = Utils.getDPIScaleFactor();
 
-	var fileName: String = null;
-
 	var atlas: Atlas;
 
 	var previewWidth : Float;

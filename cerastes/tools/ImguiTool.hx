@@ -229,7 +229,10 @@ class ImGuiToolManager
 
 		previewEvents = new SceneEvents();
 
-		restoreState();
+		// Delay a frame so we get the right sizes
+		new Timer(0.1, () -> {
+			restoreState();
+		});
 
 	}
 

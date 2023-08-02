@@ -235,4 +235,9 @@ class UIEntity extends h2d.Object implements Entity
 		while( p.parent != null ) p = p.parent;
 		return p;
 	}
+
+	function schedule(time: Float, func: Void->Void )
+	{
+		EntityManager.instance.schedule( hxd.Timer.elapsedTime + time, func );
+	}
 }

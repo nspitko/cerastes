@@ -5,6 +5,7 @@ import cerastes.macros.Metrics;
 import cerastes.net.Replicated;
 #end
 import cerastes.Utils.*;
+using cerastes.types.List;
 
 typedef ScheduledFunction = {
 	var time: Float;
@@ -20,7 +21,7 @@ class EntityManager
 
 	static var lastId = 0;
 
-	var scheduledFunctions: Array<ScheduledFunction> = [];
+	var scheduledFunctions: List<ScheduledFunction> = new List<ScheduledFunction>();
 
 	public function new () {}
 
@@ -39,9 +40,9 @@ class EntityManager
 		}
 
 		var t = haxe.Timer.stamp();
-		while( scheduledFunctions.length > 0 && scheduledFunctions[0].time < t )
+		while( scheduledFunctions.first() != null && scheduledFunctions.first().item.time < t )
 		{
-			var f = scheduledFunctions.shift();
+			var f = scheduledFunctions.pop().item;
 			f.func();
 		}
 		Metrics.end();
@@ -68,9 +69,11 @@ class EntityManager
 		return ++lastId;
 	}
 
-	// @todo refactor this: A better solution would be to backsolve which frame
-	// we expect to run this func on, then insert into a map of frame -> entities
-	// ... This is probably fine for low freq stuff though
+	function scheduleInsertFunc( item: ScheduledFunction, other: ScheduledFunction ) : Bool
+	{
+		return item.time < other.time;
+	}
+
 	public function schedule(time: Float, func: Void->Void )
 	{
 		var low = 0;
@@ -81,6 +84,8 @@ class EntityManager
 			func: func
 		};
 
+		scheduledFunctions.insert(sf, scheduleInsertFunc );
+		/*
 		while (low < high)
 		{
 			var mid = (low + high) >>> 1;
@@ -89,9 +94,12 @@ class EntityManager
 			else
 				high = mid;
 		}
-
 		scheduledFunctions.insert(low, sf);
+		*/
+
+
 	}
+
 }
 
 
@@ -159,6 +167,11 @@ class BaseEntity #if network implements Replicated #end implements Entity
 
 	public function tick( delta: Float )
 	{
+	}
+
+	function schedule(time: Float, func: Void->Void )
+	{
+		EntityManager.instance.schedule( hxd.Timer.elapsedTime + time, func );
 	}
 
 	public function isDestroyed()

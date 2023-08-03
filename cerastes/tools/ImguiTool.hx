@@ -64,6 +64,7 @@ class ImGuiPopup
 class ImGuiToolManagerState
 {
 	public var openFiles: Array<String> = [];
+	public var previewScale: Int = 1;
 }
 
 class ImGuiToolManager
@@ -181,6 +182,8 @@ class ImGuiToolManager
 				s.openFiles.push( t.fileName );
 		}
 
+		s.previewScale = previewScale;
+
 		sys.io.File.saveContent( "cerastesToolState.sav", CDPrinter.print( s ) );
 	}
 
@@ -196,6 +199,7 @@ class ImGuiToolManager
 					openAssetEditor( f );
 				}
 			}
+			previewScale = s.previewScale > 0 ? s.previewScale : previewScale;
 		}
 		catch(e)
 		{

@@ -1,5 +1,6 @@
 package cerastes;
 
+import cerastes.c2d.DebugDraw;
 import cerastes.macros.Metrics;
 #if network
 import cerastes.net.Replicated;
@@ -45,6 +46,7 @@ class EntityManager
 			var f = scheduledFunctions.pop().item;
 			f.func();
 		}
+
 		Metrics.end();
 	}
 
@@ -171,7 +173,7 @@ class BaseEntity #if network implements Replicated #end implements Entity
 
 	function schedule(time: Float, func: Void->Void )
 	{
-		EntityManager.instance.schedule( hxd.Timer.elapsedTime + time, func );
+		EntityManager.instance.schedule( haxe.Timer.stamp() + time, func );
 	}
 
 	public function isDestroyed()

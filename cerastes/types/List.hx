@@ -40,7 +40,7 @@ class List<T>
 			if ( check(item, l.item) )
 			{
 				var v = ListNode.create(item, prev.next );
-				prev.next = l;
+				prev.next = v;
 
 				length++;
 				return ;

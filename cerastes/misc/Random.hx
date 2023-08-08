@@ -4,8 +4,13 @@ package cerastes.misc;
 // ref https://raw.githubusercontent.com/Kode/Kha/master/Sources/kha/math/Random.hx
 
 // Mersenne twister
-class Random {
-	public function new(seed: Int): Void {
+class Random
+{
+	public function new(?seed: Int = -1): Void
+	{
+		if( seed == -1 )
+			seed = Std.random(0xFFFFFFFF);
+
 		MT = new Array<Int>();
 		MT[624 - 1] = 0;
 		MT[0] = seed;

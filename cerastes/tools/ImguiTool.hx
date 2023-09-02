@@ -100,6 +100,8 @@ class ImGuiToolManager
 
 	static var nextWindowFocus: String = null;
 
+	static var styleWindowOpen: Bool = false;
+
 	static function set_enabled(v)
 	{
 		enabled = v;
@@ -357,6 +359,11 @@ class ImGuiToolManager
 				if (ImGui.menuItem("Atlas Builder"))
 					ImGuiToolManager.showTool("AtlasBuilder");
 
+				ImGui.separator();
+
+				if (ImGui.menuItem("Style Editor"))
+					styleWindowOpen = !styleWindowOpen;
+
 				ImGui.endMenu();
 			}
 			ImGui.endMainMenuBar();
@@ -364,6 +371,9 @@ class ImGuiToolManager
 
 		Metrics.begin("ImGui.showDemoWindow");
 		//ImGui.showDemoWindow();
+		if( styleWindowOpen )
+			ImGui.showStyleEditor();
+		
 		Metrics.end();
 
 		drawTaskBar();

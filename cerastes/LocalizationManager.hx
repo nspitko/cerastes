@@ -163,7 +163,12 @@ class LocalizationManager
 		contexts["common"].set(token, value);
 	}
 
-	public static function localize(token: String, ...rest: String) : String
+	public inline static function localize(token: String, ...rest: String) : String
+	{
+		return localizeArray(token, rest.toArray());
+	}
+
+	public static function localizeArray(token: String, rest: Array<String>) : String
 	{
 		if( Utils.assert( token != null, "Tried to localized null string as token!" ) )
 			return "null";
@@ -181,7 +186,7 @@ class LocalizationManager
 			str = token;
 		}
 
-		return formatStr(str, rest.toArray());
+		return formatStr(str, rest );
 	}
 
 	public static function exists( token: String )

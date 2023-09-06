@@ -115,126 +115,128 @@ class VariableEditor extends ImguiTool
 		final ttw = 300;
 
 
-		ImGui.beginTable( "textTable", 3, ImGuiTableFlags.Resizable | ImGuiTableFlags.SizingStretchProp | ImGuiTableFlags.Hideable );
-
-		var c: ImVec4 = {x: 0.8, y: 0.8, z: 0.8, w: 1.0 };
-
-		var first = true;
-		var precision: Float = 10000;
-
-
-		//ImGui.tableSetColumnEnabled( 0, showTime );
-		ImGui.tableSetupColumn("Name", ImGuiTableColumnFlags.WidthFixed, 150 * scaleFactor );
-		//var flags = ImGui.tableGetColumnFlags();
-
-		ImGui.tableSetupColumn("Value", ImGuiTableColumnFlags.WidthStretch );
-
-		ImGui.tableHeadersRow();
-
-		scrollToBottom = autoScroll && Utils.log.length != lastLen;
-		lastLen = Utils.log.length;
-
-		var keys = [ for(k in defs) k.name ];
-		keys.sort( (a: String, b: String ) -> { return a < b ? -1 : 1; } );
-
-		var kv = @:privateAccess runner.context.interp.variables;
-
-		for( k in keys )
+		if( ImGui.beginTable( "textTable", 3, ImGuiTableFlags.Resizable | ImGuiTableFlags.SizingStretchProp | ImGuiTableFlags.Hideable ) )
 		{
-			var v = kv[k];
 
-			if( filter != null && filter.length > 0)
+			var c: ImVec4 = {x: 0.8, y: 0.8, z: 0.8, w: 1.0 };
+
+			var first = true;
+			var precision: Float = 10000;
+
+
+			//ImGui.tableSetColumnEnabled( 0, showTime );
+			ImGui.tableSetupColumn("Name", ImGuiTableColumnFlags.WidthFixed, 150 * scaleFactor );
+			//var flags = ImGui.tableGetColumnFlags();
+
+			ImGui.tableSetupColumn("Value", ImGuiTableColumnFlags.WidthStretch );
+
+			ImGui.tableHeadersRow();
+
+			scrollToBottom = autoScroll && Utils.log.length != lastLen;
+			lastLen = Utils.log.length;
+
+			var keys = [ for(k in defs) k.name ];
+			keys.sort( (a: String, b: String ) -> { return a < b ? -1 : 1; } );
+
+			var kv = @:privateAccess runner.context.interp.variables;
+
+			for( k in keys )
 			{
-				if( !StringTools.contains(k, filter) )
-					continue;
-			}
+				var v = kv[k];
 
-			ImGui.tableNextRow();
-
-			ImGui.tableNextColumn();
-
-			ImGui.text( k );
-
-			if( ImGui.isItemHovered() )
-			{
-				var cs = getCommentString(k);
-				if( cs != null )
+				if( filter != null && filter.length > 0)
 				{
-					ImGui.setNextWindowSize( {x: ttw * scaleFactor, y: 0 } );
-					ImGui.beginTooltip();
-					ImGui.textMarkdown( cs );
-					ImGui.endTooltip();
+					if( !StringTools.contains(k, filter) )
+						continue;
+				}
+
+				ImGui.tableNextRow();
+
+				ImGui.tableNextColumn();
+
+				ImGui.text( k );
+
+				if( ImGui.isItemHovered() )
+				{
+					var cs = getCommentString(k);
+					if( cs != null )
+					{
+						ImGui.setNextWindowSize( {x: ttw * scaleFactor, y: 0 } );
+						ImGui.beginTooltip();
+						ImGui.textMarkdown( cs );
+						ImGui.endTooltip();
+					}
+				}
+
+				if( ImGui.isItemClicked( ImGuiMouseButton.Left ) && ImGui.isMouseDoubleClicked( ImGuiMouseButton.Left ) )
+				{
+					editorField = k;
+				}
+
+				ImGui.tableNextColumn();
+
+				if( editorField == k )
+				{
+					switch ( Type.typeof( v ) )
+					{
+						case TInt:
+							var r = v;
+							if( ImGui.inputInt( '##${k}', r ) )
+								kv[k] = r.get();
+
+						case TFloat:
+							var r = v;
+							if( ImGui.inputDouble( '##${k}', r ) )
+								kv[k] = r.get();
+
+						case TBool:
+							var r = v;
+							if( ImGui.checkbox( '##${k}', r ) )
+								kv[k] = r.get();
+
+						case TClass( String ):
+							var r: Ref<String> = v;
+							if( ImGui.inputText( '##${k}', r ) && r != null )
+								kv[k] = r.get();
+
+						case _:
+							Utils.info('Unhandled type ${Type.typeof( v )}');
+					}
+				}
+				else
+				{
+					var displayStr: Dynamic = v;
+					if( v == "" )
+						displayStr = "<Unset>";
+
+					ImGui.text( Std.string( displayStr )  );
+				}
+
+				if( ImGui.isItemHovered() )
+				{
+					var cs = getCommentString(k);
+					if( cs != null )
+					{
+						ImGui.setNextWindowSize( {x: ttw * scaleFactor, y: 0 } );
+						ImGui.beginTooltip();
+						ImGui.textMarkdown( cs );
+						ImGui.endTooltip();
+					}
+				}
+
+
+
+				first = false;
+
+				if( ImGui.isItemClicked( ImGuiMouseButton.Left ) && ImGui.isMouseDoubleClicked( ImGuiMouseButton.Left ) )
+				{
+					editorField = k;
 				}
 			}
 
-			if( ImGui.isItemClicked( ImGuiMouseButton.Left ) && ImGui.isMouseDoubleClicked( ImGuiMouseButton.Left ) )
-			{
-				editorField = k;
-			}
 
-			ImGui.tableNextColumn();
-
-			if( editorField == k )
-			{
-				switch ( Type.typeof( v ) )
-				{
-					case TInt:
-						var r = v;
-						if( ImGui.inputInt( '##${k}', r ) )
-							kv[k] = r.get();
-
-					case TFloat:
-						var r = v;
-						if( ImGui.inputDouble( '##${k}', r ) )
-							kv[k] = r.get();
-
-					case TBool:
-						var r = v;
-						if( ImGui.checkbox( '##${k}', r ) )
-							kv[k] = r.get();
-
-					case TClass( String ):
-						var r: Ref<String> = v;
-						if( ImGui.inputText( '##${k}', r ) && r != null )
-							kv[k] = r.get();
-
-					case _:
-						Utils.info('Unhandled type ${Type.typeof( v )}');
-				}
-			}
-			else
-			{
-				var displayStr: Dynamic = v;
-				if( v == "" )
-					displayStr = "<Unset>";
-
-				ImGui.text( Std.string( displayStr )  );
-			}
-
-			if( ImGui.isItemHovered() )
-			{
-				var cs = getCommentString(k);
-				if( cs != null )
-				{
-					ImGui.setNextWindowSize( {x: ttw * scaleFactor, y: 0 } );
-					ImGui.beginTooltip();
-					ImGui.textMarkdown( cs );
-					ImGui.endTooltip();
-				}
-			}
-
-
-
-			first = false;
-
-			if( ImGui.isItemClicked( ImGuiMouseButton.Left ) && ImGui.isMouseDoubleClicked( ImGuiMouseButton.Left ) )
-			{
-				editorField = k;
-			}
+			ImGui.endTable();
 		}
-
-
-		ImGui.endTable();
 
 	}
 

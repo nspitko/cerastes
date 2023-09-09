@@ -58,6 +58,9 @@ enum PackMode {
 	@serializeType("cerastes.fmt.Vec2i")
 	public var size: Vec2i = {};
 
+	// Duration (in ms) of this frame. Only used in cerastes.ui.Anim
+	public var duration: Int = 0;
+
 	@noSerialize
 	public var atlas: Atlas = null;
 
@@ -82,6 +85,9 @@ enum PackMode {
 	public var bbox: Vec4i = {};
 	@serializeType("cerastes.fmt.Vec2i")
 	public var origin: Vec2i = {};
+
+	// If set and not -1, defines the frame we will use when the animation finishes or has not started
+	@default(-1) public var defaultFrame: Int = -1;
 
 	//
 
@@ -131,6 +137,20 @@ enum PackMode {
 		}
 
 		rebuildLinks();
+		setDefaults();
+	}
+
+	// @todo make this configurable.
+	function setDefaults()
+	{
+		for( e in entries )
+		{
+			for(f in e.frames )
+			{
+				if( f.duration == 0 )
+					f.duration = 100;
+			}
+		}
 	}
 
 	public function rebuildLinks()

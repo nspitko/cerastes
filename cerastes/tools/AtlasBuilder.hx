@@ -1,5 +1,6 @@
 package cerastes.tools;
 
+import cerastes.ui.Anim;
 #if hlimgui
 import cerastes.fmt.CUIResource;
 import cerastes.fmt.AtlasResource.PackMode;
@@ -24,6 +25,7 @@ import sys.io.File;
 import imgui.ImGui;
 import h2d.Object;
 import haxe.ds.Map;
+import cerastes.macros.MacroUtils.imTooltip;
 
 enum AESelectedObjectType {
 	None;
@@ -59,6 +61,11 @@ class AtlasBuilder  extends  ImguiTool
 
 	var selectedItemType: AESelectedObjectType = None;
 
+	var previewAnim: cerastes.ui.Anim;
+	var previewScene: h2d.Scene;
+	var sceneRT: Texture;
+
+
 	static var globalIndex = 0;
 	var index = 0;
 
@@ -82,6 +89,10 @@ class AtlasBuilder  extends  ImguiTool
 		index = globalIndex++;
 
 		atlas = {};
+
+		previewScene = new h2d.Scene();
+		previewScene.scaleMode = Fixed(viewportWidth,viewportHeight, 1, Left, Top);
+		sceneRT = new Texture(10,10, [Target] );
 
 		// TESTING
 		//openFile("atlases/TextureGroup1.catlas");
@@ -218,8 +229,58 @@ class AtlasBuilder  extends  ImguiTool
 				ImGui.endPopup();
 			}
 
+			if( selectedFrame != null )
+			{
+				if( ImGui.button("Move Up") )
+				{
+					var idx = selectedEntry.frames.indexOf( selectedFrame );
+					if( idx > 0 )
+					{
+						selectedEntry.frames.remove( selectedFrame );
+						selectedEntry.frames.insert(idx-1, selectedFrame );
+					}
+				}
+				ImGui.sameLine();
+				if( ImGui.button("Move Down") )
+				{
+					var idx = selectedEntry.frames.indexOf( selectedFrame );
+					if( idx > 0 )
+					{
+						selectedEntry.frames.remove( selectedFrame );
+						selectedEntry.frames.insert(idx+1, selectedFrame );
+					}
+				}
+				ImGui.inputInt("Frame duration (ms)", selectedFrame.duration, 10, 100 );
 
-		}
+
+
+				ImGui.separator();
+			}
+
+
+
+			var hasDefaultFrame = selectedEntry.defaultFrame != -1;
+			if( ImGui.checkbox("Default Frame", hasDefaultFrame) )
+			{
+				selectedEntry.defaultFrame = hasDefaultFrame ? 0 : -1;
+			}
+			imTooltip( "This is the frame that will be used when the animation isn't playing. Useful for things like blinks, where we don't want to hide the underlying sprite when we're not animating." );
+
+
+			if( hasDefaultFrame )
+			{
+				ImGui.inputInt("Frame Index", selectedEntry.defaultFrame,1,10 );
+				imTooltip( "Frame number to use as the default frame." );
+
+			}
+
+			ImGui.separator();
+
+			ImGui.image(sceneRT, { x: selectedEntry.size.x, y: selectedEntry.size.y }, null, null, null, {x: 1, y: 1, z:1, w:1} );
+
+
+
+		} // end selected entry
 
 		ImGui.end();
 	}
@@ -294,8 +355,13 @@ class AtlasBuilder  extends  ImguiTool
 			var buttonPos = ImGui.getCursorPos();
 			if( ImGui.button('',{x: buttonWidth, y: buttonHeight } ) )
 			{
+				previewScene.removeChildren();
 				selectedEntry = entry;
 				selectedItemType = Entry;
+				selectedFrame = null;
+				previewAnim = new Anim(selectedEntry, previewScene);
+				previewAnim.loop = true;
+				sceneRT.resize( entry.size.x > 0 ? entry.size.x : 1, entry.size.y > 0 ? entry.size.y : 1 );
 			}
 
 
@@ -423,7 +489,7 @@ class AtlasBuilder  extends  ImguiTool
 
 			var idOut = hl.Ref.make( dockspaceId );
 
-			dockspaceIdLeft = ImGui.dockBuilderSplitNode(idOut.get(), ImGuiDir.Left, 0.20, null, idOut);
+			dockspaceIdLeft = ImGui.dockBuilderSplitNode(idOut.get(), ImGuiDir.Left, 0.30, null, idOut);
 			//dockspaceIdRight = ImGui.dockBuilderSplitNode(idOut.get(), ImGuiDir.Right, 0.3, null, idOut);
 			dockspaceIdCenter = idOut.get();
 
@@ -480,8 +546,10 @@ class AtlasBuilder  extends  ImguiTool
 		{
 			var fileName = Utils.toLocalFile( newFile );
 
-			trace(fileName);
-			atlas.add(fileName);
+			if( hxd.File.exists( fileName ))
+			{
+				atlas.add(fileName);
+			}
 		}
 	}
 
@@ -496,11 +564,14 @@ class AtlasBuilder  extends  ImguiTool
 		if( newFile != null )
 		{
 			var fileName = Utils.toLocalFile( newFile );
-			var frame: AtlasFrame = {
-				file: Utils.toLocalFile( newFile )
-			};
+			if( hxd.File.exists( fileName ))
+			{
+				var frame: AtlasFrame = {
+					file: fileName
+				};
 
-			entry.frames.push( frame );
+				entry.frames.push( frame );
+			}
 		}
 
 		atlas.rebuildLinks();
@@ -554,6 +625,30 @@ class AtlasBuilder  extends  ImguiTool
 			}
 			ImGui.endMenuBar();
 		}
+	}
+
+
+	override public function render( e: h3d.Engine)
+	{
+		sceneRT.clear( 0 );
+
+		var oldW = e.width;
+		var oldH = e.height;
+
+		e.pushTarget( sceneRT );
+		e.clear(0,1);
+
+		@:privateAccess// @:bypassAccessor
+		{
+			e.width = sceneRT.width;
+			e.height = sceneRT.height;
+			previewScene.checkResize();
+			previewScene.render(e);
+			e.width = oldW;
+			e.height = oldH;
+		}
+
+		e.popTarget();
 	}
 
 

@@ -4,10 +4,6 @@ package cerastes.tools;
 
 #if hlimgui
 
-#if macro
-import haxe.macro.Expr;
-using haxe.macro.Tools;
-#else
 import hxd.fs.LocalFileSystem;
 import hl.UI;
 import h3d.Engine;
@@ -47,10 +43,9 @@ class TimelineItem
 }
 
 typedef IG = ImGuiTools;
-#end
 
-class ImGuiTools {
-#if !macro
+class ImGuiTools
+{
 	static var typeMap: Map<String,Dynamic> = [];
 	static var enumMap: Map<String,Array<Dynamic>> = [];
 
@@ -812,6 +807,6 @@ class ImGuiTools {
 		var atlas = ImGui.getFontAtlas();
 	}
 
-	#end
+
 }
 #end

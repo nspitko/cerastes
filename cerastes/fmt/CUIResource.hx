@@ -242,6 +242,14 @@ import hxd.res.Resource;
 	@et("Float") public var speed: Float = 15;
 	@et("Bool") public var loop: Bool = true;
 	@et("Bool") public var autoplay: Bool = true;
+	@et("Bool") public var bidirectional: Bool = false;
+}
+
+@:structInit class CUICAnim extends CUIDrawable {
+	public var entry: String = "#FF00FF";
+	@et("Float") public var speed: Float = 15;
+	@et("Bool") public var loop: Bool = true;
+	@et("Bool") public var autoplay: Bool = true;
 }
 
 @:structInit class CUIButton extends CUIFlow {
@@ -554,6 +562,9 @@ class CUIResource extends Resource
 			case "h2d.Anim":
 				obj = new h2d.Anim();
 
+			case "cerastes.ui.Anim":
+				obj = new cerastes.ui.Anim();
+
 			case "h2d.Mask":
 				var d : CUIMask = cast entry;
 				obj = new h2d.Mask(d.width,d.height);
@@ -701,6 +712,9 @@ class CUIResource extends Resource
 
 				o.maxLines = e.maxLines;
 
+				if( e.text.charAt(0) == "#" )
+					o.locToken = e.text.substr(1);
+
 
 			case "h2d.Bitmap":
 				var o = cast(obj, h2d.Bitmap);
@@ -727,11 +741,36 @@ class CUIResource extends Resource
 				var o = cast(obj, h2d.Anim);
 				var e: CUIAnim = cast entry;
 
-				@:privateAccess o.frames = getTiles( e.entry );
+				var frames = getTiles( e.entry );
+				if( e.bidirectional )
+				{
+					var bidiFrames = frames.copy();
+					var i = frames.length - 1;
+					while ( i >= 0 )
+					{
+						frames.push( bidiFrames[i] );
+						i--;
+					}
+				}
+
+				@:privateAccess o.frames = frames;
+
 				o.speed = e.speed;
 				o.loop = e.loop;
 				o.pause = !e.autoplay;
 
+			case "cerastes.ui.Anim":
+				var o = cast(obj, cerastes.ui.Anim);
+				var e: CUICAnim = cast entry;
+
+				var entry = Utils.getAtlasEntry( e.entry );
+				/*
+				o.entry = entry;
+
+				o.speed = e.speed;
+				o.loop = e.loop;
+				o.pause = !e.autoplay;
+*/
 			case "h2d.Flow":
 				var o = cast(obj, h2d.Flow);
 				var e: CUIFlow = cast entry;

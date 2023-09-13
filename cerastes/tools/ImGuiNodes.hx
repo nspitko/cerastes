@@ -176,7 +176,12 @@ class ImGuiNodes
 	{
 		// HACK: Do not do shit while minimized, it breaks the world.
 		if( hxd.Window.getInstance().width == 0 || hxd.Window.getInstance().height == 0 )
-			return;
+			return false;
+
+
+		var size = ImGui.getContentRegionAvail();
+		if( size.x == 0 || size.y == 0  )
+			return false;
 
 
 		NodeEditor.setCurrentEditor( editor );
@@ -187,14 +192,7 @@ class ImGuiNodes
 		style.NodeRounding = 0;
 
 
-		if( firstRender )
-		{
-			// Hack
-			NodeEditor.begin("test", {x: 1000, y: 1000});
-			firstRender = false;
-		}
-		else
-			NodeEditor.begin("test");
+		NodeEditor.begin("test", size);
 
 		if( iconWidth == 0 )
 		{
@@ -214,10 +212,14 @@ class ImGuiNodes
 		}
 
 		handleEvents();
-
 		NodeEditor.end();
 
+		if(firstRender )
+			firstRender = false;
+
+
 		canSuspend = true;
+		return true;
 	}
 
 	function getNode(nodeId: NodeId32 )
@@ -846,6 +848,9 @@ class ImGuiNodes
 	{
 		var nodeIds: hl.NativeArray<NodeId> = NodeEditor.getSelectedNodes();
 		var out = [];
+		if( firstRender )
+			return out;
+
 		for( nodeId in nodeIds )
 		{
 			for( n in nodes )
@@ -859,6 +864,9 @@ class ImGuiNodes
 
 	public function getSelectedNode() : Node
 	{
+		if( firstRender )
+			return null;
+
 		var nodeIds: hl.NativeArray<NodeId> = NodeEditor.getSelectedNodes();
 		if( nodeIds.length != 1 )
 			return null;
@@ -875,6 +883,9 @@ class ImGuiNodes
 
 	public function getSelectedLink() : Link
 	{
+		if( firstRender )
+			return null;
+
 		var linkIds: hl.NativeArray<LinkId> = NodeEditor.getSelectedLinks();
 		if( linkIds.length != 1 )
 			return null;

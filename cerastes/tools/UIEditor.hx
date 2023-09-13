@@ -199,7 +199,7 @@ class UIEditor extends ImguiTool
 
 			if( ImGui.beginPopup("uie_additem") )
 			{
-				var types = ["h2d.Object", "h2d.Text", "h2d.Bitmap", "h2d.Anim", "h2d.Flow", "h2d.Mask", "h2d.Interactive", "h2d.ScaleGrid", "cerastes.ui.Button", "cerastes.ui.BitmapButton", "cerastes.ui.TextButton", "cerastes.ui.AdvancedText", "cerastes.ui.Reference", "cerastes.ui.Sound"];
+				var types = ["h2d.Object", "h2d.Text", "h2d.Bitmap", "h2d.Anim", "h2d.Flow", "h2d.Mask", "h2d.Interactive", "h2d.ScaleGrid", "cerastes.ui.Button", "cerastes.ui.AdvancedText", "cerastes.ui.Reference", "cerastes.ui.Sound"];
 
 				for( t in types )
 				{
@@ -313,6 +313,8 @@ class UIEditor extends ImguiTool
 		var lastFrame = frame;
 		var popupIdRC = 'timeline_rc${windowID()}';
 		var popupIdKeyframeContext = 'timeline_kf_context${windowID()}';
+		var drawList = ImGui.getWindowDrawList();
+		var style = NeoSequencer.getStyle();
 
 		var isPopupOpen = ImGui.isPopupOpen( popupIdRC ) || ImGui.isPopupOpen( popupIdKeyframeContext );
 
@@ -1212,6 +1214,12 @@ class UIEditor extends ImguiTool
 
 	function populateTimelineEditor()
 	{
+		if( selectedTimeline == null )
+		{
+			ImGui.text("No timeline selected");
+			return;
+		}
+
 		var nt = IG.textInput( "Name", selectedTimeline.name );
 		if( nt != null && nt.length > 0 )
 		{

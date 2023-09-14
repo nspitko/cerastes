@@ -250,6 +250,24 @@ class AtlasBuilder  extends  ImguiTool
 						selectedEntry.frames.insert(idx+1, selectedFrame );
 					}
 				}
+				// NL
+				if( ImGui.button("Clone") )
+				{
+					var idx = selectedEntry.frames.indexOf( selectedFrame );
+					if( idx == -1 ) idx = 0;
+
+					selectedEntry.frames.insert(idx+1, selectedFrame.clone() );
+				}
+				ImGui.sameLine();
+				if( ImGui.button("Remove") )
+				{
+					var idx = selectedEntry.frames.indexOf( selectedFrame );
+					if( idx > 0 )
+					{
+						selectedEntry.frames.remove( selectedFrame );
+					}
+				}
+				// NL
 				ImGui.inputInt("Frame duration (ms)", selectedFrame.duration, 10, 100 );
 
 

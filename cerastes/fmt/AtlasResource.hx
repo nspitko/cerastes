@@ -6,6 +6,7 @@ import cerastes.file.CDParser;
 import cerastes.file.CDPrinter;
 import hxd.Pixels;
 import cerastes.c2d.Vec2;
+import cerastes.macros.Clone.Cloneable;
 import hxd.res.Resource;
 
 #if hlimgui
@@ -24,13 +25,13 @@ enum PackMode {
 	Skyline;
 }
 
-@:structInit class Vec2i
+@:structInit class Vec2i implements Cloneable
 {
 	public var x: Int = 0;
 	public var y: Int = 0;
 }
 
-@:structInit class Vec4i
+@:structInit class Vec4i implements Cloneable
 {
 	public var x: Int = 0;
 	public var y: Int = 0;
@@ -47,7 +48,7 @@ enum PackMode {
 }
 
 
-@:structInit class AtlasFrame
+@:structInit class AtlasFrame implements Cloneable
 {
 	public var file: String = null;
 
@@ -67,6 +68,19 @@ enum PackMode {
 	@noSerialize
 	public var tile(get, never): h2d.Tile;
 
+	// Custom clone function to handle the ref copy.
+	public function clone() : AtlasFrame
+	{
+		return {
+			file: file,
+			pos: pos.clone(),
+			offset: offset.clone(),
+			size: size.clone(),
+			duration: duration,
+			atlas: atlas
+		};
+	}
+
 	function get_tile()
 	{
 		atlas.ensureLoaded();
@@ -74,7 +88,7 @@ enum PackMode {
 	}
 }
 
-@:structInit class AtlasEntry
+@:structInit class AtlasEntry implements Cloneable
 {
 	//public var name: String = null;
 	@serializeType("cerastes.fmt.AtlasFrame")

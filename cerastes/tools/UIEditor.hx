@@ -199,7 +199,7 @@ class UIEditor extends ImguiTool
 
 			if( ImGui.beginPopup("uie_additem") )
 			{
-				var types = ["h2d.Object", "h2d.Text", "h2d.Bitmap", "h2d.Anim", "h2d.Flow", "h2d.Mask", "h2d.Interactive", "h2d.ScaleGrid", "cerastes.ui.Button", "cerastes.ui.AdvancedText", "cerastes.ui.Reference", "cerastes.ui.Sound"];
+				var types = ["h2d.Object", "h2d.Text", "h2d.Bitmap", "h2d.Anim", "h2d.Flow", "h2d.Mask", "h2d.Interactive", "h2d.ScaleGrid", "cerastes.ui.Button", "cerastes.ui.AdvancedText", "cerastes.ui.Reference", "cerastes.ui.Sound", "cerastes.ui.Anim"];
 
 				for( t in types )
 				{
@@ -1761,6 +1761,18 @@ class UIEditor extends ImguiTool
 				ImGui.checkbox("Loop", d.loop );
 				ImGui.checkbox("Autoplay", d.autoplay );
 
+
+			case "cerastes.ui.Anim":
+				var d: CUICAnim = cast def;
+
+
+				var newTile = IG.inputTile( "Entry", d.entry );
+				if( newTile != null )
+					d.entry = newTile;
+
+				ImGui.checkbox("Loop", d.loop );
+				ImGui.checkbox("Autoplay", d.autoplay );
+
 			case "h2d.Flow":
 				var d: CUIFlow = cast def;
 
@@ -2165,7 +2177,8 @@ class UIEditor extends ImguiTool
 			case "h2d.Object": return "\uf0b2";
 			case "h2d.Text": return "\uf031";
 			case "h2d.Bitmap": return "\uf03e";
-			case "h2d.Anim": return "\uf008";
+			case "h2d.Anim": return "\uf008"; // DEPRECATED, used cerastes.ui.anim?
+			case "cerastes.ui.Anim": return "\uf008";
 			case "h2d.Flow": return "\uf0db";
 			case "h2d.Mask": return "\uf125";
 			case "h2d.Interactive": return "\uf125";
@@ -2236,6 +2249,17 @@ class UIEditor extends ImguiTool
 				};
 
 				parent.children.push(def);
+
+			case "cerastes.ui.Anim":
+				var def: CUICAnim = {
+					type: type,
+					name: getAutoName(type),
+					children: []
+				};
+
+				parent.children.push(def);
+
+
 			case "h2d.Flow":
 				var def: CUIFlow = {
 					type: type,

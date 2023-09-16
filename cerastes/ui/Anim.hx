@@ -45,7 +45,7 @@ class Anim extends h2d.Drawable {
 	}
 
 	inline function get_currentFrameIdx() {
-		return frameIndex == 0 && pause && entry.defaultFrame != -1 ? entry.defaultFrame : frameIndex;
+		return frameIndex;
 	}
 
 	/**
@@ -62,6 +62,7 @@ class Anim extends h2d.Drawable {
 	public function replay()
 	{
 		currentFrameIdx = 0;
+		frameTimer = 0;
 		pause = false;
 	}
 
@@ -108,7 +109,8 @@ class Anim extends h2d.Drawable {
 		if( frameIndex < entry.frames.length )
 			return;
 
-		if( loop ) {
+		if( loop )
+		{
 			if( entry.frames.length == 0 )
 				frameIndex = 0;
 			else
@@ -117,8 +119,16 @@ class Anim extends h2d.Drawable {
 		}
 		else if( frameIndex >= entry.frames.length )
 		{
-			frameIndex = entry.frames.length;
-			if( frameIndex != prev ) onAnimEnd();
+			pause = true;
+
+			if( entry.defaultFrame != -1 )
+				frameIndex = entry.defaultFrame;
+			else
+				frameIndex = entry.frames.length - 1;
+
+			if( frameIndex != prev )
+				onAnimEnd();
+
 		}
 	}
 

@@ -1,5 +1,7 @@
 package cerastes.fmt;
 
+import cerastes.fmt.AtlasResource.AtlasFrame;
+import cerastes.fmt.AtlasResource.AtlasEntry;
 import cerastes.ui.Button.ButtonHoverTween;
 import haxe.rtti.Meta;
 import cerastes.ui.Timeline;
@@ -247,7 +249,6 @@ import hxd.res.Resource;
 
 @:structInit class CUICAnim extends CUIDrawable {
 	public var entry: String = "#FF00FF";
-	@et("Float") public var speed: Float = 15;
 	@et("Bool") public var loop: Bool = true;
 	@et("Bool") public var autoplay: Bool = true;
 }
@@ -763,14 +764,21 @@ class CUIResource extends Resource
 				var o = cast(obj, cerastes.ui.Anim);
 				var e: CUICAnim = cast entry;
 
-				var entry = Utils.getAtlasEntry( e.entry );
-				/*
-				o.entry = entry;
+				var entry: AtlasEntry = Utils.getAtlasEntry( e.entry );
+				if( entry == null )
+				{
+					entry = {};
+					entry.atlas = {};
+					var frame: AtlasFrame = {};
+					frame.atlas = entry.atlas;
+					@:privateAccess entry.atlas.tile = Utils.invalidTile();
+					entry.frames.push(frame);
+				}
 
-				o.speed = e.speed;
+				o.entry = entry;
 				o.loop = e.loop;
 				o.pause = !e.autoplay;
-*/
+
 			case "h2d.Flow":
 				var o = cast(obj, h2d.Flow);
 				var e: CUIFlow = cast entry;

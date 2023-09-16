@@ -181,6 +181,9 @@ enum PackMode {
 
 	public function ensureLoaded()
 	{
+		if( tile != null )
+			return;
+		
 		#if ( tools && binpacking )
 		if( textureFile == null || !hxd.Res.loader.exists( textureFile ) )
 		{

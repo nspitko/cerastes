@@ -32,6 +32,23 @@ import hxd.res.Resource;
 	public var type: String = null;
 }
 
+enum abstract CUIScriptId(Int) {
+	var Invalid;
+	// Object
+	var OnAdd;
+	var OnRemove;
+
+	// Button
+	var OnPress;
+	var OnRelease;
+	var OnStartHover;
+	var OnEndHover;
+
+
+	// If you need to extend, create a new compatible enum that starts here:
+	var Last = 1000;
+}
+
 // Cerastes UI
 @:keepSub
 @:structInit class CUIObject implements CDObject {
@@ -51,6 +68,9 @@ import hxd.res.Resource;
 	public var visible: Bool = true;
 
 	public var filter: CUIFilterDef = null;
+
+	public var onAdd: UIScript = null;
+	public var onRemove: UIScript = null;
 
 	#if hlimgui
 	@noSerialize public var handle: h2d.Object = null;
@@ -377,8 +397,6 @@ import hxd.res.Resource;
 
 	public var scrollX: Float = 0;
 	public var scrollY: Float = 0;
-
-	public var onAdd: UIScript = null;
 }
 
 @:structInit class CUIScaleGrid extends CUIDrawable {
@@ -672,6 +690,11 @@ class CUIResource extends Resource
 				obj.visible = entry.visible;
 
 				obj.alpha = entry.alpha;
+
+				if( entry.onAdd != null )
+					obj.registerScript(OnAdd, entry.onAdd);
+				if( entry.onRemove != null )
+					obj.registerScript(OnRemove, entry.onRemove);
 
 
 				if( entry.filter != null )

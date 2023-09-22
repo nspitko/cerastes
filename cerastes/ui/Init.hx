@@ -6,6 +6,10 @@ class Init
 	{
 		no.Spoon.bend('h2d.Object', macro class {
 			public var timelineDefs: Array<cerastes.ui.Timeline.Timeline>;
+			public var scripts: Map<cerastes.fmt.CUIResource.CUIScriptId,hscript.Expr>;
+
+			public static var fnParseScript: (cerastes.fmt.CUIResource.UIScript) -> hscript.Expr;
+			public static var fnRunScript: (hscript.Expr) -> Void;
 
 			public function createTimelineRunner( name: String, ?registerWithTimeManager: Bool = true )
 			{
@@ -26,6 +30,64 @@ class Init
 
 				return null;
 			}
+
+			public function registerScript( scriptId: cerastes.fmt.CUIResource.CUIScriptId, script: cerastes.fmt.CUIResource.UIScript )
+			{
+				if( fnParseScript == null )
+				{
+					cerastes.Utils.warning('Trying to register script but no parser function is set!');
+					return;
+				}
+
+				if(scripts == null ) scripts = [];
+				scripts[scriptId] = fnParseScript( script );
+			}
+
+			public function triggerScript( scriptId )
+			{
+				if( fnRunScript == null )
+				{
+					cerastes.Utils.warning('Trying to run script but no interp function is set!');
+					return;
+				}
+
+				if( scripts != null && scripts.exists(scriptId) )
+				{
+					fnRunScript( scripts[scriptId] );
+				}
+			}
+
+			// !! Overrides base type
+			function onAdd()
+			{
+				allocated = true;
+				if( filter != null )
+					filter.bind(this);
+
+				triggerScript( cerastes.fmt.CUIResource.CUIScriptId.OnAdd );
+
+				for( c in children )
+					c.onAdd();
+			}
+
+			// !! Overrides base type
+			function onRemove()
+			{
+				allocated = false;
+				if( filter != null )
+					filter.unbind(this);
+
+				triggerScript( cerastes.fmt.CUIResource.CUIScriptId.OnRemove );
+
+				var i = children.length - 1;
+				while( i >= 0 )
+				{
+					var c = children[i--];
+					if( c != null ) c.onRemove();
+				}
+			}
+
+
 		});
 
 		no.Spoon.bend('h2d.Anim', macro class {

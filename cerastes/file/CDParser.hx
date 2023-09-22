@@ -2,6 +2,7 @@ package cerastes.file;
 
 import haxe.rtti.Meta;
 
+@:autoBuild(cerastes.macros.CData.build())
 interface CDObject {
 
 }

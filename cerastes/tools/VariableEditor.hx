@@ -2,6 +2,9 @@
 package cerastes.tools;
 
 
+import haxe.io.BytesData;
+import haxe.io.BytesBuffer;
+import imgui.Markdown;
 import cerastes.StrictInterp.InterpVariable;
 import cerastes.flow.Flow.FlowRunner;
 import cerastes.ui.Console.GlobalConsole;
@@ -53,10 +56,53 @@ class VariableEditor extends ImguiTool
 
 	public override function getName() { return '\uf328 Variables'; }
 
+	var markdownConfig: MarkdownConfig = new MarkdownConfig();
+
 	public function setup( r: FlowRunner, d: Array<InterpVariable> )
 	{
 		runner = r;
 		defs = d;
+
+		markdownConfig.heading1 = ImGuiToolManager.headingFont;
+		markdownConfig.imageCallback = markdownImageCallback;
+		markdownConfig.linkCallback = markdownLinkCallback;
+		markdownConfig.tooltipCallback = markdownTooltipCallback;
+	}
+
+
+	function markdownImageCallback( data: MarkdownLinkCallbackData, ret: MarkdownImageData ): Void
+	{
+
+		var text = data.text.toBytes(data.textLength).getString(0,data.textLength);
+		var link = data.link.toBytes(data.linkLength).getString(0,data.linkLength);
+
+		var tex = hxd.Res.atlases.Sei_tex.toTexture();
+
+
+
+		ret.textureId = tex;
+		ret.uv0.copyFrom({x: 0, y: 0});
+		ret.uv1.copyFrom({x: 1, y: 1});
+		ret.size.copyFrom({x: tex.width, y: tex.height});
+		ret.isValid = true;
+	}
+
+	function markdownLinkCallback( data: MarkdownLinkCallbackData ): Void
+	{
+		if( !data.isImage )
+		{
+			var link = data.link.toBytes(data.linkLength).getString(0,data.linkLength);
+			Sys.command("start", ["",link]);
+		}
+	}
+
+	function markdownTooltipCallback( data: MarkdownTooltipCallbackData ): Void
+	{
+		if(  !data.isImage && data.linkLength > 0 )
+		{
+			var link = data.link.toBytes(data.linkLength).getString(0,data.linkLength);
+			ImGui.setTooltip(link);
+		}
 	}
 
 	override public function update( delta: Float )
@@ -163,7 +209,8 @@ class VariableEditor extends ImguiTool
 					{
 						ImGui.setNextWindowSize( {x: ttw * scaleFactor, y: 0 } );
 						ImGui.beginTooltip();
-						ImGui.textMarkdown( cs );
+						//ImGui.textMarkdown( cs );
+						imgui.Markdown.text(cs, markdownConfig);
 						ImGui.endTooltip();
 					}
 				}
@@ -219,7 +266,7 @@ class VariableEditor extends ImguiTool
 					{
 						ImGui.setNextWindowSize( {x: ttw * scaleFactor, y: 0 } );
 						ImGui.beginTooltip();
-						ImGui.textMarkdown( cs );
+						Markdown.text( cs, markdownConfig );
 						ImGui.endTooltip();
 					}
 				}

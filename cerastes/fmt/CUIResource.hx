@@ -38,16 +38,17 @@ import hxd.res.Resource;
 
 	public var type: String = null;
 	public var name: String = null;
+	// Hack
 	@default([]) public var children: Array<CUIObject> = null;
 
-	@et("Float") public var x: Float = 0;
-	@et("Float") public var y: Float = 0;
-	@et("Float") public var rotation: Float = 0;
-	@default(1) @et("Float") public var scaleX: Float = 1;
-	@default(1) @et("Float") public var scaleY: Float = 1;
-	@default(1) @et("Float") public var alpha: Float = 1;
+	public var x: Float = 0;
+	public var y: Float = 0;
+	public var rotation: Float = 0;
+	public var scaleX: Float = 1;
+	public var scaleY: Float = 1;
+	public var alpha: Float = 1;
 
-	@default(true) @et("Bool") public var visible: Bool = true;
+	public var visible: Bool = true;
 
 	public var filter: CUIFilterDef = null;
 
@@ -190,7 +191,7 @@ import hxd.res.Resource;
 }
 
 @:structInit class CUIDrawable extends CUIObject {
-	@default(0xFFFFFFFF) public var color: Int = 0xFFFFFFFF;
+	public var color: Int = 0xFFFFFFFF;
 }
 
 @:structInit class CUIReference extends CUIObject {
@@ -199,71 +200,71 @@ import hxd.res.Resource;
 
 @:structInit class CUIInteractive extends CUIDrawable {
 	public var cursor: hxd.Cursor = hxd.Cursor.Default;
-	@et("Bool") public var isEllipse: Bool = false ;
+	public var isEllipse: Bool = false ;
 	//public var backgroundColor: Int = 0xFFFFFFFF;
 
-	@et("Float") public var width: Float = 0;
-	@et("Float") public var height: Float = 0;
+	public var width: Float = 0;
+	public var height: Float = 0;
 }
 
 @:structInit class CUIText extends CUIDrawable {
-	@default("") public var text: String = "";
+	public var text: String = "";
 	public var font: String = "fnt/kodenmanhou16.fnt";
 	// sdf
-	@default(12) public var sdfSize: Int = 12;
-	@default(0.5) public var sdfAlpha: Float = 0.5;
-	@default(10) public var sdfSmoothing: Float = 10;
+	public var sdfSize: Int = 12;
+	public var sdfAlpha: Float = 0.5;
+	public var sdfSmoothing: Float = 10;
 
-	public var textAlign: h2d.Text.Align = Left;
+	public var textAlign: h2d.Text.Align = h2d.Text.Align.Left;
 
-	@default(-1) @et("Float") public var maxWidth: Float = -1;
+	public var maxWidth: Float = -1;
 }
 
 @:structInit class CUIAdvancedText extends CUIText {
-	@et("Bool") public var ellipsis: Bool = false;
-	@et("Int") public var maxLines: Int = 0;
+	public var ellipsis: Bool = false;
+	public var maxLines: Int = 0;
 	public var boldFont: String = null;
 }
 
 
 @:structInit class CUIBitmap extends CUIDrawable {
 	public var tile: String = "#FF00FF";
-	@default(-1) @et("Float") public var width: Float = -1;
-	@default(-1) @et("Float") public var height: Float = -1;
+	public var width: Float = -1;
+	public var height: Float = -1;
 }
 
 @:structInit class CUIAdvancedBitmap extends CUIBitmap {
-	@et("Int") public var scrollX: Int = 0;
-	@et("Int") public var scrollY: Int = 0;
-	@et("Int") public var clipX: Int = 0;
-	@et("Int") public var clipY: Int = 0;
+	public var scrollX: Int = 0;
+	public var scrollY: Int = 0;
+	public var clipX: Int = 0;
+	public var clipY: Int = 0;
 }
 
 @:structInit class CUIAnim extends CUIDrawable {
 	public var entry: String = "#FF00FF";
-	@et("Float") public var speed: Float = 15;
-	@et("Bool") public var loop: Bool = true;
-	@et("Bool") public var autoplay: Bool = true;
-	@et("Bool") public var bidirectional: Bool = false;
+	public var speed: Float = 15;
+	public var loop: Bool = true;
+	public var autoplay: Bool = true;
+	public var bidirectional: Bool = false;
 }
 
 @:structInit class CUICAnim extends CUIDrawable {
 	public var entry: String = "#FF00FF";
-	@et("Bool") public var loop: Bool = true;
-	@et("Bool") public var autoplay: Bool = true;
+	public var loop: Bool = true;
+	public var autoplay: Bool = true;
 }
 
 @:structInit class CUIButton extends CUIFlow {
-	@default("") public var defaultTile: String = "";
-	@default("") public var hoverTile: String = "";
-	@default("") public var onTile: String = "";
-	@default("") public var disabledTile: String = "";
+	public var defaultTile: String = "";
+	public var hoverTile: String = "";
+	public var onTile: String = "";
+	public var disabledTile: String = "";
 
-	@default(0xFFFFFFFF) public var defaultColor: Int = 0xFFFFFFFF;
-	@default(0xFFFFFFFF) public var hoverColor: Int = 0xFFFFFFFF;
-	@default(0xFFFFFFFF) public var onColor: Int = 0xFFFFFFFF;
-	@default(0xFFFFFFFF) public var onHoverColor: Int = 0xFFFFFFFF;
-	@default(0xFFFFFFFF) public var disabledColor: Int = 0xFFFFFFFF;
+	public var defaultColor: Int = 0xFFFFFFFF;
+	public var hoverColor: Int = 0xFFFFFFFF;
+	public var onColor: Int = 0xFFFFFFFF;
+	public var onHoverColor: Int = 0xFFFFFFFF;
+	public var disabledColor: Int = 0xFFFFFFFF;
 
 	public var defaultTextColor: Int = 0x00000000;
 	public var hoverTextColor: Int = 0x00000000;
@@ -274,25 +275,27 @@ import hxd.res.Resource;
 	public var font: String = null;
 
 	// sdf
-	@default(12) public var sdfSize: Int = 12;
-	@default(0.5) public var sdfAlpha: Float = 0.5;
-	@default(10) public var sdfSmoothing: Float = 10;
+	public var sdfSize: Int = 12;
+	public var sdfAlpha: Float = 0.5;
+	public var sdfSmoothing: Float = 10;
 
-	@et("Bool") public var ellipsis: Bool = false;
+	public var ellipsis: Bool = false;
 
-	public var bitmapMode: BitmapMode = ButtonTile;
-	public var buttonMode: ButtonType = Momentary;
+	public var bitmapMode: BitmapMode = cerastes.ui.Button.BitmapMode.ButtonTile;
+	public var buttonMode: ButtonType = cerastes.ui.Button.ButtonType.Momentary;
 
 	public var hoverSound: String = null;
 	public var activateSound: String = null;
 	public var deactivateSound: String = null;
 
-	public var tweenModeHover: ButtonHoverTween = None;
-	public var tweenModeUnHover: ButtonHoverTween = None;
+	public var tweenModeHover: ButtonHoverTween = cerastes.ui.Button.ButtonHoverTween.None;
+	public var tweenModeUnHover: ButtonHoverTween = cerastes.ui.Button.ButtonHoverTween.None;
 	public var tweenDuration: Float = 0;
 
-	public var orientation: cerastes.ui.Button.Orientation = None;
+	public var orientation: cerastes.ui.Button.Orientation = cerastes.ui.Button.Orientation.None;
 	@default(true) public var colorChildren: Bool = true;
+
+	public var onPress: UIScript = null;
 }
 
 
@@ -311,7 +314,7 @@ import hxd.res.Resource;
 	public var disabledColor: Vector = new Vector(1,1,1,1);
 
 
-	public var orientation: cerastes.ui.Button.Orientation = None;
+	public var orientation: cerastes.ui.Button.Orientation = cerastes.ui.Button.Orientation.None;
 }
 
 @:structInit class CUIBButton extends CUIInteractive {
@@ -325,73 +328,80 @@ import hxd.res.Resource;
 	public var pressColor: Vector = new Vector(1,1,1,1);
 	public var disabledColor: Vector = new Vector(1,1,1,1);
 
-	public var orientation: cerastes.ui.Button.Orientation = None;
+	public var orientation: cerastes.ui.Button.Orientation = cerastes.ui.Button.Orientation.None;
 }
 
 @:structInit class CUITButton extends CUIFlow {
 
-	@default(0xFFFFFFFF) public var defaultColor: Int = 0xFFFFFFFF;
-	@default(0xFFFFFFFF) public var hoverColor: Int = 0xFFFFFFFF;
-	@default(0xFFFFFFFF) public var onColor: Int = 0xFFFFFFFF;
-	@default(0xFFFFFFFF) public var disabledColor: Int = 0xFFFFFFFF;
+	public var defaultColor: Int = 0xFFFFFFFF;
+	public var hoverColor: Int = 0xFFFFFFFF;
+	public var onColor: Int = 0xFFFFFFFF;
+	public var disabledColor: Int = 0xFFFFFFFF;
 
 	public var text: String = "";
 }
 
 @:structInit class CUIFlow extends CUIDrawable {
-	public var layout: h2d.Flow.FlowLayout = Horizontal;
-	public var verticalAlign: h2d.Flow.FlowAlign = Top;
-	public var horizontalAlign: h2d.Flow.FlowAlign = Left;
-	public var overflow: h2d.Flow.FlowOverflow = Limit;
+	public var layout: h2d.Flow.FlowLayout = h2d.Flow.FlowLayout.Horizontal;
+	public var verticalAlign: h2d.Flow.FlowAlign = h2d.Flow.FlowAlign.Top;
+	public var horizontalAlign: h2d.Flow.FlowAlign = h2d.Flow.FlowAlign.Left;
+	public var overflow: h2d.Flow.FlowOverflow = h2d.Flow.FlowOverflow.Limit;
 
-	@default(-1) @et("Int") public var minWidth: Int = -1;
-	@default(-1) @et("Int") public var minHeight: Int = -1;
-	@default(-1) @et("Int") public var maxWidth: Int = -1;
-	@default(-1) @et("Int") public var maxHeight: Int = -1;
+	public var minWidth: Int = -1;
+	public var minHeight: Int = -1;
+	public var maxWidth: Int = -1;
+	public var maxHeight: Int = -1;
 
-	@et("Int") public var paddingTop: Int = 0;
-	@et("Int") public var paddingRight: Int = 0;
-	@et("Int") public var paddingBottom: Int = 0;
-	@et("Int") public var paddingLeft: Int = 0;
+	public var paddingTop: Int = 0;
+	public var paddingRight: Int = 0;
+	public var paddingBottom: Int = 0;
+	public var paddingLeft: Int = 0;
 
-	@et("Int") public var horizontalSpacing: Int = 0;
-	@et("Int") public var verticalSpacing: Int = 0;
+	public var horizontalSpacing: Int = 0;
+	public var verticalSpacing: Int = 0;
 
-	@default("") public var backgroundTile: String = "";
+	public var backgroundTile: String = "";
 
-	@et("Int") public var borderWidth: Int = 0;
-	@et("Int") public var borderHeight: Int = 0;
+	public var borderWidth: Int = 0;
+	public var borderHeight: Int = 0;
 
-	@default(true) @et("Bool") public var multiline: Bool = true;
+	public var multiline: Bool = true;
 }
 
 
 
 @:structInit class CUIMask extends CUIObject {
 
-	@et("Int") public var width: Int = 10;
-	@et("Int") public var height: Int = 10;
+	public var width: Int = 10;
+	public var height: Int = 10;
 
-	@et("Float") public var scrollX: Float = 0;
-	@et("Float") public var scrollY: Float = 0;
+	public var scrollX: Float = 0;
+	public var scrollY: Float = 0;
+
+	public var onAdd: UIScript = null;
 }
 
 @:structInit class CUIScaleGrid extends CUIDrawable {
 
-	@et("Int") public var borderLeft: Int = 1;
-	@et("Int") public var borderRight: Int = 1;
-	@et("Int") public var borderTop: Int = 1;
-	@et("Int") public var borderBottom: Int = 1;
-	@et("Int") public var borderWidth: Int = 1;
-	@et("Int") public var borderHeight: Int = 1;
+	public var borderLeft: Int = 1;
+	public var borderRight: Int = 1;
+	public var borderTop: Int = 1;
+	public var borderBottom: Int = 1;
+	public var borderWidth: Int = 1;
+	public var borderHeight: Int = 1;
 
-	@et("Float") public var width: Float = 10;
-	@et("Float") public var height: Float = 10;
+	public var width: Float = 10;
+	public var height: Float = 10;
 
-	@default(true) @et("Bool") public var tileBorders: Bool = true;
-	@default(true) @et("Bool") public var ignoreScale: Bool = true;
+	public var tileBorders: Bool = true;
+	public var ignoreScale: Bool = true;
 
 	public var contentTile: String = "#FF00FF";
+}
+
+@:structInit class UIScript
+{
+	public var script: String;
 }
 
 

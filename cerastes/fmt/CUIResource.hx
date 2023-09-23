@@ -38,6 +38,12 @@ enum abstract CUIScriptId(Int) {
 	var OnAdd;
 	var OnRemove;
 
+	// Alarms
+	var Timer1;
+	var Timer2;
+	var Timer3;
+	var Timer4;
+
 	// Button
 	var OnPress;
 	var OnRelease;
@@ -71,6 +77,11 @@ enum abstract CUIScriptId(Int) {
 
 	public var onAdd: UIScript = null;
 	public var onRemove: UIScript = null;
+
+	public var onTimer1: UIScript = null;
+	public var onTimer2: UIScript = null;
+	public var onTimer3: UIScript = null;
+	public var onTimer4: UIScript = null;
 
 	#if hlimgui
 	@noSerialize public var handle: h2d.Object = null;
@@ -316,6 +327,7 @@ enum abstract CUIScriptId(Int) {
 	@default(true) public var colorChildren: Bool = true;
 
 	public var onPress: UIScript = null;
+	public var onRelease: UIScript = null;
 }
 
 
@@ -419,7 +431,7 @@ enum abstract CUIScriptId(Int) {
 
 @:structInit class UIScript
 {
-	public var script: String;
+	public var script: String = "";
 }
 
 

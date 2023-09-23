@@ -547,9 +547,14 @@ class Button extends h2d.Flow implements IButton
 					#end
 				}
 			}
+			if( !hidden )
+			{
+				if( onActivate != null )
+					onActivate(_);
 
-			if( onActivate != null && !hidden )
-				onActivate(_);
+				triggerScript( CUIScriptId.OnPress );
+
+			}
 		}
 
 		interactive.onRelease = function(_) {
@@ -557,9 +562,16 @@ class Button extends h2d.Flow implements IButton
 			if( !enabled )
 				return;
 
+			if( !hidden )
+			{
+				if( onRelease != null )
+					onRelease(_);
 
-			if( onRelease != null && !hidden )
-				onRelease(_);
+				triggerScript( CUIScriptId.OnRelease );
+
+			}
+
+
 		}
 
 

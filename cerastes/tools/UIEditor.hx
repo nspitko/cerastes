@@ -64,6 +64,7 @@ class UIEditor extends ImguiTool
 	var selectedDragDrop: CUIObject;
 	var selectedTimeline: Timeline;
 	var selectedTimelineOperation: TimelineOperation;
+	var selectedScript: UIScript;
 	var inspectorMode: UIEInspectorMode = Element;
 
 	var scaleFactor = Utils.getDPIScaleFactor();
@@ -94,6 +95,7 @@ class UIEditor extends ImguiTool
 	var timelinePlay = false;
 	var keyframeContext: TimelineOperation = null;
 	var timelineRunner: TimelineRunner;
+	var focusScript = false;
 
 	public override function getName() { return '\uf108 UI Editor ${fileName != null ? '($fileName)' : ""}'; }
 
@@ -184,6 +186,32 @@ class UIEditor extends ImguiTool
 		Metrics.end();
 	}
 
+	function scriptEditor()
+	{
+		ImGui.setNextWindowDockId( dockspaceIdCenter, dockCond );
+		if( focusScript )
+		{
+			focusScript = false;
+			ImGui.setNextWindowFocus();
+		}
+		if( ImGui.begin('Script##${windowID()}') )
+		{
+			if( selectedScript != null )
+			{
+				var area = ImGui.getContentRegionAvail();
+				var ref: hl.Ref<String> = selectedScript.script;
+				wref( ImGui.inputTextMultiline('##scripted${windowID()}', _, area), selectedScript.script);
+
+			}
+			else
+			{
+				ImGui.text("No script selected...");
+			}
+
+			ImGui.end();
+		}
+	}
+
 	function inspectorColumn()
 	{
 		ImGui.setNextWindowDockId( dockspaceIdLeft, dockCond );
@@ -221,7 +249,7 @@ class UIEditor extends ImguiTool
 				else
 				{
 					parent.children.remove(selectedInspectorTree);
-					selectedInspectorTree = null;
+					selectDef( null );
 					updateScene();
 				}
 
@@ -589,6 +617,7 @@ class UIEditor extends ImguiTool
 		inspectorColumn();
 
 		timeline();
+		scriptEditor();
 
 		//ImGui.sameLine();
 
@@ -799,6 +828,16 @@ class UIEditor extends ImguiTool
 
 	}
 
+	function selectDef( d: CUIObject )
+	{
+		var changed = d != selectedInspectorTree;
+		if( !changed )
+			return;
+
+		selectedInspectorTree = d;
+		selectedScript = null;
+	}
+
 	function processSceneMouse( delta: Float )
 	{
 		if( mouseScenePos == null )
@@ -823,7 +862,7 @@ class UIEditor extends ImguiTool
 
 				var def = getElementDefByName( target.name, rootDef );
 				if( def != null )
-					selectedInspectorTree = def;
+					selectDef( def );
 
 
 			}
@@ -836,7 +875,7 @@ class UIEditor extends ImguiTool
 			if( o == null )
 			{
 				Utils.warning("Lost selected object...");
-				selectedInspectorTree = null;
+				selectDef( null );
 				return;
 			}
 			var bounds = o.getBounds();
@@ -973,7 +1012,7 @@ class UIEditor extends ImguiTool
 
 			if( ImGui.isItemClicked() )
 			{
-				selectedInspectorTree = c;
+				selectDef( c );
 				inspectorMode = Element;
 			}
 
@@ -1557,6 +1596,16 @@ class UIEditor extends ImguiTool
 		ImGui.popID();
 	}
 
+	function editScript( script: UIScript )
+	{
+		if( script == null )
+			script = {};
+
+		focusScript = true;
+
+		selectedScript = script;
+	}
+
 	//
 	// Field related functions
 	//
@@ -1567,6 +1616,8 @@ class UIEditor extends ImguiTool
 			case "cerastes.ui.UIEntity":
 				return;
 		}
+
+		ImGui.pushID(type);
 
 		if (!ImGui.collapsingHeader(type, ImGuiTreeNodeFlags.DefaultOpen ))
 			return;
@@ -1634,6 +1685,17 @@ class UIEditor extends ImguiTool
 					var cls = Type.resolveClass(def.filter.type);
 					var fn = Reflect.field(cls, "getInspector");
 					fn( def.filter );
+				}
+
+				if( ImGui.collapsingHeader( "Scripts" ) )
+				{
+					if( ImGui.button("OnAdd") ) editScript( def.onAdd );
+					if( ImGui.button("OnRemove") ) editScript( def.onRemove );
+					ImGui.separator();
+					if( ImGui.button("Timer1") ) editScript( def.onTimer1 );
+					if( ImGui.button("Timer2") ) editScript( def.onTimer2 );
+					if( ImGui.button("Timer3") ) editScript( def.onTimer3 );
+					if( ImGui.button("Timer4") ) editScript( def.onTimer4 );
 				}
 
 
@@ -2023,6 +2085,12 @@ class UIEditor extends ImguiTool
 
 				}
 
+				if( ImGui.collapsingHeader("Scripts") )
+				{
+					if( ImGui.button("OnPress") ) editScript( d.onPress );
+					if( ImGui.button("OnRelease") ) editScript( d.onRelease );
+				}
+
 			case "cerastes.ui.BitmapButton":
 				var d : CUIBButton = cast def;
 
@@ -2136,6 +2204,8 @@ class UIEditor extends ImguiTool
 
 
 		}
+
+		ImGui.popID();
 
 		ImGui.separator();
 	}

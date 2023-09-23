@@ -9,7 +9,27 @@ class Init
 			public var scripts: Map<cerastes.fmt.CUIResource.CUIScriptId,hscript.Expr>;
 
 			public static var fnParseScript: (cerastes.fmt.CUIResource.UIScript) -> hscript.Expr;
-			public static var fnRunScript: (hscript.Expr) -> Void;
+			public static var fnRunScript: (hscript.Expr, h2d.Object ) -> Void;
+
+			public function runTimeline( name: String )
+			{
+				var r = createTimelineRunner(name);
+				if( r != null )
+				{
+					cerastes.Tickable.TimeManager.register(r);
+					r.play();
+				}
+				else
+				{
+					cerastes.Utils.error('Object $this does not have a timeline named $name');
+				}
+			}
+
+			@:noCompletion
+			public function setTimer( scriptId: cerastes.fmt.CUIResource.CUIScriptId, delay: Float )
+			{
+				new cerastes.Timer(delay, () ->{ triggerScript(scriptId); });
+			}
 
 			public function createTimelineRunner( name: String, ?registerWithTimeManager: Bool = true )
 			{
@@ -53,7 +73,7 @@ class Init
 
 				if( scripts != null && scripts.exists(scriptId) )
 				{
-					fnRunScript( scripts[scriptId] );
+					fnRunScript( scripts[scriptId], this );
 				}
 			}
 

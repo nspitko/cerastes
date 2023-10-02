@@ -1041,8 +1041,15 @@ class FlowRunner implements cerastes.Tickable
 	// If set, points to the runner that created this one
 	public var parent: FlowRunner = null;
 
+	// whether or not this runner has finished all tasks and is ready to exit.
+	// This is mostly used for sub runners, if you just want to see if there
+	// is any more pending work this frame use .busy
 	public var finished( get, null ): Bool = false;
 	function get_finished() { return finished; }
+
+	// Whether or not we have a node in queue
+	public var busy( get, never ): Bool;
+	function get_busy() { return stack.first() != null; }
 
 	/**
 	 * OnExit is called when a flow reaches it's exit node.
@@ -1179,6 +1186,11 @@ class FlowRunner implements cerastes.Tickable
 		queue( node );
 
 
+	}
+
+	public function isValidJump( id: String )
+	{
+		return labels.exists(id);
 	}
 
 	public function jumpFile( file: String, nodeId: NodeId32 = 0, label: String = null )

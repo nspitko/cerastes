@@ -86,8 +86,10 @@ class Init
 
 				triggerScript( cerastes.fmt.CUIResource.CUIScriptId.OnAdd );
 
-				for( c in children )
-					c.onAdd();
+				if( children != null )
+					for( c in children )
+						if( c != null )
+							c.onAdd();
 			}
 
 			// !! Overrides base type

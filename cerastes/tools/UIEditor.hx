@@ -315,6 +315,7 @@ class UIEditor extends ImguiTool
 					timelineRunner.playing = true;
 					inspectorMode = Timeline;
 					selectedTimelineOperation = null;
+					NeoSequencer.clearSelection();
 				}
 
 				if( isOpen )
@@ -1345,7 +1346,7 @@ class UIEditor extends ImguiTool
 
 			if( o.key != null )
 			{
-				mType = CUIObject.getMetaForField(o.key, "et", Type.getClass( td ) );
+				mType = CUIObject.getMetaForField(o.key, "cd_type", Type.getClass( td ) );
 
 				if( mType == "Float" )
 				{
@@ -1368,6 +1369,10 @@ class UIEditor extends ImguiTool
 					var v: Bool = o.value;
 					if( ImGui.checkbox( o.key, v ) )
 						o.value = v;
+				}
+				else
+				{
+					trace( mType );
 				}
 
 			}
@@ -1443,6 +1448,7 @@ class UIEditor extends ImguiTool
 					ImGui.endTooltip();
 				}
 
+				ImGui.checkbox("Int snap", o.intSnap );
 				ImGui.checkbox("Specify start value", o.hasInitialValue );
 				if( o.hasInitialValue )
 				{
@@ -2162,6 +2168,9 @@ class UIEditor extends ImguiTool
 				if( newCue != null )
 					d.cue = newCue;
 
+				wref( ImGui.inputDouble("Volume",_,0.05,0.1), d.volume );
+				wref( ImGui.checkbox( "Loop", _ ), d.loop );
+
 			case "h2d.Interactive":
 				var d : CUIInteractive = cast def;
 
@@ -2193,6 +2202,8 @@ class UIEditor extends ImguiTool
 				}
 
 */
+
+			case "h2d.TileGroup":
 
 			default:
 				var cl = Type.resolveClass(type);

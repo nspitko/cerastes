@@ -499,6 +499,9 @@ class Button extends h2d.Flow implements IButton
 					#if hlwwise
 					var evt = wwise.Api.Event.make(hoverSound);
 					wwise.Api.postEvent(evt);
+					#else
+					var handle = hxd.Res.loader.load(hoverSound).toSound();
+					handle.play(false, 1);
 					#end
 				}
 
@@ -527,6 +530,9 @@ class Button extends h2d.Flow implements IButton
 					#if hlwwise
 					var evt = wwise.Api.Event.make(activateSound);
 					wwise.Api.postEvent(evt);
+					#else
+					var handle = hxd.Res.loader.load(activateSound).toSound();
+					handle.play(false, 1);
 					#end
 				}
 				else if( !toggled && deactivateSound != null )
@@ -534,6 +540,9 @@ class Button extends h2d.Flow implements IButton
 					#if hlwwise
 					var evt = wwise.Api.Event.make(deactivateSound);
 					wwise.Api.postEvent(evt);
+					#else
+					var handle = hxd.Res.loader.load(deactivateSound).toSound();
+					handle.play(false, 1);
 					#end
 				}
 			}
@@ -544,6 +553,9 @@ class Button extends h2d.Flow implements IButton
 					#if hlwwise
 					var evt = wwise.Api.Event.make(activateSound);
 					wwise.Api.postEvent(evt);
+					#else
+					var handle = hxd.Res.loader.load(activateSound).toSound();
+					handle.play(false, 1);
 					#end
 				}
 			}

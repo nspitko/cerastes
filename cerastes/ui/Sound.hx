@@ -9,6 +9,8 @@ class Sound extends h2d.Object
 	public var cue: String;
 
 	var handle: hxd.res.Sound;
+	public var volume: Float = 1;
+	public var loop: Bool = false;
 
 	public function new( ?parent: Object )
 	{
@@ -28,8 +30,10 @@ class Sound extends h2d.Object
 		var evt = wwise.Api.Event.make('Play_${cue}');
 		wwise.Api.postEvent(evt);
 		#else
-		handle = hxd.Res.loader.load(cue).toSound();
-		handle.play();
+		if( handle == null )
+			handle = hxd.Res.loader.load(cue).toSound();
+		handle.stop();
+		handle.play(loop, volume);
 		#end
 	}
 

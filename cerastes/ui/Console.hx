@@ -27,7 +27,7 @@ class CerastesConsole extends h2d.Console
 
 }
 
-
+@:keep
 class GlobalConsole
 {
 	public static var instance = new GlobalConsole();
@@ -38,6 +38,9 @@ class GlobalConsole
 
 	function set_currentScene(v : cerastes.Scene)
 	{
+		if(console == null )
+			return v;
+
 		console.remove();
 		v.s2d.addChild( console );
 

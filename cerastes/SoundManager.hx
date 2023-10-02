@@ -202,6 +202,35 @@ class SoundManager
 
 	}
 
+	public static function playFile( file: String )
+	{
+		var snd = hxd.Res.loader.load(file).toSound();
+		if( Utils.assert(snd != null, 'Cannot load sound $file') )
+			return;
+
+		snd.play();
+	}
+
+	static var musicSnd: Sound;
+	static var currentMusicFile: String;
+	static var musicVol: Float = 0.5;
+	public static function playMusicFile( file: String )
+	{
+		if( file == currentMusicFile )
+			return;
+
+		currentMusicFile = file;
+
+		if( musicSnd != null )
+		{
+			musicSnd.stop();
+		}
+
+		musicSnd = hxd.Res.loader.load(file).toSound();
+		musicSnd.play(true, musicVol);
+
+	}
+
 
 	static function init()
 	{

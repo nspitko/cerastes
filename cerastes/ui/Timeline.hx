@@ -63,6 +63,7 @@ abstract TargetType(Int) {
 	public var value: Dynamic = null; // Value to set
 	public var initialValue: Dynamic = null; // For tweens, the start value.
 	public var hasInitialValue: Bool = false; // To handle zero start values...
+	public var intSnap: Bool = false; // Slam floats to nearest int? (Useful for x/y)
 	public var frame: Int = 0;
 
 	public var duration: Int = 0;
@@ -205,9 +206,17 @@ class TimelineRunner implements Tickable
 
 		playing = true;
 		finished = false;
+		var ticks = 0;
 		while( frame < f  )
 		{
 			tick( 1 / timeline.frameRate );
+			ticks++;
+			if( ticks > 1000 )
+			{
+				Utils.warning('Runaway animation!! t=$time f=$f frame=$frame');
+				stop();
+				break;
+			}
 		}
 
 
@@ -227,7 +236,10 @@ class TimelineRunner implements Tickable
 
 		var lastFrame = frame;
 
-		if( frame > timeline.frames  )
+		// Jacky hack to make sure looping is smooth
+		var m = loop ? timeline.frames - 1: timeline.frames;
+
+		if( frame > m  )
 		{
 			if( onComplete != null )
 				onComplete();
@@ -236,7 +248,7 @@ class TimelineRunner implements Tickable
 
 			if( loop )
 			{
-				time = 0;
+				time -= timeline.frames * (1/timeline.frameRate);
 			}
 			else
 			{
@@ -297,7 +309,7 @@ class TimelineRunner implements Tickable
 
 			switch( op.type )
 			{
-				case None:
+				case None #if js | null #end:
 					if( op.key == null )
 						continue;
 
@@ -388,6 +400,9 @@ class TimelineRunner implements Tickable
 
 						var f = tweenFunc( adjTime / duration );
 						var v = ( f * ( op.value - state.startValue ) ) + state.startValue;
+
+						if( op.intSnap )
+							v = Math.round(v);
 
 						Reflect.setProperty(target, op.key, v);
 						changed = true;

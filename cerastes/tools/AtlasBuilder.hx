@@ -269,6 +269,7 @@ class AtlasBuilder  extends  ImguiTool
 				}
 				// NL
 				ImGui.inputInt("Frame duration (ms)", selectedFrame.duration, 10, 100 );
+				ImGui.checkbox("Skip trim", selectedFrame.noTrim );
 
 
 
@@ -564,10 +565,12 @@ class AtlasBuilder  extends  ImguiTool
 		{
 			var fileName = Utils.toLocalFile( newFile );
 
-			if( hxd.File.exists( fileName ))
+			// This broke at some poin....
+			//if( Utils.assert( hxd.File.exists( fileName ), 'Could not locate rel path to $newFile' ) )
 			{
 				atlas.add(fileName);
 			}
+
 		}
 	}
 
@@ -582,7 +585,8 @@ class AtlasBuilder  extends  ImguiTool
 		if( newFile != null )
 		{
 			var fileName = Utils.toLocalFile( newFile );
-			if( hxd.File.exists( fileName ))
+			// This broke at some poin....
+			//if( hxd.File.exists( fileName ))
 			{
 				var frame: AtlasFrame = {
 					file: fileName

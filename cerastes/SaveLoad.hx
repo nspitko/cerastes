@@ -1,8 +1,10 @@
 package cerastes;
 
+#if sys
 import sys.io.File;
-import cerastes.file.CDParser;
 import sys.FileSystem;
+#end
+import cerastes.file.CDParser;
 import cerastes.file.CDPrinter;
 import haxe.io.Path;
 import cerastes.Utils;
@@ -45,9 +47,13 @@ class SaveLoad
 
 	function saveFolder()
 	{
+		#if sys
 		var flags = cerastes.Native.CSIDL.CSIDL_LOCAL_APPDATA | cerastes.Native.CSIDL.CSIDL_FLAG_CREATE;
 		Utils.info(cerastes.Native.getFolderPath( flags ));
 		return Path.join( [ cerastes.Native.getFolderPath( flags ) ,'cerastes', 'saves']);
+		#else
+		return "";
+		#end
 	}
 
 	public function save( slot: Int, ?type: GameSaveType = Normal )

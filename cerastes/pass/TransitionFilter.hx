@@ -1,20 +1,62 @@
 package cerastes.pass;
 
+import h3d.mat.Texture;
+#if hlimgui
+import cerastes.tools.ImguiTools.ImGuiTools;
+import imgui.ImGui;
+import imgui.ImGuiMacro.wref;
+#end
+
 import cerastes.shaders.TransitionShader;
 import h2d.filter.Filter;
 
 import h2d.RenderContext.RenderContext;
 
-class TransitionFilter extends Filter {
+@:structInit class TransitionFilterDef extends cerastes.fmt.CUIResource.CUIFilterDef
+{
+	@cd_type("Float") public var amount: Float = 0;
+	@cd_type("Texture") public var texture: String = null;
+}
 
-
+class TransitionFilter extends Filter  implements SelectableFilter
+{
+	#if tools
+	@:keep public static function getEditorName() { return "\uf07c Transition"; }
+	@:keep public static function getDef() : TransitionFilterDef { return {}; }
+	@:keep public static function getInspector( def: TransitionFilterDef ) {
+		wref( ImGui.inputDouble("amount",_,0.01,0.1), def.amount );
+		var t: String = ImGuiTools.inputTexture("Texture",def.texture,"shd");
+		if( t != null )
+			def.texture = t;
+	}
+	#end
 
 	public var pass : TransitionPass;
 
-	public function new(  ) {
+	public var amount(get, set): Float;
+	public var texture(get, set): Texture;
+
+	@:keep public function get_amount() { return pass.phase; }
+	@:keep public function set_amount( v ) { pass.phase = v; return v; }
+
+	@:keep public function get_texture() { return @:privateAccess pass.transitionTexture; }
+	@:keep public function set_texture( v ) {
+		@:privateAccess pass.transitionTexture = v;
+		v.filter = Nearest;
+		v.mipMap = None;
+		return v;
+	}
+
+	public function new( ?def: TransitionFilterDef  ) {
 		super();
 		smooth = false;
 		pass = new TransitionPass();
+
+		if( def != null )
+		{
+			amount = def.amount;
+			texture = Utils.resolveTexture( def.texture );
+		}
 	}
 
 

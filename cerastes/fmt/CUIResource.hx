@@ -215,6 +215,8 @@ enum abstract CUIScriptId(Int) {
 
 @:structInit class CUISound extends CUIObject {
 	public var cue: String = null;
+	public var volume: Float = 1;
+	public var loop: Bool = false;
 }
 
 @:structInit class CUIEntity extends CUIObject {
@@ -637,6 +639,7 @@ class CUIResource extends Resource
 				//var d: CUISound = cast entry;
 				obj = new cerastes.ui.Sound( );
 
+
 			default:
 
 				var opts = CompileTime.getAllClasses(UIEntity);
@@ -839,8 +842,8 @@ class CUIResource extends Resource
 				o.minWidth = e.minWidth > 0 ? e.minWidth : o.minWidth;
 				o.minHeight = e.minHeight > 0 ? e.minHeight : o.minHeight;
 
-				o.maxWidth = e.maxWidth;
-				o.maxHeight = e.maxHeight;
+				if( e.maxWidth > 0 ) o.maxWidth = e.maxWidth;
+				if( e.maxHeight > 0 ) o.maxHeight = e.maxHeight;
 
 				o.verticalSpacing = e.verticalSpacing;
 				o.horizontalSpacing = e.horizontalSpacing;
@@ -996,6 +999,8 @@ class CUIResource extends Resource
 				var e: CUISound = cast entry;
 
 				o.cue = e.cue;
+				o.volume = e.volume;
+				o.loop = e.loop;
 
 
 			default:

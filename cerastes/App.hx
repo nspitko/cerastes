@@ -104,7 +104,9 @@ class App extends hxd.App {
 	override function init()
 	{
 		saveload = new cerastes.SaveLoad();
+		#if sys
 		parseArgs();
+		#end
 		defaultFont = hxd.res.DefaultFont.get();
 
 		hxd.Window.getInstance().vsync = true;

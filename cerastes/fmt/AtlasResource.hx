@@ -61,6 +61,8 @@ enum PackMode {
 
 	// Duration (in ms) of this frame. Only used in cerastes.ui.Anim
 	public var duration: Int = 0;
+	// Should we skip trimming this texture?
+	public var noTrim: Bool = false;
 
 	@noSerialize
 	public var atlas: Atlas = null;
@@ -183,7 +185,7 @@ enum PackMode {
 	{
 		if( tile != null )
 			return;
-		
+
 		#if ( tools && binpacking )
 		if( textureFile == null || !hxd.Res.loader.exists( textureFile ) )
 		{
@@ -415,6 +417,9 @@ enum PackMode {
 			frame.size.y = p.height;
 			frame.offset.x = 0;
 			frame.offset.y = 0;
+
+			if( frame.noTrim )
+				continue;
 
 			if( p.format != BGRA )
 			{

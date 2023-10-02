@@ -28,9 +28,10 @@ class SubtractionShader extends h3d.shader.ScreenShader {
 
 @:structInit class SubtractionFilterDef extends cerastes.fmt.CUIResource.CUIFilterDef
 {
-	@et("Float") public var amount: Float = 0;
+	@cd_type("Float") public var amount: Float = 0;
 }
 
+@:keep
 class SubtractionFilter extends Filter implements SelectableFilter
 {
 	public var pass : SubtractionPass;

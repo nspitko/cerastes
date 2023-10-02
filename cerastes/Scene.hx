@@ -246,7 +246,7 @@ class Scene
 		var type = Type.resolveClass( className);
 		#end
 
-        if( Std.isOfType(this,type ) )
+        if( onlyIfNew && Std.isOfType(this,type ) )
             return null;
 
 		var other: Scene = Type.createInstance(type, [app]);

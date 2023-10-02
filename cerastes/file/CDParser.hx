@@ -104,7 +104,16 @@ class CDParser {
 									obj.set( Std.parseInt( field.toString() ), rec );
 								else
 								{
+									// JS has no idea whether or not a field is valid so always set
+									#if js
 									Reflect.setField(obj, field.toString(), rec );
+									#else
+									// in other platforms we can have a warning.
+									if( Reflect.hasField(obj, field.toString() ) )
+										Reflect.setField(obj, field.toString(), rec );
+									else
+										Utils.warning('Object $obj has invalid field ${field.toString()} defined in CDef');
+									#end
 								}
 
 

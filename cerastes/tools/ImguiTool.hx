@@ -1,13 +1,13 @@
 
 package cerastes.tools;
-
+#if hlimgui
 import haxe.io.Path;
 import cerastes.file.CDPrinter;
 import sys.io.File;
 import cerastes.file.CDParser;
 import sys.FileSystem;
 import hxd.Window;
-#if hlimgui
+
 import hxd.Key;
 import hxd.SceneEvents;
 import cerastes.tools.ImguiTools.IG;
@@ -373,7 +373,7 @@ class ImGuiToolManager
 		//ImGui.showDemoWindow();
 		if( styleWindowOpen )
 			ImGui.showStyleEditor();
-		
+
 		Metrics.end();
 
 		drawTaskBar();

@@ -1,14 +1,14 @@
 
 package cerastes.tools;
 
-
+#if hlimgui
 import haxe.io.BytesData;
 import haxe.io.BytesBuffer;
 import imgui.Markdown;
 import cerastes.StrictInterp.InterpVariable;
 import cerastes.flow.Flow.FlowRunner;
 import cerastes.ui.Console.GlobalConsole;
-#if hlimgui
+
 import h2d.Console.ConsoleArg;
 import h3d.Engine;
 import hxd.Key;
@@ -72,7 +72,7 @@ class VariableEditor extends ImguiTool
 
 	function markdownImageCallback( data: MarkdownLinkCallbackData, ret: MarkdownImageData ): Void
 	{
-
+/*
 		var text = data.text.toBytes(data.textLength).getString(0,data.textLength);
 		var link = data.link.toBytes(data.linkLength).getString(0,data.linkLength);
 
@@ -85,6 +85,7 @@ class VariableEditor extends ImguiTool
 		ret.uv1.copyFrom({x: 1, y: 1});
 		ret.size.copyFrom({x: tex.width, y: tex.height});
 		ret.isValid = true;
+		*/
 	}
 
 	function markdownLinkCallback( data: MarkdownLinkCallbackData ): Void

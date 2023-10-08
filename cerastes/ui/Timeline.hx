@@ -4,8 +4,7 @@ import h2d.Object;
 import tweenxcore.Tools.Easing;
 
 
-@:enum
-abstract OperationType(Int) from Int to Int {
+enum abstract OperationType(Int) from Int to Int {
 	var None = 0;
 	// Tweens
 	var Linear = 100;
@@ -46,8 +45,7 @@ abstract OperationType(Int) from Int to Int {
   //
 }
 
-@:enum
-abstract TargetType(Int) {
+enum abstract TargetType(Int) {
 	var Object = 0;
 	var Filter = 1;
 }

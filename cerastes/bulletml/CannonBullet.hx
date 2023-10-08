@@ -21,8 +21,7 @@ import org.si.cml.*;
 import org.si.cml.CMLObject;
 import cerastes.CollisionManager.Collidable;
 
-@:enum
-abstract CannonDestructonReason(Int) from Int to Int {
+enum abstract CannonDestructonReason(Int) from Int to Int {
     var ALIVE = -1;             // Bullet is alive
 
     var NONE = 0;               // No reason specified. This shouldn't be set (but probably will be; treat like FINISHED)

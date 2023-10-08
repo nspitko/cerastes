@@ -9,8 +9,7 @@ import cerastes.file.CDPrinter;
 import haxe.io.Path;
 import cerastes.Utils;
 
-@:enum
-abstract GameSaveType(Int)
+enum abstract GameSaveType(Int)
 {
 	var Normal 	= 1;
 	var Auto 	= 2;

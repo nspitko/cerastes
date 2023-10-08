@@ -173,8 +173,7 @@ class CRaycast
 	}
 }
 
-@:enum
-abstract ColliderType(Int) from Int to Int
+enum abstract ColliderType(Int) from Int to Int
 {
 	final Invalid = 0;			// ???
 	final AABB = 1;				// An axis aligned bounding box. Fastest box. Bestest box.
@@ -196,8 +195,7 @@ abstract ColliderType(Int) from Int to Int
 	}
 }
 
-@:enum
-abstract CollisionGroup(Int) from Int to Int {
+enum abstract CollisionGroup(Int) from Int to Int {
   var None = 0;
 
   var LastEngineGroup;

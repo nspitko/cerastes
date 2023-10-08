@@ -21,8 +21,7 @@ import cerastes.c3d.Material.MaterialDef;
 	EXTRA2;
  }
 
-@:enum
-abstract BulletShape(Int) from Int to Int
+enum abstract BulletShape(Int) from Int to Int
 {
 	var Box = 0;
 	var Sphere = 1;

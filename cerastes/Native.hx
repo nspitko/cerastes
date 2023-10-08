@@ -1,6 +1,6 @@
 package cerastes;
 
-@:enum abstract CSIDL(Int) from Int to Int {
+enum abstract CSIDL(Int) from Int to Int {
 
 	var CSIDL_DESKTOP                   = 0x0000;        // <desktop>
 	var CSIDL_INTERNET                  = 0x0001;        // Internet Explorer (icon on desktop)

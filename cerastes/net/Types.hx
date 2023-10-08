@@ -30,8 +30,7 @@ class ReplicatedVector<T>
 
 }
 
-@:enum
-abstract Chunk(Int) from Int to Int {
+enum abstract Chunk(Int) from Int to Int {
 	var Invalid			= 0;
 	var FullEntities 	= 1; // Full sync of an entity, including data for creation
 	var DeltaEntities 	= 2; // Deltas from last update

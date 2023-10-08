@@ -6,8 +6,7 @@ import h3d.col.Point;
 import sys.io.File;
 #end
 
-@:enum
-abstract EntitySpawnType(Int) from Int to Int
+enum abstract EntitySpawnType(Int) from Int to Int
 {
 	public var EST_WORLDSPAWN			= 0;
 	public var EST_MERGE_WORLDSPAWN		= 1;
@@ -219,8 +218,7 @@ class EntityGeometry
 // Surfaces
 //
 
-@:enum
-abstract SurfaceSplitType(Int) from Int to Int
+enum abstract SurfaceSplitType(Int) from Int to Int
 {
 	public var SST_NONE		= 0;
 	public var SST_ENTITY	= 1;

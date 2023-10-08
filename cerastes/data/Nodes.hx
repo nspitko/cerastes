@@ -30,7 +30,7 @@ abstract PinId32(Int) from Int to Int {}
 abstract LinkId32(Int) from Int to Int {}
 #end
 
-@:enum abstract NodeKind(Int) from Int to Int {
+enum abstract NodeKind(Int) from Int to Int {
 	var Blueprint = 0;
 	var Comment = 1;
 	var Micro = 2;
@@ -39,7 +39,7 @@ abstract LinkId32(Int) from Int to Int {}
 
 typedef PortId = Int;
 
-@:enum abstract PinDataType(Int) from Int to Int {
+enum abstract PinDataType(Int) from Int to Int {
 	var Node 		= 0;	// Accepts an entire node as its input (Typically for logic flow)
 	var Numeric 	= 1;	// Accepts numeric values (int/float)
 	var Bool 		= 2;	// Accepts bool and numerics (where number > 0)

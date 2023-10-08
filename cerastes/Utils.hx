@@ -24,8 +24,7 @@ import sys.io.File;
 import cerastes.ui.Console.GlobalConsole;
 #end
 
-@:enum
-abstract Spew(Int) {
+enum abstract Spew(Int) {
 	var ALWAYS = 0;
 	var ERROR = 1;
 	var WARNING = 2;

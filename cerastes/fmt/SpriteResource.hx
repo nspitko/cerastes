@@ -17,8 +17,7 @@ import hxd.res.Resource;
 import haxe.Json;
 
 // Cerastes Sprites
-@:enum
-abstract SpriteAttachmentTween(Int) from Int to Int
+enum abstract SpriteAttachmentTween(Int) from Int to Int
 {
 	var None = 0;		// Do not tween attachments
 	var Linear = 1;		// Linear tweening

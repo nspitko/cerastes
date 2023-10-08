@@ -191,8 +191,7 @@ import haxe.io.Bytes;
 }
 
 
-@:enum
-abstract MapSurfaceType_t(Int) from Int to Int {
+enum abstract MapSurfaceType_t(Int) from Int to Int {
 	public var MST_BAD = 0;
 	public var MST_PLANAR = 1;
 	public var MST_PATCH = 2;

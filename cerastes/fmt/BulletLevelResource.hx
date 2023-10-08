@@ -18,8 +18,7 @@ import hxd.res.Resource;
 
 import haxe.Json;
 
-@:enum
-abstract CBLTriggerType(Int) from Int to Int
+enum abstract CBLTriggerType(Int) from Int to Int
 {
 	var None = 0;		// Do not tween attachments
 	var PauseForClear = 1;		// Linear tweening

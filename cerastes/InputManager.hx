@@ -4,8 +4,7 @@ import cerastes.macros.Metrics;
 import hxd.Key;
 import hxd.Pad;
 
-@:enum
-abstract InputButton(Int) from Int to Int
+enum abstract InputButton(Int) from Int to Int
 {
 	var UP 			= 0;
 	var DOWN 		= 1;

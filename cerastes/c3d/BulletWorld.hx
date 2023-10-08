@@ -5,8 +5,7 @@ import h3d.Vector;
 import h3d.col.Point;
 import bullet.*;
 
-@:enum
-abstract BulletCollisionFilterGroup(Int) from Int to Int
+enum abstract BulletCollisionFilterGroup(Int) from Int to Int
 {
 	public var WORLD		= (1 << 0 );
 	public var NPC			= (1 << 1 );
@@ -15,8 +14,7 @@ abstract BulletCollisionFilterGroup(Int) from Int to Int
 	public var TRIGGER		= (1 << 4 );
 }
 
-@:enum
-abstract BulletCollisionFilterMask(Int) from Int to Int
+enum abstract BulletCollisionFilterMask(Int) from Int to Int
 {
 	public var MASK_ALL						= 0xFFFF;
 	public var MASK_WORLD					= NPC | PLAYER | PROP; // I'm the world, I collide with things that are not the world

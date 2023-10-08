@@ -12,13 +12,13 @@ import hxd.snd.Channel;
 
 import tweenxcore.Tools.Easing;
 
-@:enum abstract SoundCueKind(Int) from Int to Int {
+enum abstract SoundCueKind(Int) from Int to Int {
 	var CueGlobal = 0; // Event does not have spatial data
 	var Cue2D = 1; // Event exists in a 2d world with spatial data
 	var Cue3D = 2; // Event exists in a 3d world with spatial data
 }
 
-@:enum abstract SoundCueItemType(Int) from Int to Int {
+enum abstract SoundCueItemType(Int) from Int to Int {
 	var Clip = 0; // A sound clip
 	var Event = 1; // A sound event
 

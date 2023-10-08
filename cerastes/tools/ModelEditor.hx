@@ -15,7 +15,6 @@ import h3d.col.Point;
 import hl.UI;
 import imgui.ImGuiMacro.wref;
 import cerastes.file.CDParser;
-import h3d.mat.DepthBuffer;
 import h3d.mat.Texture;
 import h3d.scene.Object;
 import h3d.scene.Mesh;
@@ -111,7 +110,7 @@ class ModelEditor extends ImguiTool
 
 		preview = new h3d.scene.Scene();
 		sceneRT = new Texture(viewportWidth,viewportHeight, [Target] );
-		sceneRT.depthBuffer = new DepthBuffer(viewportWidth, viewportHeight );
+		sceneRT.depthBuffer = new Texture(viewportWidth, viewportHeight, [Target], Depth16 );
 
 		modelDef = { file:"" };
 
@@ -148,7 +147,7 @@ class ModelEditor extends ImguiTool
 			return;
 
 		sceneRT.resize( CMath.floor( newSize.x ), CMath.floor( newSize.y ) );
-		sceneRT.depthBuffer = new DepthBuffer( CMath.floor( newSize.x ), CMath.floor( newSize.y ) );
+		sceneRT.depthBuffer.resize( CMath.floor( newSize.x ), CMath.floor( newSize.y ) );
 	}
 
 	public static function buildModelPreview(scene: h3d.scene.Scene, def: ModelDef)

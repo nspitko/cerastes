@@ -8,7 +8,6 @@ import hl.UI;
 import hxd.Key;
 import imgui.ImGui;
 import h3d.col.Point;
-import h3d.mat.DepthBuffer;
 import cerastes.tools.ImguiTool.ImGuiToolManager;
 import imgui.ImGui.ImGuiCond;
 import imgui.ImGui.ImVec2;
@@ -82,7 +81,7 @@ class GPUParticleEditor extends ImguiTool
 
 		preview = new h3d.scene.Scene();
 		sceneRT = new Texture(viewportWidth,viewportHeight, [Target] );
-		sceneRT.depthBuffer = new DepthBuffer(viewportWidth, viewportHeight );
+		sceneRT.depthBuffer = new Texture(viewportWidth, viewportHeight, [Target] );
 
 		particleDef = { };
 
@@ -442,7 +441,7 @@ class GPUParticleEditor extends ImguiTool
 			return;
 
 		sceneRT.resize( CMath.floor( newSize.x ), CMath.floor( newSize.y ) );
-		sceneRT.depthBuffer = new DepthBuffer( CMath.floor( newSize.x ), CMath.floor( newSize.y ) );
+		sceneRT.depthBuffer.resize( CMath.floor( newSize.x ), CMath.floor( newSize.y ) );
 	}
 
 

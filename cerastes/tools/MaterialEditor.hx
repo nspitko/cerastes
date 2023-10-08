@@ -5,7 +5,6 @@ package cerastes.tools;
 import hl.UI;
 import imgui.ImGuiMacro.wref;
 import cerastes.file.CDParser;
-import h3d.mat.DepthBuffer;
 import h3d.mat.Texture;
 import h3d.scene.Object;
 import h3d.scene.Mesh;
@@ -77,7 +76,7 @@ class MaterialEditor extends ImguiTool
 
 		preview = new h3d.scene.Scene();
 		sceneRT = new Texture(viewportWidth,viewportHeight, [Target] );
-		sceneRT.depthBuffer = new DepthBuffer(viewportWidth, viewportHeight );
+		sceneRT.depthBuffer = new Texture(viewportWidth, viewportHeight, [Target], Depth16 );
 
 		materialDef = {};
 

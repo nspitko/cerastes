@@ -1,5 +1,6 @@
 package cerastes.fmt.gltf;
 
+import hxd.BufferFormat.BufferInput;
 import h3d.Quat;
 import h3d.Vector;
 import h3d.col.Bounds;
@@ -184,21 +185,20 @@ class HMDOut {
 				geoMaterials.push(geoMats);
 				geo.props = null;
 				geo.vertexCount = posAcc.count;
-				geo.vertexStride = 11;
+				geo.vertexFormat = hxd.BufferFormat.make([
+					new BufferInput("position", DVec3),
+					new BufferInput("normal", DVec3),
+					new BufferInput("tangent", DVec3),
+					new BufferInput("uv", DVec2),
 
-				geo.vertexFormat = [];
-				geo.vertexFormat.push(new GeometryFormat("position", DVec3));
-				geo.vertexFormat.push(new GeometryFormat("normal", DVec3));
-				geo.vertexFormat.push(new GeometryFormat("tangent", DVec3));
-				geo.vertexFormat.push(new GeometryFormat("uv", DVec2));
+				]);
 				geo.vertexPosition = dataPos[accSet];
 				geo.bounds = bounds[accSet];
 
 				if (accessors[3] != -1) {
 					// Has joint and weight data
-					geo.vertexStride += 5;
-					geo.vertexFormat.push(new GeometryFormat("indexes", DBytes4));
-					geo.vertexFormat.push(new GeometryFormat("weights", DVec4));
+					geo.vertexFormat.append("indexes", DBytes4);
+					geo.vertexFormat.append("weights", DVec4);
 				}
 
 				var mesh = gltfData.meshes[meshInd];

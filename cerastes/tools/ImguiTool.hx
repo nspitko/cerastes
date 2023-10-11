@@ -40,6 +40,8 @@ class ImguiTool
 	}
 
 	public function getName() {	return "Untitled"; }
+
+	public function openFile( file: String ) {};
 }
 
 enum ImGuiPopupType
@@ -47,6 +49,13 @@ enum ImGuiPopupType
 	Info;
 	Warning;
 	Error;
+}
+
+@:structInit class ImGuiToolRegistration
+{
+	public var extensions: Array<String>;
+	public var title: String;
+	public var cls: String;
 }
 
 @:structInit
@@ -82,6 +91,8 @@ class ImGuiToolManager
 	public static var popupStack: Array<ImGuiPopup> = [];
 
 	public static var enabled(default, set): Bool = false;
+
+	public static var customTools: Array<ImGuiToolRegistration> = [];
 
 	static var sceneRT: Texture;
 	static var sceneRTId: Int;
@@ -146,8 +157,14 @@ class ImGuiToolManager
 
 	public static function showTool( cls: String )
 	{
-		var type = Type.resolveClass( "cerastes.tools." + cls);
-		Utils.assert( type != null, 'Trying to create unknown tool cerastes.tools.${cls}');
+		var type = null;
+		if( cls.indexOf(".") == -1 )
+			type = Type.resolveClass( "cerastes.tools." + cls);
+		else
+			type = Type.resolveClass(cls);
+
+		if( Utils.assert( type != null, 'Trying to create unknown tool cerastes.tools.${cls}') )
+			return null;
 
 
 		if(Meta.getType(type).multiInstance == null )
@@ -358,6 +375,13 @@ class ImGuiToolManager
 
 				if (ImGui.menuItem("Atlas Builder"))
 					ImGuiToolManager.showTool("AtlasBuilder");
+
+
+				for( c in customTools )
+				{
+					if( ImGui.menuItem( c.title ) )
+						ImGuiToolManager.showTool(c.cls);
+				}
 
 				ImGui.separator();
 

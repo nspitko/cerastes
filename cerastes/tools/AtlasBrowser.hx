@@ -60,7 +60,7 @@ class AtlasBrowser  extends  ImguiTool
 		//openFile("spr/sample.atlas");
 	}
 
-	public function openFile( f: String )
+	public override function openFile( f: String )
 	{
 		fileName = f;
 

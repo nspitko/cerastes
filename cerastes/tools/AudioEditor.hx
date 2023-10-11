@@ -758,7 +758,7 @@ class AudioEditor extends ImguiTool
 		}
 	}
 
-	public function openFile( fileName: String )
+	public override function openFile( fileName: String )
 	{
 		var file: SoundCueFile = CDParser.parse(hxd.Res.loader.load( fileName ).toText(), SoundCueFile );
 		cues = file.cues;

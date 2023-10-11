@@ -98,7 +98,7 @@ class AtlasBuilder  extends  ImguiTool
 		//openFile("atlases/TextureGroup1.catlas");
 	}
 
-	public function openFile( f: String )
+	public override function openFile( f: String )
 	{
 		fileName = f;
 

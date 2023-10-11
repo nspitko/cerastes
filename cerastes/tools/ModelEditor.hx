@@ -126,7 +126,7 @@ class ModelEditor extends ImguiTool
 
 	}
 
-	public function openFile(f: String)
+	public override function openFile(f: String)
 	{
 		fileName = f;
 

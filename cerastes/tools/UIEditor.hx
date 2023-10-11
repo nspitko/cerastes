@@ -125,7 +125,7 @@ class UIEditor extends ImguiTool
 		updateScene();
 	}
 
-	public function openFile( f: String )
+	public override function openFile( f: String )
 	{
 		fileName = f;
 

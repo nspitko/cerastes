@@ -396,7 +396,7 @@ class FlowEditor extends ImguiTool
 		}
 	}
 
-	public function openFile( fileName: String )
+	public override function openFile( fileName: String )
 	{
 		var res = hxd.Res.loader.load(fileName);
 		var obj: FlowFile = CDParser.parse( res.toText(), FlowFile );

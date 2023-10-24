@@ -15,12 +15,12 @@ class MacroUtils
 	}
 
 	#if hlimgui
-	macro public static function imTooltip( contents: String )
+	macro public static function imTooltip( contents: haxe.macro.Expr )
 	{
 		return macro {
 			if( ImGui.isItemHovered() )
 			{
-				ImGui.setTooltip($v{contents});
+				ImGui.setTooltip(${contents});
 			}
 		}
 	}

@@ -391,6 +391,9 @@ enum abstract CUIScriptId(Int) {
 	public var paddingBottom: Int = 0;
 	public var paddingLeft: Int = 0;
 
+	public var lineHeight: Int = -1;
+	public var colWidth: Int = -1;
+
 	public var horizontalSpacing: Int = 0;
 	public var verticalSpacing: Int = 0;
 
@@ -855,6 +858,9 @@ class CUIResource extends Resource
 				o.paddingRight = e.paddingRight;
 				o.paddingTop = e.paddingTop;
 				o.paddingBottom = e.paddingBottom;
+
+				if( e.lineHeight >= 0 ) o.lineHeight = e.lineHeight;
+				if( e.colWidth >= 0 ) o.colWidth = e.colWidth;
 
 				o.multiline = e.multiline;
 

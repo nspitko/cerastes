@@ -36,6 +36,7 @@ import imgui.ImGui;
 import cerastes.tools.ImguiTools.IG;
 import imgui.ImGuiMacro.wref;
 import imgui.NeoSequencer;
+import cerastes.macros.MacroUtils.imTooltip;
 
 enum UIEInspectorMode
 {
@@ -1843,6 +1844,7 @@ class UIEditor extends ImguiTool
 
 			case "h2d.Flow":
 				var d: CUIFlow = cast def;
+				var o: h2d.Flow = cast obj;
 
 
 				var layout = IG.combo("Layout", d.layout, h2d.Flow.FlowLayout );
@@ -1850,7 +1852,7 @@ class UIEditor extends ImguiTool
 					d.layout = layout;
 
 				wref( ImGui.checkbox( "Wrap", _ ), d.multiline );
-
+				imTooltip("When set to true, uses specified lineHeight/colWidth instead of maxWidth/maxHeight for alignment.");
 
 				var align = IG.combo("Vertical Align", d.verticalAlign, h2d.Flow.FlowAlign );
 				if( align != null )
@@ -1891,6 +1893,14 @@ class UIEditor extends ImguiTool
 				wref( ImGui.inputInt("Padding Left",_,1,10), d.paddingLeft );
 				wref( ImGui.inputInt("Padding Right",_,1,10), d.paddingRight );
 
+				wref( ImGui.inputInt("Column Width",_,1,10), d.colWidth );
+				imTooltip("Sets the minimum colum width when `Flow.layout` is `Vertical`.  (Wrap only)");
+
+				wref( ImGui.inputInt("Line Height",_,1,10), d.lineHeight );
+				imTooltip("Sets the minimum row height when `Flow.layout` is `Horizontal`. (Wrap only)");
+
+
+
 				var newTile = IG.inputTile( "Background Tile", d.backgroundTile );
 				if( newTile != null )
 					d.backgroundTile = newTile;
@@ -1905,6 +1915,8 @@ class UIEditor extends ImguiTool
 
 				wref( ImGui.inputInt("Border Width",_,1,10), d.borderWidth );
 				wref( ImGui.inputInt("Border Height",_,1,10), d.borderHeight );
+
+				o.needReflow = true;
 
 			case "h2d.Mask":
 				var t : CUIMask = cast def;

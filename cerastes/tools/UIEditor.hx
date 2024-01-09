@@ -155,7 +155,7 @@ class UIEditor extends ImguiTool
 		var res = new CUIResource(null);
 		rootDef.initChildren();
 		cerastes.fmt.CUIResource.initializeEntities = initializeObjects;
-		previewRoot = res.defToObject(rootDef, null);
+		previewRoot = res.defToObject(rootDef, null, true);
 		preview.addChild(previewRoot);
 
 		//selectedItemBorder = new Graphics();

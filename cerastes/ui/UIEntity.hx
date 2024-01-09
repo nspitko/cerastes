@@ -23,8 +23,13 @@ class UIEntity extends h2d.Object implements Entity
 
 	function get_initialized() { return initialized; }
 
+	var isPreview: Bool = false;
+
 	public function beginDrag( entity: UIEntity, ?key: Int = -1, ?bounds: Bounds = null)
 	{
+		if( isPreview )
+			return;
+
 		draggingEntity = entity;
 		draggingEntityKey = key;
 	}
@@ -37,6 +42,9 @@ class UIEntity extends h2d.Object implements Entity
 	 */
 	public function queryDrag( bounds: Bounds, key: Int = -1 )
 	{
+		if( isPreview )
+			return false;
+
 		if( draggingEntity == null )
 			return false;
 
@@ -132,6 +140,9 @@ class UIEntity extends h2d.Object implements Entity
 
 	public function registerDrag( int: h2d.Interactive, cb: ( Event ) -> Void, ?dragKey: Int = -1 )
 	{
+		if( isPreview )
+			return;
+
 		dragInteractive = int;
 		dragInteractive.onPush = onDragStart;
 		dragCallback = cb;
@@ -141,6 +152,9 @@ class UIEntity extends h2d.Object implements Entity
 
 	public function onDragStart( e: Event )
 	{
+		if( isPreview )
+			return;
+
 		dragStartX = x;
 		dragStartY = y;
 
@@ -208,6 +222,9 @@ class UIEntity extends h2d.Object implements Entity
 
 	function trackCallback( success: Bool, unregisterFunction: ( ClassKey -> Bool ) )
 	{
+		if( isPreview )
+			return;
+
 		if( success )
 			trackedCallbacks.push( unregisterFunction );
 	}
@@ -215,6 +232,9 @@ class UIEntity extends h2d.Object implements Entity
 	public override function onAdd()
 	{
 		super.onAdd();
+
+		if( isPreview )
+			return;
 
 		if( initialized )
 			EntityManager.instance.register(this);

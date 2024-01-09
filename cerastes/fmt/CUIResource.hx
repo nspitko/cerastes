@@ -472,7 +472,7 @@ class CUIResource extends Resource
 		return null;
 	}
 
-	public function toObject(?parent: h2d.Object = null)
+	public function toObject(?parent: h2d.Object = null, isPreview: Bool = false)
 	{
 
 		var data = getData();
@@ -486,16 +486,16 @@ class CUIResource extends Resource
 		#end
 
 
-		return defToObject( data.root, parent );
+		return defToObject( data.root, parent, isPreview );
 	}
 
-	public function defToObject(def: CUIObject, ?parent: h2d.Object )
+	public function defToObject(def: CUIObject, ?parent: h2d.Object, isPreview: Bool = false )
 	{
 		entsToInitialize = [];
 
 		var root = new Object();
 
-		recursiveCreateObjects(def, root, root);
+		recursiveCreateObjects(def, root, root, isPreview);
 
 		root = root.getChildAt(0);
 
@@ -544,19 +544,22 @@ class CUIResource extends Resource
 		}
 	}
 
-	public function recursiveCreateObjects( entry: CUIObject, parent: Object, root: Object )
+	public function recursiveCreateObjects( entry: CUIObject, parent: Object, root: Object, isPreview: Bool = false )
 	{
 		var e = createObject(entry);
 		parent.addChild(e);
 
 		if( entry.children != null )
 			for( c in entry.children )
-				recursiveCreateObjects( c, e, root );
+				recursiveCreateObjects( c, e, root, isPreview );
 
 		// Fuck this but I don't wanna rewrite everything.
 		var ent: UIEntity = Std.downcast( e, UIEntity );
 		if( ent != null )
+		{
+			@:privateAccess ent.isPreview = isPreview;
 			entsToInitialize.push(ent);
+		}
 	}
 
 	public static function updateObject( entry: CUIObject, target: Object, ?initialize = true )
@@ -646,14 +649,17 @@ class CUIResource extends Resource
 			default:
 
 				var opts = CompileTime.getAllClasses(UIEntity);
-
-				for( c in opts )
+				if( opts != null )
 				{
-					if( Type.getClassName(c) == entry.type )
+
+					for( c in opts )
 					{
-						var t = Type.resolveClass( entry.type );
-						obj = Type.createInstance(t, [entry]);
-						break;
+						if( Type.getClassName(c) == entry.type )
+						{
+							var t = Type.resolveClass( entry.type );
+							obj = Type.createInstance(t, [entry]);
+							break;
+						}
 					}
 				}
 
@@ -662,6 +668,7 @@ class CUIResource extends Resource
 					Utils.error('CUI: Cannot create unknown type ${entry.type}; ignoring!!');
 					obj = new h2d.Object();
 				}
+
 
 
 

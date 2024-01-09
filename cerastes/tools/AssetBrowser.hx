@@ -314,7 +314,7 @@ class AssetBrowser  extends  ImguiTool
 					var res = new cerastes.fmt.CUIResource( hxd.Res.loader.load(asset.file).entry );
 
 					cerastes.fmt.CUIResource.initializeEntities = false;
-					var obj = res.defToObject( @:privateAccess res.getData().root, null );
+					var obj = res.defToObject( @:privateAccess res.getData().root, null, true );
 
 					var scale = previewWidth / viewportWidth;
 					obj.scale( scale );

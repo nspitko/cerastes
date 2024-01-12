@@ -144,14 +144,41 @@ class Utils
 				hl.Api.breakPoint();
 			#end
 		}
-
-		return !condition;
-		#else
-		return true;
 		#end
 	}
 
 	public static inline function assert( condition: Bool, ?msg: String, ?pos:haxe.PosInfos )
+	{
+		if( msg == null )
+			msg = "Assertion failed";
+
+		if( !condition )
+		{
+			writeLog('Assertion failed: ${msg} ', ASSERT, pos);
+
+			#if ( butai && hl )
+			var json = Json.stringify({
+				line: pos.lineNumber,
+				text: msg,
+				"function": pos.methodName,
+				file: pos.fileName,
+				time: hxd.Timer.elapsedTime,
+				level: Spew.ASSERT
+			});
+			Debug.debugWrite("log",json);
+			#end
+
+			#if hl
+			if( WRITE_LOG )
+				logFile.flush();
+			#end
+			#if ( !noassert && hl )
+				hl.Api.breakPoint();
+			#end
+		}
+	}
+
+	public static inline function verify( condition: Bool, ?msg: String, ?pos:haxe.PosInfos )
 	{
 		if( msg == null )
 			msg = "Assertion failed";

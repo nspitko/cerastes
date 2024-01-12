@@ -133,7 +133,7 @@ class Init
 
 				public function formatLoc( ...rest: String ) : Void
 				{
-					if( cerastes.Utils.assert( locToken != null, 'locToken cannot be null when calling formatLoc' ) )
+					if( cerastes.Utils.verify( locToken != null, 'locToken cannot be null when calling formatLoc' ) )
 						return;
 
 					text = cerastes.LocalizationManager.localizeArray( locToken, rest.toArray() );

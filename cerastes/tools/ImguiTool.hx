@@ -163,7 +163,7 @@ class ImGuiToolManager
 		else
 			type = Type.resolveClass(cls);
 
-		if( Utils.assert( type != null, 'Trying to create unknown tool cerastes.tools.${cls}') )
+		if( Utils.verify( type != null, 'Trying to create unknown tool cerastes.tools.${cls}') )
 			return null;
 
 

@@ -69,7 +69,25 @@ enum abstract TargetType(Int) {
 
 	public var stepRate: Float = 0; // If > 0, step at this reduced speed
 
+	public function clone( )
+	{
+		var cls = Type.getClass(this);
+		var inst = Type.createEmptyInstance(cls);
+		var fields = Type.getInstanceFields(cls);
+		for (field in fields)
+		{
 
+			// generic copy
+			var val:Dynamic = Reflect.field(this,field);
+			if ( !Reflect.isFunction(val) )
+			{
+				Reflect.setField(inst,field,val);
+			}
+
+		}
+
+		return inst;
+	}
 
 }
 
@@ -89,6 +107,38 @@ enum abstract TargetType(Int) {
 	public var frameRate: Int = 10;
 
 	public var name: String = "Unnamed Timeline";
+
+	public function clone( )
+	{
+		var cls = Type.getClass(this);
+		var inst = Type.createEmptyInstance(cls);
+		var fields = Type.getInstanceFields(cls);
+		for (field in fields)
+		{
+			if( field == "operations" || field.length == 0) // Fixes a bug in HL when inheriting interfaces
+			{
+				continue;
+			}
+			else
+			{
+				// generic copy
+				var val:Dynamic = Reflect.field(this,field);
+				if ( !Reflect.isFunction(val) )
+				{
+					Reflect.setField(inst,field,val);
+				}
+			}
+		}
+
+		inst.operations = [];
+
+		// Now clone children
+		for( c in operations )
+		{
+			inst.operations.push( c.clone( ) );
+		}
+		return inst;
+	}
 
 }
 

@@ -233,7 +233,7 @@ class BaseEntity extends Object implements cerastes.Entity
 	// ---------------------------------------------------------------------------------------------------------------
 	public function setBodyOrigin( x : Float, y : Float, z : Float )
 	{
-		if( #if !bullet true || #end Utils.assert( body != null, "Tried to set body origin on entity without a body!" ) )
+		if( #if !bullet true || #end Utils.verify( body != null, "Tried to set body origin on entity without a body!" ) )
 		{
 			setAbsOrigin(x,y,z);
 			return;
@@ -246,7 +246,7 @@ class BaseEntity extends Object implements cerastes.Entity
 	// ---------------------------------------------------------------------------------------------------------------
 	public function getBodyOrigin() : h3d.Vector
 	{
-		if( #if !bullet true || #end Utils.assert( body != null, "Tried to set body origin on entity without a body!" ) )
+		if( #if !bullet true || #end Utils.verify( body != null, "Tried to set body origin on entity without a body!" ) )
 		{
 			return new Vector(x,y,z);
 		}

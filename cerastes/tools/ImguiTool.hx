@@ -84,6 +84,10 @@ class ImGuiToolManager
 	public static var headingFont: ImFont;
 	public static var consoleFont: ImFont;
 
+	public static var defaultFontSize: Float;
+	public static var headingFontSize: Float;
+	public static var consoleFontSize: Float;
+
 	public static var scaleFactor: Float = 1;
 
 	public static var toolIdx = 0;
@@ -238,9 +242,13 @@ class ImGuiToolManager
 		}
 
 		// Default font
-		ImGuiToolManager.defaultFont = ImGuiToolManager.addFont("res/tools/Ruda-Bold.ttf", 14, true);
-		ImGuiToolManager.headingFont = ImGuiToolManager.addFont("res/tools/Ruda-Bold.ttf", 21, true);
-		ImGuiToolManager.consoleFont = ImGuiToolManager.addFont("res/tools/console.ttf", 14);
+		defaultFontSize = 14 * scaleFactor;
+		headingFontSize = 21 * scaleFactor;
+		consoleFontSize = 14 * scaleFactor;
+
+		ImGuiToolManager.defaultFont = ImGuiToolManager.addFont("res/tools/Ruda-Bold.ttf", defaultFontSize, true);
+		ImGuiToolManager.headingFont = ImGuiToolManager.addFont("res/tools/Ruda-Bold.ttf", headingFontSize, true);
+		ImGuiToolManager.consoleFont = ImGuiToolManager.addFont("res/tools/console.ttf", consoleFontSize);
 		ImGuiToolManager.buildFonts();
 
 		var viewportDimensions = IG.getViewportDimensions();
@@ -256,6 +264,8 @@ class ImGuiToolManager
 		new Timer(0.1, () -> {
 			restoreState();
 		});
+
+		ImGuiToolManager.showTool("TileMapEditor");
 
 	}
 
@@ -375,6 +385,9 @@ class ImGuiToolManager
 
 				if (ImGui.menuItem("Atlas Builder"))
 					ImGuiToolManager.showTool("AtlasBuilder");
+
+				if (ImGui.menuItem("Tile Map Editor"))
+					ImGuiToolManager.showTool("TileMapEditor");
 
 
 				for( c in customTools )
@@ -534,11 +547,11 @@ class ImGuiToolManager
 
 
 		var dpiScale = Utils.getDPIScaleFactor();
-		Utils.info('Add font: ${file} ${size*dpiScale}px');
+		Utils.info('Add font: ${file} ${size}px');
 
 		var atlas = ImGui.getFontAtlas();
 		//atlas.addFontDefault();
-		var font = atlas.addFontFromFileTTF(file, size * dpiScale);
+		var font = atlas.addFontFromFileTTF(file, size);
 
 
 		var facfg = new ImFontConfig();
@@ -573,15 +586,15 @@ class ImGuiToolManager
 		#end
 
 		#if imjp
-		atlas.addFontFromFileTTF("res/tools/NotoSansJP-Regular.otf",  size * dpiScale, jpcfg, ranges);
+		atlas.addFontFromFileTTF("res/tools/NotoSansJP-Regular.otf",  size, jpcfg, ranges);
 		#end
 
 		if( includeGlyphs )
 		{
 			facfg.MergeMode = true;
 			facfg.GlyphMinAdvanceX = 18 * dpiScale;
-			atlas.addFontFromFileTTF("res/tools/fa-regular-400.ttf",  size * dpiScale * 0.8, facfg, ranges);
-			atlas.addFontFromFileTTF("res/tools/fa-solid-900.ttf",  size * dpiScale * 0.8, facfg, ranges);
+			atlas.addFontFromFileTTF("res/tools/fa-regular-400.ttf",  size * 0.8, facfg, ranges);
+			atlas.addFontFromFileTTF("res/tools/fa-solid-900.ttf",  size * 0.8, facfg, ranges);
 		}
 		atlas.build();
 

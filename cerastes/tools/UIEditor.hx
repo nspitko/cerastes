@@ -274,6 +274,7 @@ class UIEditor extends ImguiTool
 
 	function timelineColumn()
 	{
+
 		ImGui.setNextWindowDockId( dockspaceIdLeft, dockCond );
 		if( ImGui.begin('Timelines##${windowID()}') )
 		{
@@ -299,6 +300,7 @@ class UIEditor extends ImguiTool
 
 			ImGui.beginChild("uie_timeline_list",null, false, ImGuiWindowFlags.AlwaysAutoResize);
 
+			var idx = 0;
 			for( t in timelines)
 			{
 				var flags = ImGuiTreeNodeFlags.Leaf | ImGuiTreeNodeFlags.DefaultOpen;
@@ -308,6 +310,8 @@ class UIEditor extends ImguiTool
 
 				var name = t.name;
 				var isOpen: Bool = ImGui.treeNodeEx( name, flags );
+
+				var popupIdRC = 'timeline_entry_rc${windowID()}_${idx++}';
 
 				if( ImGui.isItemClicked() )
 				{
@@ -319,11 +323,32 @@ class UIEditor extends ImguiTool
 					NeoSequencer.clearSelection();
 				}
 
+				if( ImGui.isItemClicked( ImGuiMouseButton.Right ) )
+				{
+					selectedTimeline = t;
+					ImGui.openPopup( popupIdRC );
+				}
+
+				if( ImGui.beginPopup( popupIdRC ) )
+				{
+					if( ImGui.menuItem( '\uf084 Clone') )
+					{
+						var nt = t.clone();
+						timelines.push(nt);
+					}
+					ImGui.endPopup();
+				}
+
 				if( isOpen )
 					ImGui.treePop();
+
 			}
 
+
+
 			ImGui.endChild();
+
+
 
 
 		}
@@ -402,8 +427,6 @@ class UIEditor extends ImguiTool
 								inspectorMode = Timeline;
 								selectedTimelineOperation = o;
 							}
-
-
 
 							if( NeoSequencer.isKeyframeRightClicked() )
 							{

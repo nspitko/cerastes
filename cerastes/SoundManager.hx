@@ -191,7 +191,7 @@ class SoundManager
 	public static function play( cueName: String, ?channelGroup: ChannelGroup = null, ?soundGroup = null )
 	{
 		var cue = cues.get(cueName );
-		if( Utils.verify( cue != null, 'Tried to play unknown cue ${cueName}') )
+		if( !Utils.verify( cue != null, 'Tried to play unknown cue ${cueName}') )
 			return null;
 
 		var instance = new CueInstance( cue, channelGroup, soundGroup );
@@ -205,7 +205,7 @@ class SoundManager
 	public static function playFile( file: String )
 	{
 		var snd = hxd.Res.loader.load(file).toSound();
-		if( Utils.verify(snd != null, 'Cannot load sound $file') )
+		if( !Utils.verify(snd != null, 'Cannot load sound $file') )
 			return;
 
 		snd.play();

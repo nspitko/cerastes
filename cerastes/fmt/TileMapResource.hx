@@ -32,6 +32,21 @@ enum abstract TileMapTileFlags(Int) from Int to Int
 	var FlipFlags = TileMapTileFlags.FlipVertical | TileMapTileFlags.FlipHorizontal | TileMapTileFlags.FlipDiagonal;
 }
 
+@:structInit class TileMapEntityDef
+{
+	public var type: String = null;
+	@serializeType("haxe.ds.StringMap")
+	public var properties: Map<String, String> = [];
+
+	// x and y are floats here, entities aren't bound to tile boundaries
+	public var x: Float = 0;
+	public var y: Float = 0;
+
+	// Entities may contain dimensions, such as volumes.
+	public var width: Float = 0;
+	public var height: Float = 0;
+}
+
 @:structInit class TileMapLayerDataDef
 {
 	public var tileSheet: String = "";
@@ -72,7 +87,7 @@ enum abstract TileMapTileFlags(Int) from Int to Int
 
 	public function resize(w: Int, h: Int )
 	{
-		if( width == w && height == h )
+		if( width == w && height == h && data != null )
 			return;
 
 		var oldData = data;
@@ -83,13 +98,13 @@ enum abstract TileMapTileFlags(Int) from Int to Int
 			{
 				if( x < width && y < height )
 				{
-					data[x + y * w * 2] = oldData[x + y * width];
-					data[x + y * w * 2 + 1] = oldData[x + y * width + 1];
+					data[( x + y * w) * 2] = oldData[( x + y * width) * 2];
+					data[( x + y * w) * 2 + 1] = oldData[( x + y * width) * 2 + 1];
 				}
 				else
 				{
-					data[x + y * w * 2] = -1;
-					data[x + y * w * 2 + 1] = 0;
+					data[( x + y * w ) * 2] = -1;
+					data[( x + y * w ) * 2 + 1] = 0;
 				}
 			}
 		}
@@ -122,16 +137,32 @@ enum abstract TileMapTileFlags(Int) from Int to Int
 	{
 		return data[(x + y * width ) * 2 + 1];
 	}
+
+	public function clear()
+	{
+		data.fill(-1);
+	}
 }
 
 @:structInit class TileMapLayerDef
 {
 	@serializeType("cerastes.fmt.TileMapLayerData")
 	public var tileData: TileMapLayerDataDef = {};
+	@serializeType("cerastes.fmt.TileMapEntityDef")
+	public var entities: Array<TileMapEntityDef> = [];
+
+	public var name: String = null;
+	public var locked: Bool = false;
+	public var hidden: Bool = false;
 
 	public function resize(w: Int, h: Int )
 	{
 		tileData.resize(w, h);
+	}
+
+	public function clear()
+	{
+		tileData.clear();
 	}
 }
 
@@ -159,6 +190,12 @@ enum abstract TileMapTileFlags(Int) from Int to Int
 		out = new TileMap( this );
 
 		return out;
+	}
+
+	public function clear()
+	{
+		for( l in layers )
+			l.clear();
 	}
 }
 
@@ -233,6 +270,28 @@ class TileMap extends h2d.Object
 						tg.addTransform( x * l.tileData.tileWidth + xo, y * l.tileData.tileHeight + yo, fx, fy, rot, tile );
 
 					}
+				}
+			}
+
+			for( e in l.entities )
+			{
+				var cls = Type.resolveClass( e.type );
+				// @TODO REALLY BAD HACK PLEASE FIND A BETTER WAY TO DO THIS THANKS
+				var defCls = Type.resolveClass('${e.type}Def');
+
+				if( Utils.verify( cls != null && defCls != null, 'Unknown/invalid map entity cls ${cls} / ${defCls}' ))
+				{
+					var d = Type.createInstance( defCls, [] );
+					for( k => v in e.properties )
+					{
+						// @todo type conversion??????
+						Reflect.setField(d, k, v );
+					}
+					var n: cerastes.c2d.TileEntity = cast Type.createInstance(cls,[ d, this ]);
+					n.initialize( this );
+					n.x = e.x;
+					n.y = e.y;
+
 				}
 			}
 		}

@@ -337,7 +337,7 @@ class TimelineRunner implements Tickable
 				var targetName = op.target;
 
 				var target = ui.getObjectByName(targetName);
-				if( Utils.verify(target != null, 'Timeline target ${op.target} is missing') )
+				if( !Utils.verify(target != null, 'Timeline target ${op.target} is missing') )
 				{
 					op.target = null;
 					continue;
@@ -405,7 +405,7 @@ class TimelineRunner implements Tickable
 					if( op.key == null )
 						continue;
 
-					if( Utils.verify( duration > 0, 'Tween Operation has invalid duration ${op.duration}, defaulting to 1' ))
+					if( !Utils.verify( duration > 0, 'Tween Operation has invalid duration ${op.duration}, defaulting to 1' ))
 						duration = 1 * timeline.frameRate;
 
 					if( firstFrame && state.startValue == null )

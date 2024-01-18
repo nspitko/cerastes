@@ -80,7 +80,7 @@ class LocalizationManager
 		var context = getContext(token);
 		var c = contexts[context];
 
-		if( Utils.verify( c != null, "Failed to set localization key; context not loaded!!" ) )
+		if( !Utils.verify( c != null, "Failed to set localization key; context not loaded!!" ) )
 			return;
 
 		Utils.error("Who calls me?");
@@ -170,7 +170,7 @@ class LocalizationManager
 
 	public static function localizeArray(token: String, rest: Array<String>) : String
 	{
-		if( Utils.verify( token != null, "Tried to localized null string as token!" ) )
+		if( !Utils.verify( token != null, "Tried to localized null string as token!" ) )
 			return "null";
 
 		var context = getContext(token);

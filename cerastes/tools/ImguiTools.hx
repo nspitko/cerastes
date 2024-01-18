@@ -25,6 +25,7 @@ import imgui.ImGuiMacro.wref;
 	public var activeIdx: Int = 0;				// Index of currently 'active' item by use of up/down keys
 	public var selectionChanged: Bool = false;	// Flag to help focus the correct item when selecting active item
 	public var lastInput: String = "";			// Tracks the last human input so we know whether to re-run the suggestion filter
+	public var active: Bool = false;
 }
 
 @:structInit
@@ -598,8 +599,76 @@ class ImGuiTools
 	}
 
 
-	static function comboFilterDrawPopup( state: ComboFilterState, start: Int, entries: Array<String> )
+	static function comboFilterDrawPopup( state: ComboFilterState, start: Int, entries: Array<String>, activated: Bool = false )
 	{
+
+		var clicked = 0;
+
+		// Grab the position for the popup
+		var pos: ImVec2 = ImGui.getItemRectMin();
+		pos.y += ImGui.getItemRectSize().y;
+		var size: ImVec2 = {x: ImGui.getItemRectSize().x-60, y: ImGui.getFrameHeightWithSpacing() * 4 };
+
+		ImGui.pushStyleVar( ImGuiStyleVar.WindowRounding, 0.0 );
+
+		if( activated )
+		{
+			Utils.info("Open popup");
+			ImGui.openPopup("##cfdpopup");
+		}
+
+		ImGui.setNextWindowPos({x:ImGui.getItemRectMin().x, y:ImGui.getItemRectMax().y});
+		//ImGui::SetNextWindowSize({ ImGui::GetItemRectSize().x, 0 });
+		if (ImGui.beginPopup("##cfdpopup", ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoResize | ImGuiWindowFlags.ChildWindow))
+		{
+			for( i in 0 ... entries.length )
+			{
+				// Track if we're drawing the active index so we
+				// can scroll to it if it has changed
+				var isIndexActive: Bool = state.activeIdx == i;
+
+				if( isIndexActive ) {
+					// Draw the currently 'active' item differently
+					// ( used appropriate colors for your own style )
+					//ImGui.pushStyleColor( ImGuiCol.Border, 0xFFFFFF00 );
+				}
+
+				ImGui.pushID( '${i}' );
+				if( ImGui.selectable( entries[i], isIndexActive ) ) {
+					// And item was clicked, notify the input
+					// callback so that it can modify the input buffer
+					state.activeIdx = i;
+					clicked = 1;
+					state.active = false;
+
+				}
+				ImGui.popID();
+
+				if( isIndexActive ) {
+					if( state.selectionChanged ) {
+						// Make sure we bring the currently 'active' item into view.
+						ImGui.setScrollHereY();
+						state.selectionChanged = false;
+					}
+
+					//ImGui.popStyleColor(1);
+				}
+			}
+
+			//if (is_input_text_enter_pressed || (!is_input_text_active && !ImGui.isWindowFocused()))
+			//	ImGui.closeCurrentPopup();
+
+			if( !state.active )
+			{
+				ImGui.closeCurrentPopup();
+			}
+
+			ImGui.endPopup();
+			ImGui.popStyleVar(1);
+		}
+
+		return clicked > 0;
+
 		var clicked = 0;
 
 		// Grab the position for the popup
@@ -624,48 +693,50 @@ class ImGuiTools
 		//ImGui.setNextWindowSize( size, ImGuiCond.Always );
 		ImGui.pushAllowKeyboardFocus( false );
 		//ImGui.begin("##combo_filter", null, flags );
-		ImGui.beginChild("##combo_filter", size, false, flags);
-
-
-		for( i in 0 ... entries.length )
+		if( ImGui.beginChild("##combo_filter", size, false, flags) )
 		{
-			// Track if we're drawing the active index so we
-			// can scroll to it if it has changed
-			var isIndexActive: Bool = state.activeIdx == i;
 
-			if( isIndexActive ) {
-				// Draw the currently 'active' item differently
-				// ( used appropriate colors for your own style )
-				ImGui.pushStyleColor( ImGuiCol.Border, 0xFFFFFF00 );
-			}
 
-			ImGui.pushID( '${i}' );
-			if( ImGui.selectable( entries[i], isIndexActive ) ) {
-				// And item was clicked, notify the input
-				// callback so that it can modify the input buffer
-				state.activeIdx = i;
-				clicked = 1;
-			}
-			if( ImGui.isItemFocused() && ImGui.isKeyPressed( ImGuiKey.Enter ) ) {
-				// Allow ENTER key to select current highlighted item (w/ keyboard navigation)
-				state.activeIdx = i;
-				clicked = 1;
-			}
-			ImGui.popID();
+			for( i in 0 ... entries.length )
+			{
+				// Track if we're drawing the active index so we
+				// can scroll to it if it has changed
+				var isIndexActive: Bool = state.activeIdx == i;
 
-			if( isIndexActive ) {
-				if( state.selectionChanged ) {
-					// Make sure we bring the currently 'active' item into view.
-					ImGui.setScrollHereY();
-					state.selectionChanged = false;
+				if( isIndexActive ) {
+					// Draw the currently 'active' item differently
+					// ( used appropriate colors for your own style )
+					ImGui.pushStyleColor( ImGuiCol.Border, 0xFFFFFF00 );
 				}
 
-				ImGui.popStyleColor(1);
-			}
-		}
+				ImGui.pushID( '${i}' );
+				if( ImGui.selectable( entries[i], isIndexActive ) ) {
+					// And item was clicked, notify the input
+					// callback so that it can modify the input buffer
+					state.activeIdx = i;
+					clicked = 1;
+				}
+				if( ImGui.isItemFocused() && ImGui.isKeyPressed( ImGuiKey.Enter ) ) {
+					// Allow ENTER key to select current highlighted item (w/ keyboard navigation)
+					state.activeIdx = i;
+					clicked = 1;
+				}
+				ImGui.popID();
 
-		//ImGui.end();
-		ImGui.endChild();
+				if( isIndexActive ) {
+					if( state.selectionChanged ) {
+						// Make sure we bring the currently 'active' item into view.
+						ImGui.setScrollHereY();
+						state.selectionChanged = false;
+					}
+
+					ImGui.popStyleColor(1);
+				}
+			}
+
+			//ImGui.end();
+			ImGui.endChild();
+		}
 
 		ImGui.popAllowKeyboardFocus();
 		ImGui.popStyleVar(1);
@@ -674,7 +745,7 @@ class ImGuiTools
 
 	}
 
-	public static function comboFilter( id: String, hints: Array<String>, s: ComboFilterState ) : String
+	public static function comboFilter( id: String, hints: Array<String>, s: ComboFilterState, ?preview: String = null ) : String
 	{
 		function search( needle: String, words: Array<String> )
 		{
@@ -696,19 +767,30 @@ class ImGuiTools
 			return best;
 		}
 
-		var length = 256;
 		var buffer = "";
-		var textBuf = new hl.Bytes(length);
-		var src = haxe.io.Bytes.ofString(buffer);
-		textBuf.blit(0,src,0,buffer.length);
-		textBuf.setUI8(buffer.length,0); // Null term
 
-		var ret = ImGui.inputTextBuf(id, textBuf, length, ImGuiInputTextFlags.AutoSelectAll | ImGuiInputTextFlags.EnterReturnsTrue  );
+		var flags = ImGuiInputTextFlags.AutoSelectAll | ImGuiInputTextFlags.EnterReturnsTrue;
 
-		buffer = @:privateAccess String.fromUTF8(textBuf);
+		var ret = false;
+
+		/*
+		if( preview != null )
+			ret = ImGui.inputTextWithHint(id, preview, buffer, flags);
+		else
+			ret = ImGui.inputText(id, buffer, flags);
+		*/
+
+		if( preview != null )
+			buffer = preview;
+
+		ret = ImGui.inputText(id, buffer, flags);
+
+		var activated = ImGui.isItemActivated();
+		s.active = s.active || ImGui.isItemActive() || activated;
+
 
 		var shouldScore = false;
-		if( s.lastInput != buffer )
+		if( s.lastInput != buffer && !ret )
 		{
 			shouldScore = true;
 			s.lastInput = buffer;
@@ -717,8 +799,11 @@ class ImGuiTools
 
 		var done = ret != false;
 
-		var hot = s.activeIdx >= 0 && buffer != hints[s.activeIdx] && buffer.length > 0;
-		if( hot ) {
+		if( done )
+			s.active = false;
+
+		var hot = s.activeIdx >= 0 && /* buffer != hints[s.activeIdx] && */ ( buffer.length > 0 || s.active );
+		if( hot  ) {
 			var idx = s.activeIdx;
 			if( shouldScore )
 			{
@@ -740,7 +825,7 @@ class ImGuiTools
 
 			s.selectionChanged = s.activeIdx != idx;
 			s.activeIdx = idx;
-			if( done || comboFilterDrawPopup( s, idx, hints ) ) {
+			if( comboFilterDrawPopup( s, idx, hints, activated ) || done ) {
 				var i = s.activeIdx;
 				if( i >= 0 ) {
 					buffer = hints[i];
@@ -748,10 +833,11 @@ class ImGuiTools
 				}
 			}
 		}
+
 		if( !done )
 			return null;
 
-		return buffer;
+		return s.activeIdx >= 0 ? hints[s.activeIdx] : "";
 	}
 
 	static function comboScore(query:String, string:String):Float {

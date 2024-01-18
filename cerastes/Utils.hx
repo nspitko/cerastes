@@ -208,7 +208,7 @@ class Utils
 			#end
 		}
 
-		return !condition;
+		return condition;
 	}
 
 	public static function warning( msg: String, ?pos:haxe.PosInfos )
@@ -444,6 +444,7 @@ class Utils
 
 	private static var missingTexture: Texture;
 	private static var missingTile: h2d.Tile;
+	private static var missingAtlas: AtlasEntry;
 
 	public static function invalidTexture()
 	{
@@ -459,6 +460,33 @@ class Utils
 			missingTile = h2d.Tile.fromTexture( invalidTexture() );
 
 		return missingTile;
+	}
+
+	public static function invalidAtlas()
+	{
+		if( missingAtlas == null )
+		{
+			var atlas: Atlas = {
+				tile: invalidTile()
+			};
+			var frame: AtlasFrame = {
+				pos: {x: 0, y: 0},
+				offset: {x: 0, y: 0},
+				size: {x: 1, y: 1},
+				atlas: atlas,
+			};
+			missingAtlas = {
+				frames: [
+					frame
+				],
+				size: {x: 10, y: 10 },
+				bbox: {x: 10, y: 10 },
+				origin: {x: 0, y: 0},
+				name: "Invalid",
+			};
+		}
+
+		return missingAtlas;
 	}
 
 	public static function resolveTexture( file: String ): Texture

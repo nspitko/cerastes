@@ -651,7 +651,7 @@ class ImGuiNodes
 			{
 				var node = findNode(nodeId);
 
-				if( Utils.verify( node != null, 'Unknown nodeID ${nodeId} marked as deleted!') )
+				if( !Utils.verify( node != null, 'Unknown nodeID ${nodeId} marked as deleted!') )
 					continue;
 
 				nodes.remove( node );
@@ -663,7 +663,7 @@ class ImGuiNodes
 			{
 				var link = findLink(linkId);
 
-				if( Utils.verify( link != null, 'Unknown linkID ${linkId} marked as deleted!') )
+				if( !Utils.verify( link != null, 'Unknown linkID ${linkId} marked as deleted!') )
 					continue;
 
 				links.remove( link );

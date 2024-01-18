@@ -1,0 +1,43 @@
+package cerastes.c2d.tile;
+
+import h2d.Tile;
+import h2d.Bitmap;
+import cerastes.Utils.*;
+
+@:structInit class DecoDef extends cerastes.c2d.TileEntity.TileEntityDef
+{
+	@editor("Animation","AtlasEntry")
+	public var anim: String = null;
+}
+
+@:build(cerastes.macros.TileEntityBuilder.build( DecoDef ))
+class Deco extends TileEntity
+{
+	// @todo: Some day move this to c2d where it belongs
+	var anim: cerastes.ui.Anim;
+
+	public override function initialize( root: h2d.Object )
+	{
+		var entry = Utils.getAtlasEntry( def.anim );
+
+		anim = new cerastes.ui.Anim( entry != null ? entry : Utils.invalidAtlas(), this );
+
+		new Bitmap( Tile.fromColor(0xFF00FF,16,16,1), this );
+	}
+}
+
+@:build(cerastes.macros.TileEntityBuilder.build( DecoDef ))
+class Deco2 extends TileEntity
+{
+	// @todo: Some day move this to c2d where it belongs
+	var anim: cerastes.ui.Anim;
+
+	public override function initialize( root: h2d.Object )
+	{
+		var entry = Utils.getAtlasEntry( def.anim );
+
+		anim = new cerastes.ui.Anim( entry != null ? entry : Utils.invalidAtlas(), this );
+
+		new Bitmap( Tile.fromColor(0xFF00FF,16,16,1), this );
+	}
+}

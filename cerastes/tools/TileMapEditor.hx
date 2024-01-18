@@ -2,6 +2,8 @@
 package cerastes.tools;
 
 
+import cerastes.fmt.TileMapResource.TileMapEntityDef;
+import cerastes.tools.ImguiTools.ComboFilterState;
 import h2d.TileGroup;
 import cerastes.fmt.TileMapResource.TileMapTileFlags;
 import h2d.Tile;
@@ -43,6 +45,13 @@ import imgui.ImGui;
 import cerastes.tools.ImguiTools.IG;
 import imgui.ImGuiMacro.wref;
 import cerastes.macros.MacroUtils.imTooltip;
+
+enum PaintMode
+{
+	Normal;
+	Fill;
+	Entity;
+}
 
 @:keep
 @multiInstance(true)
@@ -93,13 +102,20 @@ class TileMapEditor extends ImguiTool
 	var tileMapDef: cerastes.fmt.TileMapResource.TileMapDef;
 	var tileMap: TileMap;
 
+	var tileMapDefPreview: cerastes.fmt.TileMapResource.TileMapDef;
+	var tileMapPreview: TileMap;
+
 	var selectedLayer: TileMapLayerDef;
 	var selectedTile: Int = -1;
+	var selectedTileEnd: Int = -1;
 
 	//
 	var randomRotation = false;
 	var randomFlip = false;
 	var tileRotation: Int = 0;
+	var paintMode: PaintMode = Normal;
+	var paintEntityType: String = null;
+	var paintEntityFilterState: ComboFilterState = {};
 
 	public override function getName() { return '\uf108 UI Editor ${fileName != null ? '($fileName)' : ""}'; }
 
@@ -119,6 +135,10 @@ class TileMapEditor extends ImguiTool
 		cursorTileGroup = new TileGroup();
 
 		tileMapDef = {};
+		tileMapDefPreview = {
+			layers: [ {} ]
+		};
+
 
 		// TEST
 		//
@@ -139,17 +159,31 @@ class TileMapEditor extends ImguiTool
 		ld.setIdx(0,2,131);
 		ld.setIdx(0,3,131);
 
-
 		//tileMapDef.resize( 10, 10 );
 		tileMap = tileMapDef.create();
+		tileMapPreview = tileMapDefPreview.create();
+
+
+		selectLayer(l);
 
 
 		preview.addChild( tileMap );
 		preview.addChild(selectedItemBorder);
 		preview.addChild(cursor);
-		preview.addChild( cursorTileGroup );
+		preview.addChild( tileMapPreview );
+
 
 		updateScene();
+	}
+
+	function selectLayer( l: TileMapLayerDef )
+	{
+		selectedLayer = l;
+
+		tileMapDefPreview.layers[0].tileData.tileSheet = l.tileData.tileSheet;
+		tileMapDefPreview.resize( tileMapDefPreview.layers[0].tileData.width, tileMapDefPreview.layers[0].tileData.height );
+		tileMapDefPreview.clear();
+		tileMapPreview.rebuild();
 	}
 
 	public override function openFile( f: String )
@@ -172,6 +206,9 @@ class TileMapEditor extends ImguiTool
 	{
 		Metrics.begin();
 		tileMap.rebuild();
+
+		tileMapDefPreview.resize( tileMapDef.width, tileMapDef.height );
+		tileMapPreview.rebuild();
 
 		var w = 0;
 		var h = 0;
@@ -283,6 +320,8 @@ class TileMapEditor extends ImguiTool
 
 		menuBar();
 
+		toolBar();
+
 		dockSpace();
 
 		ImGui.dockSpace( dockspaceId, null );
@@ -329,8 +368,9 @@ class TileMapEditor extends ImguiTool
 		ImGui.end();
 
 
-		layoutColumn();
 		propertiesColumn();
+		layoutColumn();
+
 
 
 		dockCond = ImGuiCond.Appearing;
@@ -346,6 +386,40 @@ class TileMapEditor extends ImguiTool
 
 
 
+	}
+
+	function toolBar()
+	{
+		var style = ImGui.getStyle();
+
+		if( toolBarButton("\uf245", paintMode == Normal) )
+			paintMode = Normal;
+
+		ImGui.sameLine();
+
+		if( toolBarButton("\uf575", paintMode == Fill ) )
+			paintMode = Fill;
+
+		ImGui.sameLine();
+
+		if( toolBarButton("\uf0eb", paintMode == Entity ) )
+			paintMode = Entity;
+
+
+
+	}
+
+	function toolBarButton(text: String, selected: Bool )
+	{
+		if( !selected )
+			ImGui.pushStyleColor(ImGuiCol.Button, ImVec4.getColor(0x555555) );
+
+		var ret = ImGui.button(text);
+
+		if( !selected )
+			ImGui.popStyleColor();
+
+		return ret;
 	}
 
 	function layoutColumn()
@@ -381,29 +455,69 @@ class TileMapEditor extends ImguiTool
 					if( selectedLayer == l )
 						flags |= ImGuiTreeNodeFlags.Selected;
 
-					var name = 'Layer ${i}';
+					var name = selectedLayer.name.length > 0 ? selectedLayer.name : 'Layer ${i}';
 					if( ImGui.treeNodeEx( name, flags ) )
 					{
 						ImGui.treePop();
 					}
 
 					if( ImGui.isItemClicked() )
-						selectedLayer = l;
+						selectLayer( l );
 
-					var isHidden = false;
-					var isLocked = false;
+					var popupIdRC = 'tme_rc_layer_${windowID()}_${i}';
+
+					if( ImGui.isItemClicked( ImGuiMouseButton.Right ) )
+					{
+						ImGui.openPopup( popupIdRC );
+					}
+
+					if( ImGui.beginPopup( popupIdRC ) )
+					{
+						if( ImGui.menuItem( '\uf1f8 Delete') )
+						{
+							if( selectedLayer == l)
+								selectedLayer = null;
+							tileMapDef.layers.splice(i,1);
+						}
+						ImGui.endPopup();
+					}
 
 					ImGui.tableNextColumn();
-					ImGui.checkbox("##hidden", isHidden);
+					if( ImGui.checkbox("##hidden", l.hidden) )
+						updateScene();
 					ImGui.tableNextColumn();
-					ImGui.checkbox("##locked", isLocked);
+					ImGui.checkbox("##locked", l.locked);
 
 
 				}
 				ImGui.endTable();
+				if( ImGui.button("New Layer") )
+				{
+					var l: TileMapLayerDef = {};
+					l.resize(tileMapDef.width, tileMapDef.height);
+					tileMapDef.layers.push(l);
+				}
 			}
 
 			ImGui.endChildFrame();
+		}
+
+		if( paintMode == Entity )
+		{
+			var classList = CompileTime.getAllClasses(cerastes.c2d.TileEntity);
+			if( classList != null )
+			{
+				var options = [ for(c in classList) Type.getClassName(c) ];
+
+				var ret = IG.comboFilter( "Entity", options, paintEntityFilterState, paintEntityType );
+				if( ret != null )
+				{
+					paintEntityType = ret;
+					paintEntityFilterState = {};
+				}
+			}
+			//paintEntityType
+
 		}
 
 		var w = tileMapDef.width;
@@ -437,11 +551,19 @@ class TileMapEditor extends ImguiTool
 			return;
 		}
 
-		var newTexture = IG.inputTexture( "Tile Sheet", selectedLayer.tileData.tileSheet );
+		if( selectedLayer.name == null)
+			selectedLayer.name = "";
+
+		ImGui.inputText("Name",selectedLayer.name);
+
+		var newTexture = IG.inputTexture( "Tile Sheet", selectedLayer.tileData.tileSheet, "sheets" );
 		if( newTexture != null )
 		{
 			selectedLayer.tileData.tileSheet = newTexture;
 			updateScene();
+			// re-select layer to update the preview tiles
+			selectLayer( selectedLayer );
+
 		}
 
 		ImGui.text("Palette");
@@ -453,9 +575,9 @@ class TileMapEditor extends ImguiTool
 
 		var pickerZoom = 2;
 		var pickerMousePos = {x: ( mousePos.x - startPos.x) / pickerZoom, y: ( mousePos.y - startPos.y ) / pickerZoom };
-		var pw = tex.width * pickerZoom;
-		var ph = tex.height * pickerZoom;
-		ImGui.image( tex, {x: pw, y: ph }, null, null, null, {x: 1, y:1, z: 1, w: 1 } );
+		var pw = tex.width;
+		var ph = tex.height;
+		ImGui.image( tex, {x: pw * pickerZoom, y: ph * pickerZoom }, null, null, null, {x: 1, y:1, z: 1, w: 1 } );
 		var restorePos = ImGui.getCursorPos();
 
 		if( pickerMousePos.x > 0 && pickerMousePos.x < pw && pickerMousePos.y > 0 && pickerMousePos.y < ph )
@@ -463,19 +585,59 @@ class TileMapEditor extends ImguiTool
 			var tx: Int = Math.floor(pickerMousePos.x / selectedLayer.tileData.tileWidth );
 			var ty: Int = Math.floor(pickerMousePos.y / selectedLayer.tileData.tileHeight );
 
-			var px: Int = tx * selectedLayer.tileData.tileWidth * pickerZoom;
-			var py: Int = ty * selectedLayer.tileData.tileHeight * pickerZoom;
+			var drawSelect = false;
 
-			if( ImGui.isItemClicked())
+			if( ImGui.isItemClicked() )
 			{
 				selectedTile = cast tx + ty * ( tex.width / selectedLayer.tileData.tileWidth );
+				selectedTileEnd = selectedTile;
+				drawSelect = true;
 			}
+			if( ImGui.isMouseDown( ImGuiMouseButton.Left ))
+			{
+				selectedTileEnd = cast tx + ty * ( tex.width / selectedLayer.tileData.tileWidth );
+				drawSelect = true;
+				if( selectedTileEnd != selectedTile )
+				{
+					randomRotation = false;
+					tileRotation = tileRotation & ~TileMapTileFlags.FlipFlags;
+					if( paintMode == Fill ) paintMode = Normal;
+				}
+
+			}
+
+			var px, py, tw, th: Int;
+
+			if( drawSelect )
+			{
+				var tsw: Int = cast tex.width / selectedLayer.tileData.tileWidth;
+
+				var tsx: Int = selectedTile % tsw;
+				var tsy: Int = cast selectedTile / tsw;
+
+				var tex: Int = selectedTileEnd % tsw;
+				var tey: Int = cast selectedTileEnd / tsw;
+
+				tw = tex - tsx + 1;
+				th = tey - tsy + 1;
+
+				px = tsx * selectedLayer.tileData.tileWidth * pickerZoom;
+				py = tsy * selectedLayer.tileData.tileHeight * pickerZoom;
+
+			}
+			else
+			{
+				tw = 1;
+				th = 1;
+
+				px = tx * selectedLayer.tileData.tileWidth * pickerZoom;
+				py = ty * selectedLayer.tileData.tileHeight * pickerZoom;
+			}
+
 
 			var offset: ImVec2 = {x: px, y: py};
 			ImGui.setCursorScreenPos( startPos + offset );
-			ImGui.imageTile( Tile.fromColor(0xFFFFFF, 1, 1, 0.25), {x:selectedLayer.tileData.tileWidth * pickerZoom, y: selectedLayer.tileData.tileHeight * pickerZoom} );
-
-
+			ImGui.imageTile( Tile.fromColor(0xFFFFFF, 1, 1, 0.25), {x:selectedLayer.tileData.tileWidth * tw * pickerZoom, y: selectedLayer.tileData.tileHeight * th * pickerZoom} );
 		}
 
 		ImGui.setCursorPos( restorePos );
@@ -499,7 +661,7 @@ class TileMapEditor extends ImguiTool
 
 
 		cursor.clear();
-		cursorTileGroup.clear();
+		tileMapDefPreview.clear();
 		if( isMouseOverViewport )
 		{
 			if( selectedLayer != null )
@@ -507,49 +669,16 @@ class TileMapEditor extends ImguiTool
 				var cx: Int = cast mouseScenePos.x / selectedLayer.tileData.tileWidth;
 				var cy: Int = cast mouseScenePos.y / selectedLayer.tileData.tileHeight;
 
-
-				if( selectedTile >= 0 )
-				{
-					cursor.alpha = 0.7;
-					var tile = Utils.getTile( selectedLayer.tileData.tileSheet );
-					var t = selectedLayer.tileData.getTile( tile, selectedTile );
-
-					var flipX = tileRotation & TileMapTileFlags.FlipHorizontal != 0;
-					var flipY = tileRotation & TileMapTileFlags.FlipVertical != 0;
-					var flipDiag = tileRotation & TileMapTileFlags.FlipDiagonal != 0;
-
-					var fx = flipX ? -1 : 1;
-					var fy = flipY ? -1 : 1;
-					var rot = 0.;
-
-					var xo = fx == -1 ? selectedLayer.tileData.tileWidth : 0;
-					var yo = fy == -1 ? selectedLayer.tileData.tileHeight : 0;
-
-					if( flipDiag )
-					{
-						fy = -fy;
-
-						if( flipX  != flipY )
-						{
-							rot = -Math.PI / 2;
-						}
-						else
-						{
-							rot = Math.PI / 2;
-
-						}
-					}
-
-					cursorTileGroup.addTransform( cx * selectedLayer.tileData.tileWidth + xo, cy * selectedLayer.tileData.tileHeight + yo, fx, fy, rot, t );
-
-
-				}
-				else
+				if( selectedTile == -1 )
 				{
 					cursor.alpha = 0.35;
 					cursor.beginFill(0xFFFFFF);
 					cursor.drawRect( cx * selectedLayer.tileData.tileWidth, cy * selectedLayer.tileData.tileHeight, selectedLayer.tileData.tileWidth, selectedLayer.tileData.tileHeight );
 					cursor.endFill();
+				}
+				else
+				{
+					blit( cx, cy, selectedTile, selectedTileEnd, tileMapDefPreview.layers[0] );
 				}
 
 				if( ImGui.isMouseDown( ImGuiMouseButton.Left ) )
@@ -570,6 +699,7 @@ class TileMapEditor extends ImguiTool
 
 
 		}
+		tileMapPreview.rebuild();
 
 	}
 
@@ -596,13 +726,62 @@ class TileMapEditor extends ImguiTool
 			step = 0;
 
 		tileRotation = steps[step];
+		// If we're intentionally chosing a rotation, stop picking them randomly.
+		randomRotation = false;
 	}
 
 	function tileMapClicked(x: Int, y: Int )
 	{
-		var flags = tileRotation;
 		lastDownX = x;
 		lastDownY = y;
+
+		switch( paintMode )
+		{
+			case Normal:
+				blit( x, y, selectedTile, selectedTileEnd, selectedLayer );
+			case Fill:
+				var target = selectedLayer.tileData.getIdx(x, y);
+				fill(x, y, selectedTile, target, selectedLayer );
+			case Entity:
+				if( paintEntityType != null )
+				{
+					var e: TileMapEntityDef = {
+						type: paintEntityType,
+						x: x * selectedLayer.tileData.tileWidth,
+						y: y * selectedLayer.tileData.tileHeight,
+						width: selectedLayer.tileData.tileWidth, // @ todo: Zones
+						height: selectedLayer.tileData.tileHeight,
+					};
+
+					selectedLayer.entities.push(e);
+
+				}
+		}
+
+		updateScene();
+	}
+
+	function fill( x: Int, y: Int, tile: Int, target: Int, layer: TileMapLayerDef )
+	{
+		if( x >= layer.tileData.width || x < 0 || y >= layer.tileData.height || y < 0 )
+			return;
+
+		var t = layer.tileData.getIdx(x,y);
+		if( t != target || t == tile )
+			return;
+
+		blit(x,y,tile,tile,layer);
+
+		fill(x+1, y, tile, target, layer);
+		fill(x-1, y, tile, target, layer);
+		fill(x, y+1, tile, target, layer);
+		fill(x, y-1, tile, target, layer);
+	}
+
+	function blit(x: Int, y: Int, startTile: Int, endTile: Int, layer: TileMapLayerDef )
+	{
+		var flags = tileRotation;
+
 
 		if( randomRotation )
 		{
@@ -610,8 +789,25 @@ class TileMapEditor extends ImguiTool
 			tileRotation = flags;
 		}
 
-		tileMapDef.layers[0].tileData.setIdx(x,y,selectedTile, flags);
-		updateScene();
+		var tileTex = Utils.resolveTexture( layer.tileData.tileSheet );
+
+		var tsw: Int = cast tileTex.width / layer.tileData.tileWidth;
+
+		var tsx: Int = startTile % tsw;
+		var tsy: Int = cast startTile / tsw;
+
+		var tex: Int = endTile % tsw;
+		var tey: Int = cast endTile / tsw;
+
+
+		for( tileOffsetX in 0 ... tex - tsx + 1 )
+		{
+			for( tileOffsetY in 0 ... tey - tsy + 1 )
+			{
+				var selectedTileOffset: Int = tileOffsetX + ( tileOffsetY * tsw );
+				layer.tileData.setIdx(x + tileOffsetX,y + tileOffsetY,startTile + selectedTileOffset, flags);
+			}
+		}
 	}
 
 	var lastDownX = -1;
@@ -649,9 +845,8 @@ class TileMapEditor extends ImguiTool
 
 			var idOut = hl.Ref.make( dockspaceId );
 
-			dockspaceIdBottom = ImGui.dockBuilderSplitNode(idOut.get(), ImGuiDir.Down, 0.30, null, idOut);
-			dockspaceIdLeft = ImGui.dockBuilderSplitNode(idOut.get(), ImGuiDir.Left, 0.30, null, idOut);
-			dockspaceIdRight = ImGui.dockBuilderSplitNode(idOut.get(), ImGuiDir.Right, 0.30, null, idOut);
+			dockspaceIdLeft = ImGui.dockBuilderSplitNode(idOut.get(), ImGuiDir.Left, 0.2, null, idOut);
+			dockspaceIdRight = ImGui.dockBuilderSplitNode(idOut.get(), ImGuiDir.Right, 0.50, null, idOut);
 			dockspaceIdCenter = idOut.get();
 
 

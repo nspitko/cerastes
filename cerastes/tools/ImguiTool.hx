@@ -1,5 +1,6 @@
 
 package cerastes.tools;
+import hl.UI;
 #if hlimgui
 import haxe.io.Path;
 import cerastes.file.CDPrinter;
@@ -21,6 +22,7 @@ import cerastes.macros.Metrics;
 import haxe.rtti.Meta;
 import haxe.macro.Expr;
 import cerastes.input.ControllerAccess;
+import imgui.ImGuiMacro.wref;
 
 @:keepSub
 class ImguiTool
@@ -772,6 +774,174 @@ class ImGuiToolManager
 			case "wav" | "ogg" | "mp3":
 				hxd.Res.load( file ).toSound().play();
 		}
+	}
+
+	public static function renderElement( field: String, type: String, args: Array<String>, fnGet: (String) -> Any, fnSet: (String, Any) -> Void, ?tooltip: String )
+	{
+		var changed = false;
+		switch( type )
+		{
+			case "Bool":
+				var val = fnGet(field);
+				if( val == null ) val = 0;
+				if( wref( ImGui.checkbox(args[0], _ ), val ) )
+				{
+					fnSet(field, val);
+
+					changed = true;
+				}
+
+				if (tooltip != null && ImGui.isItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
+					ImGui.setTooltip(tooltip);
+
+			case "Int":
+				var val = fnGet(field);
+				if( val == null ) val = 0;
+				if( wref( ImGui.inputInt(args[0], _ ), val ) )
+				{
+					fnSet(field, val);
+					changed = true;
+				}
+
+				if (tooltip != null && ImGui.isItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
+					ImGui.setTooltip(tooltip);
+
+			case "String" | "LocalizedString":
+				var val = fnGet(field);
+				if( val == null ) val = "";
+				var ret = IG.textInput(args[0],val);
+				if( ret != null )
+					fnSet(field, ret);
+
+				changed = ret != null;
+
+				if (tooltip != null && ImGui.isItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
+					ImGui.setTooltip(tooltip);
+
+			case "StringMultiline" | "LocalizedStringMultiline":
+				var val = fnGet(field);
+				if( val == null ) val = "";
+				var ret = IG.textInputMultiline(args[0],val,{x: -1, y: 300 * Utils.getDPIScaleFactor()}, ImGuiInputTextFlags.Multiline | ImGuiInputTextFlags.CallbackAlways ,1024*8);
+				if( ret != null )
+					fnSet(field, ret);
+
+				changed = ret != null;
+
+				if (tooltip != null && ImGui.isItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
+					ImGui.setTooltip(tooltip);
+
+			case "Tile":
+				var val = fnGet(field);
+				if( val == null ) val = "";
+				var ret = IG.inputTile(args[0],val);
+				if( ret != null )
+					fnSet(field, ret);
+
+				changed = ret != null;
+
+				if (tooltip != null && ImGui.isItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
+					ImGui.setTooltip(tooltip);
+
+
+			case "File":
+				var val = fnGet(field);
+				if( val == null ) val = "";
+				var ret = IG.textInput(args[0],val);
+				if( ret != null )
+					fnSet(field, ret);
+
+				changed = ret != null;
+
+				if( ImGui.beginDragDropTarget( ) )
+				{
+					var payload = ImGui.acceptDragDropPayloadString("asset_name");
+					if( payload != null && StringTools.endsWith(payload, "flow") )
+					{
+						fnSet( field, payload );
+						changed = true;
+					}
+				}
+
+				if (tooltip != null && ImGui.isItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
+					ImGui.setTooltip(tooltip);
+
+
+				if( ImGui.button("Select...") )
+				{
+					var file = UI.loadFile({
+						title:"Select file",
+						filters:[
+						{name:"Cerastes flow files", exts:["flow"]},
+						],
+						filterIndex: 0
+					});
+					if( file != null )
+					{
+						fnSet( field, file );
+						changed = true;
+					}
+				}
+/*
+			case "ComboString":
+				var val = Reflect.getProperty(obj,field);
+				var opts = getOptions( field );
+				var idx = opts.indexOf( val );
+				if( ImGui.beginCombo( args[0], val ) )
+				{
+					for( opt in opts )
+					{
+						if( ImGui.selectable( opt, opt == val ) )
+						{
+							Reflect.setField( obj, field, opt );
+							changed = true;
+						}
+					}
+					ImGui.endCombo();
+				}
+
+				if (tooltip != null && ImGui.isItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
+					ImGui.setTooltip(tooltip);
+*/
+			case "Array":
+				ImGui.text(args[0]);
+
+				if (tooltip != null && ImGui.isItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
+					ImGui.setTooltip(tooltip);
+
+				var val:Array<String> = fnGet(field);
+				switch( args[2] )
+				{
+					case "String":
+						if( val != null )
+						{
+							for( idx in 0 ... val.length )
+							{
+								ImGui.pushID('idx${idx}');
+								if( val[idx] == null ) val[idx] = "";
+								changed = wref( ImGui.inputText( '${idx}', _), val[idx] );
+
+								if( ImGui.button("Del") )
+									val.splice(idx,1);
+
+								ImGui.popID();
+							}
+						}
+						if( ImGui.button("Add") )
+						{
+							if( val == null )
+								fnSet( field, [""] );
+							else
+								val.push("");
+						}
+				}
+
+
+
+			default:
+				ImGui.text('UNHANDLED!!! ${field} -> ${args[0]} of type ${args[1]}');
+		}
+
+		return changed;
 	}
 }
 

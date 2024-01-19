@@ -2,6 +2,8 @@
 package cerastes.tools;
 
 
+import haxe.rtti.Meta;
+import cerastes.c2d.TileEntity.TileEntityDef;
 import cerastes.fmt.TileMapResource.TileMapEntityDef;
 import cerastes.tools.ImguiTools.ComboFilterState;
 import h2d.TileGroup;
@@ -51,6 +53,7 @@ enum PaintMode
 	Normal;
 	Fill;
 	Entity;
+	Select;
 }
 
 @:keep
@@ -108,6 +111,7 @@ class TileMapEditor extends ImguiTool
 	var selectedLayer: TileMapLayerDef;
 	var selectedTile: Int = -1;
 	var selectedTileEnd: Int = -1;
+	var selectedEntity: TileMapEntityDef = null;
 
 	//
 	var randomRotation = false;
@@ -261,10 +265,23 @@ class TileMapEditor extends ImguiTool
 
 	function handleShortcuts()
 	{
-		if( ImGui.isWindowFocused( ImGuiFocusedFlags.RootAndChildWindows ) && Key.isDown( Key.CTRL ) && Key.isPressed( Key.S ) )
+		if( ImGui.isWindowFocused( ImGuiFocusedFlags.RootAndChildWindows ) && !ImGui.wantCaptureKeyboard() )
+
 		{
-			save();
+			if( Key.isDown( Key.CTRL ) && Key.isPressed( Key.S ) )
+				save();
+
+			if( Key.isDown( Key.P ) )
+				paintMode = Normal;
+			if( Key.isDown( Key.F ) )
+				paintMode = Fill;
+			if( Key.isDown( Key.E ) )
+				paintMode = Entity;
+			if( Key.isDown( Key.S ) )
+				paintMode = Select;
 		}
+
+
 	}
 
 
@@ -361,8 +378,6 @@ class TileMapEditor extends ImguiTool
 		}
 
 		ImGui.image(sceneRT, { x: sceneRT.width * zoom, y: sceneRT.height * zoom }, null, null, null, {x: 1, y: 1, z:1, w:1} );
-		if( mouseScenePos != null )
-			ImGui.text('${mouseScenePos.x}, ${mouseScenePos.y}');
 
 
 		ImGui.end();
@@ -392,7 +407,12 @@ class TileMapEditor extends ImguiTool
 	{
 		var style = ImGui.getStyle();
 
-		if( toolBarButton("\uf245", paintMode == Normal) )
+		if( toolBarButton("\uf245", paintMode == Select ) )
+			paintMode = Select;
+
+		ImGui.sameLine();
+
+		if( toolBarButton("\uf303", paintMode == Normal ) )
 			paintMode = Normal;
 
 		ImGui.sameLine();
@@ -427,6 +447,20 @@ class TileMapEditor extends ImguiTool
 		ImGui.setNextWindowDockId( dockspaceIdLeft, dockCond );
 		ImGui.begin('Layout##${windowID()}', null, ImGuiWindowFlags.NoMove | ImGuiWindowFlags.HorizontalScrollbar );
 		handleShortcuts();
+
+		var classList = CompileTime.getAllClasses(cerastes.c2d.TileEntity);
+		if( classList != null )
+		{
+			var options = [ for(c in classList) Type.getClassName(c) ];
+
+			var ret = IG.comboFilter( "Entity", options, paintEntityFilterState, paintEntityType );
+			if( ret != null )
+			{
+				paintEntityType = ret;
+				paintEntityFilterState = {};
+				paintMode = Entity;
+			}
+		}
 
 		//ImGui.pushFont( ImGuiToolManager.headingFont );
 		ImGui.text("Layers");
@@ -502,23 +536,6 @@ class TileMapEditor extends ImguiTool
 			ImGui.endChildFrame();
 		}
 
-		if( paintMode == Entity )
-		{
-			var classList = CompileTime.getAllClasses(cerastes.c2d.TileEntity);
-			if( classList != null )
-			{
-				var options = [ for(c in classList) Type.getClassName(c) ];
-
-				var ret = IG.comboFilter( "Entity", options, paintEntityFilterState, paintEntityType );
-				if( ret != null )
-				{
-					paintEntityType = ret;
-					paintEntityFilterState = {};
-				}
-			}
-			//paintEntityType
-
-		}
 
 		var w = tileMapDef.width;
 		var h = tileMapDef.height;
@@ -556,93 +573,150 @@ class TileMapEditor extends ImguiTool
 
 		ImGui.inputText("Name",selectedLayer.name);
 
-		var newTexture = IG.inputTexture( "Tile Sheet", selectedLayer.tileData.tileSheet, "sheets" );
-		if( newTexture != null )
+		switch( paintMode )
 		{
-			selectedLayer.tileData.tileSheet = newTexture;
-			updateScene();
-			// re-select layer to update the preview tiles
-			selectLayer( selectedLayer );
-
-		}
-
-		ImGui.text("Palette");
-
-		var tex = Utils.resolveTexture( selectedLayer.tileData.tileSheet );
-
-		var startPos: ImVec2 = ImGui.getCursorScreenPos();
-		var mousePos: ImVec2 = ImGui.getMousePos();
-
-		var pickerZoom = 2;
-		var pickerMousePos = {x: ( mousePos.x - startPos.x) / pickerZoom, y: ( mousePos.y - startPos.y ) / pickerZoom };
-		var pw = tex.width;
-		var ph = tex.height;
-		ImGui.image( tex, {x: pw * pickerZoom, y: ph * pickerZoom }, null, null, null, {x: 1, y:1, z: 1, w: 1 } );
-		var restorePos = ImGui.getCursorPos();
-
-		if( pickerMousePos.x > 0 && pickerMousePos.x < pw && pickerMousePos.y > 0 && pickerMousePos.y < ph )
-		{
-			var tx: Int = Math.floor(pickerMousePos.x / selectedLayer.tileData.tileWidth );
-			var ty: Int = Math.floor(pickerMousePos.y / selectedLayer.tileData.tileHeight );
-
-			var drawSelect = false;
-
-			if( ImGui.isItemClicked() )
-			{
-				selectedTile = cast tx + ty * ( tex.width / selectedLayer.tileData.tileWidth );
-				selectedTileEnd = selectedTile;
-				drawSelect = true;
-			}
-			if( ImGui.isMouseDown( ImGuiMouseButton.Left ))
-			{
-				selectedTileEnd = cast tx + ty * ( tex.width / selectedLayer.tileData.tileWidth );
-				drawSelect = true;
-				if( selectedTileEnd != selectedTile )
+			case Select:
+				if( selectedEntity != null )
 				{
-					randomRotation = false;
-					tileRotation = tileRotation & ~TileMapTileFlags.FlipFlags;
-					if( paintMode == Fill ) paintMode = Normal;
+					ImGui.text( selectedEntity.type );
+
+					// @todo DON"T DO THIS
+					var cls = Type.resolveClass( '${selectedEntity.type}Def' );
+					if( Utils.verify( cls != null, 'Unknown TileMapEntity def type ${selectedEntity.type}Def'))
+					{
+						var meta: haxe.DynamicAccess<Dynamic> = Meta.getFields( cls );
+						for( field => data in meta )
+						{
+							var metadata: haxe.DynamicAccess<Dynamic> = data;
+							if( metadata.exists("editor") )
+							{
+								var tooltip = null;
+								if( metadata.exists("editorTooltip") )
+								{
+									tooltip = metadata.get("editorTooltip")[0];
+								}
+								var args = metadata.get("editor");
+
+								var changed = ImGuiToolManager.renderElement(
+									field,
+									args[1],
+									args,
+									(field) -> {
+										return selectedEntity.properties != null ? selectedEntity.properties.get(field) : "";
+									},
+									(field, val) -> {
+										if( selectedEntity.properties == null )
+											selectedEntity.properties = [];
+										selectedEntity.properties.set(field, val);
+									},
+									tooltip
+								);
+
+								if( changed )
+									updateScene();
+							}
+						}
+					}
+
+				}
+				else
+				{
+					ImGui.text("No entity selected");
 				}
 
-			}
+			case Fill | Normal:
+				var newTexture = IG.inputTexture( "Tile Sheet", selectedLayer.tileData.tileSheet, "sheets" );
+				if( newTexture != null )
+				{
+					selectedLayer.tileData.tileSheet = newTexture;
+					updateScene();
+					// re-select layer to update the preview tiles
+					selectLayer( selectedLayer );
 
-			var px, py, tw, th: Int;
+				}
 
-			if( drawSelect )
-			{
-				var tsw: Int = cast tex.width / selectedLayer.tileData.tileWidth;
+				ImGui.text("Palette");
 
-				var tsx: Int = selectedTile % tsw;
-				var tsy: Int = cast selectedTile / tsw;
+				var tex = Utils.resolveTexture( selectedLayer.tileData.tileSheet );
 
-				var tex: Int = selectedTileEnd % tsw;
-				var tey: Int = cast selectedTileEnd / tsw;
+				var startPos: ImVec2 = ImGui.getCursorScreenPos();
+				var mousePos: ImVec2 = ImGui.getMousePos();
 
-				tw = tex - tsx + 1;
-				th = tey - tsy + 1;
+				var pickerZoom = 2;
+				var pickerMousePos = {x: ( mousePos.x - startPos.x) / pickerZoom, y: ( mousePos.y - startPos.y ) / pickerZoom };
+				var pw = tex.width;
+				var ph = tex.height;
+				ImGui.image( tex, {x: pw * pickerZoom, y: ph * pickerZoom }, null, null, null, {x: 1, y:1, z: 1, w: 1 } );
+				var restorePos = ImGui.getCursorPos();
 
-				px = tsx * selectedLayer.tileData.tileWidth * pickerZoom;
-				py = tsy * selectedLayer.tileData.tileHeight * pickerZoom;
+				if( pickerMousePos.x > 0 && pickerMousePos.x < pw && pickerMousePos.y > 0 && pickerMousePos.y < ph )
+				{
+					var tx: Int = Math.floor(pickerMousePos.x / selectedLayer.tileData.tileWidth );
+					var ty: Int = Math.floor(pickerMousePos.y / selectedLayer.tileData.tileHeight );
 
-			}
-			else
-			{
-				tw = 1;
-				th = 1;
+					var drawSelect = false;
 
-				px = tx * selectedLayer.tileData.tileWidth * pickerZoom;
-				py = ty * selectedLayer.tileData.tileHeight * pickerZoom;
-			}
+					if( ImGui.isItemClicked() )
+					{
+						selectedTile = cast tx + ty * ( tex.width / selectedLayer.tileData.tileWidth );
+						selectedTileEnd = selectedTile;
+						drawSelect = true;
+					}
+					if( ImGui.isMouseDown( ImGuiMouseButton.Left ))
+					{
+						selectedTileEnd = cast tx + ty * ( tex.width / selectedLayer.tileData.tileWidth );
+						drawSelect = true;
+						if( selectedTileEnd != selectedTile )
+						{
+							randomRotation = false;
+							tileRotation = tileRotation & ~TileMapTileFlags.FlipFlags;
+							if( paintMode == Fill ) paintMode = Normal;
+						}
+
+					}
+
+					var px, py, tw, th: Int;
+
+					if( drawSelect )
+					{
+						var tsw: Int = cast tex.width / selectedLayer.tileData.tileWidth;
+
+						var tsx: Int = selectedTile % tsw;
+						var tsy: Int = cast selectedTile / tsw;
+
+						var tex: Int = selectedTileEnd % tsw;
+						var tey: Int = cast selectedTileEnd / tsw;
+
+						tw = tex - tsx + 1;
+						th = tey - tsy + 1;
+
+						px = tsx * selectedLayer.tileData.tileWidth * pickerZoom;
+						py = tsy * selectedLayer.tileData.tileHeight * pickerZoom;
+
+					}
+					else
+					{
+						tw = 1;
+						th = 1;
+
+						px = tx * selectedLayer.tileData.tileWidth * pickerZoom;
+						py = ty * selectedLayer.tileData.tileHeight * pickerZoom;
+					}
 
 
-			var offset: ImVec2 = {x: px, y: py};
-			ImGui.setCursorScreenPos( startPos + offset );
-			ImGui.imageTile( Tile.fromColor(0xFFFFFF, 1, 1, 0.25), {x:selectedLayer.tileData.tileWidth * tw * pickerZoom, y: selectedLayer.tileData.tileHeight * th * pickerZoom} );
+					var offset: ImVec2 = {x: px, y: py};
+					ImGui.setCursorScreenPos( startPos + offset );
+					ImGui.imageTile( Tile.fromColor(0xFFFFFF, 1, 1, 0.25), {x:selectedLayer.tileData.tileWidth * tw * pickerZoom, y: selectedLayer.tileData.tileHeight * th * pickerZoom} );
+				}
+
+				ImGui.setCursorPos( restorePos );
+
+				ImGui.checkbox("Random rotation", randomRotation);
+
+			case Entity:
+
+
 		}
-
-		ImGui.setCursorPos( restorePos );
-
-		ImGui.checkbox("Random rotation", randomRotation);
 
 
 		ImGui.end();
@@ -664,38 +738,60 @@ class TileMapEditor extends ImguiTool
 		tileMapDefPreview.clear();
 		if( isMouseOverViewport )
 		{
-			if( selectedLayer != null )
+			switch( paintMode )
 			{
-				var cx: Int = cast mouseScenePos.x / selectedLayer.tileData.tileWidth;
-				var cy: Int = cast mouseScenePos.y / selectedLayer.tileData.tileHeight;
+				case Select:
+					if( selectedLayer != null )
+					{
+						if( ImGui.isMouseDown( ImGuiMouseButton.Left ) )
+						{
+							for( e in selectedLayer.entities )
+							{
+								if( e.x <= mouseScenePos.x && e.x + e.width >= mouseScenePos.x && e.y <= mouseScenePos.y && e.y + e.height >= mouseScenePos.y )
+								{
+									selectedEntity = e;
+								}
+							}
+						}
+					}
 
-				if( selectedTile == -1 )
-				{
-					cursor.alpha = 0.35;
-					cursor.beginFill(0xFFFFFF);
-					cursor.drawRect( cx * selectedLayer.tileData.tileWidth, cy * selectedLayer.tileData.tileHeight, selectedLayer.tileData.tileWidth, selectedLayer.tileData.tileHeight );
-					cursor.endFill();
-				}
-				else
-				{
-					blit( cx, cy, selectedTile, selectedTileEnd, tileMapDefPreview.layers[0] );
-				}
 
-				if( ImGui.isMouseDown( ImGuiMouseButton.Left ) )
-				{
-					tileMapDown(cx, cy);
-				}
+				default:
 
-				if( ImGui.isMouseClicked( ImGuiMouseButton.Left ) )
-				{
-					tileMapClicked(cx, cy);
-				}
+					if( selectedLayer != null )
+					{
+						var cx: Int = cast mouseScenePos.x / selectedLayer.tileData.tileWidth;
+						var cy: Int = cast mouseScenePos.y / selectedLayer.tileData.tileHeight;
 
-				if( ImGui.isMouseClicked( ImGuiMouseButton.Right ) )
-				{
-					tileMapClickedRight(cx, cy);
-				}
+						if( selectedTile == -1 )
+						{
+							cursor.alpha = 0.35;
+							cursor.beginFill(0xFFFFFF);
+							cursor.drawRect( cx * selectedLayer.tileData.tileWidth, cy * selectedLayer.tileData.tileHeight, selectedLayer.tileData.tileWidth, selectedLayer.tileData.tileHeight );
+							cursor.endFill();
+						}
+						else
+						{
+							blit( cx, cy, selectedTile, selectedTileEnd, tileMapDefPreview.layers[0] );
+						}
+
+						if( ImGui.isMouseDown( ImGuiMouseButton.Left ) )
+						{
+							tileMapDown(cx, cy);
+						}
+
+						if( ImGui.isMouseClicked( ImGuiMouseButton.Left ) )
+						{
+							tileMapClicked(cx, cy);
+						}
+
+						if( ImGui.isMouseClicked( ImGuiMouseButton.Right ) )
+						{
+							tileMapClickedRight(cx, cy);
+						}
+					}
 			}
+
 
 
 		}
@@ -756,6 +852,7 @@ class TileMapEditor extends ImguiTool
 					selectedLayer.entities.push(e);
 
 				}
+			case Select:
 		}
 
 		updateScene();

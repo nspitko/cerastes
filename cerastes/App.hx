@@ -124,6 +124,8 @@ class App extends hxd.App {
 		cerastes.c2d.DebugDraw.init();
 		cerastes.c3d.DebugDraw.init();
 
+		cerastes.EntityBuilder.init( ["data/entities.def"] );
+
 
 		/*
 

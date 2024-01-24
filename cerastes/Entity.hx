@@ -13,6 +13,25 @@ typedef ScheduledFunction = {
 	var func: Void->Void;
 }
 
+@:keepSub
+@:structInit
+class EntityDef
+{
+	// The underlying type.
+	public var type: String;
+	// If set, inherit data from this entry first.
+	public var base: String;
+}
+
+@:keep
+class EntityFile
+{
+	public var includes: Array<String>;
+
+	@serializeType("haxe.ds.StringMap")
+	public var entities: Map<String,EntityDef>;
+}
+
 @:keep
 class EntityManager
 {
@@ -104,6 +123,10 @@ class EntityManager
 
 }
 
+
+interface DataEntity {
+	public function getDef() : EntityDef;
+}
 
 
 interface Entity {

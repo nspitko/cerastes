@@ -1,6 +1,8 @@
 package cerastes.c2d;
 
 
+import cerastes.Entity.DataEntity;
+import cerastes.Entity.EntityDef;
 import cerastes.c2d.DebugDraw;
 import cerastes.c2d.Vec2;
 import h2d.col.Bounds;
@@ -11,14 +13,15 @@ import cerastes.Entity.EntityManager;
 import cerastes.macros.Callbacks.ClassKey;
 
 @:keepSub
-@:structInit class TileEntityDef
+@:structInit class TileEntityDef extends EntityDef
 {
 
 }
 
+// @todo https://try.haxe.org/#27b129FD
 
 @:keepSub
-abstract class TileEntity extends h2d.Object implements Entity
+abstract class TileEntity extends h2d.Object implements Entity implements DataEntity
 {
 
 
@@ -29,6 +32,8 @@ abstract class TileEntity extends h2d.Object implements Entity
 	//abstract public function getDef() : TileEntityDef;
 	#end
 
+	public function getDef() : TileEntityDef { return def; }
+
 	public var initialized(get, null): Bool = false;
 
 	function get_initialized() { return initialized; }
@@ -36,11 +41,12 @@ abstract class TileEntity extends h2d.Object implements Entity
 	public var lookupId: String;
 	var destroyed = false;
 
+	@:noCompletion
+	var def: TileEntityDef;
 
-
-
-	public function new(?parent: h2d.Object)
+	public function new(def: TileEntityDef, ?parent: h2d.Object)
 	{
+		this.def = def;
 		super( parent );
 	}
 

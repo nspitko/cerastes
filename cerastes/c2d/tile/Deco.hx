@@ -10,7 +10,7 @@ import cerastes.Utils.*;
 	public var anim: String = null;
 }
 
-@:build(cerastes.macros.TileEntityBuilder.build( DecoDef ))
+@:build(cerastes.macros.EntityBuilder.build( DecoDef ))
 class Deco extends TileEntity
 {
 	// @todo: Some day move this to c2d where it belongs
@@ -18,7 +18,7 @@ class Deco extends TileEntity
 
 	public override function initialize( root: h2d.Object )
 	{
-		var entry = Utils.getAtlasEntry( def.anim );
+		var entry = Utils.getAtlasEntry( getDef().anim );
 
 		anim = new cerastes.ui.Anim( entry != null ? entry : Utils.invalidAtlas(), this );
 

@@ -11,6 +11,8 @@ using haxe.macro.Tools;
 @:structInit class EntityTypeInfo
 {
 	public var name: String;
+	public var defName: String;
+	public var dataTypeName: String;
 	public var typePath: TypePath;
 	public var builder: Expr;
 }
@@ -21,6 +23,16 @@ using haxe.macro.Tools;
 
 class EntityBuilder
 {
+	public static macro function getDefaultDataTypes():haxe.macro.Expr.ExprOf<Map<String, String>> {
+		var d: Map<String, String> = [ ];
+		for( e in classEntries )
+		{
+			d.set(e.dataTypeName, e.defName);
+		}
+
+		return macro $v{d};
+	}
+
 	#if macro
 
 	@:persistent static var classEntries: Array<EntityTypeInfo> = [];
@@ -42,6 +54,7 @@ class EntityBuilder
 			{
 
 				var clsTypePath = clsEntry.typePath;
+
 
 				caseMap.set(clsEntry.name ,macro {
 					c = new $clsTypePath( cast def );
@@ -109,6 +122,24 @@ class EntityBuilder
 				}).fields[0]
 			);
 
+			classFields.push((macro class {
+
+				public static function list( filter: Class<cerastes.Entity.EntityDef> ) : Array<String> {
+
+					var out: Array<String> = [];
+					for( defName => defObj in defMap )
+					{
+						if( Std.downcast( defObj, filter ) != null )
+							out.push(defName);
+					}
+
+
+					return out;
+				}
+
+			}).fields[0]
+		);
+
 
 			// Include the other internal classes and types. We can only substitute the ENTIRE type, so yeah...
 
@@ -139,6 +170,15 @@ class EntityBuilder
 				pos: pos,
 				kind: FFun({
 					expr: macro {
+
+						var base = cerastes.macros.EntityBuilder.getDefaultDataTypes();
+
+						for( k => v in base )
+						{
+							defMap.set( k, Type.createInstance( Type.resolveClass(v), [] ) );
+							loadedEntities++;
+						}
+
 						for( f in files )
 						{
 							parseFile( f );
@@ -213,7 +253,7 @@ class EntityBuilder
 		return null;
 	}
 
-	macro public static function build( defClass: ExprOf<Class<T>> ):Array<Field>
+	macro public static function build( defClass: ExprOf<Class<T>>, dataTypeName: String ):Array<Field>
 	{
 		var fields = Context.getBuildFields();
 		if( fields == null )
@@ -224,15 +264,24 @@ class EntityBuilder
 
 		var classType = Context.getLocalClass().get();
 
-
 		var clsTypePath : TypePath = {
 			pack: classType.pack,
 			name: classType.name
 		};
 
+		// :AyameDespair:
+		var module = classType.module.split('.');
+		if( module[module.length-1] != classType.name )
+		{
+			clsTypePath.sub = classType.name;
+			clsTypePath.name = module[module.length-1];
+		}
+
 		classEntries.push({
 			name: Context.getLocalClass().toString(),
+			defName: Context.getType( defClass.toString() ).toString(),
 			typePath: clsTypePath,
+			dataTypeName: dataTypeName,
 			builder: macro {
 				if( cls == $v{Context.getLocalClass().toString()} )
 				{

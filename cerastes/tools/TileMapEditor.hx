@@ -451,7 +451,7 @@ class TileMapEditor extends ImguiTool
 		var classList = CompileTime.getAllClasses(cerastes.c2d.TileEntity);
 		if( classList != null )
 		{
-			var options = [ for(c in classList) Type.getClassName(c) ];
+			var options = cerastes.EntityBuilder.list( TileEntityDef );
 
 			var ret = IG.comboFilter( "Entity", options, paintEntityFilterState, paintEntityType );
 			if( ret != null )

@@ -10,7 +10,7 @@ import cerastes.Utils.*;
 	public var anim: String = null;
 }
 
-@:build(cerastes.macros.EntityBuilder.build( DecoDef ))
+@:build(cerastes.macros.EntityBuilder.build( DecoDef, "deco" ))
 class Deco extends TileEntity
 {
 	// @todo: Some day move this to c2d where it belongs

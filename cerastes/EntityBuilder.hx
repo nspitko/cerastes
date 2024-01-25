@@ -13,5 +13,6 @@ class EntityBuilder
 	extern static function parseFile( file: String ): Void;
 
 	extern public static function create( type: String ) : Entity;
+	extern public static function list( filter: Class<cerastes.Entity.EntityDef> ) : Array<String>;
 
 }

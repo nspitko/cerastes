@@ -5,7 +5,7 @@ import cerastes.macros.Metrics;
 import cerastes.c3d.Entity.EntityData;
 import h3d.col.Point;
 import h3d.Quat;
-import h3d.Vector;
+import h3d.Vector4;
 import h3d.Matrix;
 import hxd.Window;
 import hxd.Key;
@@ -100,13 +100,13 @@ class ThirdPersonPlayerController extends PlayerController
 		if( Key.isDown( Key.D ) )
 		{
 			isMoving = true;
-			var side = dir.toVector().cross(new Vector(0,0,1)).toPoint();
+			var side = dir.toVector4().cross(new Vector4(0,0,1)).toPoint();
 			dir = side.multiply(-1);
 		}
 		else if( Key.isDown( Key.A ) )
 		{
 			isMoving = true;
-			var side = dir.toVector().cross(new Vector(0,0,1)).toPoint();
+			var side = dir.toVector4().cross(new Vector4(0,0,1)).toPoint();
 			dir = side.multiply(1);
 		}
 
@@ -122,7 +122,7 @@ class ThirdPersonPlayerController extends PlayerController
 			//var pos = player.getAbsPos();
 			//dir = dir.add( pos.getPosition().toPoint() );
 			//player.setAbsOrigin( dir.x, dir.y, dir.z );
-			@privateAccess player.moveDir.load(dir.toVector());
+			@privateAccess player.moveDir.load(dir.toVector4());
 			//trace(dir);
 		}
 		else
@@ -146,7 +146,7 @@ class ThirdPersonPlayerController extends PlayerController
 
 		var cameraOffset = cameraPos.clone();
 
-		var playerPos = new Vector(player.x, player.y, player.z + cameraPos.z);
+		var playerPos = new Vector4(player.x, player.y, player.z + cameraPos.z);
 
 		cameraOffset *= m;
 

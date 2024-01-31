@@ -1,7 +1,7 @@
 package cerastes.c3d;
 
 import cerastes.c3d.Vec3;
-import h3d.Vector;
+import h3d.Vector4;
 import h3d.col.Point;
 import h3d.scene.Object;
 
@@ -244,11 +244,11 @@ class BaseEntity extends Object implements cerastes.Entity
 	}
 
 	// ---------------------------------------------------------------------------------------------------------------
-	public function getBodyOrigin() : h3d.Vector
+	public function getBodyOrigin() : h3d.Vector4
 	{
 		if( #if !bullet true || #end !Utils.verify( body != null, "Tried to set body origin on entity without a body!" ) )
 		{
-			return new Vector(x,y,z);
+			return new Vector4(x,y,z);
 		}
 		#if bullet
 		return bodyOrigin;

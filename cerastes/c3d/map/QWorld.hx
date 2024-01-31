@@ -11,7 +11,7 @@ import h3d.Matrix;
 import cerastes.file.CDParser;
 import cerastes.file.CDPrinter;
 import cerastes.c3d.Prefab.PrefabDef;
-import h3d.Vector;
+import h3d.Vector4;
 import h3d.Quat;
 import h3d.scene.World;
 import h3d.scene.Object;

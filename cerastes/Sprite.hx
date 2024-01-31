@@ -476,7 +476,7 @@ class Sprite extends h2d.Drawable implements CollisionObject
 
 	function buildColliders()
 	{
-		colliders = new haxe.ds.Vector( spriteDef.colliders.length );
+		colliders = new haxe.ds.Vector4( spriteDef.colliders.length );
 		for( i in 0 ... spriteDef.colliders.length)
 		{
 			var c = spriteDef.colliders[i];

@@ -10,7 +10,7 @@ import h3d.Camera;
 import h3d.scene.Graphics;
 import hxd.Key;
 import cerastes.tools.ImguiTool.ImGuiToolManager;
-import h3d.Vector;
+import h3d.Vector4;
 import h3d.mat.Texture;
 import cerastes.c3d.World;
 import cerastes.c3d.World.WorldDef;
@@ -137,10 +137,10 @@ class WorldEditor extends ImguiTool
 		// @todo: Move to world
 		var light = new h3d.scene.pbr.DirLight(perspectiveScene);
 		light.setPosition(72, 72, 40);
-		light.setDirection(new Vector( 1.0, 1.0, -1.0 ));
+		light.setDirection(new Vector4( 1.0, 1.0, -1.0 ));
 		light.power = 3;
 
-		new h3d.scene.fwd.DirLight(new h3d.Vector( 0.3, -0.4, -0.9), perspectiveScene);
+		new h3d.scene.fwd.DirLight(new h3d.Vector4( 0.3, -0.4, -0.9), perspectiveScene);
 
 
 		perspectiveScene.camera.target.set(0, 0, 1);

@@ -139,7 +139,9 @@ enum abstract PinDataType(Int) from Int to Int {
 
 		id = n.getNextId();
 		pins = [];
+		#if tools
 		editorData = {};
+		#end
 
 		for( pin in def.pins )
 		{

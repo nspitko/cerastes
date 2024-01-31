@@ -574,7 +574,7 @@ class ProxyGenerator
 				var queueFunc:Function = {
 					expr: macro {
 
-						var args = new haxe.ds.Vector( $v{nArgs} );
+						var args = new haxe.ds.Vector4( $v{nArgs} );
 						$b{argSetters};
 
 						var rpc: cerastes.net.Types.RPCCall = {
@@ -1030,7 +1030,7 @@ class ProxyGenerator
 
 						pack.push( macro {
 							var len = buffer.getUInt16(pos );
-							$i{name} = new haxe.ds.Vector( len );
+							$i{name} = new haxe.ds.Vector4( len );
 							for( e in 0 ... $i{name}.length )
 							{
 								$b{innerPackers}

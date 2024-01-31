@@ -167,8 +167,10 @@ class ImGuiNodes
 	public function addNode(node: Node, x: Float, y: Float)
 	{
 		node.init(this);
+		#if tools
 		node.editorData.x = x;
 		node.editorData.y = y;
+		#end
 		nodes.push( node );
 	}
 

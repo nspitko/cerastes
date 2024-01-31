@@ -6,7 +6,7 @@ import cerastes.collision.Collision.ColliderType;
 import cerastes.Sprite.SpriteCache;
 import h2d.col.Point;
 import haxe.EnumTools;
-import h3d.Vector;
+import h3d.Vector4;
 import haxe.io.BytesBuffer;
 import haxe.io.Bytes;
 import h2d.Bitmap;

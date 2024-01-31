@@ -2,7 +2,7 @@ package cerastes.fmt.gltf;
 
 import haxe.crypto.Base64;
 import h3d.Quat;
-import h3d.Vector;
+import h3d.Vector4;
 import haxe.Json;
 import cerastes.fmt.gltf.Data;
 import cerastes.fmt.gltf.Util;
@@ -371,7 +371,7 @@ class Parser {
 			if (metalRough.baseColorFactor != null) {
 				var bc = metalRough.baseColorFactor;
 				Debug.assert(bc.length >= 3);
-				var colVec = new h3d.Vector(bc[0], bc[1], bc[2], bc.length >= 4 ? bc[3] : 1.0);
+				var colVec = new h3d.Vector4(bc[0], bc[1], bc[2], bc.length >= 4 ? bc[3] : 1.0);
 				matData.color = colVec.toColor();
 			}
 			if (metalRough.baseColorTexture != null) {
@@ -591,13 +591,13 @@ class Parser {
 		curNode.name = n.name;
 
 		if (n.translation != null) {
-			curNode.trans = new Vector(
+			curNode.trans = new Vector4(
 				n.translation[0],
 				n.translation[1],
 				n.translation[2]);
 		}
 		if (n.scale != null) {
-			curNode.scale = new Vector(
+			curNode.scale = new Vector4(
 				n.scale[0],
 				n.scale[1],
 				n.scale[2]);

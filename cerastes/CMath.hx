@@ -6,6 +6,7 @@
  package cerastes;
 
  import h3d.col.Point;
+import h3d.Vector4;
 import h3d.Vector;
 import haxe.macro.Expr;
 

@@ -1,6 +1,6 @@
 package cerastes.c3d.map;
 
-import h3d.Vector;
+import h3d.Vector4;
 import cerastes.c3d.map.Data.FaceVertex;
 import h3d.Matrix;
 import cerastes.c3d.map.Data.FaceUVExtra;
@@ -40,7 +40,7 @@ class GeoGenerator
 	inline function PointRotate( input: Point, axis: Point, angle: Float)
 	{
 		var mat = new Matrix();
-		mat.initRotationAxis(axis.toVector(), angle);
+		mat.initRotationAxis(axis.toVector4(), angle);
 
 		return input.transformed( mat );
 	}

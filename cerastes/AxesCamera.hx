@@ -1,13 +1,13 @@
 package cerastes;
 
-import h3d.Vector;
+import h3d.Vector4;
 import h3d.Matrix;
 
 class AxesCamera extends h3d.Camera
 {
-	public var ax = new Vector(1,0,0);
-	public var ay = new Vector(0,1,0);
-	public var az = new Vector(0,0,1);
+	public var ax = new Vector4(1,0,0);
+	public var ay = new Vector4(0,1,0);
+	public var az = new Vector4(0,0,1);
 
 	public function setRotation(x: Float, y: Float, z: Float )
 	{
@@ -18,7 +18,7 @@ class AxesCamera extends h3d.Camera
 
 	public function getRotation()
 	{
-		return new Vector(ax.x, ay.y, az.z);
+		return new Vector4(ax.x, ay.y, az.z);
 	}
 
 	override function makeCameraMatrix( m: Matrix ) {

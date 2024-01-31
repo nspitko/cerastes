@@ -1,7 +1,7 @@
 package cerastes.c3d.entities;
 
 import cerastes.c3d.Entity.EntityData;
-import h3d.Vector;
+import h3d.Vector4;
 import h3d.col.Point;
 
 import cerastes.c3d.BulletWorld.BulletCollisionFilterGroup;

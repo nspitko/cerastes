@@ -94,7 +94,7 @@ class Player extends KinematicActor
 	{
 		super.sync(ctx);
 
-		//world.getScene().camera.mcam.setPosition( body.position.toVector().add(eyePos) );
+		//world.getScene().camera.mcam.setPosition( body.position.toVector4().add(eyePos) );
 
 		//world.getScene().camera.mcam
 	}

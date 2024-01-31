@@ -41,14 +41,14 @@ abstract Vec4(CVec4)
 
 	// --------------------------------------------------------------------------------------------------
 	@:from
-	static inline public function fromHeapsVector(v:h3d.Vector):Vec4
+	static inline public function fromHeapsVector4(v:h3d.Vector4):Vec4
 	{
 		return new Vec4(v.x, v.y, v.z, v.w);
 	}
 
 	@:to
-	public inline function toHeapsVector():h3d.Vector
+	public inline function toHeapsVector4():h3d.Vector4
 	{
-		return new h3d.Vector(this.x, this.y, this.z, this.w);
+		return new h3d.Vector4(this.x, this.y, this.z, this.w);
 	}
 }

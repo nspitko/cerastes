@@ -59,8 +59,8 @@ class Scene
     public function enter()
     {
         cerastes.c3d.DebugDraw.tick(0); // Hack
-        s3d.addChild( cerastes.c3d.DebugDraw.g );
-        s2d.addChild( cerastes.c3d.DebugDraw.t );
+        s3d.addChild( cerastes.c3d.DebugDraw.state.g );
+        s2d.addChild( cerastes.c3d.DebugDraw.state.t );
 
         s2d.addChild( cerastes.c2d.DebugDraw.g );
 

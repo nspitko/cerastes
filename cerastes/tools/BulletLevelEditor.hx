@@ -2,7 +2,7 @@
 package cerastes.tools;
 #if ( hlimgui && cannonml )
 import cerastes.fmt.SpriteResource.CSDSound;
-import h3d.Vector;
+import h3d.Vector4;
 import h3d.mat.DepthBuffer;
 import h2d.Graphics;
 import cerastes.collision.Colliders.AABB;

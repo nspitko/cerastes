@@ -7,7 +7,7 @@ import cerastes.c3d.q3bsp.BSPMap.BSPPatchDef;
 import cerastes.c3d.q3bsp.BSPFile.BSPBrushDef;
 import cerastes.c3d.q3bsp.BSPFile.BSPLeafDef;
 import cerastes.c3d.q3bsp.BSPFile.BSPPlaneDef;
-import h3d.Vector;
+import h3d.Vector4;
 
 typedef BSPTraceResult = {
 	var allSolid: Bool;
@@ -75,36 +75,36 @@ class BSPTrace
 	static function createTraceWork() : TraceWork_t
 	{
 		return {
-			start: new Vector(),
-			end: new Vector(),
+			start: new Vector4(),
+			end: new Vector4(),
 			size: haxe.ds.Vector.fromData([
-				new Vector(),
-				new Vector()
+				new Vector4(),
+				new Vector4()
 			]),
 			offsets: haxe.ds.Vector.fromData([
-				new Vector(),
-				new Vector(),
-				new Vector(),
-				new Vector(),
-				new Vector(),
-				new Vector(),
-				new Vector(),
-				new Vector()
+				new Vector4(),
+				new Vector4(),
+				new Vector4(),
+				new Vector4(),
+				new Vector4(),
+				new Vector4(),
+				new Vector4(),
+				new Vector4()
 			]),
 			maxOffset: 0,
-			extents: new Vector(),
+			extents: new Vector4(),
 			bounds: haxe.ds.Vector.fromData([
-				new Vector(),
-				new Vector()
+				new Vector4(),
+				new Vector4()
 			]),
-			modelOrigin: new Vector(),
+			modelOrigin: new Vector4(),
 			contents: 0,
 			isPoint: false,
 			trace: {
 				allSolid: false,
 				startSolid: false,
 				fraction: -1,
-				endPos: new Vector(),
+				endPos: new Vector4(),
 				plane: null,
 				surfaceFlags: 0,
 				contents: 0,

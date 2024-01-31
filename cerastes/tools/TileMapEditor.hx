@@ -1,6 +1,7 @@
 
 package cerastes.tools;
 
+#if hlimgui
 
 import haxe.rtti.Meta;
 import cerastes.c2d.TileEntity.TileEntityDef;
@@ -13,7 +14,6 @@ import cerastes.fmt.TileMapResource.TileMapDef;
 import cerastes.fmt.TileMapResource.TileMapLayerDef;
 import cerastes.fmt.TileMapResource.TileMapLayerDataDef;
 import cerastes.fmt.TileMapResource.TileMap;
-#if hlimgui
 
 import h3d.scene.Object.ObjectFlags;
 import cerastes.ui.Timeline;
@@ -23,7 +23,7 @@ import cerastes.tools.ImguiTool.ImGuiPopupType;
 import hxd.Key;
 import hxd.res.Font;
 import hxd.res.BitmapFont;
-import h3d.Vector;
+import h3d.Vector4;
 import h2d.col.Point;
 import h2d.Graphics;
 import hl.UI;
@@ -224,6 +224,8 @@ class TileMapEditor extends ImguiTool
 
 		sceneRT.resize( w,h  );
 		preview.scaleMode = Fixed(w,h, 1, Left, Top);
+		//preview.width = w;
+		//preview.height = h;
 
 		Metrics.end();
 

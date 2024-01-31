@@ -13,7 +13,7 @@ import hl.NativeArray;
 import cerastes.fmt.CUIResource;
 import haxe.EnumTools;
 import haxe.macro.Context;
-import h3d.Vector;
+import h3d.Vector4;
 import h2d.col.Point;
 import h2d.Tile;
 
@@ -304,7 +304,7 @@ class ImGuiTools
 		if( id == null )
 			id = "Color";
 
-		var c = Vector.fromColor(nColor);
+		var c = Vector4.fromColor(nColor);
 		var color = new hl.NativeArray<Single>(4);
 		color[0] = c.r;
 		color[1] = c.g;
@@ -325,14 +325,14 @@ class ImGuiTools
 		return null;
 	}
 
-	public static function inputColorHVec( c:Vector, ?key: String = null ): Vector
+	public static function inputColorHVec( c:Vector4, ?key: String = null ): Vector4
 	{
 		if( key != null )
 		{
 			ImGui.pushID( key );
 		}
 		if( c == null )
-			c = new Vector(1,1,1,1);
+			c = new Vector4(1,1,1,1);
 		var color = new hl.NativeArray<Single>(4);
 		color[0] = c.r;
 		color[1] = c.g;
@@ -346,7 +346,7 @@ class ImGuiTools
 			if( key != null  )
 				ImGui.popID();
 
-			return new Vector( color[0], color[1], color[2], color[3] );
+			return new Vector4( color[0], color[1], color[2], color[3] );
 		}
 		if( key != null  )
 			ImGui.popID();
@@ -356,7 +356,7 @@ class ImGuiTools
 
 	public static function colorToImVec4(c: Int): ImVec4
 	{
-		var vec = Vector.fromColor(c);
+		var vec = Vector4.fromColor(c);
 		return {x: vec.x, y: vec.y, z: vec.z, w: vec.w};
 	}
 

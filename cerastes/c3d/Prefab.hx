@@ -34,11 +34,11 @@ enum abstract BulletShape(Int) from Int to Int
 @:structInit class ShapeDef
 {
 	public var shape: BulletShape;
-	public var position: h3d.Vector;
-	public var x1: h3d.Vector;
-	public var x2: h3d.Vector;
-	public var x3: h3d.Vector;
-	public var x4: h3d.Vector;
+	public var position: h3d.Vector4;
+	public var x1: h3d.Vector4;
+	public var x2: h3d.Vector4;
+	public var x3: h3d.Vector4;
+	public var x4: h3d.Vector4;
 }
 
 

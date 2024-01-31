@@ -2,6 +2,7 @@ package cerastes.c3d;
 
 import cerastes.macros.Metrics;
 import h3d.Vector;
+import h3d.Vector;
 import h3d.col.Point;
 import bullet.*;
 

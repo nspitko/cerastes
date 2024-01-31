@@ -1,6 +1,6 @@
 package cerastes.pass;
 import cerastes.shaders.DitherShader;
-import h3d.Vector;
+import h3d.Vector4;
 
 
 @ignore("shader")

@@ -179,7 +179,7 @@ import haxe.io.Bytes;
 	public var height: Int;
 	public var wrapWidth: Bool;
 	public var wrapHeight: Bool;
-	public var points: Vector<Vector<h3d.Vector>>;
+	public var points: Vector<Vector<h3d.Vector4>>;
 }
 
 @:structInit class PatchCollide_t
@@ -322,7 +322,7 @@ class Q3BSPFile
 		var entrySize = 72;  // Size = 64 + 4 + 4
 		var numEntries : Int = cast dirEntry.length / entrySize;
 
-		file.shaders = new Vector(numEntries);
+		file.shaders = new Vector4(numEntries);
 
 		for( i in 0 ... numEntries )
 		{
@@ -351,7 +351,7 @@ class Q3BSPFile
 		var entrySize = 16;  // Size =  4 * 3 + 4
 		var numEntries : Int = cast dirEntry.length / entrySize;
 
-		file.planes = new Vector(numEntries);
+		file.planes = new Vector4(numEntries);
 
 		for( i in 0 ... numEntries )
 		{
@@ -383,7 +383,7 @@ class Q3BSPFile
 		var entrySize = 36;
 		var numEntries : Int = cast dirEntry.length / entrySize;
 
-		file.nodes = new Vector(numEntries);
+		file.nodes = new Vector4(numEntries);
 
 		for( i in 0 ... numEntries )
 		{
@@ -431,7 +431,7 @@ class Q3BSPFile
 		var entrySize = 48;
 		var numEntries : Int = cast dirEntry.length / entrySize;
 
-		file.leafs = new Vector(numEntries);
+		file.leafs = new Vector4(numEntries);
 
 		for( i in 0 ... numEntries )
 		{
@@ -471,7 +471,7 @@ class Q3BSPFile
 		var entrySize = 4;
 		var numEntries : Int = cast dirEntry.length / entrySize;
 
-		file.leafFaces = new Vector(numEntries);
+		file.leafFaces = new Vector4(numEntries);
 
 		for( i in 0 ... numEntries )
 		{
@@ -492,7 +492,7 @@ class Q3BSPFile
 		var entrySize = 4;
 		var numEntries : Int = cast dirEntry.length / entrySize;
 
-		file.leafBrushes = new Vector(numEntries);
+		file.leafBrushes = new Vector4(numEntries);
 
 		for( i in 0 ... numEntries )
 		{
@@ -519,7 +519,7 @@ class Q3BSPFile
 		var entrySize = 40;
 		var numEntries : Int = cast dirEntry.length / entrySize;
 
-		file.models = new Vector(numEntries);
+		file.models = new Vector4(numEntries);
 
 		for( i in 0 ... numEntries )
 		{
@@ -560,7 +560,7 @@ class Q3BSPFile
 		var entrySize = 12;
 		var numEntries : Int = cast dirEntry.length / entrySize;
 
-		file.brushes = new Vector(numEntries);
+		file.brushes = new Vector4(numEntries);
 
 		for( i in 0 ... numEntries )
 		{
@@ -588,7 +588,7 @@ class Q3BSPFile
 		var entrySize = 8;
 		var numEntries : Int = cast dirEntry.length / entrySize;
 
-		file.brushSides = new Vector(numEntries);
+		file.brushSides = new Vector4(numEntries);
 
 		for( i in 0 ... numEntries )
 		{
@@ -617,7 +617,7 @@ class Q3BSPFile
 		var entrySize = 44;
 		var numEntries : Int = cast dirEntry.length / entrySize;
 
-		file.vertices = new Vector(numEntries);
+		file.vertices = new Vector4(numEntries);
 		file.verticesRaw = bytes.sub(dirEntry.offset, dirEntry.length);
 
 		for( i in 0 ... numEntries )
@@ -668,7 +668,7 @@ class Q3BSPFile
 		var entrySize = 4;
 		var numEntries : Int = cast dirEntry.length / entrySize;
 
-		file.meshVerts = new Vector(numEntries);
+		file.meshVerts = new Vector4(numEntries);
 
 		#if resample16
 
@@ -713,7 +713,7 @@ class Q3BSPFile
 		var entrySize = 72;
 		var numEntries : Int = cast dirEntry.length / entrySize;
 
-		file.effects = new Vector(numEntries);
+		file.effects = new Vector4(numEntries);
 
 		for( i in 0 ... numEntries )
 		{
@@ -755,7 +755,7 @@ class Q3BSPFile
 		var entrySize = 104;
 		var numEntries : Int = cast dirEntry.length / entrySize;
 
-		file.surfaces = new Vector(numEntries);
+		file.surfaces = new Vector4(numEntries);
 
 		for( i in 0 ... numEntries )
 		{
@@ -822,7 +822,7 @@ class Q3BSPFile
 		var entrySize = 128*128*3;
 		var numEntries : Int = cast dirEntry.length / entrySize;
 
-		file.lightMaps = new Vector(numEntries);
+		file.lightMaps = new Vector4(numEntries);
 
 		for( i in 0 ... numEntries )
 		{
@@ -886,7 +886,7 @@ class Q3BSPFile
 		var entrySize = 8;
 		var numEntries : Int = cast dirEntry.length / entrySize;
 
-		file.lightMapVols = new Vector(numEntries);
+		file.lightMapVols = new Vector4(numEntries);
 
 		for( i in 0 ... numEntries )
 		{
@@ -930,7 +930,7 @@ class Q3BSPFile
 		var numVectors = bytes.getInt32(pos);
 		var sizeVectors = bytes.getInt32(pos+4);
 
-		var vectors = new Vector(numVectors * sizeVectors );
+		var vectors = new Vector4(numVectors * sizeVectors );
 
 		for( i in 0...numVectors * sizeVectors )
 		{
@@ -962,7 +962,7 @@ class Q3BSPFile
 
 		count = file.surfaces.length;
 
-		file.patches = new Vector(file.vertices.length);
+		file.patches = new Vector4(file.vertices.length);
 
 		// scan through all surfaces
 		for( i in 0 ... count )
@@ -986,12 +986,12 @@ class Q3BSPFile
 
 
 
-			points = new Vector(c);
+			points = new Vector4(c);
 
 			for( j in 0...c)
 			{
 				var dv_p = file.vertices[ surface.firstVertex + j ];
-				points[j] = new Vector(3);
+				points[j] = new Vector4(3);
 				points[j][0] = dv_p.xyz[0];
 				points[j][1] = dv_p.xyz[1];
 				points[j][2] = dv_p.xyz[2];

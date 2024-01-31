@@ -12,7 +12,7 @@ import cerastes.tools.ImguiTool.ImGuiPopupType;
 import hxd.Key;
 import hxd.res.Font;
 import hxd.res.BitmapFont;
-import h3d.Vector;
+import h3d.Vector4;
 import h2d.col.Point;
 import h2d.Graphics;
 import hl.UI;

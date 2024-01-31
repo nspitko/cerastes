@@ -156,7 +156,7 @@ class GPUParticleEditor extends ImguiTool
 		light.power = 8;
 		#else
 
-		cast( preview.lightSystem, h3d.scene.fwd.LightSystem).ambientLight.set(1,1,1,1);
+		cast( preview.lightSystem, h3d.scene.fwd.LightSystem).ambientLight.set(1,1,1);
 		#end
 
 
@@ -503,7 +503,7 @@ class GPUParticleEditor extends ImguiTool
 		//ImGuizmo.viewManipulate( cameraView, 1, viewPos, viewSize, 0x10101010 );
 		//readMatrix( preview.camera.mcam, cameraView  );
 
-		//preview.camera.mcam.setPosition(new Vector(0,0, 10));
+		//preview.camera.mcam.setPosition(new Vector4(0,0, 10));
 
 		/*
 

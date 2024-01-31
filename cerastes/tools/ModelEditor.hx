@@ -1,9 +1,11 @@
 
 package cerastes.tools;
+import cerastes.c3d.Vec3;
+import cerastes.c3d.DebugDraw;
 #if hlimgui
 
 import cerastes.tools.ImguiTool.ImGuiPopupType;
-import h3d.Vector;
+import h3d.Vector4;
 import h3d.scene.CameraController;
 import h3d.Matrix;
 import h3d.scene.Skin.Joint;
@@ -36,6 +38,7 @@ import imgui.ImGuiDrawable;
 import imgui.ImGuiDrawable.ImGuiDrawableBuffers;
 import imgui.ImGui;
 import cerastes.data.Nodes;
+import cerastes.macros.MacroUtils.imTooltip;
 
 #if imguizmo
 import imgui.ImGuizmo;
@@ -58,6 +61,7 @@ class ModelEditor extends ImguiTool
 
 	// Preview
 	var preview: h3d.scene.Scene;
+	var preview2d: h2d.Scene;
 	var previewMesh: Mesh;
 	var sceneRT: Texture;
 	var sceneRTId: Int;
@@ -95,6 +99,12 @@ class ModelEditor extends ImguiTool
 
 	var showScaleBox = true;
 
+	var debugState: DebugState = {};
+
+	//
+	var renderModel: Bool = true;
+	var renderBones: Bool = false;
+
 	public override function getName() { return "\uf183 Model Editor"; }
 
 	public function new()
@@ -109,6 +119,7 @@ class ModelEditor extends ImguiTool
 		viewportHeight = viewportWidth;
 
 		preview = new h3d.scene.Scene();
+		preview2d = new h2d.Scene();
 		sceneRT = new Texture(viewportWidth,viewportHeight, [Target] );
 		sceneRT.depthBuffer = new Texture(viewportWidth, viewportHeight, [Target], Depth16 );
 
@@ -146,8 +157,13 @@ class ModelEditor extends ImguiTool
 		if( sceneRT.width == newSize.x && sceneRT.height == newSize.y )
 			return;
 
-		sceneRT.resize( CMath.floor( newSize.x ), CMath.floor( newSize.y ) );
-		sceneRT.depthBuffer.resize( CMath.floor( newSize.x ), CMath.floor( newSize.y ) );
+		var w: Int = CMath.floor( newSize.x );
+		var h: Int = CMath.floor( newSize.y );
+
+		sceneRT.resize( w, h );
+		sceneRT.depthBuffer.resize( w, h );
+		preview2d.scaleMode = Fixed( w, h, 1, Left, Top);
+
 	}
 
 	public static function buildModelPreview(scene: h3d.scene.Scene, def: ModelDef)
@@ -263,12 +279,22 @@ class ModelEditor extends ImguiTool
 
 		previewGraphics = new Graphics(preview);
 
+		DebugDraw.pushState( debugState );
+		DebugDraw.init();
+		DebugDraw.popState();
+
+		preview.addChild(debugState.g);
+		preview2d.addChild(debugState.t);
+
+
+
 
 	}
 
 	// Called every frame. Does a lighter version of rebuildPreview
 	function refreshPreview()
 	{
+		modelObject.visible = renderModel;
 		var g = previewGraphics;
 		g.clear();
 
@@ -322,6 +348,10 @@ class ModelEditor extends ImguiTool
 			ImGuiToolManager.closeTool( this );
 		}
 
+		DebugDraw.pushState( debugState );
+		DebugDraw.tick(delta);
+		DebugDraw.popState();
+
 	}
 
 	function modelSettings()
@@ -350,8 +380,10 @@ class ModelEditor extends ImguiTool
 		{
 			for( idx in 0 ... modelLibrary.header.materials.length )
 			{
-				var defMat = idx < modelDef.materials.length ? modelDef.materials[idx] : "";
 				var mat = modelLibrary.header.materials[idx];
+				var defMat = modelDef.materialMap[mat.name];
+				if( defMat == null )
+					defMat = "";
 
 				var name = mat.name;
 				if( mat.name.length == 0 )
@@ -361,11 +393,7 @@ class ModelEditor extends ImguiTool
 				var newMat = IG.inputMaterial( name, defMat );
 				if( newMat != null )
 				{
-					if( modelDef.materials.length >= idx )
-						modelDef.materials[idx] = newMat;
-					else
-						modelDef.materials.insert(idx, newMat);
-
+					modelDef.materialMap.set(mat.name, newMat);
 					rebuildPreview();
 				}
 			}
@@ -525,19 +553,30 @@ class ModelEditor extends ImguiTool
 			{
 				for( a in modelLibrary.header.animations )
 				{
+					var isValid = a.frames > 0;
+					if( !isValid )
+						ImGui.pushStyleColor( ImGuiCol.Text, 0xFFFF3333 );
+
 					if( ImGui.treeNodeEx( '${modelLibrary.resource.name}/${a.name}', flags | ImGuiTreeNodeFlags.Leaf ) )
 					{
 						if( ImGui.isItemClicked() )
 						{
-							var anim = modelLibrary.loadAnimation( a.name );
-							modelObject.playAnimation( anim );
-
-
-							selectedObject = anim;
-							selectedObjectType = Animation;
+							if( isValid )
+							{
+								var anim = modelLibrary.loadAnimation( a.name );
+								modelObject.playAnimation( anim );
+								selectedObject = anim;
+								selectedObjectType = Animation;
+							}
+							else
+							{
+								imTooltip('This animation contains no data');
+							}
 						}
 						ImGui.treePop();
 					}
+					if( !isValid )
+						ImGui.popStyleColor();
 				}
 
 				// Additionally, load in animations from sub-libraries
@@ -605,19 +644,49 @@ class ModelEditor extends ImguiTool
 							{
 								if( ImGui.treeNodeEx( joint.name, flags | ImGuiTreeNodeFlags.Leaf ) )
 								{
+									var jointObj = modelObject.getObjectByName( joint.name );
 									if( ImGui.isItemClicked() )
 									{
 										// Find the runtime model bone
-										var joint = modelObject.getObjectByName( joint.name );
-										if( joint == null )
+										if( jointObj == null )
 											Utils.warning('Failed to look up joint ${joint.name} in loaded rig');
 
-										selectedObject = joint;
+										selectedObject = jointObj;
 										selectedObjectType = Joint;
+									}
+
+									if( renderBones && jointObj != null )
+									{
+										var isSelected = false;
+										if( selectedObjectType == Joint )
+										{
+											var obj: h3d.scene.Object = cast selectedObject;
+											isSelected = obj.name == joint.name;
+										}
+										DebugDraw.pushState( debugState );
+
+										var size = 0.25;
+
+										var parentJoint = mod.skin.joints[joint.parent];
+										if( parentJoint != null )
+										{
+											var parentObj = modelObject.getObjectByName( parentJoint.name );
+
+
+											if( parentObj != null )
+												DebugDraw.line( jointObj.getAbsPos().getPosition(), parentObj.getAbsPos().getPosition(), 0x997777 );
+										}
+
+
+										DebugDraw.sphere( jointObj.getAbsPos().getPosition(), size, isSelected ? 0x22FF22 : 0x777799  );
+										DebugDraw.text( jointObj.name, jointObj.getAbsPos().getPosition() );
+
+										DebugDraw.popState();
 									}
 
 									ImGui.treePop();
 								}
+
 							}
 							ImGui.treePop();
 
@@ -664,6 +733,10 @@ class ModelEditor extends ImguiTool
 
 		resizeRT(texSize);
 
+		ImGui.checkbox("Model", renderModel);
+		ImGui.sameLine();
+		ImGui.checkbox("Bones", renderBones);
+
 		ImGui.imageButton(sceneRT, texSize, null, null, 0 );
 
 		ImGui.popStyleColor();
@@ -701,14 +774,7 @@ class ModelEditor extends ImguiTool
 		{
 			case Joint:
 
-				var joint: Joint = cast selectedObject;
-				var jm = joint.getAbsPos();
-				var jointMatrix = new hl.NativeArray<Single>(16);
-				copyMatrix(jm, jointMatrix);
 
-				#if imguizmo
-				ImGuizmo.manipulate( cameraView, cameraProject, TRANSLATE, WORLD, jointMatrix );
-				#end
 
 
 			default:
@@ -733,7 +799,7 @@ class ModelEditor extends ImguiTool
 		//ImGuizmo.viewManipulate( cameraView, 1, viewPos, viewSize, 0x10101010 );
 		//readMatrix( preview.camera.mcam, cameraView  );
 
-		//preview.camera.mcam.setPosition(new Vector(0,0, 10));
+		//preview.camera.mcam.setPosition(new Vector4(0,0, 10));
 
 		/*
 
@@ -849,7 +915,10 @@ class ModelEditor extends ImguiTool
 	override public function render( e: h3d.Engine)
 	{
 
+		sceneRT.clear( 0 );
 
+		var oldW = e.width;
+		var oldH = e.height;
 
 		@:privateAccess// @:bypassAccessor
 		{
@@ -860,11 +929,19 @@ class ModelEditor extends ImguiTool
 
 			try
 			{
+				e.width = sceneRT.width;
+				e.height = sceneRT.height;
+				preview2d.checkResize();
 				preview.render(e);
+				preview2d.render(e);
+				e.width = oldW;
+				e.height = oldH;
+
+
 			}
 			catch(e )
 			{
-				// @todo: Show error
+				Utils.error(e.message);
 			}
 
 			e.popTarget();

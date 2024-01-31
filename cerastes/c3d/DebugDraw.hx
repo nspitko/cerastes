@@ -1,5 +1,7 @@
 package cerastes.c3d;
 
+import cerastes.c2d.Vec2.CVec2;
+import cerastes.c3d.Vec3.CVec3;
 import h3d.Matrix;
 import h2d.Object;
 import hxd.res.DefaultFont;
@@ -7,6 +9,7 @@ import h3d.prim.Polygon;
 import h3d.prim.Sphere;
 import h3d.prim.Primitive;
 import h3d.col.Point;
+import h3d.Vector4;
 import h3d.Vector;
 import h3d.scene.Graphics;
 
@@ -30,76 +33,100 @@ class DebugText
 	public var time: Float;
 	public var alpha: Float;
 	public var rendered: Bool = false;
+	public var position: CVec2;
+}
+
+@:structInit class DebugState
+{
+	public var g: Graphics = null;
+	public var t: h2d.Object = null;
+
+	public var lines: Array<DebugLine> = [];
+	public var linesDirty = false;
+
+	public var colorAdd = 0;
+
+	public var textLines: Array<DebugText> = [];
+	public var textDirty = false;
+
 }
 
 class DebugDraw
 {
-	public static var g: Graphics;
-	public static var t: h2d.Text;
-
-	static var lines: Array<DebugLine> = [];
-	static var linesDirty = false;
+	public static var state: DebugState = {};
+	static var stateStack: Array<DebugState> = [];
 
 	static var cube: Polygon;
 	static var ball: Polygon;
 
+	public static function pushState( s: DebugState )
+	{
+		stateStack.push(state);
+		state = s;
+	}
 
-	static var textLines: Array<DebugText> = [];
-	static var textDirty = false;
-
-	public static var colorAdd = 0;
+	public static function popState()
+	{
+		state = stateStack.pop();
+	}
 
 	public static function init()
 	{
-		if( g == null )
+		if( state.g == null )
 		{
-			g = new Graphics();
+			state.g = new Graphics();
 
 			#if debugUseOverlay
-			g.material.mainPass.setPassName("overlay");
+			state.g.material.mainPass.setPassName("overlay");
+			state.g.material.mainPass.depthTest = Always;
 			#end
-			g.material.mainPass.depthTest = Always;
+			state.g.material.mainPass.depthTest = Always;
+			state.g.material.mainPass.layer = 1;
+			//state.g.material.mainPass.depthTest = Equal;
 
-			cube = new h3d.prim.Cube(1,1,1,true);
-			ball = new h3d.prim.Sphere(1);
-
-			t = new h2d.Text( DefaultFont.get() );
+			state.t = new h2d.Object();
 		}
+		if( cube == null )
+		{
+			cube = new h3d.prim.Cube(1,1,1,true);
+			ball = new h3d.prim.Sphere(1,5,4);
+		}
+
 	}
 
 	public static function tick( delta: Float )
 	{
 
 
-		var i = lines.length - 1;
+		var i = state.lines.length - 1;
 		while( i >= 0 )
 		{
-			var line = lines[i];
+			var line = state.lines[i];
 			if( line.rendered && line.time >= 0 && line.time < hxd.Timer.lastTimeStamp )
 			{
-				lines.splice(i,1);
-				linesDirty = true;
+				state.lines.splice(i,1);
+				state.linesDirty = true;
 			}
 			i--;
 		}
 
-		if( linesDirty )
+		if( state.linesDirty )
 			rebuildLines();
 
 
-		var i = textLines.length - 1;
+		var i = state.textLines.length - 1;
 		while( i >= 0 )
 		{
-			var line = textLines[i];
+			var line = state.textLines[i];
 			if( line.rendered && line.time >= 0 && line.time < hxd.Timer.lastTimeStamp )
 			{
-				textLines.splice(i,1);
-				textDirty = true;
+				state.textLines.splice(i,1);
+				state.textDirty = true;
 			}
 			i--;
 		}
 
-		if( textDirty )
+		if( state.textDirty )
 			rebuildText();
 
 
@@ -107,35 +134,64 @@ class DebugDraw
 
 	static function rebuildText()
 	{
-		var str = "";
-		for( t in textLines )
+		var i = state.t.numChildren-1;
+		while( i >= 0 )
 		{
-			str += '${t.text}\n';
-			t.rendered = true;
+			var to: h2d.Text = cast state.t.getChildAt(i);
+			var ti = state.textLines[i];
+			i--;
+			if( ti == null )
+			{
+				to.remove();
+				continue;
+			}
+
+			ti.rendered = true;
+			to.text = ti.text;
+			to.setPosition( ti.position.x, ti.position.y );
 		}
-		t.text = str;
+		if( state.textLines.length > state.t.numChildren )
+		{
+			for( i in state.t.numChildren ... state.textLines.length )
+			{
+				var nt = new h2d.Text( DefaultFont.get(), state.t );
+				var ti = state.textLines[i];
+				nt.text = ti.text;
+				nt.setPosition( ti.position.x, ti.position.y );
+			}
+		}
 	}
 
 	static function rebuildLines()
 	{
-		g.clear();
-		for( l in lines )
+		state.g.clear();
+		for( l in state.lines )
 		{
-			g.lineStyle(l.thickness, l.color, l.alpha);
-			g.drawLine(l.start, l.end);
+			state.g.lineStyle(l.thickness, l.color, l.alpha);
+			state.g.drawLine(l.start, l.end);
 			l.rendered = true;
 		}
 	}
 
-	public static function text( text: String, color: Int = 0xFFFFFF, duration: Float = 0, alpha: Float = 1 )
+	public static function text( text: String, pos: Vec3, color: Int = 0xFFFFFF, duration: Float = 0, alpha: Float = 1 )
 	{
-		textDirty=true;
-		textLines.push({
+		state.textDirty=true;
+
+		var scene3d = state.g.getScene();
+		var scene2d = state.t.getScene();
+		if( !Utils.verify( scene3d != null && scene3d != null, "Tried to place text inside debug text when it's not in a scene!" ) )
+			return;
+
+		var pos: Vec3 = scene3d.camera.project( pos.x, pos.y, pos.z, scene2d.width, scene2d.height );
+
+		state.textLines.push({
 			text: text,
 			color: color,
 			time: duration >= 0 ? hxd.Timer.lastTimeStamp + duration : duration,
-			alpha: alpha
+			alpha: alpha,
+			position: { x: pos.x, y: pos.y }
 		});
+
 	}
 
 	public static inline function lineV(source: Vector, target: Vector, color: Int = 0xFF0000, duration: Float = 0, alpha: Float = 1, thickness: Float = 1 )
@@ -220,11 +276,11 @@ class DebugDraw
 
 	static function addLine( source: Point, target: Point, color: Int, duration: Float = 0, alpha: Float = 1, thickness: Float = 1 )
 	{
-		linesDirty = true;
-		lines.push({
+		state.linesDirty = true;
+		state.lines.push({
 			start: source,
 			end: target,
-			color: color + colorAdd,
+			color: color + state.colorAdd,
 			time: duration >= 0 ? hxd.Timer.lastTimeStamp + duration : duration,
 			thickness: thickness,
 			alpha: alpha

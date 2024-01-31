@@ -1,6 +1,6 @@
 package cerastes.c3d.map;
 import h3d.col.Point;
-import h3d.Vector;
+import h3d.Vector4;
 import hxd.snd.Data.SampleFormat;
 import h3d.mat.PbrMaterial.PbrStencilCompare;
 import hxd.fs.FileEntry;

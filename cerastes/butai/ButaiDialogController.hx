@@ -1,7 +1,7 @@
 package cerastes.butai;
 #if butai
 import h2d.Flow;
-import h3d.Vector;
+import h3d.Vector4;
 import cerastes.ui.AdvancedText;
 
 import cerastes.InputManager;
@@ -49,7 +49,7 @@ class ButaiDialogController
 	var ticksSinceLastVisible = 90;
 
 	public var font: h2d.Font;
-	public var color: Vector = new Vector(1,1,1);
+	public var color: Vector = new Vector4(1,1,1);
 	public var multiline: Bool = false;
 	public var autoadvance: Bool = false;
 	public var dropShadow : { dx : Float, dy : Float, color : Int, alpha : Float } = null;

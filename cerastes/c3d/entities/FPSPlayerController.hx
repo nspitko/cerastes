@@ -3,7 +3,7 @@ package cerastes.c3d.entities;
 import cerastes.c3d.Entity.EntityData;
 import h3d.col.Point;
 import h3d.Quat;
-import h3d.Vector;
+import h3d.Vector4;
 import h3d.Matrix;
 import hxd.Window;
 import hxd.Key;
@@ -94,13 +94,13 @@ class FPSPlayerController extends PlayerController
 		if( Key.isDown( Key.D ) )
 		{
 			isMoving = true;
-			var side = dir.toVector().cross(new Vector(0,0,1)).toPoint();
+			var side = dir.toVector4().cross(new Vector4(0,0,1)).toPoint();
 			dir = side.multiply(-1);
 		}
 		else if( Key.isDown( Key.A ) )
 		{
 			isMoving = true;
-			var side = dir.toVector().cross(new Vector(0,0,1)).toPoint();
+			var side = dir.toVector4().cross(new Vector4(0,0,1)).toPoint();
 			dir = side.multiply(1);
 		}
 
@@ -150,7 +150,7 @@ class FPSPlayerController extends PlayerController
 		var targetMat = world.getScene().camera.mcam;
 
 		var basisRot = new Matrix();
-		basisRot.initRotationAxis(new Vector(0,0,1),90 * ( Math.PI / 180 ));
+		basisRot.initRotationAxis(new Vector4(0,0,1),90 * ( Math.PI / 180 ));
 
 		world.getScene().camera.mcam.multiply3x4(basisRot, targetMat);
 	}
@@ -188,7 +188,7 @@ class FPSPlayerController extends PlayerController
 
 		//xRot.initRotation(0,0,relX);
 		var xRotMat = new Matrix();
-		xRotMat.initRotationAxis(new Vector(0,1,0), relX);
+		xRotMat.initRotationAxis(new Vector4(0,1,0), relX);
 
 		DebugDraw.text( '${xRotMat.toString()}' );
 		var targetMat = world.getScene().camera.mcam;

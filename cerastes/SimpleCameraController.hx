@@ -1,6 +1,6 @@
 package cerastes;
 
-import h3d.Vector;
+import h3d.Vector4;
 import h3d.scene.*;
 
 class SimpleCameraController
@@ -26,10 +26,10 @@ class SimpleCameraController
 	var pushY = 0.;
 	var moveX = 0.;
 	var moveY = 0.;
-	var curPos = new h3d.Vector();
-	var curOffset = new h3d.Vector();
-	var targetPos = new h3d.Vector(10. / 25., Math.PI / 4, Math.PI * 5 / 13);
-	var targetOffset = new h3d.Vector(0, 0, 0, 0);
+	var curPos = new h3d.Vector4();
+	var curOffset = new h3d.Vector4();
+	var targetPos = new h3d.Vector4(10. / 25., Math.PI / 4, Math.PI * 5 / 13);
+	var targetOffset = new h3d.Vector4(0, 0, 0, 0);
 
 	public function new(scene: Scene, ?distance,?parent) {
 		this.scene = scene;
@@ -102,12 +102,12 @@ class SimpleCameraController
 		if( scene == null ) throw "Not in scene";
 		var bounds = scene.getBounds();
 		var center = bounds.getCenter();
-		scene.camera.target.load(center.toVector());
+		scene.camera.target.load(center.toVector4());
 		var d = bounds.getMax().sub(center);
 		d.scale(5);
 		d.z *= 0.5;
 		d = d.add(center);
-		scene.camera.pos.load(d.toVector());
+		scene.camera.pos.load(d.toVector4());
 		loadFromCamera();
 	}
 
@@ -196,7 +196,7 @@ class SimpleCameraController
 
 	public function getRotation()
 	{
-		return new Vector( moveX, moveY, 1);
+		return new Vector4( moveX, moveY, 1);
 	}
 
 	public function setRotation(x: Float, y: Float, z: Float)
@@ -206,7 +206,7 @@ class SimpleCameraController
 	}
 
 	public function pan(dx, dy) {
-		var v = new h3d.Vector(dx, dy);
+		var v = new h3d.Vector4(dx, dy);
 		scene.camera.update();
 		v.transform3x3(scene.camera.getInverseView());
 		v.w = 0;

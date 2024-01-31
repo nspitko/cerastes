@@ -267,7 +267,7 @@ class ImGuiToolManager
 			restoreState();
 		});
 
-		ImGuiToolManager.showTool("TileMapEditor");
+		//ImGuiToolManager.showTool("TileMapEditor");
 
 	}
 
@@ -381,6 +381,9 @@ class ImGuiToolManager
 
 				if (ImGui.menuItem("Asset Browser", "Alt+B"))
 					ImGuiToolManager.showTool("AssetBrowser");
+
+				if (ImGui.menuItem("Model Editor"))
+					ImGuiToolManager.showTool("ModelEditor");
 
 				if (ImGui.menuItem("Material Editor"))
 					ImGuiToolManager.showTool("MaterialEditor");
@@ -714,12 +717,21 @@ class ImGuiToolManager
 			if( propagate )
 				previewEvents.emitEvent( event );
 
-			var scene: h2d.Scene = cast previewEvents.scenes[0];
+			var scene: h2d.Scene = Std.downcast( previewEvents.scenes[0], h2d.Scene );
 			if( scene != null )
 			{
 				var vsx = scene.width / windowSizeX;
 				var vsy = scene.height / windowSizeY;
 				previewEvents.setMousePos( event.relX * vsx, event.relY * vsy );
+			}
+			else
+			{
+
+				var scene: h3d.scene.Scene = Std.downcast( previewEvents.scenes[0], h3d.scene.Scene );
+				if( scene != null )
+				{
+					// @todo
+				}
 			}
 
 		}

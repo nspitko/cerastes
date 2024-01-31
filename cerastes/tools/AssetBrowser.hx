@@ -7,7 +7,7 @@ import cerastes.file.CDParser;
 import cerastes.flow.Flow.FlowFile;
 import cerastes.data.Nodes.NodeKind;
 import hxd.res.Sound;
-import h3d.Vector;
+import h3d.Vector4;
 import h2d.Graphics;
 import cerastes.macros.Metrics;
 #if hlimgui
@@ -168,7 +168,7 @@ class AssetBrowser  extends  ImguiTool
 				t.maxWidth = previewWidth - 8;
 				t.x = 4;
 				t.y = 4;
-				t.color = Vector.fromColor( getTypeColor(asset.file) );
+				t.color = Vector4.fromColor( getTypeColor(asset.file) );
 				t.dropShadow = { dx:1, dy : 1, color : 0, alpha : 1 };
 
 			case "model":
@@ -188,7 +188,7 @@ class AssetBrowser  extends  ImguiTool
 				t.maxWidth = previewWidth - 8;
 				t.x = 4;
 				t.y = 4;
-				t.color = Vector.fromColor( getTypeColor(asset.file) );
+				t.color = Vector4.fromColor( getTypeColor(asset.file) );
 				t.dropShadow = { dx:1, dy : 1, color : 0, alpha : 1 };
 
 			case "fnt":
@@ -286,7 +286,7 @@ class AssetBrowser  extends  ImguiTool
 				t.maxWidth = previewWidth - 8;
 				t.x = 4;
 				t.y = 4;
-				t.color = Vector.fromColor( getTypeColor(asset.file) );
+				t.color = Vector4.fromColor( getTypeColor(asset.file) );
 				t.dropShadow = { dx:1, dy : 1, color : 0, alpha : 1 };
 
 
@@ -303,7 +303,7 @@ class AssetBrowser  extends  ImguiTool
 				t.maxWidth = previewWidth - 8;
 				t.x = 4;
 				t.y = 4;
-				t.color = Vector.fromColor( getTypeColor(asset.file) );
+				t.color = Vector4.fromColor( getTypeColor(asset.file) );
 				t.dropShadow = { dx:1, dy : 1, color : 0, alpha : 1 };
 
 			case "ui":
@@ -338,7 +338,7 @@ class AssetBrowser  extends  ImguiTool
 				t.maxWidth = previewWidth - 8;
 				t.x = 4;
 				t.y = 4;
-				t.color = Vector.fromColor( getTypeColor(asset.file) );
+				t.color = Vector4.fromColor( getTypeColor(asset.file) );
 				t.dropShadow = { dx:1, dy : 1, color : 0, alpha : 1 };
 			#if spritemeta
 			case "csd":
@@ -367,7 +367,7 @@ class AssetBrowser  extends  ImguiTool
 				t.maxWidth = previewWidth - 8;
 				t.x = 4;
 				t.y = 4;
-				t.color = Vector.fromColor( getTypeColor(asset.file) );
+				t.color = Vector4.fromColor( getTypeColor(asset.file) );
 				t.dropShadow = { dx:1, dy : 1, color : 0, alpha : 1 };
 			#end
 			case "atlas":
@@ -399,7 +399,7 @@ class AssetBrowser  extends  ImguiTool
 				t.maxWidth = previewWidth - 8;
 				t.x = 4;
 				t.y = 4;
-				t.color = Vector.fromColor( getTypeColor(asset.file) );
+				t.color = Vector4.fromColor( getTypeColor(asset.file) );
 				t.dropShadow = { dx:1, dy : 1, color : 0, alpha : 1 };
 
 			case "catlas":
@@ -431,10 +431,10 @@ class AssetBrowser  extends  ImguiTool
 				t.maxWidth = previewWidth - 8;
 				t.x = 4;
 				t.y = 4;
-				t.color = Vector.fromColor( getTypeColor(asset.file) );
+				t.color = Vector4.fromColor( getTypeColor(asset.file) );
 				t.dropShadow = { dx:1, dy : 1, color : 0, alpha : 1 };
 
-			case "fbx" | "glb":
+			case "fbx" | "glb" | "gltf":
 				try
 				{
 					asset.scene3d = new h3d.scene.Scene();
@@ -455,7 +455,7 @@ class AssetBrowser  extends  ImguiTool
 				t.maxWidth = previewWidth - 8;
 				t.x = 4;
 				t.y = 4;
-				t.color = Vector.fromColor( getTypeColor(asset.file) );
+				t.color = Vector4.fromColor( getTypeColor(asset.file) );
 				t.dropShadow = { dx:1, dy : 1, color : 0, alpha : 1 };
 
 			case "wav" | "mp3" | "ogg":
@@ -470,7 +470,7 @@ class AssetBrowser  extends  ImguiTool
 				t.maxWidth = previewWidth - 8;
 				t.x = 4;
 				t.y = 4;
-				t.color = Vector.fromColor( getTypeColor(asset.file) );
+				t.color = Vector4.fromColor( getTypeColor(asset.file) );
 
 
 
@@ -548,7 +548,7 @@ class AssetBrowser  extends  ImguiTool
 				t.maxWidth = previewWidth - 8;
 				t.x = 4;
 				t.y = 4;
-				t.color = Vector.fromColor( getTypeColor(asset.file) );
+				t.color = Vector4.fromColor( getTypeColor(asset.file) );
 
 
 		}
@@ -765,7 +765,7 @@ class AssetBrowser  extends  ImguiTool
 			case "ui": 0xFF2288FF;
 			case "atlas" | "catlas": 0xFFff0088;
 			case "csd": 0xFF88ffff;
-			case "fbx": 0xFFff88ff;
+			case "fbx" | "gltf" | "glb": 0xFFff88ff;
 			case "flow": 0xFFFF6688;
 			case "audio": 0xFF880088;
 			case "png" | "bmp" | "gif": 0xFFffff88;
@@ -794,7 +794,7 @@ class AssetBrowser  extends  ImguiTool
 			#end
 			case "csd": "Sprite";
 			case "atlas" | "catlas": "Texture Atlas";
-			case "fbx" | "glb": "Raw Model";
+			case "fbx" | "glb" | "gltf": "Raw Model";
 			case "model": "Model";
 			case "audio": "Audio Cue Sheet";
 			#if cannonml

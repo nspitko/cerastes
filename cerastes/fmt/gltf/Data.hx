@@ -48,9 +48,9 @@ class NodeData {
 	public var parent: Null<NodeData> = null;
 	public var children: Array<NodeData> = [];
 
-	public var trans: Null<h3d.Vector> = null;
+	public var trans: Null<h3d.Vector4> = null;
 	public var rot: Null<Quat> = null;
-	public var scale: Null<h3d.Vector> = null;
+	public var scale: Null<h3d.Vector4> = null;
 
 	public var outputID: Int = -1;
 

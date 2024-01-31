@@ -1,6 +1,6 @@
 package cerastes.ui;
 
-import h3d.Vector;
+import h3d.Vector4;
 import h2d.Bitmap;
 import cerastes.ui.Button.Orientation;
 import cerastes.ui.Button.ButtonState;

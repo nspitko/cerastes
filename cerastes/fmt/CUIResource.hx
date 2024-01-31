@@ -16,7 +16,7 @@ import cerastes.file.CDPrinter;
 import h2d.ScaleGrid;
 import h2d.Tile;
 import haxe.EnumTools;
-import h3d.Vector;
+import h3d.Vector4;
 import haxe.io.BytesBuffer;
 import haxe.io.Bytes;
 import h2d.Bitmap;
@@ -340,12 +340,12 @@ enum abstract CUIScriptId(Int) {
 	public var defaultTile: String = "";
 	public var disabledTile: String = "";
 
-	public var defaultColor: Vector = new Vector(1,1,1,1);
-	public var hoverColor: Vector = new Vector(1,1,1,1);
-	public var pressColor: Vector = new Vector(1,1,1,1);
+	public var defaultColor: Vector4 = new Vector4(1,1,1,1);
+	public var hoverColor: Vector4 = new Vector4(1,1,1,1);
+	public var pressColor: Vector4 = new Vector4(1,1,1,1);
 
-	public var visitedColor: Vector = new Vector(1,1,1,1);
-	public var disabledColor: Vector = new Vector(1,1,1,1);
+	public var visitedColor: Vector4 = new Vector4(1,1,1,1);
+	public var disabledColor: Vector4 = new Vector4(1,1,1,1);
 
 
 	public var orientation: cerastes.ui.Button.Orientation = cerastes.ui.Button.Orientation.None;
@@ -357,10 +357,10 @@ enum abstract CUIScriptId(Int) {
 	public var defaultTile: String = "";
 	public var disabledTile: String = "";
 
-	public var defaultColor: Vector = new Vector(1,1,1,1);
-	public var hoverColor: Vector = new Vector(1,1,1,1);
-	public var pressColor: Vector = new Vector(1,1,1,1);
-	public var disabledColor: Vector = new Vector(1,1,1,1);
+	public var defaultColor: Vector4 = new Vector4(1,1,1,1);
+	public var hoverColor: Vector4 = new Vector4(1,1,1,1);
+	public var pressColor: Vector4 = new Vector4(1,1,1,1);
+	public var disabledColor: Vector4 = new Vector4(1,1,1,1);
 
 	public var orientation: cerastes.ui.Button.Orientation = cerastes.ui.Button.Orientation.None;
 }

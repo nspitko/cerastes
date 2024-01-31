@@ -9,7 +9,7 @@ import cerastes.file.CDPrinter;
 import h2d.ScaleGrid;
 import h2d.Tile;
 import haxe.EnumTools;
-import h3d.Vector;
+import h3d.Vector4;
 import haxe.io.BytesBuffer;
 import haxe.io.Bytes;
 import h2d.Bitmap;

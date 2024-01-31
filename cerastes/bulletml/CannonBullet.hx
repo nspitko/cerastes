@@ -107,7 +107,7 @@ class CannonBullet extends CMLObject implements CollisionObject
         else
         {
             b.collider = new Circle({p: {x: 0, y: 0}, r: Math.min( width/2, height/2 ) });
-            b.colliders = new haxe.ds.Vector(1);
+            b.colliders = new haxe.ds.Vector4(1);
             b.colliders[0] =  b.collider;
         }
     }
@@ -138,7 +138,7 @@ class CannonBullet extends CMLObject implements CollisionObject
     {
 
         container = parent;
-        colliders = new haxe.ds.Vector(1);
+        colliders = new haxe.ds.Vector4(1);
 
         updateCollider(this, 5, 5);
 

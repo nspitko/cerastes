@@ -1,7 +1,7 @@
 package cerastes.fmt;
 
 import haxe.io.BytesOutput;
-import h3d.Vector;
+import h3d.Vector4;
 import haxe.io.BytesBuffer;
 import haxe.io.Bytes;
 import hxd.res.Loader;

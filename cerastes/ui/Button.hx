@@ -7,7 +7,7 @@ import h2d.Object;
 import hxd.res.BitmapFont;
 import hxd.res.DefaultFont;
 import cerastes.fmt.CUIResource;
-import h3d.Vector;
+import h3d.Vector4;
 import h2d.Bitmap;
 
 enum Orientation

@@ -1,7 +1,7 @@
 package cerastes.ui;
 
 import cerastes.ui.Button.ButtonState;
-import h3d.Vector;
+import h3d.Vector4;
 import h2d.Bitmap;
 import cerastes.ui.Button.Orientation;
 
@@ -14,11 +14,11 @@ class BitmapButton extends h2d.Interactive
 	public var pressTile: h2d.Tile = null;
 	public var disabledTile: h2d.Tile = null;
 
-	public var defaultColor: Vector = new Vector(1,1,1,1);
-	public var hoverColor: Vector = new Vector(1,1,1,1);
-	public var pressColor: Vector = new Vector(1,1,1,1);
+	public var defaultColor: Vector4 = new Vector4(1,1,1,1);
+	public var hoverColor: Vector4 = new Vector4(1,1,1,1);
+	public var pressColor: Vector4 = new Vector4(1,1,1,1);
 
-	public var disabledColor: Vector = new Vector(1,1,1,1); // Replaces defaultColor if disabled = true
+	public var disabledColor: Vector4 = new Vector4(1,1,1,1); // Replaces defaultColor if disabled = true
 
 	public var onActivate : (hxd.Event) -> Void;
 	public var onMouseOver : (hxd.Event) -> Void;
@@ -109,7 +109,7 @@ class BitmapButton extends h2d.Interactive
 		return v;
 	}
 
-	function setTint( color: Vector )
+	function setTint( color: Vector4 )
 	{
 		if( color.r == 1 && color.g == 1 && color.b == 1 && color.a == 1)
 		{

@@ -2,7 +2,7 @@ package cerastes.ui;
 
 import h2d.TileGroup;
 import h2d.RenderContext;
-import h3d.Vector;
+import h3d.Vector4;
 
 enum TextEffect {
 	None;
@@ -22,7 +22,7 @@ class AdvancedText extends h2d.Text
 
 	public var boldFont(default, set) : h2d.Font;
 	var boldGlyphs : h2d.TileGroup;
-	public var desiredColor: Vector = new Vector(1,1,1,1);
+	public var desiredColor: Vector4 = new Vector4(1,1,1,1);
 
 	public var displayedText: String;
 
@@ -295,7 +295,7 @@ class AdvancedText extends h2d.Text
 
 		}
 
-		var colorOverride :Vector = null;
+		var colorOverride :Vector4 = null;
 		var mode = None;
 
 		var i: Int = 0;
@@ -343,7 +343,7 @@ class AdvancedText extends h2d.Text
 						{
 							var color = t.substr(i+1,6);
 							i+= 6;
-							colorOverride = Vector.fromColor( Std.parseInt('0x${color}') );
+							colorOverride = Vector4.fromColor( Std.parseInt('0x${color}') );
 						}
 						else
 							colorOverride = null;

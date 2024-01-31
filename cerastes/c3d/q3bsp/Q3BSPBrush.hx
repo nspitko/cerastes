@@ -7,7 +7,7 @@ import cerastes.c3d.Material.MaterialDef;
 import h3d.mat.Texture;
 import h3d.mat.Material;
 import h3d.scene.RenderContext;
-import h3d.Vector;
+import h3d.Vector4;
 import h3d.col.Point;
 import h3d.col.Bounds;
 import cerastes.c3d.Entity.EntityData;
@@ -171,7 +171,7 @@ class Q3BSPBrush extends BaseBrush
 			}
 		}
 
-		visLeafs = new haxe.ds.Vector(vl.length );
+		visLeafs = new haxe.ds.Vector4(vl.length );
 		for( i in 0 ... visLeafs.length )
 		{
 			visLeafs[i] = vl[i];
@@ -510,7 +510,7 @@ class Q3BSPBrush extends BaseBrush
 			var node = bsp.nodes[index];
 			var plane = bsp.planes[node.planeNum];
 
-			var planeVec = new Vector(plane.normal[0], plane.normal[1], plane.normal[2]);
+			var planeVec = new Vector4(plane.normal[0], plane.normal[1], plane.normal[2]);
 			//swizzle(planeVec)
 			var distance = planeVec.dot3( cameraPosition ) - plane.dist;
 

@@ -2,7 +2,7 @@ package cerastes.fmt.gltf;
 
 import hxd.BufferFormat.BufferInput;
 import h3d.Quat;
-import h3d.Vector;
+import h3d.Vector4;
 import h3d.col.Bounds;
 import hxd.fmt.hmd.Data;
 
@@ -509,7 +509,7 @@ class HMDOut {
 		return ret;
 	}
 
-	function generateNormals(posAcc:BuffAccess) : Array<Vector> {
+	function generateNormals(posAcc:BuffAccess) : Array<h3d.Vector4> {
 		Debug.assert(posAcc.count % 3 == 0);
 		var numTris = Std.int(posAcc.count / 3);
 		var ret = [];
@@ -517,7 +517,7 @@ class HMDOut {
 
 			var ps = [];
 			for (p in 0...3) {
-				ps.push(new Vector(
+				ps.push(new Vector4(
 					Util.getFloat(gltfData, posAcc, i*3+p,0),
 					Util.getFloat(gltfData, posAcc, i*3+p,1),
 					Util.getFloat(gltfData, posAcc, i*3+p,2)));
@@ -562,7 +562,7 @@ class HMDOut {
 		return ret;
 	}
 
-	function generateTangents( posAcc: BuffAccess, normAcc: BuffAccess, uvAcc: BuffAccess ) : Array<Vector>
+	function generateTangents( posAcc: BuffAccess, normAcc: BuffAccess, uvAcc: BuffAccess ) : Array<Vector4>
 	{
 		/*
 		#if (hl && !hl_disable_mikkt && (haxe_ver >= "4.0"))

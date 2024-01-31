@@ -140,15 +140,15 @@ abstract Vec3(CVec3) {
 	// --------------------------------------------------------------------------------------------------
 	// Heaps vector
 	@:from
-	static inline public function fromHeapsVector(v: h3d.Vector ):Vec3
+	static inline public function fromHeapsVector4(v: h3d.Vector4 ):Vec3
 	{
 		return new Vec3(v.x, v.y, v.z);
 	}
 
 	@:to
-	public inline function toHeapsVector():h3d.Vector
+	public inline function toHeapsVector4():h3d.Vector4
 	{
-		return new h3d.Vector(this.x, this.y, this.z);
+		return new h3d.Vector4(this.x, this.y, this.z);
 	}
 
 	// --------------------------------------------------------------------------------------------------

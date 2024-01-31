@@ -4,7 +4,7 @@ import cerastes.macros.Metrics;
 import bullet.Constants.CollisionFlags;
 import cerastes.c3d.Entity.EntityData;
 import cerastes.c3d.BulletWorld.BulletRayTestResult;
-import h3d.Vector;
+import h3d.Vector4;
 import h3d.col.Point;
 import h3d.scene.Graphics;
 
@@ -23,7 +23,7 @@ enum MoveType
 class KinematicActor extends Actor
 {
 
-	public var velocity: Vector = new Vector(0,0,0);
+	public var velocity: Vector = new Vector4(0,0,0);
 
 	// Defaults
 	var bodyRadius: Float = 8;
@@ -44,7 +44,7 @@ class KinematicActor extends Actor
 	var minWalkNormal = 0.7;
 
 
-	var moveDir = new Vector(0,0,0);
+	var moveDir = new Vector4(0,0,0);
 	var moveTime:Float = 1;
 
 	var touchingEntities: Array<Entity> = [];
@@ -204,7 +204,7 @@ class KinematicActor extends Actor
 		down.z -= stepSize;
 
 		var rc = world.physics.shapeTestV( cast body.shape, startOrigin, down, body.group, body.mask );
-		var up = new Vector(0,0,1);
+		var up = new Vector4(0,0,1);
 
 		// Never step up when you have velocity
 		if( velocity.z >0 && ( rc.fraction == 1 || rc.normal.dot( up ) < 0.7 ) )
@@ -262,7 +262,7 @@ class KinematicActor extends Actor
 		var primalVelocity = velocity.clone();
 		var planes = new haxe.ds.Vector<Vector>(5);
 
-		var endVelocity = new Vector();
+		var endVelocity = new Vector4();
 
 		if( gravity )
 		{
@@ -503,7 +503,7 @@ class KinematicActor extends Actor
 		else
 			backoff /= overBounce;
 
-		var out = new Vector(
+		var out = new Vector4(
 			vin.x - ( normal.x * backoff ),
 			vin.y - ( normal.y * backoff ),
 			vin.z - ( normal.z * backoff )

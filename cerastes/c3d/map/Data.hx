@@ -1,5 +1,5 @@
 package cerastes.c3d.map;
-import h3d.Vector;
+import h3d.Vector4;
 import h3d.col.Point;
 
 #if mapcompiler

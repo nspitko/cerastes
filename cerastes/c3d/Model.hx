@@ -1,5 +1,6 @@
 package cerastes.c3d;
 
+import hxd.fmt.hmd.Data.Material;
 import h3d.prim.HMDModel;
 import h3d.prim.ModelCache;
 import hxd.fmt.hmd.Library;
@@ -43,8 +44,9 @@ class JointMask
 class ModelDef
 {
 	public var file: String;
-	// String separated list of materials to apply, in slot order
-	public var materials: Array<String> = [];
+
+	@serializeType("haxe.ds.StringMap")
+	public var materialMap: Map<String,String> = [];
 
 	@serializeType("cerastes.c3d.JointMask")
 	public var jointMasks: Map<String, JointMask> = [];
@@ -101,6 +103,10 @@ class ModelDef
 		if( file == null || file == "")
 			return new Object();
 
+		// fixup
+		if( materialMap == null )
+			materialMap = [];
+
 
 		var library = getLibrary(file);
 
@@ -120,13 +126,17 @@ class ModelDef
 
 				if( m.skin != null )
 				{
+					for( mIdx in m.materials )
+					{
+						trace( mIdx );
+					}
 					var skinData = @:privateAccess library.makeSkin(m.skin, library.header.geometries[m.geometry]);
 					skinData.primitive = prim;
-					obj = new h3d.scene.Skin(skinData, [for( idx in 0 ... m.materials.length ) loadMaterial(materials[idx])]);
+					obj = new h3d.scene.Skin(skinData, [for( idx in m.materials ) loadMaterial(materialMap, library.header.materials[idx] ) ]);
 				} else if( false && m.materials.length == 1 )
-					obj = new h3d.scene.Mesh(prim, loadMaterial( materials[0] ), obj );
+					obj = new h3d.scene.Mesh(prim, loadMaterial(materialMap, library.header.materials[0] ), obj );
 				else
-					obj = new h3d.scene.MultiMaterial(prim, [for( idx in 0 ... m.materials.length ) loadMaterial(materials[idx])], obj);
+					obj = new h3d.scene.MultiMaterial(prim, [for( idx in m.materials ) loadMaterial(materialMap, library.header.materials[idx] )], obj);
 
 				var prim: HMDModel =cast  @:privateAccess cast (obj, h3d.scene.Mesh).primitive;
 				//prim.addTangents();
@@ -171,8 +181,9 @@ class ModelDef
 
 	}
 
-	function loadMaterial( file: String )
+	function loadMaterial( materialMap: Map<String, String>, material: Material )
 	{
+		var file = materialMap[material.name];
 		return MaterialDef.loadMaterial( file );
 	}
 

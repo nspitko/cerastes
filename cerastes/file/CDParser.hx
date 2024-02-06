@@ -149,6 +149,7 @@ class CDParser {
 						invalidChar();
 					}
 
+
 					var cls =Type.resolveClass(classType.toString());
 					if(cls==null) throw "Invalid class name - "+classType;
 

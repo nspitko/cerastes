@@ -8,6 +8,7 @@ class Reference extends h2d.Object
 {
 
 	var fileName: String;
+	var ref: h2d.Object;
 
 	public function new( ?fileName: String, ?parent: Object )
 	{
@@ -21,12 +22,17 @@ class Reference extends h2d.Object
 	{
 		removeChildren();
 		fileName = file;
-		hxd.Res.loader.loadCache( file, CUIResource ).toObject(this);
+		ref = hxd.Res.loader.loadCache( file, CUIResource ).toObject(this);
 	}
 
 	public function reload()
 	{
 		removeChildren();
 		load(fileName);
+	}
+
+	public function get()
+	{
+		return ref;
 	}
 }

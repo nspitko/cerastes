@@ -171,7 +171,7 @@ class EntityBuilder
 				kind: FFun({
 					expr: macro {
 
-						var base = cerastes.macros.EntityBuilder.getDefaultDataTypes();
+						var base: Map<String,String> = cerastes.macros.EntityBuilder.getDefaultDataTypes();
 
 						for( k => v in base )
 						{

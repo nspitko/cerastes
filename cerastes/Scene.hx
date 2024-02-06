@@ -1,5 +1,6 @@
 package cerastes;
 
+import h2d.Scene.ScaleMode;
 import h2d.Bitmap;
 import h3d.mat.Texture;
 import cerastes.macros.Callbacks.ClassKey;

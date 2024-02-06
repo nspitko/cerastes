@@ -126,10 +126,6 @@ class ModelDef
 
 				if( m.skin != null )
 				{
-					for( mIdx in m.materials )
-					{
-						trace( mIdx );
-					}
 					var skinData = @:privateAccess library.makeSkin(m.skin, library.header.geometries[m.geometry]);
 					skinData.primitive = prim;
 					obj = new h3d.scene.Skin(skinData, [for( idx in m.materials ) loadMaterial(materialMap, library.header.materials[idx] ) ]);
@@ -138,8 +134,7 @@ class ModelDef
 				else
 					obj = new h3d.scene.MultiMaterial(prim, [for( idx in m.materials ) loadMaterial(materialMap, library.header.materials[idx] )], obj);
 
-				var prim: HMDModel =cast  @:privateAccess cast (obj, h3d.scene.Mesh).primitive;
-				//prim.addTangents();
+				//var prim: HMDModel =cast  @:privateAccess cast (obj, h3d.scene.Mesh).primitive;
 			}
 
 			obj.name = m.name;

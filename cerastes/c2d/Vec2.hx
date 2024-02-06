@@ -42,12 +42,13 @@ class CVec2
 
 // --------------------------------------------------------------------------------------------------
 @:forward
-abstract Vec2(CVec2) from CVec2 {
+abstract Vec2(CVec2) from CVec2 to CVec2 {
 	public inline function new(x:Float, y:Float)
 	{
 		this = new CVec2(x, y);
 	}
 
+	/*
 	// Vec4
 	@:from
 	static inline public function fromVec4(v:Vec4):Vec2
@@ -60,7 +61,8 @@ abstract Vec2(CVec2) from CVec2 {
 	{
 		return new Vec4(this.x, this.y, 1, 1);
 	}
-
+	*/
+/*
 	// Vec3
 	@:from
 	static inline public function fromVec3(v:Vec3):Vec2
@@ -73,7 +75,7 @@ abstract Vec2(CVec2) from CVec2 {
 	{
 		return new Vec3(this.x, this.y, 1);
 	}
-
+*/
 	// --------------------------------------------------------------------------------------------------
 	// Operations
 	//

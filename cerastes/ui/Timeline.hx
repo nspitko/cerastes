@@ -154,6 +154,7 @@ class TimelineRunner implements Tickable
 
 	public var playing: Bool = false;
 	public var loop: Bool = false;
+	public var removeOnComplete = false;
 
 
 	inline function frameToTime( frame: Int ): Float { return frame / timeline.frameRate; }
@@ -185,6 +186,7 @@ class TimelineRunner implements Tickable
 	{
 		time = 0;
 		playing = true;
+		finished = false;
 
 		// Fix case where we changed the timeline after creation
 		if( timeline.operations.length != timelineState.length )
@@ -298,7 +300,7 @@ class TimelineRunner implements Tickable
 			{
 				time -= timeline.frames * (1/timeline.frameRate);
 			}
-			else
+			else if( removeOnComplete )
 			{
 				finished = true;
 			}

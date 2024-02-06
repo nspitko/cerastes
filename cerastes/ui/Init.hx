@@ -16,6 +16,8 @@ class Init
 				var r = createTimelineRunner(name);
 				if( r != null )
 				{
+					// runTimeline self disposes.
+					r.removeOnComplete = true;
 					cerastes.Tickable.TimeManager.register(r);
 					r.play();
 				}

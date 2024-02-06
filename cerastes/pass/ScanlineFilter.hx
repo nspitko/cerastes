@@ -1,5 +1,6 @@
 package cerastes.pass;
 
+import h3d.mat.Data.TextureFlags;
 import cerastes.shaders.ScanlineShader;
 import cerastes.shaders.TransitionShader;
 import h2d.filter.Filter;
@@ -8,7 +9,7 @@ import h2d.RenderContext.RenderContext;
 
 class ScanlineFilter extends Filter {
 
-	
+
 
 	var pass : ScanlinePass;
 
@@ -52,11 +53,11 @@ class ScanlinePass extends h3d.pass.ScreenFx<ScanlineShader> {
 	}
 
 	public function apply(  ctx : h3d.impl.RenderContext, src : h3d.mat.Texture, ?output : h3d.mat.Texture ) {
-		
+
 		//shader.palette=palette;
 		shader.transitionTexture=transitionTexture;
-		
-		
+
+
 		shader.texture = src;
 		shader.phase = phase;
 		//shader.delta.set(1 / texture.width, 1 / texture.height);
@@ -66,9 +67,10 @@ class ScanlinePass extends h3d.pass.ScreenFx<ScanlineShader> {
 
 		var isCube = src.flags.has(Cube);
 		var faceCount = isCube ? 6 : 1;
-		var tmp = ctx.textures.allocTarget(src.name+"ScanlineTmp", src.width, src.height, false, src.format, isCube);
+		var flags = isCube ? [ h3d.mat.Data.TextureFlags.Cube ] : null;
+		var tmp = ctx.textures.allocTarget(src.name+"ScanlineTmp", src.width, src.height, false, src.format, flags );
 
-		
+
 		for(i in 0 ... faceCount){
 			engine.pushTarget(tmp, i);
 			render();

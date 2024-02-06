@@ -19,7 +19,7 @@ class CVec4
 
 // --------------------------------------------------------------------------------------------------
 @:forward
-abstract Vec4(CVec4)
+abstract Vec4(CVec4) from CVec4 to CVec4
 {
 	public inline function new(x:Float, y:Float, z:Float, w:Float)
 	{

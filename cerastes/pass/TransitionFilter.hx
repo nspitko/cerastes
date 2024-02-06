@@ -107,7 +107,8 @@ class TransitionPass extends h3d.pass.ScreenFx<TransitionShader> {
 
 		var isCube = src.flags.has(Cube);
 		var faceCount = isCube ? 6 : 1;
-		var tmp = ctx.textures.allocTarget(src.name+"TransitionTmp", src.width, src.height, false, src.format, isCube);
+		var flags = isCube ? [ h3d.mat.Data.TextureFlags.Cube ] : null;
+		var tmp = ctx.textures.allocTarget(src.name+"TransitionTmp", src.width, src.height, false, src.format, flags);
 
 
 		for(i in 0 ... faceCount){

@@ -11,15 +11,19 @@ class Init
 			public static var fnParseScript: (cerastes.fmt.CUIResource.UIScript) -> hscript.Expr;
 			public static var fnRunScript: (hscript.Expr, h2d.Object ) -> Void;
 
-			public function runTimeline( name: String )
+			public function runTimeline( name: String, loop: Bool = false )
 			{
 				var r = createTimelineRunner(name);
 				if( r != null )
 				{
 					// runTimeline self disposes.
+					r.loop = loop;
+
 					r.removeOnComplete = true;
 					cerastes.Tickable.TimeManager.register(r);
 					r.play();
+
+
 				}
 				else
 				{

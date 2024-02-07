@@ -156,6 +156,7 @@ class UIEditor extends ImguiTool
 		rootDef.initChildren();
 		cerastes.fmt.CUIResource.initializeEntities = initializeObjects;
 		previewRoot = res.defToObject(rootDef, null, true);
+		previewRoot.timelineDefs = timelines;
 		preview.addChild(previewRoot);
 
 		//selectedItemBorder = new Graphics();
@@ -1628,9 +1629,6 @@ class UIEditor extends ImguiTool
 
 	function editScript( script: UIScript )
 	{
-		if( script == null )
-			script = {};
-
 		focusScript = true;
 
 		selectedScript = script;
@@ -1719,13 +1717,14 @@ class UIEditor extends ImguiTool
 
 				if( ImGui.collapsingHeader( "Scripts" ) )
 				{
-					if( ImGui.button("OnAdd") ) editScript( def.onAdd );
-					if( ImGui.button("OnRemove") ) editScript( def.onRemove );
+
+					if( ImGui.button("OnAdd") ) { if( def.onAdd == null ) def.onAdd = {}; editScript( def.onAdd ); };
+					if( ImGui.button("OnRemove") ) { if( def.onRemove == null ) def.onRemove = {}; editScript( def.onRemove ); };
 					ImGui.separator();
-					if( ImGui.button("Timer1") ) editScript( def.onTimer1 );
-					if( ImGui.button("Timer2") ) editScript( def.onTimer2 );
-					if( ImGui.button("Timer3") ) editScript( def.onTimer3 );
-					if( ImGui.button("Timer4") ) editScript( def.onTimer4 );
+					//if( ImGui.button("Timer1") ) editScript( def.onTimer1 );
+					//if( ImGui.button("Timer2") ) editScript( def.onTimer2 );
+					//if( ImGui.button("Timer3") ) editScript( def.onTimer3 );
+					//if( ImGui.button("Timer4") ) editScript( def.onTimer4 );
 				}
 
 

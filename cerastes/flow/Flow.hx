@@ -313,9 +313,14 @@ class FileNode extends FlowNode
 				return handled;
 			}
 			hasExited = true;
+
+			if( runner.child == childRunner )
+				runner.child = null;
+
 			nextAll( runner );
 			return handled;
 		} );
+		runner.child = childRunner;
 		childRunner.run();
 	}
 
@@ -1040,6 +1045,9 @@ class FlowRunner implements cerastes.Tickable
 
 	// If set, points to the runner that created this one
 	public var parent: FlowRunner = null;
+	// Our active childrunner. We don't support running multiple direct
+	// children at once, however our child could have a child.
+	public var child: FlowRunner = null;
 
 	// whether or not this runner has finished all tasks and is ready to exit.
 	// This is mostly used for sub runners, if you just want to see if there
@@ -1178,6 +1186,12 @@ class FlowRunner implements cerastes.Tickable
 	{
 		if( !labels.exists(id) )
 		{
+			// Check child runners
+			if( child != null && child.isValidJump( id ) )
+			{
+				child.jump(id);
+				return;
+			}
 			Utils.error('Tried to jump to invalid label ${id} in file ${res.name}');
 			return;
 		}
@@ -1212,11 +1226,18 @@ class FlowRunner implements cerastes.Tickable
 				return handled;
 			}
 			hasExited = true;
+
+			// @todo: There should be a smarter way to handle this....
+			if( childRunner == child )
+				child = null;
+
 			return handled;
 		} );
 		childRunner.run(nodeId, label);
 
-		return childRunner;
+		child = childRunner;
+
+		return child;
 	}
 
 	function lookupNodeByPin( pinId: PinId32 )

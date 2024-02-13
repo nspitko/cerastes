@@ -886,6 +886,9 @@ class FlowNode extends Node
 						{
 							for( idx in 0 ... val.length )
 							{
+								if( val[idx] == null )
+									continue;
+
 								ImGui.pushID('idx${idx}');
 								wref( ImGui.inputText( '${idx}', _), val[idx] );
 

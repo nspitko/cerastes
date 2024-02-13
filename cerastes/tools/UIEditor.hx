@@ -209,9 +209,8 @@ class UIEditor extends ImguiTool
 			{
 				ImGui.text("No script selected...");
 			}
-
-			ImGui.end();
 		}
+		ImGui.end();
 	}
 
 	function inspectorColumn()
@@ -259,18 +258,20 @@ class UIEditor extends ImguiTool
 			}
 
 
-			ImGui.beginChild("uie_inspector_tree",null, false, ImGuiWindowFlags.AlwaysAutoResize);
+			if( ImGui.beginChild("uie_inspector_tree",null, false, ImGuiWindowFlags.AlwaysAutoResize) )
+			{
 
-			populateInspector();
+				populateInspector();
 
-			ImGui.endChild();
+				ImGui.endChild();
+			}
 
 
 
 			//ImGui.endChild();
-
 		}
 		ImGui.end();
+
 	}
 
 	function timelineColumn()
@@ -299,61 +300,60 @@ class UIEditor extends ImguiTool
 			}
 
 
-			ImGui.beginChild("uie_timeline_list",null, false, ImGuiWindowFlags.AlwaysAutoResize);
-
-			var idx = 0;
-			for( t in timelines)
+			if( ImGui.beginChild("uie_timeline_list",null, false, ImGuiWindowFlags.AlwaysAutoResize) )
 			{
-				var flags = ImGuiTreeNodeFlags.Leaf | ImGuiTreeNodeFlags.DefaultOpen;
 
-				if( selectedTimeline == t )
-					flags |= ImGuiTreeNodeFlags.Selected;
-
-				var name = t.name;
-				var isOpen: Bool = ImGui.treeNodeEx( name, flags );
-
-				var popupIdRC = 'timeline_entry_rc${windowID()}_${idx++}';
-
-				if( ImGui.isItemClicked() )
+				var idx = 0;
+				for( t in timelines)
 				{
-					selectedTimeline = t;
-					timelineRunner = new TimelineRunner( t, rootDef.handle );
-					timelineRunner.playing = true;
-					inspectorMode = Timeline;
-					selectedTimelineOperation = null;
-					NeoSequencer.clearSelection();
-				}
+					var flags = ImGuiTreeNodeFlags.Leaf | ImGuiTreeNodeFlags.DefaultOpen;
 
-				if( ImGui.isItemClicked( ImGuiMouseButton.Right ) )
-				{
-					selectedTimeline = t;
-					ImGui.openPopup( popupIdRC );
-				}
+					if( selectedTimeline == t )
+						flags |= ImGuiTreeNodeFlags.Selected;
 
-				if( ImGui.beginPopup( popupIdRC ) )
-				{
-					if( ImGui.menuItem( '\uf084 Clone') )
+					var name = t.name;
+					var isOpen: Bool = ImGui.treeNodeEx( name, flags );
+
+					var popupIdRC = 'timeline_entry_rc${windowID()}_${idx++}';
+
+					if( ImGui.isItemClicked() )
 					{
-						var nt = t.clone();
-						timelines.push(nt);
+						selectedTimeline = t;
+						timelineRunner = new TimelineRunner( t, rootDef.handle );
+						timelineRunner.playing = true;
+						inspectorMode = Timeline;
+						selectedTimelineOperation = null;
+						NeoSequencer.clearSelection();
 					}
-					ImGui.endPopup();
+
+					if( ImGui.isItemClicked( ImGuiMouseButton.Right ) )
+					{
+						selectedTimeline = t;
+						ImGui.openPopup( popupIdRC );
+					}
+
+					if( ImGui.beginPopup( popupIdRC ) )
+					{
+						if( ImGui.menuItem( '\uf084 Clone') )
+						{
+							var nt = t.clone();
+							timelines.push(nt);
+						}
+						ImGui.endPopup();
+					}
+
+					if( isOpen )
+						ImGui.treePop();
+
 				}
 
-				if( isOpen )
-					ImGui.treePop();
 
+
+				ImGui.endChild();
 			}
-
-
-
-			ImGui.endChild();
-
-
-
-
 		}
 		ImGui.end();
+
 	}
 
 
@@ -362,141 +362,140 @@ class UIEditor extends ImguiTool
 	function timeline()
 	{
 		ImGui.setNextWindowDockId( dockspaceIdBottom, dockCond );
-		ImGui.begin('Timeline##${windowID()}', null, ImGuiWindowFlags.NoMove);
-		handleShortcuts();
-
-
-		var lastFrame = frame;
-		var popupIdRC = 'timeline_rc${windowID()}';
-		var popupIdKeyframeContext = 'timeline_kf_context${windowID()}';
-		var drawList = ImGui.getWindowDrawList();
-		var style = NeoSequencer.getStyle();
-
-		var isPopupOpen = ImGui.isPopupOpen( popupIdRC ) || ImGui.isPopupOpen( popupIdKeyframeContext );
-
-
-		if( selectedTimeline != null )
+		if( ImGui.begin('Timeline##${windowID()}', null, ImGuiWindowFlags.NoMove) )
 		{
-			if( timelinePlay )
-				frame = timelineRunner.frame;
+			handleShortcuts();
 
 
-			//var frame: Int = 0;
-			var startFrame: Int = 0;
-//			var endFrame: Int = 100;
+			var lastFrame = frame;
+			var popupIdRC = 'timeline_rc${windowID()}';
+			var popupIdKeyframeContext = 'timeline_kf_context${windowID()}';
+			var drawList = ImGui.getWindowDrawList();
+			var style = NeoSequencer.getStyle();
 
-			var region = ImGui.getWindowContentRegionMax();
-
-			var size: ImVec2S = {x: 0, y: 0};
-
-			var flags = ImGuiNeoSequencerFlags.AlwaysShowHeader | ImGuiNeoSequencerFlags.AllowLengthChanging;
-			if( !isPopupOpen )
-				flags |= ImGuiNeoSequencerFlags.EnableSelection | ImGuiNeoSequencerFlags.Selection_EnableDragging;
+			var isPopupOpen = ImGui.isPopupOpen( popupIdRC ) || ImGui.isPopupOpen( popupIdKeyframeContext );
 
 
-			var groups= new Map<String, Array<TimelineOperation>>();
-			for( o in selectedTimeline.operations )
+			if( selectedTimeline != null )
 			{
-				var key = '${o.target}';
-				if( !groups.exists( key ) )
-					groups.set(key,[]);
+				if( timelinePlay )
+					frame = timelineRunner.frame;
 
-				groups[key].push(o);
-			}
 
-			var keyFramesToDelete: Array<TimelineOperation> =[];
+				//var frame: Int = 0;
+				var startFrame: Int = 0;
+	//			var endFrame: Int = 100;
 
-			if( NeoSequencer.begin('NeoTimeline##${windowID()}', frame, startFrame, selectedTimeline.frames, size, flags) )
-			{
-				if( inspectorMode != Timeline )
+				var region = ImGui.getWindowContentRegionMax();
+
+				var size: ImVec2S = {x: 0, y: 0};
+
+				var flags = ImGuiNeoSequencerFlags.AlwaysShowHeader | ImGuiNeoSequencerFlags.AllowLengthChanging;
+				if( !isPopupOpen )
+					flags |= ImGuiNeoSequencerFlags.EnableSelection | ImGuiNeoSequencerFlags.Selection_EnableDragging;
+
+
+				var groups= new Map<String, Array<TimelineOperation>>();
+				for( o in selectedTimeline.operations )
 				{
-					NeoSequencer.clearSelection();
+					var key = '${o.target}';
+					if( !groups.exists( key ) )
+						groups.set(key,[]);
+
+					groups[key].push(o);
 				}
 
-				var idx: Int = 0;
-				for(k => v in groups )
+				var keyFramesToDelete: Array<TimelineOperation> =[];
+
+				if( NeoSequencer.begin('NeoTimeline##${windowID()}', frame, startFrame, selectedTimeline.frames, size, flags) )
 				{
-					if( NeoSequencer.beginTimeline(k) )
+					if( inspectorMode != Timeline )
 					{
-						for( o in v )
-						{
-							idx++;
-
-							NeoSequencer.keyframe( o.frame );
-							if( NeoSequencer.isKeyframeSelected() )
-							{
-								inspectorMode = Timeline;
-								selectedTimelineOperation = o;
-							}
-
-							if( NeoSequencer.isKeyframeRightClicked() )
-							{
-								ImGui.openPopup(popupIdKeyframeContext);
-								keyframeContext = o;
-							}
-
-
-
-
-						}
-
-						NeoSequencer.endTimeline();
+						NeoSequencer.clearSelection();
 					}
 
+					var idx: Int = 0;
+					for(k => v in groups )
+					{
+						if( NeoSequencer.beginTimeline(k) )
+						{
+							for( o in v )
+							{
+								idx++;
+
+								NeoSequencer.keyframe( o.frame );
+								if( NeoSequencer.isKeyframeSelected() )
+								{
+									inspectorMode = Timeline;
+									selectedTimelineOperation = o;
+								}
+
+								if( NeoSequencer.isKeyframeRightClicked() )
+								{
+									ImGui.openPopup(popupIdKeyframeContext);
+									keyframeContext = o;
+								}
+
+
+
+
+							}
+
+							NeoSequencer.endTimeline();
+						}
+
+					}
+
+
+
+
+					NeoSequencer.end();
 				}
 
-
-
-
-				NeoSequencer.end();
-			}
-
-			if( false && ImGui.isItemClicked( ImGuiMouseButton.Right ) && !isPopupOpen )
-			{
-				ImGui.openPopup( popupIdRC );
-			}
-
-			if( ImGui.beginPopup( popupIdRC ) )
-			{
-				if( ImGui.menuItem( '\uf084 Add keyframe here') )
+				if( false && ImGui.isItemClicked( ImGuiMouseButton.Right ) && !isPopupOpen )
 				{
-					var t: TimelineOperation = {};
-					t.target = "";
-					t.frame = frame;
-					selectedTimeline.operations.push(t);
+					ImGui.openPopup( popupIdRC );
 				}
-				ImGui.endPopup();
-			}
 
-
-			if( ImGui.beginPopup(popupIdKeyframeContext) )
-			{
-				if( ImGui.menuItem( 'Delete') )
+				if( ImGui.beginPopup( popupIdRC ) )
 				{
-					selectedTimeline.operations.remove(keyframeContext);
+					if( ImGui.menuItem( '\uf084 Add keyframe here') )
+					{
+						var t: TimelineOperation = {};
+						t.target = "";
+						t.frame = frame;
+						selectedTimeline.operations.push(t);
+					}
+					ImGui.endPopup();
 				}
 
-				ImGui.endPopup();
-			}
-		}
-		else
-		{
-			ImGui.text("No timeline selected...");
-		}
 
-		if( lastFrame != frame && !timelinePlay )
-		{
-			if( lastFrame > frame )
+				if( ImGui.beginPopup(popupIdKeyframeContext) )
+				{
+					if( ImGui.menuItem( 'Delete') )
+					{
+						selectedTimeline.operations.remove(keyframeContext);
+					}
+
+					ImGui.endPopup();
+				}
+			}
+			else
 			{
-				updateDefRecursive( rootDef.handle,rootDef );
+				ImGui.text("No timeline selected...");
 			}
-			@:privateAccess timelineRunner.ui = rootDef.handle;
-			timelineRunner.setFrame(frame);
+
+			if( lastFrame != frame && !timelinePlay )
+			{
+				if( lastFrame > frame )
+				{
+					updateDefRecursive( rootDef.handle,rootDef );
+				}
+				@:privateAccess timelineRunner.ui = rootDef.handle;
+				timelineRunner.setFrame(frame);
+			}
+			lastFrame = frame;
 		}
-		lastFrame = frame;
-
-
-		//ImGui.endChild();
 		ImGui.end();
 	}
 
@@ -504,34 +503,36 @@ class UIEditor extends ImguiTool
 	{
 		//ImGui.beginChild("uie_editor",{x: 300 * scaleFactor, y: viewportHeight}, false, ImGuiWindowFlags.AlwaysAutoResize);
 		ImGui.setNextWindowDockId( dockspaceIdRight, dockCond );
-		ImGui.begin('Editor##${windowID()}');
-		handleShortcuts();
-
-		if( inspectorMode == Element )
+		if( ImGui.begin('Editor##${windowID()}') )
 		{
+			handleShortcuts();
 
-			if( selectedInspectorTree == null )
+			if( inspectorMode == Element )
 			{
-				ImGui.text("No item selected...");
-			}
-			else
-			{
-				populateEditor();
-			}
-		}
-		else if( inspectorMode == Timeline )
-		{
-			if( selectedTimelineOperation == null )
-			{
-				populateTimelineEditor();
-			}
-			else
-			{
-				populateKeyframeEditor();
-			}
-		}
 
-		//ImGui.endChild();
+				if( selectedInspectorTree == null )
+				{
+					ImGui.text("No item selected...");
+				}
+				else
+				{
+					populateEditor();
+				}
+			}
+			else if( inspectorMode == Timeline )
+			{
+				if( selectedTimelineOperation == null )
+				{
+					populateTimelineEditor();
+				}
+				else
+				{
+					populateKeyframeEditor();
+				}
+			}
+
+			//ImGui.endChild();
+		}
 		ImGui.end();
 	}
 
@@ -625,14 +626,15 @@ class UIEditor extends ImguiTool
 			ImGui.setNextWindowFocus();
 		}
 		ImGui.setNextWindowSize({x: viewportWidth * 2, y: viewportHeight * 1.6}, ImGuiCond.Once);
-		ImGui.begin('\uf108 UI Editor ${fileName != null ? fileName : ""} ${saveString}###${windowID()}', isOpenRef, ImGuiWindowFlags.NoDocking | ImGuiWindowFlags.MenuBar );
+		if( ImGui.begin('\uf108 UI Editor ${fileName != null ? fileName : ""} ${saveString}###${windowID()}', isOpenRef, ImGuiWindowFlags.NoDocking | ImGuiWindowFlags.MenuBar ) )
+		{
 
-		menuBar();
+			menuBar();
 
-		dockSpace();
+			dockSpace();
 
-		ImGui.dockSpace( dockspaceId, null );
-
+			ImGui.dockSpace( dockspaceId, null );
+		}
 		ImGui.end();
 
 		// Selected Border stuff
@@ -649,43 +651,44 @@ class UIEditor extends ImguiTool
 
 		// Preview
 		ImGui.setNextWindowDockId( dockspaceIdCenter, dockCond );
-		ImGui.begin('Preview##${windowID()}', null, ImGuiWindowFlags.NoMove | ImGuiWindowFlags.HorizontalScrollbar );
-		handleShortcuts();
-
-		ImGui.checkbox("Show markers", showMarkers );
-		ImGui.sameLine();
-		if( ImGui.checkbox("Initialize Objects", initializeObjects ) )
-			updateScene();
-
-		ImGui.image(sceneRT, { x: viewportWidth * zoom, y: viewportHeight * zoom }, null, null, null, {x: 1, y: 1, z:1, w:1} );
-
-		if( ImGui.isWindowHovered() )
+		if( ImGui.begin('Preview##${windowID()}', null, ImGuiWindowFlags.NoMove | ImGuiWindowFlags.HorizontalScrollbar ) )
 		{
-			var startPos: ImVec2 = ImGui.getCursorScreenPos();
-			var mousePos: ImVec2 = ImGui.getMousePos();
+			handleShortcuts();
 
-			mouseScenePos = {x: ( mousePos.x - startPos.x) / zoom, y: ( mousePos.y - startPos.y ) / zoom };
-			// Should use imgui events here for consistency but GetIO isn't exposed to hl sooo...
-			if (Key.isPressed(Key.MOUSE_WHEEL_DOWN))
+			ImGui.checkbox("Show markers", showMarkers );
+			ImGui.sameLine();
+			if( ImGui.checkbox("Initialize Objects", initializeObjects ) )
+				updateScene();
+
+			ImGui.image(sceneRT, { x: viewportWidth * zoom, y: viewportHeight * zoom }, null, null, null, {x: 1, y: 1, z:1, w:1} );
+
+			if( ImGui.isWindowHovered() )
 			{
-				zoom--;
-				if( zoom <= 0 )
-					zoom = 1;
+				var startPos: ImVec2 = ImGui.getCursorScreenPos();
+				var mousePos: ImVec2 = ImGui.getMousePos();
+
+				mouseScenePos = {x: ( mousePos.x - startPos.x) / zoom, y: ( mousePos.y - startPos.y ) / zoom };
+				// Should use imgui events here for consistency but GetIO isn't exposed to hl sooo...
+				if (Key.isPressed(Key.MOUSE_WHEEL_DOWN))
+				{
+					zoom--;
+					if( zoom <= 0 )
+						zoom = 1;
+				}
+				if (Key.isPressed(Key.MOUSE_WHEEL_UP))
+				{
+					zoom++;
+					if( zoom > 20 )
+						zoom = 20;
+				}
+
+
 			}
-			if (Key.isPressed(Key.MOUSE_WHEEL_UP))
+			else
 			{
-				zoom++;
-				if( zoom > 20 )
-					zoom = 20;
+				mouseScenePos = null;
 			}
-
-
 		}
-		else
-		{
-			mouseScenePos = null;
-		}
-
 		ImGui.end();
 
 		//ImGui.sameLine();

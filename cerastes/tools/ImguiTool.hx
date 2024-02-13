@@ -554,7 +554,8 @@ class ImGuiToolManager
 		var dpiScale = Utils.getDPIScaleFactor();
 		Utils.info('Add font: ${file} ${size}px');
 
-		var atlas = ImGui.getFontAtlas();
+
+		var atlas = ImGui.getIO().Fonts;
 		//atlas.addFontDefault();
 		var font = atlas.addFontFromFileTTF(file, size);
 
@@ -609,7 +610,8 @@ class ImGuiToolManager
 	public static function buildFonts()
 	{
 		var fontInfo: ImFontTexData = new ImFontTexData();
-		var atlas = ImGui.getFontAtlas();
+		var atlas = ImGui.getIO().Fonts;
+
 		atlas.getTexDataAsRGBA32( fontInfo );
 
 		// create font texture

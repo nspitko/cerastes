@@ -267,7 +267,7 @@ class TileMapEditor extends ImguiTool
 
 	function handleShortcuts()
 	{
-		if( ImGui.isWindowFocused( ImGuiFocusedFlags.RootAndChildWindows ) && !ImGui.wantCaptureKeyboard() )
+		if( ImGui.isWindowFocused( ImGuiFocusedFlags.RootAndChildWindows ) && !ImGui.getIO().WantCaptureKeyboard )
 
 		{
 			if( Key.isDown( Key.CTRL ) && Key.isPressed( Key.S ) )

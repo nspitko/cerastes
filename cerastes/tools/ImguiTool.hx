@@ -234,7 +234,8 @@ class ImGuiToolManager
 
 	public static function init()
 	{
-		ImGui.setConfigFlags( DockingEnable );
+		var io = ImGui.getIO();
+		io.ConfigFlags |= DockingEnable;
 
 		scaleFactor = Utils.getDPIScaleFactor();
 		if( scaleFactor > 1 )

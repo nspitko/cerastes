@@ -613,7 +613,6 @@ class ImGuiTools
 
 		if( activated )
 		{
-			Utils.info("Open popup");
 			ImGui.openPopup("##cfdpopup");
 		}
 

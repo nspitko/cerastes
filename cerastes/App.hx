@@ -111,7 +111,7 @@ class App extends hxd.App {
 
 		hxd.Window.getInstance().vsync = true;
 		#if hlimgui
-		drawable = new ImGuiDrawable(this.s2d);
+		drawable = new ImGuiDrawable(this.s2d, false);
 
 
 		ImGuiToolManager.init();
@@ -383,11 +383,4 @@ class App extends hxd.App {
 
 	}
 	#end
-
-	override function onResize()
-	{
-		#if hlimgui
-		ImGui.setDisplaySize(this.s2d.width, this.s2d.height);
-		#end
-	}
 }

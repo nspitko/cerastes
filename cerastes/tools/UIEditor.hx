@@ -709,7 +709,7 @@ class UIEditor extends ImguiTool
 
 		processSceneMouse( delta );
 
-		if( !ImGui.wantCaptureKeyboard() )
+		if( !ImGui.getIO().WantCaptureKeyboard )
 		{
 			if( Key.isPressed( Key.SPACE ) && selectedTimeline != null )
 			{
@@ -1235,6 +1235,7 @@ class UIEditor extends ImguiTool
 			e.width = sceneRT.width;
 			e.height = sceneRT.height;
 			preview.checkResize();
+			preview.setElapsedTime( ImGui.getIO().DeltaTime );
 			preview.render(e);
 			e.width = oldW;
 			e.height = oldH;

@@ -1,5 +1,6 @@
 
 package cerastes.tools;
+import cerastes.c2d.Vec2;
 #if ( hlimgui )
 import hxd.Key;
 import sys.io.File;
@@ -55,8 +56,6 @@ class FlowEditor extends ImguiTool
 	var context = new FlowContext(null);
 
 	var selectedNode: FlowNode;
-
-
 	/**
 	 * Called when doing a debug jump.
 	 */
@@ -478,11 +477,13 @@ class FlowEditor extends ImguiTool
 
 	function handleShortcuts()
 	{
-		if( ImGui.isWindowFocused(  ImGuiFocusedFlags.RootAndChildWindows ) && Key.isDown( Key.CTRL ) && Key.isPressed( Key.S ) )
+		if( ImGui.isWindowFocused(  ImGuiFocusedFlags.RootAndChildWindows ) )
 		{
-			save();
+			if(  Key.isDown( Key.CTRL ) && Key.isPressed( Key.S )  )
+				save();
 		}
 	}
+
 
 	function menuBar()
 	{

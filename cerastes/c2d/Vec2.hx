@@ -1,5 +1,6 @@
 package cerastes.c2d;
 
+import imgui.ImGui.ImVec2;
 import cerastes.c3d.Vec3;
 import cerastes.c3d.Vec4;
 
@@ -97,6 +98,12 @@ abstract Vec2(CVec2) from CVec2 to CVec2 {
 		return new Vec2( this.x + v.x, this.y + v.y );
 	}
 
+	@:op(A - B)
+	public inline function subVecRet( v: Vec2 ): Vec2
+	{
+		return new Vec2( this.x - v.x, this.y - v.y );
+	}
+
 	// --------------------------------------------------------------------------------------------------
 	@:op(A *= B)
 	public inline function mulVecInline( v: Vec2 )
@@ -167,4 +174,24 @@ abstract Vec2(CVec2) from CVec2 to CVec2 {
 	{
 		return new h2d.col.Point(this.x, this.y);
 	}
+
+	#if hlimgui
+	// --------------------------------------------------------------------------------------------------
+	// Imgui Vec2
+	/*
+	// https://github.com/HaxeFoundation/haxe/issues/11586
+
+	@:from
+	static inline public function fromImguiVec2(v: ImVec2 ):Vec2
+	{
+		return new Vec2(v.x, v.y );
+	}
+
+	@:to
+	public inline function toImguiVec2():ImVec2
+	{
+		return new ImVec2(this.x, this.y);
+	}
+	*/
+	#end
 }

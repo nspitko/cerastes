@@ -1,5 +1,7 @@
 package cerastes.tools;
 
+import hxd.Key;
+import cerastes.c2d.Vec2;
 import haxe.ds.ArraySort;
 import cerastes.flow.Flow.FlowComment;
 #if hlimgui
@@ -81,6 +83,10 @@ class ImGuiNodes
 	public var canSuspend = false;
 
 	var firstRender = true;
+	var active = false;
+
+	var selectedNodes: Array<Node>;
+	var selectedObjectCount: Int;
 
 	public function new()
 	{
@@ -187,6 +193,7 @@ class ImGuiNodes
 
 
 		NodeEditor.setCurrentEditor( editor );
+		active = true;
 
 		if( style == null )
 			style = NodeEditor.getStyle();
@@ -214,6 +221,11 @@ class ImGuiNodes
 		}
 
 		handleEvents();
+
+		selectedNodes = getSelectedNodes();
+		selectedObjectCount = NodeEditor.getSelectedObjectCount();
+
+		active = false;
 		NodeEditor.end();
 
 		if(firstRender )
@@ -743,11 +755,110 @@ class ImGuiNodes
 		}
 
 
+
+
 		if( canSuspend )
 		{
 			NodeEditor.suspend();
 			popups();
+			// Shortcuts
+			if( ImGui.isWindowFocused(  ImGuiFocusedFlags.RootAndChildWindows ) )
+			{
+				if( Key.isDown( Key.CTRL ) && Key.isPressed( Key.C )  )
+					copy();
+				//if( Key.isDown( Key.CTRL ) && Key.isPressed( Key.X )  )
+				//	cut();
+				if( Key.isDown( Key.CTRL ) && Key.isPressed( Key.V )  )
+					paste();
+			}
 			NodeEditor.resume();
+		}
+
+
+	}
+
+	var copyBuffer: Array<Node> = null;
+
+
+	function copy()
+	{
+		copyBuffer = getSelectedNodes().copy();
+	}
+
+	public static function copyNode<T>(c:T):T
+	{
+		var cls:Class<T> = Type.getClass(c);
+		var inst:T = Type.createEmptyInstance(cls);
+		var fields = Type.getInstanceFields(cls);
+		for (field in fields)
+		{
+			var val:Dynamic = Reflect.field(c,field);
+			if ( ! Reflect.isFunction(val) ) {
+				Reflect.setField(inst,field,val);
+			}
+		}
+		return inst;
+	}
+
+	function paste()
+	{
+		if( copyBuffer == null )
+			return;
+
+		var copyIds = copyBuffer.map( (n: Node ) -> return n.id );
+
+		// First, find the most upper right node as a starting point
+		var offset: Vec2 = { x: CMath.T_FLOAT_MAX, y: CMath.T_FLOAT_MAX };
+		for( n in copyBuffer )
+		{
+			if( n.editorData.y < offset.y || ( Math.round( n.editorData.y ) ==  Math.round( offset.y ) && n.editorData.x < offset.x ) )
+			{
+				offset.x = n.editorData.x;
+				offset.y = n.editorData.y;
+			}
+		}
+
+		var pos = NodeEditor.screenToCanvas(ImGui.getMousePos());
+		// @bugbug
+		var posVec: Vec2 = {x: pos.x, y: pos.y};
+
+		var idMap: Map<PinId32, PinId32> = [];
+
+		for( n in copyBuffer )
+		{
+			var newNode = copyNode(n);
+			var newPos: Vec2 = {x: n.editorData.x, y: n.editorData.y };
+			newPos = posVec + ( newPos - offset );
+			addNode(newNode, newPos.x, newPos.y);
+
+			for( k => v in n.pins )
+				idMap.set(n.pins[k], newNode.pins[k]);
+		}
+
+		// Now process links between pasted nodes.
+		for( link in links )
+		{
+			var srcNode = queryPin( link.sourceId );
+			var dstNode =  queryPin( link.destId );
+			if( srcNode == null || dstNode == null )
+				continue;
+
+			var srcId = srcNode.id;
+			var dstId = dstNode.id;
+
+			if( copyIds.indexOf(srcId ) != -1 && copyIds.indexOf( dstId ) != -1 )
+			{
+				var newLink = createLink( idMap[link.sourceId], idMap[link.destId], getNextId());
+
+				var startNode = srcNode;
+
+				var startPinDef = startNode.getPinDefForPin(link.sourceId);
+
+				if( startPinDef.color != 0 )
+					newLink.color = IG.colorToImVec4( startPinDef.color );
+
+				links.push(newLink);
+			}
 		}
 
 
@@ -848,8 +959,12 @@ class ImGuiNodes
 
 	public function getSelectedNodes()
 	{
+		if( !active )
+			return selectedNodes;
+
 		var nodeIds: hl.NativeArray<NodeId> = NodeEditor.getSelectedNodes();
 		var out = [];
+
 		if( firstRender )
 			return out;
 

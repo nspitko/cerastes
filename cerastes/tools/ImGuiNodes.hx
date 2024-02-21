@@ -793,7 +793,25 @@ class ImGuiNodes
 		for (field in fields)
 		{
 			var val:Dynamic = Reflect.field(c,field);
-			if ( ! Reflect.isFunction(val) ) {
+			if ( ! Reflect.isFunction(val) )
+			{
+				// @todo: this is shallow, may need to be deep?
+				if( Std.isOfType( val, Array ) )
+				{
+					var array: Array<Any> = cast val;
+					val = array.copy();
+				}
+				if( Std.isOfType( val, haxe.ds.StringMap ) )
+				{
+					var map: haxe.ds.StringMap<Any> = cast val;
+					val = map.copy();
+				}
+				if( Std.isOfType( val, haxe.ds.IntMap ) )
+				{
+					var map: haxe.ds.IntMap<Any> = cast val;
+					val = map.copy();
+				}
+
 				Reflect.setField(inst,field,val);
 			}
 		}

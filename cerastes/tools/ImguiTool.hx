@@ -540,6 +540,7 @@ class ImGuiToolManager
 		e.pushTarget( sceneRT );
 		e.clear(0xFF000000,1);
 		Metrics.begin("currentScene.render");
+		cerastes.App.currentScene.s2d.setElapsedTime( ImGui.getIO().DeltaTime );
 		cerastes.App.currentScene.render(e);
 
 		Metrics.end();

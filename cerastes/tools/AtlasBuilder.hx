@@ -270,6 +270,8 @@ class AtlasBuilder  extends  ImguiTool
 				// NL
 				ImGui.inputInt("Frame duration (ms)", selectedFrame.duration, 10, 100 );
 				ImGui.checkbox("Skip trim", selectedFrame.noTrim );
+				ImGui.inputInt("Padding", selectedFrame.padding );
+
 
 
 
@@ -665,6 +667,7 @@ class AtlasBuilder  extends  ImguiTool
 			e.width = sceneRT.width;
 			e.height = sceneRT.height;
 			previewScene.checkResize();
+			previewScene.setElapsedTime( ImGui.getIO().DeltaTime );
 			previewScene.render(e);
 			e.width = oldW;
 			e.height = oldH;

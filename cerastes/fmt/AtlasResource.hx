@@ -48,7 +48,7 @@ enum PackMode {
 }
 
 
-@:structInit class AtlasFrame implements Cloneable
+@:structInit class AtlasFrame implements Cloneable implements CDObject
 {
 	public var file: String = null;
 
@@ -58,9 +58,10 @@ enum PackMode {
 	public var offset: Vec2i = {};
 	@serializeType("cerastes.fmt.Vec2i")
 	public var size: Vec2i = {};
+	public var padding: Int = 0;
 
 	// Duration (in ms) of this frame. Only used in cerastes.ui.Anim
-	public var duration: Int = 0;
+	public var duration: Int = 100;
 	// Should we skip trimming this texture?
 	public var noTrim: Bool = false;
 
@@ -319,7 +320,7 @@ enum PackMode {
 						continue;
 
 					var heuristic = binpacking.MaxRectsPacker.FreeRectChoiceHeuristic.BestShortSideFit;
-					var rect = packer.insert( frame.size.x, frame.size.y, heuristic ) ;
+					var rect = packer.insert( frame.size.x + frame.padding * 2, frame.size.y + frame.padding * 2, heuristic ) ;
 					if( rect == null )
 					{
 						packed = false;
@@ -336,8 +337,8 @@ enum PackMode {
 						break;
 					}
 
-					frame.pos.x = Math.floor( rect.x );
-					frame.pos.y = Math.floor( rect.y );
+					frame.pos.x = Math.floor( rect.x ) + frame.padding;
+					frame.pos.y = Math.floor( rect.y ) + frame.padding;
 					fit++;
 				}
 

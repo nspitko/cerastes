@@ -1,5 +1,6 @@
 package cerastes.fmt;
 
+import h3d.Engine;
 import cerastes.fmt.AtlasResource.AtlasFrame;
 import cerastes.fmt.AtlasResource.AtlasEntry;
 import cerastes.ui.Button.ButtonHoverTween;
@@ -55,6 +56,12 @@ enum abstract CUIScriptId(Int) {
 	var Last = 1000;
 }
 
+enum abstract CUITristateBool(Int) from Int to Int {
+	var True = 1;
+	var False = 0;
+	var Null = -1;
+}
+
 // Cerastes UI
 @:keepSub
 @:structInit class CUIObject implements CDObject {
@@ -70,6 +77,7 @@ enum abstract CUIScriptId(Int) {
 	public var scaleX: Float = 1;
 	public var scaleY: Float = 1;
 	public var alpha: Float = 1;
+	public var blendMode: h2d.BlendMode = h2d.BlendMode.Alpha;
 
 	public var visible: Bool = true;
 
@@ -225,6 +233,7 @@ enum abstract CUIScriptId(Int) {
 
 @:structInit class CUIDrawable extends CUIObject {
 	public var color: Int = 0xFFFFFFFF;
+	public var smooth: CUITristateBool = CUITristateBool.Null;
 }
 
 @:structInit class CUIReference extends CUIObject {
@@ -708,6 +717,8 @@ class CUIResource extends Resource
 				obj.x = entry.x;
 				obj.y = entry.y;
 				obj.rotation = entry.rotation;
+				if( entry.blendMode != null )
+					obj.blendMode = entry.blendMode;
 
 				obj.scaleX = entry.scaleX;
 				obj.scaleY = entry.scaleY;
@@ -743,6 +754,13 @@ class CUIResource extends Resource
 				{
 					o.color.setColor( e.color );
 				}
+
+				if( e.smooth != Null || o.smooth != null )
+				{
+					o.smooth = e.smooth == CUITristateBool.True;
+				}
+
+
 
 			case "h2d.Text":
 				var o = cast(obj, h2d.Text);

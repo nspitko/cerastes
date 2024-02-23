@@ -2,6 +2,7 @@
 package cerastes.tools;
 
 
+import h2d.BlendMode;
 #if hlimgui
 
 import h3d.scene.Object.ObjectFlags;
@@ -1669,6 +1670,9 @@ class UIEditor extends ImguiTool
 				wref( ImGui.checkbox( "Visible", _ ), def.visible );
 
 				ImGui.inputDouble("Alpha", def.alpha);
+				var out = IG.combo("Blend Mode", def.blendMode, BlendMode );
+				if( out != null )
+					def.blendMode = out;
 
 
 				var classList = CompileTime.getAllClasses(cerastes.pass.SelectableFilter);
@@ -1739,6 +1743,19 @@ class UIEditor extends ImguiTool
 				var nc = IG.inputColorInt( d.color );
 				if( nc != null )
 					d.color = nc;
+
+				var smooth: Bool = d.smooth == CUITristateBool.True;
+
+				ImGui.checkbox("Smooth", smooth);
+				if( smooth == preview.defaultSmooth )
+					d.smooth = CUITristateBool.Null;
+				else
+					d.smooth = smooth ? CUITristateBool.True : CUITristateBool.False;
+
+
+
+
+
 
 			case "h2d.Text":
 				var d: CUIText = cast def;

@@ -684,7 +684,7 @@ class CUIResource extends Resource
 		}
 
 		obj.name = entry.name;
-		#if tools
+		#if hlimgui
 		entry.handle = obj;
 		#end
 

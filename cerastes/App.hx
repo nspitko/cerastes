@@ -176,13 +176,15 @@ class App extends hxd.App {
 			if( arg == "notools")
 				noTools = true;
 		}
-		if( !noTools )
-			ImGuiToolManager.enabled = !ImGuiToolManager.enabled;
-
 		//hxd.Window.getInstance().displayMode = Borderless;
 		#end
 
 		#if hlimgui
+
+		if( !noTools )
+			ImGuiToolManager.enabled = !ImGuiToolManager.enabled;
+
+		
 		ImGuiToolManager.showTool("Perf");
 		ImGuiToolManager.showTool("AssetBrowser");
 		ImGuiToolManager.showTool("Console");

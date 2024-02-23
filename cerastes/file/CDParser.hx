@@ -2,6 +2,7 @@ package cerastes.file;
 
 import haxe.rtti.Meta;
 
+@:keepSub
 @:autoBuild(cerastes.macros.CData.build())
 interface CDObject {
 
@@ -329,17 +330,24 @@ class CDParser {
 
 				if( ma.exists( "default" ) )
 				{
-					var val = ma.get("default");
-					if( val != null )
+					try
 					{
-						// Objects must be copied else we end up with tons of tangled references
-						if( val[0] is Array  )
+						var val = ma.get("default");
+						if( val != null )
 						{
-							var arr: Array<Any> = cast val[0];
-							Reflect.setField( obj, k, arr.copy() );
+							// Objects must be copied else we end up with tons of tangled references
+							if( val[0] is Array  )
+							{
+								var arr: Array<Any> = cast val[0];
+								Reflect.setField( obj, k, arr.copy() );
+							}
+							else
+								Reflect.setField( obj, k, val[0] );
 						}
-						else
-							Reflect.setField( obj, k, val[0] );
+					}
+					catch( e )
+					{
+						Utils.warning('Init: Failed to apply defaults for ${ma.get("cd_type")}');
 					}
 				}
 			}

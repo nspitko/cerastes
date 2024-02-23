@@ -1,6 +1,8 @@
 package cerastes.c2d;
 
+#if hlimgui
 import imgui.ImGui.ImVec2;
+#end
 import cerastes.c3d.Vec3;
 import cerastes.c3d.Vec4;
 
@@ -180,7 +182,7 @@ abstract Vec2(CVec2) from CVec2 to CVec2 {
 	// Imgui Vec2
 	/*
 	// https://github.com/HaxeFoundation/haxe/issues/11586
-
+#if hlimgui
 	@:from
 	static inline public function fromImguiVec2(v: ImVec2 ):Vec2
 	{
@@ -192,6 +194,7 @@ abstract Vec2(CVec2) from CVec2 to CVec2 {
 	{
 		return new ImVec2(this.x, this.y);
 	}
+#end
 	*/
 	#end
 }

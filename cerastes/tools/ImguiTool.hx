@@ -536,14 +536,28 @@ class ImGuiToolManager
 		Metrics.begin("Scene Render");
 		// Render current scene to texture
 		sceneRT.clear( 0 );
-
 		e.pushTarget( sceneRT );
 		e.clear(0xFF000000,1);
-		Metrics.begin("currentScene.render");
-		cerastes.App.currentScene.s2d.setElapsedTime( ImGui.getIO().DeltaTime );
-		cerastes.App.currentScene.render(e);
 
-		Metrics.end();
+		var oldW = e.width;
+		var oldH = e.height;
+
+		@:privateAccess// @:bypassAccessor
+		{
+			e.width = sceneRT.width;
+			e.height = sceneRT.height;
+
+
+			Metrics.begin("currentScene.render");
+			cerastes.App.currentScene.s2d.setElapsedTime( ImGui.getIO().DeltaTime );
+			cerastes.App.currentScene.render(e);
+			Metrics.end();
+
+			e.width = oldW;
+			e.height = oldH;
+		}
+
+
 		e.popTarget();
 		Metrics.end();
 	}

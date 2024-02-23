@@ -20,7 +20,7 @@ import h2d.RenderContext.RenderContext;
 
 class TransitionFilter extends Filter  implements SelectableFilter
 {
-	#if tools
+	#if hlimgui
 	@:keep public static function getEditorName() { return "\uf07c Transition"; }
 	@:keep public static function getDef() : TransitionFilterDef { return {}; }
 	@:keep public static function getInspector( def: TransitionFilterDef ) {

@@ -12,7 +12,7 @@ import hxd.res.Resource;
 #if hlimgui
 import cerastes.tools.ImguiTool.ImGuiToolManager;
 #end
-#if tools
+#if hlimgui
 import sys.thread.Mutex;
 import sys.thread.Lock;
 import sys.thread.Thread;
@@ -91,7 +91,7 @@ enum PackMode {
 	}
 }
 
-@:structInit class AtlasEntry implements Cloneable
+@:structInit class AtlasEntry implements Cloneable implements CDObject
 {
 	//public var name: String = null;
 	@serializeType("cerastes.fmt.AtlasFrame")
@@ -133,14 +133,16 @@ enum PackMode {
 	}
 }
 
-@:structInit class Atlas
+@:structInit class Atlas implements Cloneable
 {
 	@serializeType("cerastes.fmt.AtlasEntry")
 	public var entries: Map<String,AtlasEntry> = [];
 	public var textureFile: String = null;
 	public var atlasFile: String = null;
 
+	#if tools
 	public var packMode: PackMode = MaxRects;
+	#end
 	public var size: Vec2i = {};
 
 	@noSerialize
@@ -187,7 +189,7 @@ enum PackMode {
 		if( tile != null )
 			return;
 
-		#if ( tools && binpacking )
+		#if ( hlimgui && binpacking )
 		if( textureFile == null || !hxd.Res.loader.exists( textureFile ) )
 		{
 			pack( atlasFile );
@@ -201,7 +203,7 @@ enum PackMode {
 	}
 
 	#if binpacking
-	#if tools
+	#if hlimgui
 	@noSerialize var jobWorkerThread: Thread = null;
 	@noSerialize var trimWork: Array<AtlasEntry> = [];
 	@noSerialize var pool: Array<Thread> = null;

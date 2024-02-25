@@ -31,7 +31,23 @@ class Sound extends h2d.Object
 		wwise.Api.postEvent(evt);
 		#else
 		if( handle == null )
-			handle = hxd.Res.loader.load(cue).toSound();
+		{
+			var path = cue;
+			if( !hxd.Res.loader.exists(path ) )
+			{
+				path = 'sfx/${cue}.ogg';
+				if( !hxd.Res.loader.exists(path ) )
+				{
+					path = 'audio/${cue}.ogg';
+					if( !hxd.Res.loader.exists(path ) )
+					{
+						Utils.error('Failed to resolve an asset path for cue ${cue}');
+						return;
+					}
+				}
+			}
+			handle = hxd.Res.loader.load(path).toSound();
+		}
 		handle.stop();
 		handle.play(loop, volume);
 		#end

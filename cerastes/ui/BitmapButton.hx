@@ -103,6 +103,8 @@ class BitmapButton extends h2d.Interactive
 			case On:
 				Utils.error("STUB");
 
+			default:
+
 		}
 
 		state = v;
@@ -185,6 +187,8 @@ class BitmapButton extends h2d.Interactive
 		super(width,height,parent);
 
 		colorFilter = new h2d.filter.ColorMatrix();
+
+		Utils.warning('BitmapButton is deprecated, please replace with cerastes.ui.Button!');
 
 		//label.textAlign = Right;
 		cursor = Button;

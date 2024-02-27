@@ -301,17 +301,20 @@ enum abstract CUITristateBool(Int) from Int to Int {
 	public var hoverTile: String = "";
 	public var onTile: String = "";
 	public var disabledTile: String = "";
+	public var pressTile: String = "";
 
 	public var defaultColor: Int = 0xFFFFFFFF;
 	public var hoverColor: Int = 0xFFFFFFFF;
 	public var onColor: Int = 0xFFFFFFFF;
 	public var onHoverColor: Int = 0xFFFFFFFF;
 	public var disabledColor: Int = 0xFFFFFFFF;
+	public var pressColor: Int = 0xFFFFFFFF;
 
 	public var defaultTextColor: Int = 0x00000000;
 	public var hoverTextColor: Int = 0x00000000;
 	public var onTextColor: Int = 0x00000000;
 	public var disabledTextColor: Int = 0x00000000;
+	public var pressTextColor: Int = 0x00000000;
 
 	public var text: String = null;
 	public var font: String = null;
@@ -959,6 +962,11 @@ class CUIResource extends Resource
 				o.disabledColor = e.disabledColor;
 				o.disabledTextColor = e.disabledTextColor;
 				o.disabledTile = e.disabledTile;
+
+				o.pressColor = e.pressColor;
+				o.pressTextColor = e.pressTextColor;
+				o.pressTile = e.pressTile;
+
 
 				o.hoverSound = e.hoverSound;
 				o.activateSound = e.activateSound;

@@ -2022,6 +2022,10 @@ class UIEditor extends ImguiTool
 					if( newTile != null )
 						d.hoverTile = newTile;
 
+					var newTile = IG.inputTile( "Press Tile", d.pressTile );
+					if( newTile != null )
+						d.pressTile = newTile;
+
 					var newTile = IG.inputTile( "Disabled Tile", d.disabledTile );
 					if( newTile != null )
 						d.disabledTile = newTile;
@@ -2047,6 +2051,11 @@ class UIEditor extends ImguiTool
 					var nc = IG.inputColorInt( d.hoverColor, "Hover Color" );
 					if( nc != null )
 						d.hoverColor = nc;
+
+					ImGui.text("Press Color");
+					var nc = IG.inputColorInt( d.hoverColor, "Press Color" );
+					if( nc != null )
+						d.pressColor = nc;
 
 					if( d.buttonMode == Toggle )
 					{
@@ -2102,18 +2111,23 @@ class UIEditor extends ImguiTool
 					if( d.buttonMode == Toggle )
 					{
 						ImGui.text("Toggled Text color");
-						var nc = IG.inputColorInt( d.onTextColor, "On Color" );
+						var nc = IG.inputColorInt( d.onTextColor, "On Text Color" );
 						if( nc != null )
 							d.onTextColor = nc;
 					}
 
 					ImGui.text("Hover Text Color");
-					var nc = IG.inputColorInt( d.hoverTextColor, "Hover Color" );
+					var nc = IG.inputColorInt( d.hoverTextColor, "Hover Text Color" );
 					if( nc != null )
 						d.hoverTextColor = nc;
 
+					ImGui.text("Press Text Color");
+					var nc = IG.inputColorInt( d.hoverTextColor, "Press Text Color" );
+					if( nc != null )
+						d.pressTextColor = nc;
+
 					ImGui.text("Disabled Text Color");
-					var nc = IG.inputColorInt( d.disabledTextColor, "Disabled Color" );
+					var nc = IG.inputColorInt( d.disabledTextColor, "Disabled Text Color" );
 					if( nc != null )
 						d.disabledTextColor = nc;
 

@@ -595,83 +595,80 @@ class AudioEditor extends ImguiTool
 
 	function populateBrowser( node: AETreeNode )
 	{
+		var flags = ImGuiTreeNodeFlags.OpenOnArrow | ImGuiTreeNodeFlags.DefaultOpen;
+		//if( c.children.length == 0)
+		//	flags |= ImGuiTreeNodeFlags.Leaf;
 
-		for( child in node.children )
+		var icon = '\uf07c';
+
+		if( selectedTreeNode == node )
 		{
-
-			var flags = ImGuiTreeNodeFlags.OpenOnArrow | ImGuiTreeNodeFlags.DefaultOpen;
-			//if( c.children.length == 0)
-			//	flags |= ImGuiTreeNodeFlags.Leaf;
-
-			var icon = '\uf07c';
-
-			if( selectedTreeNode == child )
-			{
-				flags |= ImGuiTreeNodeFlags.Selected;
-
-			}
-
-			var name = '${icon} ${child.name}';
-
-			var isOpen = ImGui.treeNodeEx( name, flags );
-
-			if( ImGui.isItemClicked() )
-			{
-				selectedTreeNode = child;
-				selectedTreeCue = null;
-			}
-
-
-
-			if( isOpen  )
-			{
-				if( child.children.length > 0)
-				{
-					populateBrowser(child);
-				}
-
-				for( name => cue in child.cues )
-				{
-
-					var flags = ImGuiTreeNodeFlags.Leaf;
-
-					if( selectedCue == null )
-						selectedCue = cue; //@temp
-
-
-
-					var icon = '\uf028';
-
-					if( selectedTreeCue == name )
-					{
-						flags |= ImGuiTreeNodeFlags.Selected;
-					}
-
-					var shortName = name.split('.').pop();
-
-
-					var label = '${icon} ${shortName}';
-
-					var isOpen = ImGui.treeNodeEx( label, flags );
-
-					if( ImGui.isItemClicked() )
-					{
-						selectedTreeCue = name;
-						selectedCue = cue;
-						selectedTreeNode = null;
-						selectMode = Cue;
-					}
-
-					if( isOpen )
-						ImGui.treePop();
-
-
-				}
-
-				ImGui.treePop();
-			}
+			flags |= ImGuiTreeNodeFlags.Selected;
 
 		}
+
+		var name = '${icon} ${node.name}';
+
+		var isOpen = ImGui.treeNodeEx( name, flags );
+
+		if( ImGui.isItemClicked() )
+		{
+			selectedTreeNode = node;
+			selectedTreeCue = null;
+		}
+
+
+
+		if( isOpen  )
+		{
+			if( node.children.length > 0)
+			{
+				for( child in node.children )
+					populateBrowser(child);
+			}
+
+			for( name => cue in node.cues )
+			{
+
+				var flags = ImGuiTreeNodeFlags.Leaf;
+
+				if( selectedCue == null )
+					selectedCue = cue; //@temp
+
+
+
+				var icon = '\uf028';
+
+				if( selectedTreeCue == name )
+				{
+					flags |= ImGuiTreeNodeFlags.Selected;
+				}
+
+				var shortName = name.split('.').pop();
+
+
+				var label = '${icon} ${shortName}';
+
+				var isOpen = ImGui.treeNodeEx( label, flags );
+
+				if( ImGui.isItemClicked() )
+				{
+					selectedTreeCue = name;
+					selectedCue = cue;
+					selectedTreeNode = null;
+					selectMode = Cue;
+				}
+
+				if( isOpen )
+					ImGui.treePop();
+
+
+			}
+
+			ImGui.treePop();
+		}
+
+
 
 
 	}

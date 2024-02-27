@@ -28,7 +28,9 @@ enum ButtonState
 	On;
 	Hover;
 	UnHover;
+	UnPress;
 	Disabled;
+	Press;
 }
 
 enum ButtonType
@@ -101,6 +103,10 @@ class Button extends h2d.Flow implements IButton
 	public var hoverTextColor: Int = 0xFFFFFFFF;
 	public var hoverTile: String;
 
+	public var pressColor: Int = 0xFFFFFFFF;
+	public var pressTextColor: Int = 0xFFFFFFFF;
+	public var pressTile: String;
+
 	public var onColor: Int = 0xFFFFFFFF;
 	public var onTextColor: Int = 0xFFFFFFFF;
 	public var onTile: String;
@@ -145,6 +151,8 @@ class Button extends h2d.Flow implements IButton
 	var bitmap: h2d.Bitmap = null;
 
 	var tweenTimers: Array<Tween> = [];
+
+	var hovering: Bool = false;
 
 	function set_defaultTile(v)
 	{
@@ -333,6 +341,13 @@ class Button extends h2d.Flow implements IButton
 					setTints( defaultTile, defaultColor, defaultTextColor, tweenHoverEndMode );
 					v = Default;
 				}
+			case UnPress:
+				// Oh god please rewrite this already...
+				set_state( Default );
+				state = Default;
+				if( hovering )
+					set_state( Hover );
+
 
 
 			case Hover:
@@ -341,6 +356,8 @@ class Button extends h2d.Flow implements IButton
 				else
 					setTints( hoverTile, hoverColor, hoverTextColor, tweenHoverStartMode );
 
+			case Press:
+				setTints( pressTile, pressColor, pressTextColor, None );
 
 			case Disabled:
 				setTints( disabledTile, disabledColor, disabledTextColor, None );
@@ -361,6 +378,10 @@ class Button extends h2d.Flow implements IButton
 
 	function setTints( bitmapTile: String, bitmapColor: Int, textColor: Int, tweenMode: ButtonHoverTween )
 	{
+		// Is this safe??
+		if( ( bitmapTile == null || bitmapTile == "" ) && bitmapColor == 0xFFFFFFFF && textColor == 0xFFFFFFFF )
+			return;
+
 		var expoFunc = switch( tweenMode )
 		{
 			case None | null: null;
@@ -487,6 +508,7 @@ class Button extends h2d.Flow implements IButton
 				return;
 
 			state = Hover;
+			hovering = true;
 
 			if( !hidden )
 			{
@@ -500,8 +522,7 @@ class Button extends h2d.Flow implements IButton
 					var evt = wwise.Api.Event.make(hoverSound);
 					wwise.Api.postEvent(evt);
 					#else
-					var handle = hxd.Res.loader.load(hoverSound).toSound();
-					handle.play(false, 1);
+					cerastes.SoundManager.play(hoverSound);
 					#end
 				}
 
@@ -512,6 +533,7 @@ class Button extends h2d.Flow implements IButton
 				return;
 
 			state = UnHover;
+			hovering = false;
 
 			if( onMouseOut != null && !hidden )
 				onMouseOut(_);
@@ -522,6 +544,8 @@ class Button extends h2d.Flow implements IButton
 			if( !enabled )
 				return;
 
+			state = Press;
+
 			if( buttonType == Toggle )
 			{
 				toggled = !toggled;
@@ -531,8 +555,7 @@ class Button extends h2d.Flow implements IButton
 					var evt = wwise.Api.Event.make(activateSound);
 					wwise.Api.postEvent(evt);
 					#else
-					var handle = hxd.Res.loader.load(activateSound).toSound();
-					handle.play(false, 1);
+					SoundManager.play(activateSound, SoundManager.sfxChannelGroup );
 					#end
 				}
 				else if( !toggled && deactivateSound != null )
@@ -541,8 +564,7 @@ class Button extends h2d.Flow implements IButton
 					var evt = wwise.Api.Event.make(deactivateSound);
 					wwise.Api.postEvent(evt);
 					#else
-					var handle = hxd.Res.loader.load(deactivateSound).toSound();
-					handle.play(false, 1);
+					SoundManager.play(deactivateSound, SoundManager.sfxChannelGroup );
 					#end
 				}
 			}
@@ -554,8 +576,7 @@ class Button extends h2d.Flow implements IButton
 					var evt = wwise.Api.Event.make(activateSound);
 					wwise.Api.postEvent(evt);
 					#else
-					var handle = hxd.Res.loader.load(activateSound).toSound();
-					handle.play(false, 1);
+					SoundManager.play(activateSound, SoundManager.sfxChannelGroup );
 					#end
 				}
 			}
@@ -573,6 +594,8 @@ class Button extends h2d.Flow implements IButton
 
 			if( !enabled )
 				return;
+
+			state = UnPress;
 
 			if( !hidden )
 			{
@@ -607,6 +630,12 @@ class Button extends h2d.Flow implements IButton
 		b.hoverColor = hoverColor;
 		b.hoverTextColor = hoverTextColor;
 		b.hoverTile = hoverTile;
+
+		b.onHoverColor = onHoverColor;
+
+		b.pressColor = pressColor;
+		b.pressTextColor = pressTextColor;
+		b.pressTile = pressTile;
 
 		b.onColor = onColor;
 		b.onTextColor = onTextColor;

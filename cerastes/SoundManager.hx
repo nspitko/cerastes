@@ -180,6 +180,9 @@ class SoundManager
 	private static var cues: Map<String,SoundCue> = [];
 	private static var instances: haxe.ds.List<CueInstance> = new haxe.ds.List<CueInstance>();
 
+	public static var musicChannelGroup: ChannelGroup = new ChannelGroup("music");
+	public static var sfxChannelGroup: ChannelGroup = new ChannelGroup("sfx");
+
 	public static function loadFile( file: String )
 	{
 		var fileContents = hxd.Res.loader.load(file).toText();
@@ -191,6 +194,24 @@ class SoundManager
 	public static function play( cueName: String, ?channelGroup: ChannelGroup = null, ?soundGroup = null )
 	{
 		var cue = cues.get(cueName );
+
+		// Try to resolve a file of the same name
+		var path = 'audio/${cueName}.ogg';
+		if( cue == null && hxd.Res.loader.exists(path) )
+		{
+			cue = {
+				tracks: [
+					{
+						items: [
+							{
+								name: path
+							}
+						]
+					}
+				]
+			};
+		}
+
 		if( !Utils.verify( cue != null, 'Tried to play unknown cue ${cueName}') )
 			return null;
 
@@ -198,7 +219,6 @@ class SoundManager
 		instances.add(instance);
 
 		return instance;
-
 
 	}
 

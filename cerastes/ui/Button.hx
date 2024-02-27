@@ -539,14 +539,14 @@ class Button extends h2d.Flow implements IButton
 				onMouseOut(_);
 		}
 
-		interactive.onPush = function(_) {
+		interactive.onPush = function(e) {
 
 			if( !enabled )
 				return;
 
 			state = Press;
 
-			if( buttonType == Toggle )
+			if( buttonType == Toggle && e.button == 0 )
 			{
 				toggled = !toggled;
 				if( toggled && activateSound != null )
@@ -568,7 +568,7 @@ class Button extends h2d.Flow implements IButton
 					#end
 				}
 			}
-			else
+			else if( e.button == 0 )
 			{
 				if( activateSound != null )
 				{
@@ -580,10 +580,11 @@ class Button extends h2d.Flow implements IButton
 					#end
 				}
 			}
+			// Listeners may still want the onActivate event even for right clicks
 			if( !hidden )
 			{
 				if( onActivate != null )
-					onActivate(_);
+					onActivate(e);
 
 				triggerScript( CUIScriptId.OnPress );
 

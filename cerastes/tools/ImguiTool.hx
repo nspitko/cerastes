@@ -76,6 +76,8 @@ class ImGuiToolManagerState
 {
 	public var openFiles: Array<String> = [];
 	public var previewScale: Int = 1;
+	public var show2DExplorer: Bool = false;
+	public var show3DExplorer: Bool = false;
 }
 
 class ImGuiToolManager
@@ -118,6 +120,8 @@ class ImGuiToolManager
 	static var nextWindowFocus: String = null;
 
 	static var styleWindowOpen: Bool = false;
+	static var show2DExplorer: Bool = false;
+	static var show3DExplorer: Bool = false;
 
 	static function set_enabled(v)
 	{
@@ -208,6 +212,8 @@ class ImGuiToolManager
 		}
 
 		s.previewScale = previewScale;
+		s.show2DExplorer = show2DExplorer;
+		s.show3DExplorer = show3DExplorer;
 
 		sys.io.File.saveContent( "cerastesToolState.sav", CDPrinter.print( s ) );
 	}
@@ -281,43 +287,102 @@ class ImGuiToolManager
 			ImGui.setNextWindowFocus();
 		}
 
-		ImGui.begin("\uf3fa Scene", null, ImGuiWindowFlags.AlwaysAutoResize );
-
-		if( ImGui.beginCombo("Scale", Std.string('${previewScale}x') ) )
+		if( ImGui.begin("\uf3fa Scene", null, ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoDocking ) )
 		{
-			if( ImGui.selectable( "1x", previewScale == 1 ) ) previewScale = 1;
-			if( ImGui.selectable( "2x", previewScale == 2 ) ) previewScale = 2;
-			if( ImGui.selectable( "4x", previewScale == 4 ) ) previewScale = 4;
 
-			ImGui.endCombo();
+			if( ImGui.beginCombo("Scale", Std.string('${previewScale}x') ) )
+			{
+				if( ImGui.selectable( "1x", previewScale == 1 ) ) previewScale = 1;
+				if( ImGui.selectable( "2x", previewScale == 2 ) ) previewScale = 2;
+				if( ImGui.selectable( "4x", previewScale == 4 ) ) previewScale = 4;
+
+				ImGui.endCombo();
+			}
+
+			ImGui.sameLine();
+
+			ImGui.checkbox("2D Browser", show2DExplorer);
+
+			var pos = ImGui.getCursorPos();
+			var windowPos = pos + ImGui.getWindowPos();
+			var size: ImVec2S = { x: viewportWidth * previewScale, y: viewportHeight * previewScale };
+
+			ImGui.button("dummy", size );
+			ImGui.setCursorPos( pos );
+			ImGui.image(sceneRT, size );
+
+			var active = updatePreviewEvents( windowPos, size, previewEvents );
+
+			if( inputAccess != null )
+			{
+				if( active && hasExclusiveAccess )
+				{
+					inputAccess.releaseExclusivity();
+					hasExclusiveAccess = false;
+				}
+				else if( !active && !hasExclusiveAccess )
+				{
+					inputAccess.takeExclusivity();
+					hasExclusiveAccess = true;
+				}
+			}
 		}
-
-		var pos = ImGui.getCursorPos();
-		var windowPos = pos + ImGui.getWindowPos();
-		var size: ImVec2S = { x: viewportWidth * previewScale, y: viewportHeight * previewScale };
-
-		ImGui.button("dummy", size );
-		ImGui.setCursorPos( pos );
-		ImGui.image(sceneRT, size );
-
-		var active = updatePreviewEvents( windowPos, size, previewEvents );
 
 		ImGui.end();
 
-		if( inputAccess != null )
+		if( show2DExplorer )
+			sceneBrowser2d();
+
+
+
+	}
+
+	static function sceneBrowser2d()
+	{
+		//ImGui.setNextWindowSize( { x: 200 * scaleFactor,  y: 720 * scaleFactor }, ImGuiCond.Once );
+		if( ImGui.begin("\uf3fa 2D Scene Browser", null, ImGuiWindowFlags.NoDocking ) )
 		{
-			if( active && hasExclusiveAccess )
-			{
-				inputAccess.releaseExclusivity();
-				hasExclusiveAccess = false;
-			}
-			else if( !active && !hasExclusiveAccess )
-			{
-				inputAccess.takeExclusivity();
-				hasExclusiveAccess = true;
-			}
+			var scene = cerastes.App.currentScene.s2d;
+			populate2DChildren( scene );
+
 		}
 
+		ImGui.end();
+
+	}
+
+	static function populate2DChildren( obj: h2d.Object )
+	{
+		for( idx in 0 ... obj.numChildren )
+		{
+			var c = obj.getChildAt(idx);
+
+			var flags = ImGuiTreeNodeFlags.OpenOnArrow | ImGuiTreeNodeFlags.DefaultOpen;
+			if( c.numChildren == 0)
+				flags |= ImGuiTreeNodeFlags.Leaf;
+
+			var type = Type.getClassName( Type.getClass( c ) );
+
+			var name = c.name != null ? c.name : '${type} ($idx)';
+			//name = '${getIconForType( c.type )} ${name}';
+			var isOpen = ImGui.treeNodeEx( name, flags );
+
+			if( ImGui.isItemHovered() )
+			{
+				var bounds = c.getBounds();
+				cerastes.c2d.DebugDraw.bounds(bounds, 0xFF0000, 0, 0.75, 3);
+			}
+
+			if( isOpen  )
+			{
+				if( c.numChildren > 0)
+				{
+					populate2DChildren(c);
+				}
+				ImGui.treePop();
+			}
+
+		}
 	}
 
 	static function drawTaskBar()

@@ -23,7 +23,18 @@ class UIEntity extends h2d.Object implements Entity
 
 	function get_initialized() { return initialized; }
 
-	var isPreview: Bool = false;
+	var isPreview(default, set): Bool = false;
+
+	function set_isPreview(v)
+	{
+		if( v )
+		{
+			for( cb in trackedCallbacks )
+				cb( this );
+		}
+		isPreview = v;
+		return v;
+	}
 
 	public function beginDrag( entity: UIEntity, ?key: Int = -1, ?bounds: Bounds = null)
 	{
@@ -222,11 +233,18 @@ class UIEntity extends h2d.Object implements Entity
 
 	function trackCallback( success: Bool, unregisterFunction: ( ClassKey -> Bool ) )
 	{
-		if( isPreview )
-			return;
 
 		if( success )
+		{
+			if( isPreview )
+			{
+				unregisterFunction( this );
+				return;
+			}
+
 			trackedCallbacks.push( unregisterFunction );
+		}
+
 	}
 
 	public override function onAdd()

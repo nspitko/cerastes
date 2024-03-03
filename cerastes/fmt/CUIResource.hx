@@ -332,6 +332,7 @@ enum abstract CUITristateBool(Int) from Int to Int {
 	public var hoverSound: String = null;
 	public var activateSound: String = null;
 	public var deactivateSound: String = null;
+	public var disabledSound: String = null;
 
 	public var tweenModeHover: ButtonHoverTween = cerastes.ui.Button.ButtonHoverTween.None;
 	public var tweenModeUnHover: ButtonHoverTween = cerastes.ui.Button.ButtonHoverTween.None;
@@ -971,6 +972,7 @@ class CUIResource extends Resource
 				o.hoverSound = e.hoverSound;
 				o.activateSound = e.activateSound;
 				o.deactivateSound = e.deactivateSound;
+				o.disabledSound = e.disabledSound;
 
 				o.colorChildren = e.colorChildren;
 

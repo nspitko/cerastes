@@ -29,8 +29,21 @@ class SoundCueItem
 {
 	public var name: String = null; // Expresses either a file or event name depending on type
 	public var type: SoundCueItemType = Clip;
-	public var start: Float = 0;
-	public var end: Float = 0; // If zero, use clip length
+	//public var start: Float = 0;
+	//public var end: Float = 0; // If zero, use clip length
+
+
+
+
+}
+
+@:structInit
+class SoundCue
+{
+	public var type: SoundCueKind = CueGlobal;
+	@serializeType("haxe.ds.StringMap")
+	public var clips: Array<String> = null;
+
 	public var loop: Bool = false; // Loop this cue
 
 	public var volume: Float = 0;
@@ -42,22 +55,6 @@ class SoundCueItem
 	public var lowpass: Float = 0; // if zero, use default pitch, else float where 1.0 = default
 	public var lowpassVariance: Float = 0; // If set, choose a random pitch between pitch and pitch + pitchVariance
 
-
-}
-
-@:structInit
-class SoundCueTrack
-{
-	@serializeType("cerastes.SoundCueItem")
-	public var items: Array<SoundCueItem> = null;
-}
-
-@:structInit
-class SoundCue
-{
-	public var type: SoundCueKind = CueGlobal;
-	@serializeType("cerastes.SoundCueTrack")
-	public var tracks: Array<SoundCueTrack> = null;
 
 	@noSerialize
 	public var x: Float = 0;
@@ -101,66 +98,36 @@ class CueInstance
 		this.cue = cue;
 		this.soundGroup = soundGroup == null ? new SoundGroup( null ) : soundGroup;
 		this.channelGroup = channelGroup;
-	}
 
-	public function tick( delta: Float )
-	{
-		if( cue == null ) return;
+		if( cue == null || cue.clips == null )
+			return;
 
 		var lastTime = time;
-		time += delta;
-		isFinished = true;
-		for( track in cue.tracks )
+
+		var clipFile = cue.clips[ Std.random(cue.clips.length) ];
+		if(clipFile == null )
+			return;
+
+		var channel = hxd.Res.loader.loadCache( clipFile, Sound ).play(cue.loop, 1.0, channelGroup, soundGroup );
+		if( cue.pitch > 0 || cue.pitchVariance > 0 )
 		{
-			for( item in track.items )
-			{
-				if( item.start >= lastTime && item.start < time )
-				{
-					switch( item.type )
-					{
-						#if js
-						case Clip | null:
-						#else
-						case Clip:
-						#end
-							var channel = hxd.Res.loader.loadCache( item.name, Sound ).play(item.loop, 1.0, channelGroup, soundGroup );
-							if( item.pitch > 0 || item.pitchVariance > 0 )
-							{
-								var effect = new hxd.snd.effect.Pitch( ( item.pitch > 0 ? item.pitch : 1 ) + Math.random() * item.pitchVariance );
-								channel.addEffect( effect );
-							}
-
-							if( item.lowpass > 0 || item.lowpassVariance > 0 )
-							{
-								var effect = new hxd.snd.effect.LowPass();
-								effect.gainHF = ( item.lowpass > 0 ? item.lowpass : 1 ) + Math.random() * item.lowpassVariance ;
-								channel.addEffect( effect );
-							}
-
-
-							if( item.volume > 0 || item.volumeVariance > 0 )
-							{
-								channel.volume = ( item.volume > 0 ? item.volume : 1 ) + Math.random() * item.volumeVariance;
-							}
-							activeChannels.add( channel );
-
-						case Event:
-							var instance = SoundManager.play( item.name, channelGroup, soundGroup );
-					}
-
-				}
-				else if( item.start > time )
-					isFinished = false;
-			}
+			var effect = new hxd.snd.effect.Pitch( ( cue.pitch > 0 ? cue.pitch : 1 ) + Math.random() * cue.pitchVariance );
+			channel.addEffect( effect );
 		}
 
-		// Check to see if we have any active channels
-		if( isFinished )
+		if( cue.lowpass > 0 || cue.lowpassVariance > 0 )
 		{
-			for( c in activeChannels )
-				if( c.duration > c.position )
-					isFinished = false;
+			var effect = new hxd.snd.effect.LowPass();
+			effect.gainHF = ( cue.lowpass > 0 ? cue.lowpass : 1 ) + Math.random() * cue.lowpassVariance ;
+			channel.addEffect( effect );
 		}
+
+
+		if( cue.volume > 0 || cue.volumeVariance > 0 )
+		{
+			channel.volume = ( cue.volume > 0 ? cue.volume : 1 ) + Math.random() * cue.volumeVariance;
+		}
+		activeChannels.add( channel );
 	}
 
 	public function stop()
@@ -200,14 +167,8 @@ class SoundManager
 		if( cue == null && hxd.Res.loader.exists(path) )
 		{
 			cue = {
-				tracks: [
-					{
-						items: [
-							{
-								name: path
-							}
-						]
-					}
+				clips: [
+					 path
 				]
 			};
 		}
@@ -259,13 +220,6 @@ class SoundManager
 
 	public static function tick( delta: Float )
 	{
-
-		for( i in instances )
-		{
-			i.tick( delta );
-			if( i.isFinished )
-				instances.remove(i);
-		}
 	}
 
 

@@ -1,5 +1,6 @@
 package cerastes.ui;
 
+import hxd.snd.SoundGroup;
 import cerastes.Tween.ColorTween;
 import tweenxcore.color.RgbColor;
 import tweenxcore.Tools.Easing;
@@ -136,6 +137,7 @@ class Button extends h2d.Flow implements IButton
 	public var hoverSound: String;
 	public var activateSound: String;
 	public var deactivateSound: String;
+	public var disabledSound: String;
 
 	public var enabled(default, set): Bool = true;
 	public var toggled(default, set): Bool = false;
@@ -153,6 +155,8 @@ class Button extends h2d.Flow implements IButton
 	var tweenTimers: Array<Tween> = [];
 
 	var hovering: Bool = false;
+
+	var soundGroup = new SoundGroup("Button");
 
 	function set_defaultTile(v)
 	{
@@ -499,6 +503,8 @@ class Button extends h2d.Flow implements IButton
 	{
 		super(parent);
 
+		soundGroup.maxAudible = 1;
+
 		enableInteractive = true;
 
 		interactive.cursor = Button;
@@ -522,7 +528,7 @@ class Button extends h2d.Flow implements IButton
 					var evt = wwise.Api.Event.make(hoverSound);
 					wwise.Api.postEvent(evt);
 					#else
-					cerastes.SoundManager.play(hoverSound);
+					cerastes.SoundManager.play(hoverSound, SoundManager.sfxChannelGroup, soundGroup);
 					#end
 				}
 
@@ -542,7 +548,12 @@ class Button extends h2d.Flow implements IButton
 		interactive.onPush = function(e) {
 
 			if( !enabled )
+			{
+				if( disabledSound != null )
+					SoundManager.play(disabledSound, SoundManager.sfxChannelGroup, soundGroup );
+
 				return;
+			}
 
 			state = Press;
 
@@ -555,7 +566,7 @@ class Button extends h2d.Flow implements IButton
 					var evt = wwise.Api.Event.make(activateSound);
 					wwise.Api.postEvent(evt);
 					#else
-					SoundManager.play(activateSound, SoundManager.sfxChannelGroup );
+					SoundManager.play(activateSound, SoundManager.sfxChannelGroup, soundGroup );
 					#end
 				}
 				else if( !toggled && deactivateSound != null )
@@ -564,7 +575,7 @@ class Button extends h2d.Flow implements IButton
 					var evt = wwise.Api.Event.make(deactivateSound);
 					wwise.Api.postEvent(evt);
 					#else
-					SoundManager.play(deactivateSound, SoundManager.sfxChannelGroup );
+					SoundManager.play(deactivateSound, SoundManager.sfxChannelGroup, soundGroup );
 					#end
 				}
 			}
@@ -576,7 +587,7 @@ class Button extends h2d.Flow implements IButton
 					var evt = wwise.Api.Event.make(activateSound);
 					wwise.Api.postEvent(evt);
 					#else
-					SoundManager.play(activateSound, SoundManager.sfxChannelGroup );
+					SoundManager.play(activateSound, SoundManager.sfxChannelGroup, soundGroup );
 					#end
 				}
 			}

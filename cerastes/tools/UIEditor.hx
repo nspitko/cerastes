@@ -616,6 +616,7 @@ class UIEditor extends ImguiTool
 
 	override public function update( delta: Float )
 	{
+		Metrics.begin();
 		var isOpen = true;
 		var isOpenRef = hl.Ref.make(isOpen);
 
@@ -754,7 +755,7 @@ class UIEditor extends ImguiTool
 		}
 
 
-
+		Metrics.end();
 	}
 
 	function processSelection()
@@ -1223,6 +1224,7 @@ class UIEditor extends ImguiTool
 
 	override public function render( e: h3d.Engine)
 	{
+		Metrics.begin();
 		sceneRT.clear( 0 );
 
 		var oldW = e.width;
@@ -1243,6 +1245,7 @@ class UIEditor extends ImguiTool
 		}
 
 		e.popTarget();
+		Metrics.end();
 	}
 
 	function replaceDef( start: CUIObject, search: CUIObject, replace: CUIObject )
@@ -2144,6 +2147,9 @@ class UIEditor extends ImguiTool
 
 					var newSound = IG.textInput( "Deactivate", d.deactivateSound );
 					if( newSound != null ) d.deactivateSound = newSound;
+
+					var newSound = IG.textInput( "Disabled", d.disabledSound );
+					if( newSound != null ) d.disabledSound = newSound;
 
 				}
 

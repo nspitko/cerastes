@@ -1,5 +1,6 @@
 package cerastes.fmt;
 
+import cerastes.ui.Reference;
 import h3d.Engine;
 import cerastes.fmt.AtlasResource.AtlasFrame;
 import cerastes.fmt.AtlasResource.AtlasEntry;
@@ -522,7 +523,12 @@ class CUIResource extends Resource
 		if( initializeEntities )
 		{
 			for( e in entsToInitialize )
+			{
+				if( isPreview )
+					@:privateAccess e.isPreview = isPreview;
 				e.initialize(root);
+
+			}
 		}
 
 		return root;
@@ -571,7 +577,21 @@ class CUIResource extends Resource
 		if( ent != null )
 		{
 			@:privateAccess ent.isPreview = isPreview;
+			if( isPreview )
+				@:privateAccess ent.isPreview = isPreview;
 			entsToInitialize.push(ent);
+		}
+
+		// OH BOY SPECIAL CASING MAYBE WE SHOULD REWORK THIS GARBAGE CODE
+		if( isPreview )
+		{
+			var ref = Std.downcast(e, Reference );
+			if( ref != null )
+			{
+				var ent: UIEntity = Std.downcast( ref.getChildAt(0), UIEntity );
+				if( ent != null )
+					@:privateAccess ent.isPreview = isPreview;
+			}
 		}
 	}
 

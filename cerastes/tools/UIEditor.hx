@@ -153,7 +153,16 @@ class UIEditor extends ImguiTool
 		Metrics.begin();
 		preview.removeChildren();
 		//previewRoot = new Object(preview);
+
+		// @todo: This really sucks. We should find a better way to do this.
+		var f: CUIFile = {
+			version: 3,
+			root: null,
+			timelines: timelines
+		};
 		var res = new CUIResource(null);
+		@:privateAccess res.data = f;
+
 		rootDef.initChildren();
 		cerastes.fmt.CUIResource.initializeEntities = initializeObjects;
 		previewRoot = res.defToObject(rootDef, null, true);
@@ -370,7 +379,7 @@ class UIEditor extends ImguiTool
 
 			var lastFrame = frame;
 			var popupIdRC = 'timeline_rc${windowID()}';
-			var popupIdKeyframeContext = 'timeline_kf_context${windowID()}';
+			var popupIdKeyframeContext = 'timeline_kf_context##${windowID()}';
 			var drawList = ImGui.getWindowDrawList();
 			var style = NeoSequencer.getStyle();
 
@@ -424,6 +433,8 @@ class UIEditor extends ImguiTool
 							{
 								idx++;
 
+								ImGui.pushID('kf_${idx}');
+
 								NeoSequencer.keyframe( o.frame );
 								if( NeoSequencer.isKeyframeSelected() )
 								{
@@ -433,9 +444,27 @@ class UIEditor extends ImguiTool
 
 								if( NeoSequencer.isKeyframeRightClicked() )
 								{
-									ImGui.openPopup(popupIdKeyframeContext);
+									ImGui.openPopup("timeline_kf_context");
 									keyframeContext = o;
 								}
+
+								if( ImGui.beginPopup("timeline_kf_context") )
+								{
+									if( ImGui.menuItem( 'Delete') )
+									{
+										selectedTimeline.operations.remove(keyframeContext);
+									}
+									if( ImGui.menuItem( 'Clone') )
+									{
+										var c = keyframeContext.clone();
+										c.frame++;
+										selectedTimeline.operations.push(c);
+									}
+
+									ImGui.endPopup();
+								}
+
+								ImGui.popID();
 
 
 
@@ -471,15 +500,7 @@ class UIEditor extends ImguiTool
 				}
 
 
-				if( ImGui.beginPopup(popupIdKeyframeContext) )
-				{
-					if( ImGui.menuItem( 'Delete') )
-					{
-						selectedTimeline.operations.remove(keyframeContext);
-					}
 
-					ImGui.endPopup();
-				}
 			}
 			else
 			{

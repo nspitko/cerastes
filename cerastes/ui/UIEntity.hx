@@ -270,7 +270,7 @@ class UIEntity extends h2d.Object implements Entity
 	public function getTopmostParent()
 	{
 		var p: h2d.Object = this;
-		while( p.parent != null ) p = p.parent;
+		while( p.parent != null && !Std.isOfType(p, h2d.Scene) ) p = p.parent;
 		return p;
 	}
 

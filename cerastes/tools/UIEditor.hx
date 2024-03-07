@@ -2077,7 +2077,7 @@ class UIEditor extends ImguiTool
 						d.hoverColor = nc;
 
 					ImGui.text("Press Color");
-					var nc = IG.inputColorInt( d.hoverColor, "Press Color" );
+					var nc = IG.inputColorInt( d.pressColor, "Press Color" );
 					if( nc != null )
 						d.pressColor = nc;
 

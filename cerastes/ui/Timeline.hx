@@ -148,7 +148,7 @@ class TimelineRunner implements Tickable
 	var timeline: Timeline;
 	var timelineState: Array<TimelineState> = [];
 
-	public var finished(get, null): Bool = false;
+	@:noCompletion public var finished(get, null): Bool = false;
 
 	function get_finished() { return finished; }
 
@@ -302,6 +302,10 @@ class TimelineRunner implements Tickable
 			else if( removeOnComplete )
 			{
 				finished = true;
+			}
+			else
+			{
+				playing = false;
 			}
 
 			return;

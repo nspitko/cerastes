@@ -205,7 +205,6 @@ class TimelineRunner implements Tickable
 	{
 		playing = false;
 
-		#if hlimgui
 		if( playingSounds == null )
 			return;
 
@@ -213,7 +212,7 @@ class TimelineRunner implements Tickable
 			s.stop();
 
 		playingSounds = [];
-		#end
+
 	}
 
 	public function pause()

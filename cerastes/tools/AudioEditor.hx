@@ -540,7 +540,7 @@ class AudioEditor extends ImguiTool
 		{
 			if( selectedCue != null )
 			{
-				if( cueInstance != null && !cueInstance.isFinished )
+				if( cueInstance != null )
 					cueInstance.stop();
 				else
 					cueInstance = selectedCue.play();

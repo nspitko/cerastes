@@ -84,13 +84,10 @@ class CueInstance
 {
 	var cue: SoundCue;
 	public var time(default, null): Float;
-	var channelGroup: ChannelGroup;
-	var soundGroup: SoundGroup;
+	public var channelGroup: ChannelGroup;
+	public var soundGroup: SoundGroup;
 
-
-	public var isFinished = false;
-
-	public var activeChannels = new haxe.ds.List<hxd.snd.Channel>();
+	public var channel: Channel;
 
 
 	public function new( cue: SoundCue, channelGroup: ChannelGroup = null, soundGroup: SoundGroup = null )
@@ -108,7 +105,7 @@ class CueInstance
 		if(clipFile == null )
 			return;
 
-		var channel = hxd.Res.loader.loadCache( clipFile, Sound ).play(cue.loop, 1.0, channelGroup, soundGroup );
+		channel = hxd.Res.loader.loadCache( clipFile, Sound ).play(cue.loop, 1.0, channelGroup, soundGroup );
 		if( cue.pitch > 0 || cue.pitchVariance > 0 )
 		{
 			var effect = new hxd.snd.effect.Pitch( ( cue.pitch > 0 ? cue.pitch : 1 ) + Math.random() * cue.pitchVariance );
@@ -127,17 +124,11 @@ class CueInstance
 		{
 			channel.volume = ( cue.volume > 0 ? cue.volume : 1 ) + Math.random() * cue.volumeVariance;
 		}
-		activeChannels.add( channel );
 	}
 
 	public function stop()
 	{
-		for( channel in activeChannels )
-		{
-			channel.stop();
-		}
-		cue = null;
-		isFinished = true;
+		channel.stop();
 	}
 }
 

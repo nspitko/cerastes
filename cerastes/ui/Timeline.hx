@@ -156,9 +156,6 @@ class TimelineRunner implements Tickable
 	public var loop: Bool = false;
 	public var removeOnComplete = false;
 
-	var looped: Bool = false;
-
-
 	inline function frameToTime( frame: Int ): Float { return frame / timeline.frameRate; }
 	inline function timeToFrame( time: Float ): Int { return Math.floor( time * timeline.frameRate ); }
 
@@ -301,8 +298,6 @@ class TimelineRunner implements Tickable
 			if( loop )
 			{
 				time -= timeline.frames * (1/timeline.frameRate);
-				// This forces our initial values in tick 0 to update to their current values
-				looped = true;
 			}
 			else if( removeOnComplete )
 			{
@@ -414,9 +409,9 @@ class TimelineRunner implements Tickable
 					if( !Utils.verify( duration > 0, 'Tween Operation has invalid duration ${op.duration}, defaulting to 1' ))
 						duration = 1 * timeline.frameRate;
 
-					if( ( firstFrame && state.startValue == null ) || looped )
+					if( ( firstFrame && state.startValue == null ))
 					{
-						if( op.hasInitialValue && !looped )
+						if( op.hasInitialValue )
 							state.startValue = op.initialValue != null ? op.initialValue : 0;
 						else
 							state.startValue = Reflect.getProperty( target, op.key );
@@ -498,8 +493,5 @@ class TimelineRunner implements Tickable
 
 
 		}
-
-		looped = false;
-
 	}
 }

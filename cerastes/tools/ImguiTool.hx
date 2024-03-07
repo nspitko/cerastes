@@ -486,9 +486,6 @@ class ImGuiToolManager
 
 		drawTaskBar();
 
-		// Draw preview window
-		ImGuiToolManager.drawScene();
-
 		// Make sure there aren't any tool ID collisions
 		var toolMap: Map<String, ImguiTool> = [];
 		var toolCopy = tools.copy();
@@ -536,6 +533,9 @@ class ImGuiToolManager
 			if( previewEvents.scenes.length == 0 )
 				previewEvents.addScene( s2d );
 		}
+
+		// Draw preview window last so it starts up focused.
+		ImGuiToolManager.drawScene();
 
 
 

@@ -2,6 +2,7 @@ package cerastes.tools;
 
 
 
+import cerastes.ui.Timeline;
 #if hlimgui
 
 import hxd.fs.LocalFileSystem;
@@ -28,19 +29,32 @@ import imgui.ImGuiMacro.wref;
 	public var active: Bool = false;
 }
 
-@:structInit
-class TimelineItem
+@:allow( cerastes.tools.ImGuiTools )
+@:structInit class IGTimelineState
 {
-	var label: String;
-	var min: Float;
-	var max: Float;
-}
+	public var frameMin: Int = 0;
+	public var frameMax: Int = 0;
+	public var frames: Int = 0;
+	public var rowHeight: Float = 18;
+	public var headerHeight: Float = 22;
+	public var groupWidth: Float = 200;
 
+	//
 
-@:structInit class TimelineGroup
-{
-	var label: String;
-	var items: Array<TimelineItem>;
+	// Used for frameToPos, update every frame!
+	public var regionWidth: Float = 0;
+	public var size: ImVec2 = {};
+
+	// Internal use
+	var windowPos: ImVec2 = null;
+	var yPos: Float = 0;
+
+	public function frameToPos( frame: Int )
+	{
+		var frameToPixels: Float = regionWidth / ( frameMax - frameMin );
+		var offset = frame - frameMin;
+		return offset * frameToPixels;
+	}
 }
 
 typedef IG = ImGuiTools;
@@ -360,8 +374,190 @@ class ImGuiTools
 		return {x: vec.x, y: vec.y, z: vec.z, w: vec.w};
 	}
 
-	public static function renderTimeline( groups: TimelineGroup )
+	static var timelineState: IGTimelineState = null;
+	public static function beginTimeline( state: IGTimelineState, childSize: ImVec2, scrubPosition: Float = 0 )
 	{
+		timelineState = state;
+		state.size = childSize;
+		if( ImGui.beginChild("timelineTable", state.size, false, ImGuiWindowFlags.None ) )
+		{
+			timelineState.windowPos = ImGui.getWindowPos();
+			var pos = ImGui.getCursorPos();
+			var scrubHeadHeight = 21 * ImGuiToolManager.scaleFactor;
+
+			var scrubEnd: ImVec2 = {x: state.size.x, y: scrubHeadHeight };
+
+			// Scrub head bg
+			var drawList = ImGui.getWindowDrawList();
+			drawList.addRectFilled(timelineState.windowPos + pos, timelineState.windowPos + scrubEnd, 0xFF333333 );
+
+			// Draw ticks
+			var tickArea = childSize.x - state.groupWidth;
+			var visibleFrames = state.frameMax - state.frameMin;
+			var idealSpaceBetweenTicks = 20 * ImGuiToolManager.scaleFactor;
+
+			var actualSpaceBetweenTicks = tickArea / visibleFrames ;
+
+			var frameSkip = Math.ceil( idealSpaceBetweenTicks / actualSpaceBetweenTicks );
+			var spaceBetweenTicks = actualSpaceBetweenTicks * frameSkip;
+
+			//
+			var tickStart: ImVec2 = {x: 0, y: scrubHeadHeight / 2 };
+			var tickEnd: ImVec2 = {x: 0, y: scrubHeadHeight };
+
+
+			var n = 0;
+			for( i in 0 ... Math.floor( visibleFrames / frameSkip ) )
+			{
+				// Tick marks
+				var tickPos: ImVec2 = {x: state.groupWidth + i * spaceBetweenTicks, y: pos.y };
+				drawList.addLine( state.windowPos + pos + tickPos + tickStart, state.windowPos + pos + tickPos + tickEnd, 0xFFFFFFFF );
+
+				// Tick numbers
+				//var tickOffset: ImVec2 = {x: 0, y: 5 * ImGuiToolManager.scaleFactor };
+				var t = '${n + state.frameMin}';
+				var size = ImGui.calcTextSize( t );
+				var offset: ImVec2 = {x: size.x / 2, y: 0};
+				ImGui.setCursorPos(tickPos - offset );
+				ImGui.text( t );
+
+				n += frameSkip;
+			}
+
+			// Scrub head
+
+			if( scrubPosition >= state.frameMin && scrubPosition <= state.frameMax )
+			{
+				var adjustedPosition = (scrubPosition - state.frameMin) / state.frameMax;
+				var scrubPos: ImVec2 = {x: state.groupWidth + adjustedPosition * ( state.size.x - state.groupWidth ), y: 0 }
+				var lineEnd: ImVec2 = {x: 0, y: state.size.y };
+				//Utils.info('X=${scrubPos.x}');
+				drawList.addLine(state.windowPos + scrubPos, state.windowPos + scrubPos + lineEnd, 0x88FFFFFF );
+			}
+
+			// Add the dummy last
+			ImGui.setCursorPos(pos);
+			ImGui.dummy( {x: state.size.x, y: scrubHeadHeight } );
+
+
+
+
+			return true;
+		}
+
+		return false;
+	}
+
+	public static function timelineGroup( name: String )
+	{
+		var drawList = ImGui.getWindowDrawList();
+		var style = ImGui.getStyle();
+		var scroll: ImVec2 = {x: ImGui.getScrollX(), y: ImGui.getScrollY() };
+
+
+		var pos = ImGui.getCursorPos();
+		pos.x = 0;
+		var rowSize: ImVec2S = {x: timelineState.size.x, y: timelineState.headerHeight };
+		drawList.addRectFilled( timelineState.windowPos-scroll+pos, timelineState.windowPos-scroll+pos+rowSize, 0xFF666666 );
+
+		ImGui.setCursorPosX( style.WindowPadding.x );
+		ImGui.pushFont( ImGuiToolManager.headingFont );
+		ImGui.text( '${name}' );
+		ImGui.popFont();
+
+		pos.y += timelineState.headerHeight;
+		pos.x = 0;
+		ImGui.setCursorPos( pos );
+	}
+
+	public static function beginTimelineRow( name: String )
+	{
+		var drawList = ImGui.getWindowDrawList();
+		var scroll: ImVec2 = {x: ImGui.getScrollX(), y: ImGui.getScrollY() };
+		var style = ImGui.getStyle();
+		var pos = ImGui.getCursorPos();
+		pos.x = 0;
+		var rowSize: ImVec2S = {x: timelineState.groupWidth, y: timelineState.rowHeight };
+
+		drawList.addRectFilled( timelineState.windowPos-scroll+pos, timelineState.windowPos-scroll+pos+rowSize, 0xFF333333 );
+
+		ImGui.setCursorPosX( style.CellPadding.x );
+		ImGui.text( name );
+		ImGui.sameLine();
+	}
+
+	public static function endTimelineRow()
+	{
+		var pos = ImGui.getCursorPos();
+		pos.x = 0;
+		pos.y += timelineState.rowHeight;
+		ImGui.setCursorPos(pos);
+	}
+
+	public static function endTimeline( )
+	{
+		ImGui.endChild();
+	}
+
+	public static function timelineHandle(frame: Int)
+	{
+		var drawList = ImGui.getWindowDrawList();
+		var scroll: ImVec2 = {x: ImGui.getScrollX(), y: ImGui.getScrollY() };
+
+		var startX = timelineState.frameToPos( frame );
+		var pos = ImGui.getCursorPos();
+		pos.x = timelineState.groupWidth;
+		var framePos: ImVec2S = {x: startX };
+
+
+		var handleSize = timelineState.rowHeight / 2;
+		var handleOffset: ImVec2 = {x: 0, y: handleSize};
+		var rowSize: ImVec2 = { x: timelineState.size.x - timelineState.groupWidth, y: timelineState.rowHeight };
+
+
+		//ImGui.setCursorPos(pos);
+		ImGui.pushClipRect(timelineState.windowPos-scroll+pos,timelineState.windowPos-scroll+pos + rowSize, true);
+
+		//var test = ImGui.getForegroundDrawList();
+		//test.addRectFilled(timelineState.windowPos + pos,timelineState.windowPos+pos + rowSize, 0x44FF0000);
+
+		drawList.addCircleFilled( timelineState.windowPos-scroll+pos+framePos + handleOffset, handleSize, 0xFF339999, 4 );
+
+
+		var handleOffset: ImVec2S = {x: -handleSize, y: 0};
+
+		// Clickable handle
+		var oldPos = ImGui.getCursorPos();
+		ImGui.setCursorPos( pos + framePos + handleOffset );
+		ImGui.dummy( {x:handleSize * 2, y: handleSize * 2} );
+		ImGui.setCursorPos( oldPos );
+		ImGui.popClipRect();
+
+
+	}
+
+	public static function timelineLine(startFrame: Int, endFrame: Int )
+	{
+		var drawList = ImGui.getWindowDrawList();
+		var scroll: ImVec2 = {x: ImGui.getScrollX(), y: ImGui.getScrollY() };
+		var startX = timelineState.frameToPos( startFrame );
+		var endX = timelineState.frameToPos( endFrame );
+		var pos = ImGui.getCursorPos();
+		pos.x = timelineState.groupWidth;
+		var startPos: ImVec2S = {x: startX };
+		var endPos: ImVec2S = {x: endX, y: timelineState.rowHeight };
+		var rowSize: ImVec2 = { x: timelineState.size.x - timelineState.groupWidth, y: timelineState.rowHeight };
+
+		ImGui.pushClipRect(timelineState.windowPos-scroll+pos + startPos,timelineState.windowPos-scroll+pos + startPos + rowSize, true);
+		drawList.addRectFilled( timelineState.windowPos-scroll+pos + startPos, timelineState.windowPos-scroll+pos+endPos, 0xFF992222 );
+		drawList.addRect( timelineState.windowPos-scroll+pos + startPos, timelineState.windowPos-scroll+pos+endPos, 0xFFFF2222 );
+
+		// Clickable handle
+		var oldPos = ImGui.getCursorPos();
+		ImGui.setCursorPos( pos + startPos );
+		ImGui.dummy( {x: endX - startX , y: timelineState.rowHeight} );
+		ImGui.setCursorPos( oldPos );
+		ImGui.popClipRect();
 
 	}
 

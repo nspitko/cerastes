@@ -2,6 +2,9 @@
 package cerastes.tools;
 
 
+import cerastes.tools.ImguiTools.ImGuiTools;
+import cerastes.tools.ImguiTools.IGTimelineState;
+import cerastes.c2d.Vec2;
 import h2d.BlendMode;
 #if hlimgui
 
@@ -44,6 +47,8 @@ enum UIEInspectorMode
 	Element;
 	Timeline;
 }
+
+
 
 @:keep
 @multiInstance(true)
@@ -329,6 +334,7 @@ class UIEditor extends ImguiTool
 					if( ImGui.isItemClicked() )
 					{
 						selectedTimeline = t;
+						timelineState = null;
 						timelineRunner = new TimelineRunner( t, rootDef.handle );
 						timelineRunner.playing = true;
 						inspectorMode = Timeline;
@@ -366,10 +372,182 @@ class UIEditor extends ImguiTool
 
 	}
 
+	var timelineState: IGTimelineState = null;
+
+	function timeline()
+	{
+		ImGui.pushStyleVar( ImGuiStyleVar.WindowPadding,{x: 0, y: 0} );
+		ImGui.setNextWindowDockId( dockspaceIdBottom, dockCond );
+		var style = ImGui.getStyle();
+
+
+		if( ImGui.begin('Timeline##${windowID()}', null, ImGuiWindowFlags.NoMove) )
+		{
+			handleShortcuts();
+
+			var lastFrame = frame;
+			var popupIdRC = 'timeline_rc${windowID()}';
+			var popupIdKeyframeContext = 'timeline_kf_context##${windowID()}';
+			var drawList = ImGui.getWindowDrawList();
+
+			if( selectedTimeline != null )
+			{
+				if( timelinePlay )
+					frame = timelineRunner.frame;
+
+				// Unset
+				if( timelineState == null )
+				{
+					timelineState = {
+						frameMax: selectedTimeline.frames,
+						rowHeight: 18 * scaleFactor,
+						headerHeight: 22 * scaleFactor,
+					};
+				}
+
+
+				var groupings = new Map<String,Array<TimelineOperation>>();
+				var groupWidth: Float = 0;
+
+
+				for( op in selectedTimeline.operations )
+				{
+					var key = '${op.target}';
+					if( !groupings.exists(key) )
+						groupings.set(key, [op]);
+					else
+						groupings[key].push(op);
+/*
+					ImGui.pushFont( ImGuiToolManager.headingFont );
+					var w = ImGui.calcTextSize(op.target);
+					if( w.x > groupWidth)
+						groupWidth = w.x;
+					ImGui.popFont();
+*/
+					var w = ImGui.calcTextSize(op.key );
+					if( w.x > groupWidth )
+						groupWidth = w.x;
+				}
+
+				groupWidth += style.CellPadding.x * 4;
+
+				timelineState.groupWidth = groupWidth;
+
+
+
+				var childSize = ImGui.getContentRegionAvail();
+				timelineState.regionWidth = childSize.x - groupWidth;
+
+				var scrubPosition = timelineRunner.time * selectedTimeline.frameRate;
+				if( ImGuiTools.beginTimeline( timelineState, childSize, scrubPosition ) )
+				{
+					// Scrub head was clicked
+					if( ImGui.isItemClicked() || ( ImGui.isItemHovered() && ImGui.isMouseDown( ImGuiMouseButton.Left ) ) )
+					{
+						var mousePos = ImGui.getMousePos();
+						var cursorPos = ImGui.getCursorScreenPos();
+						var scrubX = mousePos.x - cursorPos.x - timelineState.groupWidth;
+						var scrubWidth = childSize.x - timelineState.groupWidth;
+						var frame = ( selectedTimeline.frames / scrubWidth ) * scrubX;
+						@:privateAccess
+						{
+							timelineRunner.setTime( Math.max( frame / selectedTimeline.frameRate, 0 ) );
+						}
+					}
+
+					// null is a valid key for new keyframes so.... just pick something
+					// very unlikely to be invalid.
+					// If you ever hit this bug then CONGRATULATIONS!
+					var invalidKey = "☃__=-./*-+";
+					var lastKey = invalidKey;
+					for( key => ops in groupings )
+					{
+						ops.sort((a, b) -> {return Reflect.compare(a.key, b.key); });
+						// Grouping header
+
+						IG.timelineGroup(ops[0].target );
+
+						for( op in ops )
+						{
+							// Item header (only first time we see this key)
+							if( lastKey != op.key )
+							{
+								if( lastKey != invalidKey )
+									IG.endTimelineRow();
+								lastKey = op.key;
+
+								IG.beginTimelineRow( op.key != null ? op.key : "Unassigned" );
+
+
+							}
+
+							if( op.duration > 0 )
+							{
+								// Line
+								IG.timelineLine(op.frame, op.frame + op.duration);
+								imTooltip('${op.target}/${op.key}=${op.value}');
+								if( ImGui.isItemClicked() )
+								{
+									inspectorMode = Timeline;
+									selectedTimelineOperation = op;
+								}
+							}
+
+							// Start handle
+							IG.timelineHandle( op.frame );
+							imTooltip('${op.target}/${op.key}=${op.value}');
+							if( ImGui.isItemClicked() )
+							{
+								inspectorMode = Timeline;
+								selectedTimelineOperation = op;
+							}
+
+
+							if( op.duration > 0 )
+							{
+								// End handle
+								IG.timelineHandle( op.frame + op.duration );
+								imTooltip('${op.target}/${op.key}=${op.value}');
+								if( ImGui.isItemClicked() )
+								{
+									inspectorMode = Timeline;
+									selectedTimelineOperation = op;
+								}
+							}
+
+						}
+
+						if( lastKey != invalidKey )
+						{
+							lastKey = invalidKey;
+							IG.endTimelineRow();
+						}
+
+						//ImGui.setCursorPos({x:0, y: pos.y + rowHeight });
+
+
+
+						//ImGui.text("???");
+					}
+
+					ImGuiTools.endTimeline();
+
+				}
+
+
+
+			}
+		}
+
+		ImGui.end();
+		ImGui.popStyleVar();
+	}
+
+
 
 	var frame: Int = 0;
 
-	function timeline()
+	function timelineOld()
 	{
 		ImGui.setNextWindowDockId( dockspaceIdBottom, dockCond );
 		if( ImGui.begin('Timeline##${windowID()}', null, ImGuiWindowFlags.NoMove) )
@@ -493,8 +671,10 @@ class UIEditor extends ImguiTool
 					{
 						var t: TimelineOperation = {};
 						t.target = "";
-						t.frame = frame;
+						t.frame = frame >= selectedTimeline.frames ? selectedTimeline.frames - 1 : frame;
 						selectedTimeline.operations.push(t);
+						selectedTimelineOperation = t;
+						inspectorMode = Timeline;
 					}
 					ImGui.endPopup();
 				}
@@ -737,20 +917,10 @@ class UIEditor extends ImguiTool
 			if( Key.isPressed( Key.SPACE ) && selectedTimeline != null )
 			{
 				if( timelineRunner.playing )
-					timelineRunner.stop();
+					timelineRunner.pause();
 				else
 				{
-					for( i in 0 ... selectedTimeline.operations.length )
-					{
-						var s = @:privateAccess timelineRunner.timelineState[i];
-						if( s != null )
-							s.targetHandle = null;
-					}
-
-					@:privateAccess timelineRunner.ui = rootDef.handle;
-
-					timelineRunner.setFrame( frame, true );
-					timelineRunner.loop = true;
+					timelineRunner.resume();
 				}
 			}
 		}
@@ -766,7 +936,8 @@ class UIEditor extends ImguiTool
 				}
 				else
 				{
-					timelineRunner.setFrame( frame );
+					// @todo WHY
+					//timelineRunner.setFrame( frame );
 				}
 			}
 			catch(e)
@@ -1189,8 +1360,11 @@ class UIEditor extends ImguiTool
 				{
 					var t: TimelineOperation = {};
 					t.target = c.name;
-					t.frame = frame;
+					t.frame = frame >= selectedTimeline.frames ? selectedTimeline.frames - 1 : frame;
 					selectedTimeline.operations.push(t);
+					selectedTimelineOperation = t;
+					inspectorMode = Timeline;
+
 				}
 
 				ImGui.endPopup();
@@ -1290,20 +1464,12 @@ class UIEditor extends ImguiTool
 	{
 		//var frame = populateKeyframeEditor.frame;
 
-		var idx = 0;
-		var opsToDelete = [];
-		for( o in selectedTimeline.operations )
+		if( populateOp( selectedTimelineOperation ) )
 		{
-			if( o.frame == selectedTimelineOperation.frame && o.target == selectedTimelineOperation.target )
-			{
-				ImGui.pushID('op${idx++}');
-				if( populateOp( o ) )
-					opsToDelete.push(o);
-				ImGui.popID();
-			}
+			selectedTimeline.operations.remove(selectedTimelineOperation);
+			selectedTimelineOperation = null;
 		}
-		for( o in opsToDelete)
-			selectedTimeline.operations.remove(o);
+
 	}
 
 	function populateTimelineEditor()

@@ -1,5 +1,6 @@
 package cerastes.ui;
 
+import hxd.snd.Channel;
 import h2d.Object;
 import tweenxcore.Tools.Easing;
 
@@ -162,7 +163,7 @@ class TimelineRunner implements Tickable
 
 
 	#if hlimgui
-	@noSerialize var playingSounds: Array<Sound> = [];
+	@noSerialize var playingSounds: Array<Channel> = [];
 	#end
 
 	@noSerialize public var frame(get, never): Int;
@@ -177,8 +178,10 @@ class TimelineRunner implements Tickable
 	{
 		ui = u;
 		timeline = t;
-		for( i in 0 ... t.operations.length )
-			timelineState.push({});
+
+		// Sort ops
+		timeline.operations.sort((a, b) -> { return a.frame - b.frame; });
+		ensureState();
 	}
 
 	public function play()
@@ -187,17 +190,36 @@ class TimelineRunner implements Tickable
 		playing = true;
 		finished = false;
 
-		// Fix case where we changed the timeline after creation
+		// Hack: Immediately play first frame so we can set out initial state
+		// (else we might go visible for one frame in the wrong state)
+		tick(0);
+	}
+
+	function ensureState()
+	{
 		if( timeline.operations.length != timelineState.length )
 		{
 			timelineState = [];
 			for( i in 0 ... timeline.operations.length )
-				timelineState.push({});
-		}
+			{
+				var op = timeline.operations[i];
+				var state: TimelineState = {};
+				var target = ui.getObjectByName(op.target);
 
-		// Hack: Immediately play first frame so we can set out initial state
-		// (else we might go visible for one frame in the wrong state)
-		tick(0);
+				if( op.hasInitialValue )
+					state.startValue = op.initialValue != null ? op.initialValue : 0;
+				else
+					state.startValue = Reflect.getProperty( target, op.key );
+
+				state.targetHandle = switch( op.targetType )
+				{
+					case Filter: target.filter;
+					default: target;
+				}
+
+				timelineState.push(state);
+			}
+		}
 	}
 
 
@@ -217,7 +239,20 @@ class TimelineRunner implements Tickable
 
 	public function pause()
 	{
-		playing = !playing;
+		playing = false;
+
+
+		for( s in playingSounds )
+			s.pause = true;
+
+
+	}
+
+	public function resume()
+	{
+		playing = true;
+		for( s in playingSounds )
+			s.pause = false;
 	}
 
 	#if hlimgui
@@ -272,6 +307,41 @@ class TimelineRunner implements Tickable
 			stop();
 	}
 
+	function setTime( t: Float )
+	{
+		var wasPlaying = playing;
+		var wasFinished = finished;
+
+		playing = true;
+		finished = false;
+
+		time = 0;
+
+		// Revert state
+		var idx = timeline.operations.length-1;
+		while( idx >= 0 )
+		{
+			var op = timeline.operations[idx];
+			var state = timelineState[idx];
+			if( op.key != null )
+			{
+				Reflect.setProperty(state.targetHandle, op.key, state.startValue);
+			}
+			idx--;
+		}
+
+		ensureState();
+		tick(t);
+
+		playing = wasPlaying;
+		finished = wasFinished;
+
+		if( !playing )
+			pause();
+
+
+	}
+
 	#end
 
 	public function tick(d: Float )
@@ -281,8 +351,6 @@ class TimelineRunner implements Tickable
 
 		var tLast = time;
 		time += d;
-
-		var lastFrame = frame;
 
 		// Jacky hack to make sure looping is smooth
 		var m = loop ? timeline.frames - 1: timeline.frames;
@@ -304,6 +372,7 @@ class TimelineRunner implements Tickable
 			}
 			else
 			{
+				//Utils.info('frame=${frame}@t=${time} from delta=${d} (max=${m}), pausing!!');
 				playing = false;
 			}
 
@@ -335,25 +404,6 @@ class TimelineRunner implements Tickable
 
 			if( op.target == null )
 				continue;
-
-			if( state.targetHandle == null )
-			{
-				var targetName = op.target;
-
-				var target = ui.getObjectByName(targetName);
-				if( !Utils.verify(target != null, 'Timeline target ${op.target} is missing') )
-				{
-					op.target = null;
-					continue;
-				}
-
-				state.targetHandle = switch( op.targetType )
-				{
-					case Filter: target.filter;
-					default: target;
-				}
-			}
-
 
 			var target = state.targetHandle;
 
@@ -390,11 +440,15 @@ class TimelineRunner implements Tickable
 					var sound = Std.downcast(target, cerastes.ui.Sound );
 					if( sound != null )
 					{
-						sound.play();
+						var channel = sound.play();
+						if( adjTime > 0.1)
+						{
+							channel.position = adjTime;
+						}
 						#if hlimgui
 						if( playingSounds == null )
 							playingSounds = [];
-						playingSounds.push(sound);
+						playingSounds.push(channel);
 						#end
 					}
 

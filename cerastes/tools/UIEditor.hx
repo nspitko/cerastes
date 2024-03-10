@@ -48,6 +48,12 @@ enum UIEInspectorMode
 	Timeline;
 }
 
+enum UIDraggingOpType
+{
+	Start;
+	End;
+	Line;
+}
 
 
 @:keep
@@ -373,6 +379,9 @@ class UIEditor extends ImguiTool
 	}
 
 	var timelineState: IGTimelineState = null;
+	var dragStartFrame = -1;
+	var draggingOp: TimelineOperation = null;
+	var draggingOpType: UIDraggingOpType = Start;
 
 	function timeline()
 	{
@@ -381,14 +390,9 @@ class UIEditor extends ImguiTool
 		var style = ImGui.getStyle();
 
 
-		if( ImGui.begin('Timeline##${windowID()}', null, ImGuiWindowFlags.NoMove) )
+		if( ImGui.begin('Timeline##${windowID()}', null, ImGuiWindowFlags.NoMove ) )
 		{
 			handleShortcuts();
-
-			var lastFrame = frame;
-			var popupIdRC = 'timeline_rc${windowID()}';
-			var popupIdKeyframeContext = 'timeline_kf_context##${windowID()}';
-			var drawList = ImGui.getWindowDrawList();
 
 			if( selectedTimeline != null )
 			{
@@ -402,6 +406,7 @@ class UIEditor extends ImguiTool
 						frameMax: selectedTimeline.frames,
 						rowHeight: 18 * scaleFactor,
 						headerHeight: 22 * scaleFactor,
+						frames: selectedTimeline.frames,
 					};
 				}
 
@@ -417,13 +422,7 @@ class UIEditor extends ImguiTool
 						groupings.set(key, [op]);
 					else
 						groupings[key].push(op);
-/*
-					ImGui.pushFont( ImGuiToolManager.headingFont );
-					var w = ImGui.calcTextSize(op.target);
-					if( w.x > groupWidth)
-						groupWidth = w.x;
-					ImGui.popFont();
-*/
+
 					var w = ImGui.calcTextSize(op.key );
 					if( w.x > groupWidth )
 						groupWidth = w.x;
@@ -432,13 +431,14 @@ class UIEditor extends ImguiTool
 				groupWidth += style.CellPadding.x * 4;
 
 				timelineState.groupWidth = groupWidth;
-
-
+				timelineState.frames = selectedTimeline.frames;
 
 				var childSize = ImGui.getContentRegionAvail();
-				timelineState.regionWidth = childSize.x - groupWidth;
 
 				var scrubPosition = timelineRunner.time * selectedTimeline.frameRate;
+				var scrubWidth = timelineState.regionWidth;
+				var pixelsPerFrame = ( selectedTimeline.frames / scrubWidth );
+
 				if( ImGuiTools.beginTimeline( timelineState, childSize, scrubPosition ) )
 				{
 					// Scrub head was clicked
@@ -446,9 +446,8 @@ class UIEditor extends ImguiTool
 					{
 						var mousePos = ImGui.getMousePos();
 						var cursorPos = ImGui.getCursorScreenPos();
-						var scrubX = mousePos.x - cursorPos.x - timelineState.groupWidth;
-						var scrubWidth = childSize.x - timelineState.groupWidth;
-						var frame = ( selectedTimeline.frames / scrubWidth ) * scrubX;
+						var scrubX = mousePos.x - cursorPos.x - timelineState.groupWidth;// + scrollX;
+						var frame = pixelsPerFrame * scrubX;
 						@:privateAccess
 						{
 							timelineRunner.setTime( Math.max( frame / selectedTimeline.frameRate, 0 ) );
@@ -491,6 +490,13 @@ class UIEditor extends ImguiTool
 									inspectorMode = Timeline;
 									selectedTimelineOperation = op;
 								}
+								if( draggingOp == null && ImGui.isItemHovered() && ImGui.isMouseDown( ImGuiMouseButton.Left ) )
+								{
+									draggingOp = op;
+									dragStartFrame = op.frame;
+									draggingOpType = Line;
+								}
+
 							}
 
 							// Start handle
@@ -500,6 +506,12 @@ class UIEditor extends ImguiTool
 							{
 								inspectorMode = Timeline;
 								selectedTimelineOperation = op;
+							}
+							if( draggingOp == null && ImGui.isItemHovered() && ImGui.isMouseDown( ImGuiMouseButton.Left ) )
+							{
+								draggingOp = op;
+								dragStartFrame = op.frame;
+								draggingOpType = Start;
 							}
 
 
@@ -513,6 +525,12 @@ class UIEditor extends ImguiTool
 									inspectorMode = Timeline;
 									selectedTimelineOperation = op;
 								}
+								if( draggingOp == null && ImGui.isItemHovered() && ImGui.isMouseDown( ImGuiMouseButton.Left ) )
+								{
+									draggingOp = op;
+									dragStartFrame = op.frame + op.duration;
+									draggingOpType = End;
+								}
 							}
 
 						}
@@ -522,12 +540,44 @@ class UIEditor extends ImguiTool
 							lastKey = invalidKey;
 							IG.endTimelineRow();
 						}
+					}
 
-						//ImGui.setCursorPos({x:0, y: pos.y + rowHeight });
+					// Handle dragging
+					if( !ImGui.isMouseDown( ImGuiMouseButton.Left ) )
+						draggingOp = null;
 
+					if( draggingOp != null && ImGui.isMouseDragging( ImGuiMouseButton.Left ) )
+					{
+						var delta = ImGui.getMouseDragDelta( ImGuiMouseButton.Left );
+						var newFrame = Math.round( delta.x * pixelsPerFrame ) + dragStartFrame;
 
-
-						//ImGui.text("???");
+						if( draggingOpType == Line || ( draggingOpType == Start && draggingOp.duration == 0 ) )
+						{
+							if( draggingOp.frame != newFrame )
+							{
+								draggingOp.frame = newFrame;
+								@:privateAccess timelineRunner.setTime( timelineRunner.time );
+							}
+						}
+						else if( draggingOpType == Start )
+						{
+							if( draggingOp.frame != newFrame )
+							{
+								var delta = draggingOp.frame - newFrame;
+								draggingOp.frame = newFrame;
+								draggingOp.duration += delta;
+								@:privateAccess timelineRunner.setTime( timelineRunner.time );
+							}
+						}
+						else if ( draggingOpType == End )
+						{
+							if( draggingOp.frame + draggingOp.duration != newFrame )
+							{
+								var delta = draggingOp.frame + draggingOp.duration - newFrame;
+								draggingOp.duration -= delta;
+								@:privateAccess timelineRunner.setTime( timelineRunner.time );
+							}
+						}
 					}
 
 					ImGuiTools.endTimeline();

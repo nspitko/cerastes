@@ -405,7 +405,7 @@ class UIEditor extends ImguiTool
 					timelineState = {
 						frameMax: selectedTimeline.frames,
 						rowHeight: 18 * scaleFactor,
-						headerHeight: 22 * scaleFactor,
+						headerHeight: 16 * scaleFactor,
 						frames: selectedTimeline.frames,
 					};
 				}
@@ -439,6 +439,8 @@ class UIEditor extends ImguiTool
 				var scrubWidth = timelineState.regionWidth;
 				var pixelsPerFrame = ( selectedTimeline.frames / scrubWidth );
 
+				var opIdx = 0;
+
 				if( ImGuiTools.beginTimeline( timelineState, childSize, scrubPosition ) )
 				{
 					// Scrub head was clicked
@@ -468,6 +470,9 @@ class UIEditor extends ImguiTool
 
 						for( op in ops )
 						{
+							opIdx++;
+							var popupId = '${opIdx}_item_context';
+
 							// Item header (only first time we see this key)
 							if( lastKey != op.key )
 							{
@@ -496,6 +501,8 @@ class UIEditor extends ImguiTool
 									dragStartFrame = op.frame;
 									draggingOpType = Line;
 								}
+								if( ImGui.isItemClicked( ImGuiMouseButton.Right ) )
+									ImGui.openPopup(popupId);
 
 							}
 
@@ -513,6 +520,8 @@ class UIEditor extends ImguiTool
 								dragStartFrame = op.frame;
 								draggingOpType = Start;
 							}
+							if( ImGui.isItemClicked( ImGuiMouseButton.Right ) )
+								ImGui.openPopup(popupId);
 
 
 							if( op.duration > 0 )
@@ -531,6 +540,29 @@ class UIEditor extends ImguiTool
 									dragStartFrame = op.frame + op.duration;
 									draggingOpType = End;
 								}
+								if( ImGui.isItemClicked( ImGuiMouseButton.Right ) )
+									ImGui.openPopup(popupId);
+							}
+
+							// Right click context menu
+							if( ImGui.beginPopup('${opIdx}_item_context') )
+							{
+								if( ImGui.menuItem( 'Delete') )
+								{
+									selectedTimeline.operations.remove(op);
+									timelineRunner.stop();
+									@:privateAccess timelineRunner.ensureState();
+								}
+								if( ImGui.menuItem( 'Clone') )
+								{
+									var c = op.clone();
+									c.frame++;
+									selectedTimeline.operations.push(c);
+									// Flush state
+									timelineRunner.stop();
+									@:privateAccess timelineRunner.ensureState();
+								}
+								ImGui.endPopup();
 							}
 
 						}
@@ -970,7 +1002,10 @@ class UIEditor extends ImguiTool
 					timelineRunner.pause();
 				else
 				{
-					timelineRunner.resume();
+					if( timelineRunner.frame >= selectedTimeline.frames )
+						timelineRunner.play();
+					else
+						timelineRunner.resume();
 				}
 			}
 		}
@@ -1536,11 +1571,19 @@ class UIEditor extends ImguiTool
 			selectedTimeline.name = nt;
 		}
 
+		ImGui.inputInt( "Frames", selectedTimeline.frames );
+		if( ImGui.isItemHovered() )
+		{
+			ImGui.beginTooltip();
+			ImGui.textWrapped("Total Number of frames. You can change this number at any time, the timeline will not rescale, so it's usually best to leave it high and reduce it when you're done.");
+			ImGui.endTooltip();
+		}
+
 		ImGui.inputInt( "Frame rate", selectedTimeline.frameRate );
 		if( ImGui.isItemHovered() )
 		{
 			ImGui.beginTooltip();
-			ImGui.textWrapped("Number of timeline to run per game frame. 10 is usually fine. Note this does NOT affect how smooth animations are, just how often we update the timline.");
+			ImGui.textWrapped("Number of timeline to run per game frame. 10 is usually fine. Note this does NOT affect how smooth animations are, just how often we update the timeline.");
 			ImGui.endTooltip();
 		}
 

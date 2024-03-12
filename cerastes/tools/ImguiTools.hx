@@ -496,9 +496,9 @@ class ImGuiTools
 		drawList.addRectFilled( timelineState.windowPos-scroll+pos, timelineState.windowPos-scroll+pos+rowSize, 0xFF666666 );
 
 		ImGui.setCursorPosX( style.WindowPadding.x );
-		ImGui.pushFont( ImGuiToolManager.headingFont );
+		//ImGui.pushFont( ImGuiToolManager.headingFont );
 		ImGui.text( '${name}' );
-		ImGui.popFont();
+		//ImGui.popFont();
 
 		pos.y += timelineState.headerHeight;
 		pos.x = 0;

@@ -190,6 +190,9 @@ class TimelineRunner implements Tickable
 		playing = true;
 		finished = false;
 
+		// 3/13/24 @spitko This is a bug factory so I wanted to remove it but
+		// it's still an issue.
+		//
 		// Hack: Immediately play first frame so we can set out initial state
 		// (else we might go visible for one frame in the wrong state)
 		tick(0);
@@ -208,8 +211,8 @@ class TimelineRunner implements Tickable
 
 				if( op.hasInitialValue )
 					state.startValue = op.initialValue != null ? op.initialValue : 0;
-				else
-					state.startValue = Reflect.getProperty( target, op.key );
+				//else
+				//	state.startValue = Reflect.getProperty( target, op.key );
 
 				state.targetHandle = switch( op.targetType )
 				{
@@ -323,7 +326,7 @@ class TimelineRunner implements Tickable
 		{
 			var op = timeline.operations[idx];
 			var state = timelineState[idx];
-			if( op.key != null )
+			if( op.key != null && state.targetHandle != null )
 			{
 				Reflect.setProperty(state.targetHandle, op.key, state.startValue);
 			}
@@ -437,6 +440,11 @@ class TimelineRunner implements Tickable
 						anim.currentFrame = op.value;
 
 				case SoundPlay:
+					// HACK: A hack to work around the earlier tick(0) hack causing audio to play
+					// multiple times if triggered on frame 0. :pain:
+					if( d == 0 )
+						continue;
+
 					var sound = Std.downcast(target, cerastes.ui.Sound );
 					if( sound != null )
 					{
@@ -468,10 +476,11 @@ class TimelineRunner implements Tickable
 
 					if( ( firstFrame && state.startValue == null ))
 					{
-						if( op.hasInitialValue )
-							state.startValue = op.initialValue != null ? op.initialValue : 0;
-						else
-							state.startValue = Reflect.getProperty( target, op.key );
+						// EnsureState already filled it out if we had a specified initial
+						//if( op.hasInitialValue )
+						//	state.startValue = op.initialValue != null ? op.initialValue : 0;
+						//else
+						state.startValue = Reflect.getProperty( target, op.key );
 					}
 
 					if( lastFrame )

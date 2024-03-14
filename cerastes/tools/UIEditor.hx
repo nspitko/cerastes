@@ -749,7 +749,7 @@ class UIEditor extends ImguiTool
 
 				if( ImGui.beginPopup( popupIdRC ) )
 				{
-					if( ImGui.menuItem( '\uf084 Add keyframe here') )
+					if( selectedTimeline != null && ImGui.menuItem( '\uf084 Add keyframe here') )
 					{
 						var t: TimelineOperation = {};
 						t.target = "";
@@ -757,6 +757,9 @@ class UIEditor extends ImguiTool
 						selectedTimeline.operations.push(t);
 						selectedTimelineOperation = t;
 						inspectorMode = Timeline;
+
+						if( timelineRunner != null )
+							@:privateAccess timelineRunner.ensureState();
 					}
 					ImGui.endPopup();
 				}
@@ -2449,7 +2452,10 @@ class UIEditor extends ImguiTool
 				if( ImGui.collapsingHeader("Scripts") )
 				{
 					if( ImGui.button("OnPress") ) editScript( d.onPress );
+					imTooltip("Code to run every time this button is pressed. Runs on the \"down\" stroke");
+
 					if( ImGui.button("OnRelease") ) editScript( d.onRelease );
+					imTooltip("Code to run every time this button is released.");
 				}
 
 			case "cerastes.ui.BitmapButton":
@@ -2504,6 +2510,7 @@ class UIEditor extends ImguiTool
 				var d : CUIReference = cast def;
 
 				var newFile = IG.textInput( "File", d.file );
+				imTooltip("Another cui file to include. References count as an object, so the included file's root will be a child of this reference object.");
 				if( newFile != null && hxd.Res.loader.exists( newFile ) )
 					d.file = newFile;
 
@@ -2520,17 +2527,29 @@ class UIEditor extends ImguiTool
 				var d : CUISound = cast def;
 
 				var newCue = IG.textInput( "Cue", d.cue );
+				imTooltip("Can be either a filename in the audio folder (without extension), or a cue name.");
 				if( newCue != null )
 					d.cue = newCue;
 
 				wref( ImGui.inputDouble("Volume",_,0.05,0.1), d.volume );
+				imTooltip("Applied after all other mixer settings");
+
 				wref( ImGui.checkbox( "Loop", _ ), d.loop );
+				imTooltip("Overrides cue settings.");
+
+				var channel = IG.combo("Channel", d.channel, cerastes.ui.Sound.CueChannel );
+				imTooltip("Sets the mixer channel. Mostly controls which volume slider applies.");
+				if( channel != null )
+					d.channel = channel;
+
 
 			case "h2d.Interactive":
 				var d : CUIInteractive = cast def;
 
 				wref( ImGui.inputDouble("Width",_,1,10), d.width );
+				imTooltip("Width of the actual interactive area. If both width and height are 0, it will try to figure it out based on content bounds.");
 				wref( ImGui.inputDouble("Height",_,1,10), d.height );
+				imTooltip("Height of the actual interactive area. If both width and height are 0, it will try to figure it out based on content bounds.");
 
 				var cursor = IG.combo("Cursor", d.cursor, hxd.Cursor );
 				if( cursor != null )
@@ -2599,10 +2618,11 @@ class UIEditor extends ImguiTool
 */
 	function getNameForType( type: String )
 	{
-		switch(type)
+		return switch(type)
 		{
-			default:
-				return type.substr( type.lastIndexOf(".") +1 );
+			case "h2d.Anim": 'Simple Animation';
+			case "cerastes.ui.Anim": 'Animation';
+			default: type.substr( type.lastIndexOf(".") +1 );
 		}
 	}
 
@@ -2613,7 +2633,7 @@ class UIEditor extends ImguiTool
 			case "h2d.Object": return "\uf0b2";
 			case "h2d.Text": return "\uf031";
 			case "h2d.Bitmap": return "\uf03e";
-			case "h2d.Anim": return "\uf008"; // DEPRECATED, used cerastes.ui.anim?
+			case "h2d.Anim": return "\uf008"; // DEPRECATED?, used cerastes.ui.anim?
 			case "cerastes.ui.Anim": return "\uf008";
 			case "h2d.Flow": return "\uf0db";
 			case "h2d.Mask": return "\uf125";

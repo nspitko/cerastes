@@ -1,16 +1,23 @@
 package cerastes.ui;
 
+import cerastes.SoundManager.CueInstance;
 import cerastes.fmt.CUIResource;
 import h2d.Object;
+
+enum CueChannel {
+	SFX;
+	Music;
+}
 
 @:keep
 class Sound extends h2d.Object
 {
 	public var cue: String;
 
-	var handle: hxd.res.Sound;
+	var handle: CueInstance;
 	public var volume: Float = 1;
 	public var loop: Bool = false;
+	public var channel: CueChannel = SFX;
 
 	public function new( ?parent: Object )
 	{
@@ -19,26 +26,10 @@ class Sound extends h2d.Object
 
 	public function play( )
 	{
-		if( handle == null )
-		{
-			var path = cue;
-			if( !hxd.Res.loader.exists(path ) )
-			{
-				path = 'sfx/${cue}.ogg';
-				if( !hxd.Res.loader.exists(path ) )
-				{
-					path = 'audio/${cue}.ogg';
-					if( !hxd.Res.loader.exists(path ) )
-					{
-						Utils.error('Failed to resolve an asset path for cue ${cue}');
-						return null;
-					}
-				}
-			}
-			handle = hxd.Res.loader.load(path).toSound();
-		}
-		handle.stop();
-		return handle.play(loop, volume);
+		handle = SoundManager.play( cue, channel == Music ? SoundManager.musicChannelGroup : SoundManager.sfxChannelGroup );
+		handle.channel.volume = volume;
+		handle.channel.loop = loop;
+		return handle.channel;
 	}
 
 	public function stop( )

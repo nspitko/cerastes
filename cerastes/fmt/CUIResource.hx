@@ -226,6 +226,7 @@ enum abstract CUITristateBool(Int) from Int to Int {
 	public var cue: String = null;
 	public var volume: Float = 1;
 	public var loop: Bool = false;
+	public var channel: cerastes.ui.Sound.CueChannel = cerastes.ui.Sound.CueChannel.SFX;
 }
 
 @:structInit class CUIEntity extends CUIObject {
@@ -1062,6 +1063,7 @@ class CUIResource extends Resource
 				o.cue = e.cue;
 				o.volume = e.volume;
 				o.loop = e.loop;
+				o.channel = e.channel;
 
 
 			default:

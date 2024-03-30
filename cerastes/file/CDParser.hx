@@ -180,6 +180,7 @@ class CDParser {
 								if (field == null)
 									invalidChar();
 
+
 								var fstr = field.toString();
 								var assumeType: String = getMetaForField( fstr, "serializeType", cls );
 								//if( assumeType != null )

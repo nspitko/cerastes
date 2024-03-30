@@ -122,7 +122,7 @@ class ModelDef
 			}
 			else
 			{
-				var prim = @:privateAccess library.makePrimitive(m.geometry);
+				var prim = @:privateAccess library.makePrimitive(m);
 
 				if( m.skin != null )
 				{

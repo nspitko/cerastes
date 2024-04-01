@@ -184,7 +184,7 @@ class App extends hxd.App {
 		if( !noTools )
 			ImGuiToolManager.enabled = !ImGuiToolManager.enabled;
 
-		
+
 		ImGuiToolManager.showTool("Perf");
 		ImGuiToolManager.showTool("AssetBrowser");
 		ImGuiToolManager.showTool("Console");
@@ -338,10 +338,19 @@ class App extends hxd.App {
 
 			Metrics.begin("ImGuiToolManager.Render");
 			ImGuiToolManager.render(e);
+
+
+		// Everything else
+			s2d.render(e);
+
+			var io = ImGui.getIO();
+			if ((io.ConfigFlags & ImGuiConfigFlags.ViewportsEnable) != 0 )
+			{
+				ImGui.updatePlatformWindows();
+				ImGui.renderPlatformWindowsDefault(null, engine);
+			}
 			Metrics.end();
 
-			// Everything else
-			s2d.render(e);
 
 
 		}

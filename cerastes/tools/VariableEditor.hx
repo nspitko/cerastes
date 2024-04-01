@@ -146,8 +146,8 @@ class VariableEditor extends ImguiTool
 			ImGui.endChild();
 
 
-			ImGui.end();
 		}
+		ImGui.end();
 		Metrics.end();
 	}
 

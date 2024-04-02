@@ -132,7 +132,8 @@ class ImGuiToolManager
 		enabled = v;
 		if( enabled )
 		{
-			// Temp
+			#if !multidriver
+
 			#if hlsdl
 			sdl.Sdl.setRelativeMouseMode(false);
 			#end
@@ -140,18 +141,18 @@ class ImGuiToolManager
 			@:privateAccess hxd.Window.getInstance().window.clipCursor(false);
 			#end
 
-			#if !multidriver
 			@:privateAccess hxd.Window.getInstance().window.maximize();
-			#end
 			cerastes.App.currentScene.disableEvents();
 
 			hxd.System.setNativeCursor( hxd.Cursor.Default );
+			#end
 		}
 		else
 		{
+			#if !multidriver
 			@:privateAccess hxd.Window.getInstance().window.restore();
 			cerastes.App.currentScene.enableEvents();
-
+			#end
 
 			// Clear imgui context
 			ImGui.newFrame();
@@ -340,7 +341,7 @@ class ImGuiToolManager
 					// if multi driver was what we wanted, but it isn't, so slam the context.
 					// Additionally, store off the created context so we can set it back during window destroy
 					// since heaps always destroys the context alongside the window
-					v.PlatformHandleRaw = cast w.window.glctx;
+					v.PlatformHandleRaw = w.window.glctx;
 					w.window.glctx = mainWindow.window.glctx;
 
 				}

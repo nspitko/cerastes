@@ -671,4 +671,24 @@ class Utils
 		return [ Utils.invalidTile() ];
 
 	}
+
+	public static function clone( source: Dynamic )
+	{
+		var cls = Type.getClass(source);
+		var inst = Type.createEmptyInstance(cls);
+		var fields = Type.getInstanceFields(cls);
+		for (field in fields)
+		{
+
+			// generic copy
+			var val:Dynamic = Reflect.field(source,field);
+			if ( !Reflect.isFunction(val) )
+			{
+				Reflect.setField(inst,field,val);
+			}
+
+		}
+
+		return inst;
+	}
 }

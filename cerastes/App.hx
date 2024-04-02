@@ -85,7 +85,9 @@ class App extends hxd.App {
 	// This MUST BE static! Memory referenced here can never go away or bad things happen
 	static var ranges: hl.NativeArray<hl.UI16>;
 
+	#if !multidriver
 	public var sceneEvents: SceneEvents;
+	#end
 
 	#end
 
@@ -116,7 +118,9 @@ class App extends hxd.App {
 
 		ImGuiToolManager.init();
 
+		#if !multidriver
 		sceneEvents = new SceneEvents();
+		#end
 
 		#end
 

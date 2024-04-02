@@ -66,7 +66,7 @@ class Scene
         s2d.addChild( cerastes.c2d.DebugDraw.g );
 
 
-        #if hlimgui
+        #if ( hlimgui  && !multidriver )
         if( ImGuiToolManager.enabled )
         {
             cerastes.App.instance.sceneEvents.removeScene( s2d );
@@ -167,7 +167,7 @@ class Scene
         app.sevents.removeScene(this.s3d);
         app.sevents.removeScene(this.s2d);
 
-        #if hlimgui
+        #if ( hlimgui && !multidriver )
         if( ImGuiToolManager.enabled )
         {
             cerastes.App.instance.sceneEvents.removeScene( s2d );

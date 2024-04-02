@@ -125,6 +125,8 @@ class ImGuiToolManager
 
 	static var vec2: ImVec2S = {x:0, y:0};
 
+	static var mainWindow: hxd.Window;
+
 	static function set_enabled(v)
 	{
 		enabled = v;
@@ -243,16 +245,6 @@ class ImGuiToolManager
 
 	public static function init()
 	{
-		test = new h2d.Scene();
-		var bmp = new h2d.Bitmap( h2d.Tile.fromColor(0xFF0000), test );
-		bmp.width = 100000;
-		bmp.height = 100000;
-
-		var g = new h2d.Graphics(test);
-		g.beginFill(0x0000FF);
-		g.drawCircle(0,0,200);
-		g.endFill();
-
 		var io = ImGui.getIO();
 		io.ConfigFlags |= DockingEnable;
 
@@ -262,10 +254,11 @@ class ImGuiToolManager
 		io.BackendFlags |= ImGuiBackendFlags.RendererHasViewports;
 		io.BackendFlags |= ImGuiBackendFlags.HasMouseHoveredViewport;
 
-		var v = ImGui.viewportSetMainViewport( hxd.Window.getInstance() );
+		mainWindow = hxd.Window.getInstance();
+		var v = ImGui.viewportSetMainViewport( mainWindow );
 		if( v != null )
 		{
-			var w= hxd.Window.getInstance();
+			var w= mainWindow;
 			w.onClose = () -> {
 				// @todo: Alignment!!
 				v.PlatformRequestClose = true;
@@ -381,8 +374,7 @@ class ImGuiToolManager
 
 				v.PlatformHandle = w;
 
-
-				//v.PlatformUserData = e;
+				mainWindow.setCurrent();
 
 			}
 		});
@@ -482,22 +474,7 @@ class ImGuiToolManager
 			if( !v.PlatformWindowCreated || v.PlatformHandle == null )
 				return;
 
-			// @todo: We should detect this properly and choose a better callback to do this bookkeeping.
-			//if( v.PlatformWindowCreated )
-			//	v.PlatformRequestMove = true;
-			/*
-			trace('ID: ${v.ID}');
-			trace('Flags: ${v.Flags}');
-			trace('DPIScale: ${v.DpiScale}');
-			trace('Size: ${v.Size.x}x${v.Size.y}');
-			trace('WorkSize: ${v.WorkSize.x}x${v.WorkSize.y}');
-			trace('Parent Viewport ID: ${v.ParentViewportId}');
-
-			trace('PlatformWindowCreated: ${v.PlatformWindowCreated}');
-			trace('PlatformRequestMove: ${v.PlatformRequestMove}');
-			trace('PlatformRequestResize: ${v.PlatformRequestResize}');
-			trace('PlatformRequestClose: ${v.PlatformRequestClose}');
-			*/
+			Metrics.begin("ImGui.RendererRenderWindow");
 
 			var oldWin = hxd.Window.getInstance();
 
@@ -505,7 +482,7 @@ class ImGuiToolManager
 			var w = v.PlatformHandle;
 
 			//@:privateAccess sdl.Window.winRenderTo(null, null);
-			w.setCurrent();
+
 			//sdl.GL.viewport(0,0,1000,1000);
 
 
@@ -515,76 +492,50 @@ class ImGuiToolManager
 				var oldH = e.height;
 				var oldScaleMode = cerastes.App.instance.s2d.scaleMode;
 
-				//var oldCtx = cerastes.App.instance.s2d.ctx
-
+				w.setCurrent();
 				e.window = w;
 				e.resize(w.width, w.height);
-				//e.width = w.width;
-				//e.height = w.height;
+				e.clear(0x005533);
 
 
-				//var s = cerastes.App.instance.s2d.getScene();
-				//s.window = w;
-
-
-
-				//e.setRenderZone(0,0,20,20);
-				//e.window = w;
-				//e.setCurrent();
-				//e.clear(0x00FFF0,1);
-
-				//e.
-
-				Metrics.begin("ImGui.RendererRenderWindow");
-				//cerastes.App.currentScene.s2d.setElapsedTime( ImGui.getIO().DeltaTime );
 				@:privateAccess cerastes.App.instance.s2d.window = w;
-				//@:privateAccess cerastes.App.instance.s2d.render( e );
-				//@:privateAccess cerastes.App.currentScene.render( e );
-				//test.window = w;
-				//cerastes.App.instance.s2d.window = w;
+
 				cerastes.App.instance.s2d.width = w.width;
 				cerastes.App.instance.s2d.height = w.height;
-
 				cerastes.App.instance.s2d.scaleMode = Fixed(w.width, w.height, 1);
 
 				@:privateAccess cerastes.App.instance.s2d.render( e );
 
 				cerastes.App.instance.s2d.width = oldW;
 				cerastes.App.instance.s2d.height = oldH;
-
-
-
-
-				Metrics.end();
-
-				//e.width = oldW;
-				//e.height = oldH;
-
-				//trace(w.window.glctx);
-
-				w.window.present();
-
-				//@:privateAccess cerastes.App.instance.s2d.window = oldWin;
-				//s.window = oldWin;
-				e.resize(oldW, oldH);
-				e.window = oldWin;
 				cerastes.App.instance.s2d.scaleMode = oldScaleMode;
+
+				@:privateAccess cerastes.App.instance.s2d.window = oldWin;
+
+				oldWin.setCurrent();
+				e.window = oldWin;
+				e.resize(oldW, oldH);
+
+
+
 			}
 
-			//@:privateAccess sdl.Window.winRenderTo(null, null);
-			oldWin.setCurrent();
 
+			Metrics.end();
 
 		});
-/*
+
 		ImGui.viewportSetRendererSwapBuffers( ( v: ImGuiViewport, arg: Dynamic ) -> {
+
+			Metrics.begin("ImGuiToolManager.Present");
 			var oldWin = hxd.Window.getInstance();
 			var w = v.PlatformHandle;
 			w.setCurrent();
 			@:privateAccess w.window.present();
 			oldWin.setCurrent();
+			Metrics.end();
 		});
-*/
+
 		#end
 
 
@@ -707,6 +658,52 @@ class ImGuiToolManager
 
 	}
 
+	public static function drawMenuBar()
+	{
+		// Menu bar
+		if( ImGui.beginMenu("Tools", true) )
+		{
+			if (ImGui.menuItem("Perf", "Alt+P"))
+				ImGuiToolManager.showTool("Perf");
+
+			if (ImGui.menuItem("UI Editor", "Alt+U"))
+				ImGuiToolManager.showTool("UIEditor");
+
+			if (ImGui.menuItem("Flow Editor", "Alt+U"))
+				ImGuiToolManager.showTool("FlowEditor");
+
+			if (ImGui.menuItem("Asset Browser", "Alt+B"))
+				ImGuiToolManager.showTool("AssetBrowser");
+
+			if (ImGui.menuItem("Model Editor"))
+				ImGuiToolManager.showTool("ModelEditor");
+
+			if (ImGui.menuItem("Material Editor"))
+				ImGuiToolManager.showTool("MaterialEditor");
+
+			if (ImGui.menuItem("Atlas Builder"))
+				ImGuiToolManager.showTool("AtlasBuilder");
+
+			if (ImGui.menuItem("Tile Map Editor"))
+				ImGuiToolManager.showTool("TileMapEditor");
+
+
+			for( c in customTools )
+			{
+				if( ImGui.menuItem( c.title ) )
+					ImGuiToolManager.showTool(c.cls);
+			}
+
+			ImGui.separator();
+
+			if (ImGui.menuItem("Style Editor"))
+				styleWindowOpen = !styleWindowOpen;
+
+			ImGui.endMenu();
+		}
+
+	}
+
 
 	public static function update( delta: Float )
 	{
@@ -715,53 +712,6 @@ class ImGuiToolManager
 		// Set global font
 		ImGui.pushFont( ImGuiToolManager.defaultFont );
 
-		// Menu bar
-		if( ImGui.beginMainMenuBar() )
-		{
-			var size = ImGui.getWindowSize();
-			menubarHeight = size.y;
-			if( ImGui.beginMenu("Tools", true) )
-			{
-				if (ImGui.menuItem("Perf", "Alt+P"))
-					ImGuiToolManager.showTool("Perf");
-
-				if (ImGui.menuItem("UI Editor", "Alt+U"))
-					ImGuiToolManager.showTool("UIEditor");
-
-				if (ImGui.menuItem("Flow Editor", "Alt+U"))
-					ImGuiToolManager.showTool("FlowEditor");
-
-				if (ImGui.menuItem("Asset Browser", "Alt+B"))
-					ImGuiToolManager.showTool("AssetBrowser");
-
-				if (ImGui.menuItem("Model Editor"))
-					ImGuiToolManager.showTool("ModelEditor");
-
-				if (ImGui.menuItem("Material Editor"))
-					ImGuiToolManager.showTool("MaterialEditor");
-
-				if (ImGui.menuItem("Atlas Builder"))
-					ImGuiToolManager.showTool("AtlasBuilder");
-
-				if (ImGui.menuItem("Tile Map Editor"))
-					ImGuiToolManager.showTool("TileMapEditor");
-
-
-				for( c in customTools )
-				{
-					if( ImGui.menuItem( c.title ) )
-						ImGuiToolManager.showTool(c.cls);
-				}
-
-				ImGui.separator();
-
-				if (ImGui.menuItem("Style Editor"))
-					styleWindowOpen = !styleWindowOpen;
-
-				ImGui.endMenu();
-			}
-			ImGui.endMainMenuBar();
-		}
 
 		Metrics.begin("ImGui.showDemoWindow");
 		//ImGui.showDemoWindow();
@@ -770,10 +720,21 @@ class ImGuiToolManager
 
 		Metrics.end();
 
-		//drawTaskBar();
+
+
+		#if !multidriver
+		var size = ImGui.getWindowSize();
+		menubarHeight = size.y;
+		if( ImGui.beginMainMenuBar() )
+		{
+			drawMenuBar();
+			ImGui.endMainMenuBar();
+		}
+		drawTaskBar();
 
 		// Draw preview window
 		ImGuiToolManager.drawScene();
+		#end
 
 		// Make sure there aren't any tool ID collisions
 		var toolMap: Map<String, ImguiTool> = [];
@@ -813,6 +774,7 @@ class ImGuiToolManager
 			offset = renderPopup( popup, i, offset );
 		}
 
+		#if !multidriver
 		var s2d = cerastes.App.currentScene.s2d;
 		@:privateAccess
 		{
@@ -822,6 +784,7 @@ class ImGuiToolManager
 			if( previewEvents.scenes.length == 0 )
 				previewEvents.addScene( s2d );
 		}
+		#end
 
 
 
@@ -884,6 +847,8 @@ class ImGuiToolManager
 			t.render( e );
 		Metrics.end();
 
+		#if !multidriver
+
 		Metrics.begin("Scene Render");
 		// Render current scene to texture
 		sceneRT.clear( 0 );
@@ -911,6 +876,7 @@ class ImGuiToolManager
 
 		e.popTarget();
 		Metrics.end();
+		#end
 	}
 
 	public static function addFont( file: String, size: Float, includeGlyphs: Bool = false )

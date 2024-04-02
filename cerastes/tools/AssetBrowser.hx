@@ -582,7 +582,19 @@ class AssetBrowser  extends  ImguiTool
 		}
 
 		ImGui.setNextWindowSize({x: 700 * scaleFactor, y: 400 * scaleFactor}, ImGuiCond.Once);
-		ImGui.begin("\uf07c Asset browser", isOpenRef, ImGuiWindowFlags.NoDocking);
+		var flags = ImGuiWindowFlags.NoDocking;
+		#if multidriver
+		flags |= ImGuiWindowFlags.MenuBar;
+		#end
+		ImGui.begin("\uf07c Asset browser", isOpenRef, flags);
+
+		#if multidriver
+		if( ImGui.beginMenuBar() )
+		{
+			ImGuiToolManager.drawMenuBar();
+			ImGui.endMenuBar();
+		}
+		#end
 
 		var text = IG.textInput("##Filter",filterText);
 		if( text != null )

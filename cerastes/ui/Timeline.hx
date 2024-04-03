@@ -189,13 +189,15 @@ class TimelineRunner implements Tickable
 		time = 0;
 		playing = true;
 		finished = false;
+		ensureState();
 
-		// 3/13/24 @spitko This is a bug factory so I wanted to remove it but
-		// it's still an issue.
+		// 3/17/24 @nspitko maybe fixed this? Changed the tick 0 to a tick 0.000001,
+		// this shoudl be functionally the same but will prevent re-triggering first
+		// frame logic a second time on our first "real" tick
 		//
 		// Hack: Immediately play first frame so we can set out initial state
 		// (else we might go visible for one frame in the wrong state)
-		tick(0);
+		tick(0.000001);
 	}
 
 	function ensureState()
@@ -253,6 +255,7 @@ class TimelineRunner implements Tickable
 
 	public function resume()
 	{
+		ensureState();
 		playing = true;
 		for( s in playingSounds )
 			s.pause = false;
@@ -320,17 +323,20 @@ class TimelineRunner implements Tickable
 
 		time = 0;
 
-		// Revert state
-		var idx = timeline.operations.length-1;
-		while( idx >= 0 )
+		// Revert state if it's still valid.
+		if( timeline.operations.length == timelineState.length )
 		{
-			var op = timeline.operations[idx];
-			var state = timelineState[idx];
-			if( op.key != null && state.targetHandle != null )
+			var idx = timeline.operations.length-1;
+			while( idx >= 0 )
 			{
-				Reflect.setProperty(state.targetHandle, op.key, state.startValue);
+				var op = timeline.operations[idx];
+				var state = timelineState[idx];
+				if( op.key != null && state.targetHandle != null )
+				{
+					Reflect.setProperty(state.targetHandle, op.key, state.startValue);
+				}
+				idx--;
 			}
-			idx--;
 		}
 
 		ensureState();

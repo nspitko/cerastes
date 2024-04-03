@@ -1,5 +1,6 @@
 package cerastes.fmt;
 
+import h3d.mat.Texture;
 import haxe.io.Path;
 import h2d.Tile;
 import cerastes.file.CDParser;
@@ -243,7 +244,7 @@ enum PackMode {
 		rebuildLinks();
 	}
 
-	public function pack( file: String, ?onComplete: Void -> Void )
+	public function pack( file: String, save: Bool = true, ?onComplete: Void -> Void )
 	{
 		// Don't pack if we don't have a filename
 		if( file == null )
@@ -259,13 +260,13 @@ enum PackMode {
 
 		//jobWorkerThread = Thread.create(jobWorker);
 		fileName = file;
-		jobWorker( onComplete );
+		jobWorker( save, onComplete );
 
 
 	}
 
 
-	function jobWorker( ?onComplete: Void -> Void  )
+	function jobWorker( save: Bool, ?onComplete: Void -> Void  )
 	{
 		if( pool != null )
 			return;
@@ -372,8 +373,18 @@ enum PackMode {
 		var texFile = StringTools.replace(fileName,".catlas","_tex.png");
 		var bytes = pixels.toPNG();
 		textureFile = texFile;
-		sys.io.File.saveBytes( 'res/${textureFile}', bytes);
-		sys.io.File.saveContent( 'res/${fileName}', CDPrinter.print( this ) );
+		if( save )
+		{
+			sys.io.File.saveBytes( 'res/${textureFile}', bytes);
+			sys.io.File.saveContent( 'res/${fileName}', CDPrinter.print( this ) );
+		}
+		else
+		{
+			// Just update our in-memory texture
+			pixels.convert(hxd.PixelFormat.RGBA);
+			var t = Texture.fromPixels(pixels);
+			@:privateAccess tile.innerTex = t;
+		}
 
 
 		#if hlimgui

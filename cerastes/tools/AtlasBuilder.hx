@@ -1,7 +1,8 @@
 package cerastes.tools;
 
-import cerastes.ui.Anim;
 #if hlimgui
+import hxd.DropFileEvent;
+import cerastes.ui.Anim;
 using imgui.ImGui.ImGuiKeyStringExtender;
 import cerastes.fmt.CUIResource;
 import cerastes.fmt.AtlasResource.PackMode;
@@ -70,6 +71,8 @@ class AtlasBuilder  extends  ImguiTool
 	static var globalIndex = 0;
 	var index = 0;
 
+	var isInspectorHovered: Bool = false;
+
 	public override function getName() { return '\uf247 Atlas Editor (${fileName})'; }
 
 	public function new()
@@ -109,6 +112,35 @@ class AtlasBuilder  extends  ImguiTool
 
 	}
 
+	override function onWindowChanged( w: hxd.Window )
+	{
+		if( window != null )
+		{
+			window.removeDragAndDropTarget( onFileDrop );
+		}
+		if( w != null )
+			w.addDragAndDropTarget( onFileDrop );
+	}
+
+
+	function onFileDrop( event : DropFileEvent )
+	{
+		if( isInspectorHovered && selectedEntry != null )
+		{
+			for( f in event.files )
+				addFrame( selectedEntry, f.file );
+		}
+		else
+		{
+			for( f in event.files )
+				addSprite( f.file );
+		}
+
+		if( fileName != null && fileName != "")
+			atlas.pack( fileName, false );
+
+	}
+
 
 	override public function update( delta: Float )
 	{
@@ -136,6 +168,10 @@ class AtlasBuilder  extends  ImguiTool
 
 		ImGui.setNextWindowDockId( dockspaceIdCenter, dockCond );
 		ImGui.begin('View##${windowID()}', null, ImGuiWindowFlags.NoMove | ImGuiWindowFlags.HorizontalScrollbar );
+
+		var vp = ImGui.viewportGetCurrentViewport();
+		setWindow( vp.PlatformHandle );
+
 		handleShortcuts();
 
 		var text = IG.textInput("##Filter",filterText,"Filter");
@@ -303,6 +339,12 @@ class AtlasBuilder  extends  ImguiTool
 
 
 		} // end selected entry
+
+		var wpos = ImGui.getWindowPos();
+		var wsize = ImGui.getWindowSize();
+		var mouse = ImGui.getMousePos();
+		isInspectorHovered =	wpos.x < mouse.x && wpos.x + wsize.x > mouse.x &&
+								wpos.y < mouse.y && wpos.y + wsize.y > mouse.y;
 
 		ImGui.end();
 	}
@@ -556,14 +598,17 @@ class AtlasBuilder  extends  ImguiTool
 		#end
 	}
 
-	function addSprite()
+	function addSprite(newFile: String = null)
 	{
-		var newFile = UI.loadFile({
-			title:"Add Sprite...",
-			filters:[
-			{name:"Images", exts:["png"]}
-			]
-		});
+		if( newFile == null )
+		{
+			newFile = UI.loadFile({
+				title:"Add Sprite...",
+				filters:[
+				{name:"Images", exts:["png"]}
+				]
+			});
+		}
 		if( newFile != null )
 		{
 			var fileName = Utils.toLocalFile( newFile );
@@ -575,16 +620,21 @@ class AtlasBuilder  extends  ImguiTool
 			}
 
 		}
+
+		atlas.rebuildLinks();
 	}
 
-	function addFrame( entry: AtlasEntry )
+	function addFrame( entry: AtlasEntry, newFile: String = null )
 	{
-		var newFile = UI.loadFile({
-			title:"Add Frame...",
-			filters:[
-			{name:"Images", exts:["png"]}
-			]
-		});
+		if( newFile == null )
+		{
+			newFile = UI.loadFile({
+				title:"Add Frame...",
+				filters:[
+				{name:"Images", exts:["png"]}
+				]
+			});
+		}
 		if( newFile != null )
 		{
 			var fileName = Utils.toLocalFile( newFile );

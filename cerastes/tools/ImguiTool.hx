@@ -32,6 +32,7 @@ class ImguiTool
 	public var toolId: Int = 0;
 	public var forceFocus: Bool = false;
 	public var fileName: String = null;
+	public var window: hxd.Window = null;
 
 	public function update( delta: Float ) {}
 	public function render( e: h3d.Engine)	{}
@@ -46,6 +47,21 @@ class ImguiTool
 	public function getName() {	return "Untitled"; }
 
 	public function openFile( file: String ) {};
+
+	public function setWindow( w: hxd.Window )
+	{
+		if( window != w )
+		{
+			onWindowChanged(w);
+			window = w;
+
+		}
+	}
+
+	function onWindowChanged( newWindow: hxd.Window )
+	{
+
+	}
 }
 
 enum ImGuiPopupType
@@ -364,7 +380,12 @@ class ImGuiToolManager
 				@:privateAccess
 				{
 					var d = cerastes.App.instance.drawable;
-					w.addEventTarget( ( e: hxd.Event ) -> { d.onMultiWindowEvent( w, e, v ); } );
+					w.addEventTarget( ( e: hxd.Event ) -> {
+						d.onMultiWindowEvent( w, e, v );
+						// Window events should NEVER propagate down; heaps isn't listening for them so we need to
+						// do this to prevent the OS chime from playing on key press.
+						e.propagate = false; }
+					);
 				}
 
 
@@ -723,7 +744,7 @@ class ImGuiToolManager
 
 
 		Metrics.begin("ImGui.showDemoWindow");
-		//ImGui.showDemoWindow();
+		ImGui.showDemoWindow();
 		if( styleWindowOpen )
 			ImGui.showStyleEditor();
 

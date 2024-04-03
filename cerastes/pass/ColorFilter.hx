@@ -1,5 +1,6 @@
 package cerastes.pass;
 
+import h3d.mat.Data.TextureFlags;
 #if hlimgui
 import imgui.ImGui;
 import imgui.ImGuiMacro.wref;
@@ -122,7 +123,8 @@ class ColorPass extends h3d.pass.ScreenFx<ColorShader> {
 
 		var isCube = src.flags.has(Cube);
 		var faceCount = isCube ? 6 : 1;
-		var tmp = ctx.textures.allocTarget(src.name+"ColorTmp", src.width, src.height, false, src.format, isCube);
+		var flags = isCube ? [ TextureFlags.Cube ] : null;
+		var tmp = ctx.textures.allocTarget(src.name+"ColorTmp", src.width, src.height, false, src.format, flags);
 
 
 		for(i in 0 ... faceCount){

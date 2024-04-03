@@ -14,11 +14,11 @@ class CircleDisintegrateFilter extends Filter {
 	inline function get_time() return pass.shader.time;
 	inline function set_time(v: Float) return pass.shader.time = v ;
 
-	public var color1(get, set) : hxsl.Types.Vec;
+	public var color1(get, set) : hxsl.Types.Vec4;
 	inline function get_color1() return pass.shader.color1;
 	inline function set_color1(v) return pass.shader.color1 = v;
 
-	public var color2(get, set) : hxsl.Types.Vec;
+	public var color2(get, set) : hxsl.Types.Vec4;
 	inline function get_color2() return pass.shader.color2;
 	inline function set_color2(v) return pass.shader.color2 = v;
 

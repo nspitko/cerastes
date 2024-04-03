@@ -1,4 +1,5 @@
 package cerastes.pass;
+import h3d.mat.Data.TextureFlags;
 import cerastes.shaders.CircleDisintegrateShader;
 import h3d.Vector4;
 
@@ -12,11 +13,11 @@ class CircleDisintegratePass extends h3d.pass.ScreenFx<CircleDisintegrateShader>
 	inline function get_time() return shader.time;
 	inline function set_time(v) return shader.time = v;
 
-	public var color1(get, set) : hxsl.Types.Vec;
+	public var color1(get, set) : hxsl.Types.Vec4;
 	inline function get_color1() return shader.color1;
 	inline function set_color1(v) return shader.color1 = v;
 
-	public var color2(get, set) : hxsl.Types.Vec;
+	public var color2(get, set) : hxsl.Types.Vec4;
 	inline function get_color2() return shader.color2;
 	inline function set_color2(v) return shader.color2 = v;
 
@@ -64,7 +65,8 @@ class CircleDisintegratePass extends h3d.pass.ScreenFx<CircleDisintegrateShader>
 
 		var isCube = src.flags.has(Cube);
 		var faceCount = isCube ? 6 : 1;
-		var tmp = ctx.textures.allocTarget(src.name+"DitherTmp", src.width, src.height, false, src.format, isCube);
+		var flags = isCube ? [ TextureFlags.Cube ] : null;
+		var tmp = ctx.textures.allocTarget(src.name+"DitherTmp", src.width, src.height, false, src.format, flags);
 
 
 		for(i in 0 ... faceCount){

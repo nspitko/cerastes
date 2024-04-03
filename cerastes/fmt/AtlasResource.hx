@@ -18,6 +18,7 @@ import sys.thread.Lock;
 import sys.thread.Thread;
 #end
 
+@:keep
 enum PackMode {
 	MaxRects;
 	Guillotine;

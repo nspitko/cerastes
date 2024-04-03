@@ -160,11 +160,7 @@ class TimelineRunner implements Tickable
 	inline function frameToTime( frame: Int ): Float { return frame / timeline.frameRate; }
 	inline function timeToFrame( time: Float ): Int { return Math.floor( time * timeline.frameRate ); }
 
-
-
-	#if hlimgui
 	@noSerialize var playingSounds: Array<Channel> = [];
-	#end
 
 	@noSerialize public var frame(get, never): Int;
 	@noSerialize public var time: Float = 0;
@@ -459,11 +455,9 @@ class TimelineRunner implements Tickable
 						{
 							channel.position = adjTime;
 						}
-						#if hlimgui
 						if( playingSounds == null )
 							playingSounds = [];
 						playingSounds.push(channel);
-						#end
 					}
 
 				case SoundStop:

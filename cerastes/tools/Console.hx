@@ -75,8 +75,8 @@ class Console extends ImguiTool
 				ImGui.setKeyboardFocusHere(-1);
 			}
 
-			ImGui.end();
 		}
+		ImGui.end();
 		Metrics.end();
 	}
 

@@ -1,12 +1,11 @@
 
 package cerastes.tools;
 
-
+#if hlimgui
 import cerastes.tools.ImguiTools.ImGuiTools;
 import cerastes.tools.ImguiTools.IGTimelineState;
 import cerastes.c2d.Vec2;
 import h2d.BlendMode;
-#if hlimgui
 
 import h3d.scene.Object.ObjectFlags;
 import cerastes.ui.Timeline;

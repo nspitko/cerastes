@@ -85,7 +85,9 @@ class App extends hxd.App {
 	// This MUST BE static! Memory referenced here can never go away or bad things happen
 	static var ranges: hl.NativeArray<hl.UI16>;
 
+	#if !multidriver
 	public var sceneEvents: SceneEvents;
+	#end
 
 	#end
 
@@ -116,7 +118,9 @@ class App extends hxd.App {
 
 		ImGuiToolManager.init();
 
+		#if !multidriver
 		sceneEvents = new SceneEvents();
+		#end
 
 		#end
 
@@ -184,7 +188,7 @@ class App extends hxd.App {
 		if( !noTools )
 			ImGuiToolManager.enabled = !ImGuiToolManager.enabled;
 
-		
+
 		ImGuiToolManager.showTool("Perf");
 		ImGuiToolManager.showTool("AssetBrowser");
 		ImGuiToolManager.showTool("Console");
@@ -329,6 +333,38 @@ class App extends hxd.App {
 	{
 		Metrics.begin();
 
+		#if (hlimgui && multidriver)
+		Metrics.begin("ImGuiToolManager.Render");
+		ImGuiToolManager.render(e);
+		Metrics.end();
+
+
+
+		Metrics.begin("ImGui.render");
+		ImGui.render();
+		Metrics.end();
+
+
+		Metrics.begin("currentScene.render");
+		currentScene.render(e);
+		Metrics.end();
+
+
+
+		Metrics.begin("s2d.render");
+		s2d.render(e);
+		Metrics.end();
+
+		var io = ImGui.getIO();
+		if ((io.ConfigFlags & ImGuiConfigFlags.ViewportsEnable) != 0 )
+		{
+			ImGui.updatePlatformWindows();
+			ImGui.renderPlatformWindowsDefault(null, engine);
+		}
+
+
+		#else
+
 		#if hlimgui
 		if( ImGuiToolManager.enabled )
 		{
@@ -340,9 +376,16 @@ class App extends hxd.App {
 			ImGuiToolManager.render(e);
 			Metrics.end();
 
-			// Everything else
+			Metrics.begin("s2d.render");
 			s2d.render(e);
+			Metrics.end();
 
+			var io = ImGui.getIO();
+			if ((io.ConfigFlags & ImGuiConfigFlags.ViewportsEnable) != 0 )
+			{
+				ImGui.updatePlatformWindows();
+				ImGui.renderPlatformWindowsDefault(null, engine);
+			}
 
 		}
 		else
@@ -360,6 +403,7 @@ class App extends hxd.App {
 			Metrics.end();
 		#if hlimgui
 		}
+		#end
 		#end
 
 		Metrics.end();

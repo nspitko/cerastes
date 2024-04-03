@@ -1,7 +1,9 @@
 
 package cerastes.tools;
-import hl.UI;
+import h3d.impl.GlDriver;
+import h3d.impl.DirectXDriver;
 #if hlimgui
+import hl.UI;
 import haxe.io.Path;
 import cerastes.file.CDPrinter;
 import sys.io.File;
@@ -76,8 +78,6 @@ class ImGuiToolManagerState
 {
 	public var openFiles: Array<String> = [];
 	public var previewScale: Int = 1;
-	public var show2DExplorer: Bool = false;
-	public var show3DExplorer: Bool = false;
 }
 
 class ImGuiToolManager
@@ -120,15 +120,20 @@ class ImGuiToolManager
 	static var nextWindowFocus: String = null;
 
 	static var styleWindowOpen: Bool = false;
-	static var show2DExplorer: Bool = false;
-	static var show3DExplorer: Bool = false;
+
+	public static var test: h2d.Scene;
+
+	static var vec2: ImVec2S = {x:0, y:0};
+
+	static var mainWindow: hxd.Window;
 
 	static function set_enabled(v)
 	{
 		enabled = v;
 		if( enabled )
 		{
-			// Temp
+			#if !multidriver
+
 			#if hlsdl
 			sdl.Sdl.setRelativeMouseMode(false);
 			#end
@@ -140,12 +145,14 @@ class ImGuiToolManager
 			cerastes.App.currentScene.disableEvents();
 
 			hxd.System.setNativeCursor( hxd.Cursor.Default );
+			#end
 		}
 		else
 		{
+			#if !multidriver
 			@:privateAccess hxd.Window.getInstance().window.restore();
 			cerastes.App.currentScene.enableEvents();
-
+			#end
 
 			// Clear imgui context
 			ImGui.newFrame();
@@ -212,8 +219,6 @@ class ImGuiToolManager
 		}
 
 		s.previewScale = previewScale;
-		s.show2DExplorer = show2DExplorer;
-		s.show3DExplorer = show3DExplorer;
 
 		sys.io.File.saveContent( "cerastesToolState.sav", CDPrinter.print( s ) );
 	}
@@ -238,10 +243,302 @@ class ImGuiToolManager
 		}
 	}
 
+
 	public static function init()
 	{
 		var io = ImGui.getIO();
 		io.ConfigFlags |= DockingEnable;
+
+		#if multidriver
+		io.ConfigFlags |= ViewportsEnable;
+		io.BackendFlags |= ImGuiBackendFlags.PlatformHasViewports;
+		io.BackendFlags |= ImGuiBackendFlags.RendererHasViewports;
+		io.BackendFlags |= ImGuiBackendFlags.HasMouseHoveredViewport;
+
+		mainWindow = hxd.Window.getInstance();
+		var v = ImGui.viewportSetMainViewport( mainWindow );
+		if( v != null )
+		{
+			var w= mainWindow;
+			w.onClose = () -> {
+				// @todo: Alignment!!
+				v.PlatformRequestClose = true;
+				return false;
+			}
+
+			w.onMove = () -> {
+				v.PlatformRequestMove = true;
+			}
+
+			// Get a handle to our drawable and add events. Yes it's gross.
+			@:privateAccess
+			{
+				var d = cerastes.App.instance.drawable;
+				w.addEventTarget( ( e: hxd.Event ) -> { d.onMultiWindowEvent( w, e, v ); } );
+			}
+
+
+			w.addResizeEvent(() -> {
+				v.PlatformRequestResize = true;
+			});
+
+		}
+
+
+		#if hlsdl
+		// This hint allows a focus click to also send events. Without this, you have to click a window
+		// once before you can interact with it, which feels really bad.
+		sdl.Sdl.setHint("SDL_MOUSE_FOCUS_CLICKTHROUGH", "1");
+		io.ConfigDockingTransparentPayload = true;
+
+		for( d in sdl.Sdl.getDisplays() )
+		{
+			trace(d);
+			ImGui.viewportAddMonitor( {
+				x: d.right - d.left,
+				y: d.bottom - d.top
+			}, {
+				x: d.left,
+				y: d.top
+			} );
+
+		}
+		#else
+		// @todo: need to pass position in.
+		for( m in hxd.Window.getMonitors() )
+		{
+			ImGui.viewportAddMonitor( { x: m.width, y: m.height }, { x: 0, y: 0 } );
+		}
+		#end
+
+
+		ImGui.viewportSetPlatformCreateWindow( ( v: ImGuiViewport ) -> {
+			@:privateAccess
+			{
+				#if hldx
+				var w = new hxd.Window("ImGui Viewport", 100,100,false);
+				var e = new h3d.Engine();
+				e.window = w;
+				var d3dDriver = new DirectXDriver();
+				e.driver = d3dDriver;
+				d3dDriver.window = w.window;
+				d3dDriver.reset();
+				d3dDriver.init(e.onCreate, !e.hardware);
+				#elseif hlsdl
+
+				var mainWindow = hxd.Window.inst;
+				var w = new hxd.Window("ImGui Viewport", 100,100,false);
+				w.displayMode = Borderless;
+				var e = h3d.Engine.getCurrent();
+				// Disable vsync on these windows; else we end up waiting for vblank for every individual window.
+				w.vsync = false;
+
+				@:privateAccess
+				{
+					w.window.visible = false;
+					// !! HACK !!
+					// Heaps always creates a new context when you create a window. That's perfectly reasonable
+					// if multi driver was what we wanted, but it isn't, so slam the context.
+					// Additionally, store off the created context so we can set it back during window destroy
+					// since heaps always destroys the context alongside the window
+					v.PlatformHandleRaw = w.window.glctx;
+					w.window.glctx = mainWindow.window.glctx;
+
+				}
+
+				#end
+
+				w.onClose = () -> {
+					// @todo: Alignment!!
+					v.PlatformRequestClose = true;
+					return false;
+				}
+
+				w.onMove = () -> {
+					v.PlatformRequestMove = true;
+				}
+
+				// Get a handle to our drawable and add events. Yes it's gross.
+				@:privateAccess
+				{
+					var d = cerastes.App.instance.drawable;
+					w.addEventTarget( ( e: hxd.Event ) -> { d.onMultiWindowEvent( w, e, v ); } );
+				}
+
+
+				w.addResizeEvent(() -> {
+					v.PlatformRequestResize = true;
+				});
+
+
+
+
+				v.PlatformHandle = w;
+
+				mainWindow.setCurrent();
+
+			}
+		});
+
+		ImGui.viewportSetPlatformDestroyWindow( ( v: ImGuiViewport ) -> {
+
+			@:privateAccess v.PlatformHandle.window.glctx = cast v.PlatformHandleRaw;
+
+			if( v.PlatformHandle != null )
+				v.PlatformHandle.close();
+
+			v.RendererUserData = null;
+			v.PlatformUserData = null;
+			v.PlatformHandle = null;
+
+		});
+
+		ImGui.viewportSetPlatformShowWindow( ( v: ImGuiViewport ) -> {
+			#if hlsdl
+			@:privateAccess v.PlatformHandle.window.visible = true;
+			#end
+		});
+
+		ImGui.viewportSetPlatformSetWindowPos( ( v: ImGuiViewport, size: ImVec2 ) -> {
+			#if hldx
+			var w: dx.Window = @:privateAccess v.PlatformHandle.window;
+			w.setPosition( cast size.x, cast size.y );
+			#elseif hlsdl
+			@:privateAccess v.PlatformHandle.window.setPosition( cast size.x, cast size.y );
+			#end
+		});
+
+		ImGui.viewportSetPlatformGetWindowPos( ( v: ImGuiViewport, pos: ImGuiVec2Struct ) -> {
+			// @todo
+			#if hlsdl
+			@:privateAccess
+			{
+				var x = 0;
+				var y = 0;
+				sdl.Window.winGetPosition( v.PlatformHandle.window.win, x, y );
+				pos.x = cast x;
+				pos.y = cast y;
+			}
+			#else
+			pos.x = 0;
+			pos.y = 0;
+			#end
+		});
+
+		ImGui.viewportSetPlatformSetWindowSize( ( v: ImGuiViewport, size: ImVec2 ) -> {
+			if( v.PlatformHandle.width == size.x && v.PlatformHandle.height == size.y )
+				return;
+
+			v.PlatformHandle.resize( cast size.x, cast size.y );
+		});
+
+		ImGui.viewportSetPlatformGetWindowSize( ( v: ImGuiViewport, size: ImGuiVec2Struct ) -> {
+
+			//var size: ImVec2 = {x: 0, y: 0};
+			var window: hxd.Window = v.PlatformHandle;
+
+			if( window != null )
+			{
+				size.x = window.width;
+				size.y = window.height;
+
+			}
+			//return size; // @todo
+		});
+
+		ImGui.viewportSetPlatformSetWindowFocus( ( v: ImGuiViewport ) -> {
+			// @todo
+			Utils.warning("STUB: PlatformSetWindowFocus");
+		});
+
+		ImGui.viewportSetPlatformGetWindowFocus( ( v: ImGuiViewport ) -> {
+			return v.PlatformHandle.isFocused;
+		});
+
+		ImGui.viewportSetPlatformGetWindowMinimized( ( v: ImGuiViewport ) -> {
+			return false; // @todo
+		});
+
+		ImGui.viewportSetPlatformSetWindowTitle( ( v: ImGuiViewport, title: hl.Bytes ) -> {
+			var str = @:privateAccess String.fromUTF8( title );
+			v.PlatformHandle.title = str;
+		});
+
+		ImGui.viewportSetPlatformSetWindowAlpha( ( v: ImGuiViewport, alpha: Single ) -> {
+			#if hlsdl
+			@:privateAccess v.PlatformHandle.window.opacity = 1-alpha;
+			#end
+		});
+
+		ImGui.viewportSetRendererRenderWindow( ( v: ImGuiViewport, arg: Dynamic ) -> {
+
+			if( !v.PlatformWindowCreated || v.PlatformHandle == null )
+				return;
+
+			Metrics.begin("ImGui.RendererRenderWindow");
+
+			var oldWin = hxd.Window.getInstance();
+
+			var e: h3d.Engine = Engine.getCurrent();
+			var w = v.PlatformHandle;
+
+			//@:privateAccess sdl.Window.winRenderTo(null, null);
+
+			//sdl.GL.viewport(0,0,1000,1000);
+
+
+			@:privateAccess// @:bypassAccessor
+			{
+				var oldW = e.width;
+				var oldH = e.height;
+				var oldScaleMode = cerastes.App.instance.s2d.scaleMode;
+
+				w.setCurrent();
+				e.window = w;
+				e.resize(w.width, w.height);
+				e.clear(0x005533);
+
+
+				@:privateAccess cerastes.App.instance.s2d.window = w;
+
+				cerastes.App.instance.s2d.width = w.width;
+				cerastes.App.instance.s2d.height = w.height;
+				cerastes.App.instance.s2d.scaleMode = Fixed(w.width, w.height, 1);
+
+				@:privateAccess cerastes.App.instance.s2d.render( e );
+
+				cerastes.App.instance.s2d.width = oldW;
+				cerastes.App.instance.s2d.height = oldH;
+				cerastes.App.instance.s2d.scaleMode = oldScaleMode;
+
+				@:privateAccess cerastes.App.instance.s2d.window = oldWin;
+
+				oldWin.setCurrent();
+				e.window = oldWin;
+				e.resize(oldW, oldH);
+
+
+
+			}
+
+
+			Metrics.end();
+
+		});
+
+		ImGui.viewportSetRendererSwapBuffers( ( v: ImGuiViewport, arg: Dynamic ) -> {
+
+			Metrics.begin("ImGuiToolManager.Present");
+			var oldWin = hxd.Window.getInstance();
+			var w = v.PlatformHandle;
+			w.setCurrent();
+			@:privateAccess w.window.present();
+			oldWin.setCurrent();
+			Metrics.end();
+		});
+
+		#end
+
 
 		scaleFactor = Utils.getDPIScaleFactor();
 		if( scaleFactor > 1 )
@@ -287,102 +584,43 @@ class ImGuiToolManager
 			ImGui.setNextWindowFocus();
 		}
 
-		if( ImGui.begin("\uf3fa Scene", null, ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoDocking ) )
+		ImGui.begin("\uf3fa Scene", null, ImGuiWindowFlags.AlwaysAutoResize );
+
+		if( ImGui.beginCombo("Scale", Std.string('${previewScale}x') ) )
 		{
+			if( ImGui.selectable( "1x", previewScale == 1 ) ) previewScale = 1;
+			if( ImGui.selectable( "2x", previewScale == 2 ) ) previewScale = 2;
+			if( ImGui.selectable( "4x", previewScale == 4 ) ) previewScale = 4;
 
-			if( ImGui.beginCombo("Scale", Std.string('${previewScale}x') ) )
-			{
-				if( ImGui.selectable( "1x", previewScale == 1 ) ) previewScale = 1;
-				if( ImGui.selectable( "2x", previewScale == 2 ) ) previewScale = 2;
-				if( ImGui.selectable( "4x", previewScale == 4 ) ) previewScale = 4;
-
-				ImGui.endCombo();
-			}
-
-			ImGui.sameLine();
-
-			ImGui.checkbox("2D Browser", show2DExplorer);
-
-			var pos = ImGui.getCursorPos();
-			var windowPos = pos + ImGui.getWindowPos();
-			var size: ImVec2S = { x: viewportWidth * previewScale, y: viewportHeight * previewScale };
-
-			ImGui.button("dummy", size );
-			ImGui.setCursorPos( pos );
-			ImGui.image(sceneRT, size );
-
-			var active = updatePreviewEvents( windowPos, size, previewEvents );
-
-			if( inputAccess != null )
-			{
-				if( active && hasExclusiveAccess )
-				{
-					inputAccess.releaseExclusivity();
-					hasExclusiveAccess = false;
-				}
-				else if( !active && !hasExclusiveAccess )
-				{
-					inputAccess.takeExclusivity();
-					hasExclusiveAccess = true;
-				}
-			}
+			ImGui.endCombo();
 		}
+
+		var pos = ImGui.getCursorPos();
+		var windowPos = pos + ImGui.getWindowPos();
+		var size: ImVec2S = { x: viewportWidth * previewScale, y: viewportHeight * previewScale };
+
+		ImGui.button("dummy", size );
+		ImGui.setCursorPos( pos );
+		ImGui.image(sceneRT, size );
+
+		var active = updatePreviewEvents( windowPos, size, previewEvents );
 
 		ImGui.end();
 
-		if( show2DExplorer )
-			sceneBrowser2d();
-
-
-
-	}
-
-	static function sceneBrowser2d()
-	{
-		//ImGui.setNextWindowSize( { x: 200 * scaleFactor,  y: 720 * scaleFactor }, ImGuiCond.Once );
-		if( ImGui.begin("\uf3fa 2D Scene Browser", null, ImGuiWindowFlags.NoDocking ) )
+		if( inputAccess != null )
 		{
-			var scene = cerastes.App.currentScene.s2d;
-			populate2DChildren( scene );
-
+			if( active && hasExclusiveAccess )
+			{
+				inputAccess.releaseExclusivity();
+				hasExclusiveAccess = false;
+			}
+			else if( !active && !hasExclusiveAccess )
+			{
+				inputAccess.takeExclusivity();
+				hasExclusiveAccess = true;
+			}
 		}
 
-		ImGui.end();
-
-	}
-
-	static function populate2DChildren( obj: h2d.Object )
-	{
-		for( idx in 0 ... obj.numChildren )
-		{
-			var c = obj.getChildAt(idx);
-
-			var flags = ImGuiTreeNodeFlags.OpenOnArrow | ImGuiTreeNodeFlags.DefaultOpen;
-			if( c.numChildren == 0)
-				flags |= ImGuiTreeNodeFlags.Leaf;
-
-			var type = Type.getClassName( Type.getClass( c ) );
-
-			var name = c.name != null ? c.name : '${type} ($idx)';
-			//name = '${getIconForType( c.type )} ${name}';
-			var isOpen = ImGui.treeNodeEx( name, flags );
-
-			if( ImGui.isItemHovered() )
-			{
-				var bounds = c.getBounds();
-				cerastes.c2d.DebugDraw.bounds(bounds, 0xFF0000, 0, 0.75, 3);
-			}
-
-			if( isOpen  )
-			{
-				if( c.numChildren > 0)
-				{
-					populate2DChildren(c);
-				}
-				ImGui.treePop();
-			}
-
-		}
 	}
 
 	static function drawTaskBar()
@@ -421,6 +659,52 @@ class ImGuiToolManager
 
 	}
 
+	public static function drawMenuBar()
+	{
+		// Menu bar
+		if( ImGui.beginMenu("Tools", true) )
+		{
+			if (ImGui.menuItem("Perf", "Alt+P"))
+				ImGuiToolManager.showTool("Perf");
+
+			if (ImGui.menuItem("UI Editor", "Alt+U"))
+				ImGuiToolManager.showTool("UIEditor");
+
+			if (ImGui.menuItem("Flow Editor", "Alt+U"))
+				ImGuiToolManager.showTool("FlowEditor");
+
+			if (ImGui.menuItem("Asset Browser", "Alt+B"))
+				ImGuiToolManager.showTool("AssetBrowser");
+
+			if (ImGui.menuItem("Model Editor"))
+				ImGuiToolManager.showTool("ModelEditor");
+
+			if (ImGui.menuItem("Material Editor"))
+				ImGuiToolManager.showTool("MaterialEditor");
+
+			if (ImGui.menuItem("Atlas Builder"))
+				ImGuiToolManager.showTool("AtlasBuilder");
+
+			if (ImGui.menuItem("Tile Map Editor"))
+				ImGuiToolManager.showTool("TileMapEditor");
+
+
+			for( c in customTools )
+			{
+				if( ImGui.menuItem( c.title ) )
+					ImGuiToolManager.showTool(c.cls);
+			}
+
+			ImGui.separator();
+
+			if (ImGui.menuItem("Style Editor"))
+				styleWindowOpen = !styleWindowOpen;
+
+			ImGui.endMenu();
+		}
+
+	}
+
 
 	public static function update( delta: Float )
 	{
@@ -429,53 +713,6 @@ class ImGuiToolManager
 		// Set global font
 		ImGui.pushFont( ImGuiToolManager.defaultFont );
 
-		// Menu bar
-		if( ImGui.beginMainMenuBar() )
-		{
-			var size = ImGui.getWindowSize();
-			menubarHeight = size.y;
-			if( ImGui.beginMenu("Tools", true) )
-			{
-				if (ImGui.menuItem("Perf", "Alt+P"))
-					ImGuiToolManager.showTool("Perf");
-
-				if (ImGui.menuItem("UI Editor", "Alt+U"))
-					ImGuiToolManager.showTool("UIEditor");
-
-				if (ImGui.menuItem("Flow Editor", "Alt+U"))
-					ImGuiToolManager.showTool("FlowEditor");
-
-				if (ImGui.menuItem("Asset Browser", "Alt+B"))
-					ImGuiToolManager.showTool("AssetBrowser");
-
-				if (ImGui.menuItem("Model Editor"))
-					ImGuiToolManager.showTool("ModelEditor");
-
-				if (ImGui.menuItem("Material Editor"))
-					ImGuiToolManager.showTool("MaterialEditor");
-
-				if (ImGui.menuItem("Atlas Builder"))
-					ImGuiToolManager.showTool("AtlasBuilder");
-
-				if (ImGui.menuItem("Tile Map Editor"))
-					ImGuiToolManager.showTool("TileMapEditor");
-
-
-				for( c in customTools )
-				{
-					if( ImGui.menuItem( c.title ) )
-						ImGuiToolManager.showTool(c.cls);
-				}
-
-				ImGui.separator();
-
-				if (ImGui.menuItem("Style Editor"))
-					styleWindowOpen = !styleWindowOpen;
-
-				ImGui.endMenu();
-			}
-			ImGui.endMainMenuBar();
-		}
 
 		Metrics.begin("ImGui.showDemoWindow");
 		//ImGui.showDemoWindow();
@@ -484,7 +721,21 @@ class ImGuiToolManager
 
 		Metrics.end();
 
+
+
+		#if !multidriver
+		var size = ImGui.getWindowSize();
+		menubarHeight = size.y;
+		if( ImGui.beginMainMenuBar() )
+		{
+			drawMenuBar();
+			ImGui.endMainMenuBar();
+		}
 		drawTaskBar();
+
+		// Draw preview window
+		ImGuiToolManager.drawScene();
+		#end
 
 		// Make sure there aren't any tool ID collisions
 		var toolMap: Map<String, ImguiTool> = [];
@@ -524,6 +775,7 @@ class ImGuiToolManager
 			offset = renderPopup( popup, i, offset );
 		}
 
+		#if !multidriver
 		var s2d = cerastes.App.currentScene.s2d;
 		@:privateAccess
 		{
@@ -533,9 +785,7 @@ class ImGuiToolManager
 			if( previewEvents.scenes.length == 0 )
 				previewEvents.addScene( s2d );
 		}
-
-		// Draw preview window last so it starts up focused.
-		ImGuiToolManager.drawScene();
+		#end
 
 
 
@@ -598,6 +848,8 @@ class ImGuiToolManager
 			t.render( e );
 		Metrics.end();
 
+		#if !multidriver
+
 		Metrics.begin("Scene Render");
 		// Render current scene to texture
 		sceneRT.clear( 0 );
@@ -625,6 +877,7 @@ class ImGuiToolManager
 
 		e.popTarget();
 		Metrics.end();
+		#end
 	}
 
 	public static function addFont( file: String, size: Float, includeGlyphs: Bool = false )

@@ -29,10 +29,10 @@ class DropShadowFilter extends DropShadow implements SelectableFilter
 	@:keep public static function getEditorName() { return "\uf07c Drop Shadow"; }
 	@:keep public static function getDef() : DropShadowFilterDef { return {}; }
 	@:keep public static function getInspector( def: DropShadowFilterDef ) {
-		ImGui.inputDouble("distance",def.distance,0.01,0.1);
+		ImGui.inputDouble("distance",def.distance,0.5,1);
 		imTooltip("The offset of the shadow in the `angle` direction.");
 		var ang: Single = def.angle;
-		if( ImGui.sliderAngle("angle",ang,0.01,0.1) ) def.angle = ang;
+		if( ImGui.sliderAngle("angle",ang) ) def.angle = ang;
 		imTooltip("Shadow offset direction angle.");
 
 		var nc = IG.inputColorInt( def.color, "Color" );
@@ -40,11 +40,11 @@ class DropShadowFilter extends DropShadow implements SelectableFilter
 			def.color = nc;
 
 		ImGui.inputDouble("alpha",def.alpha,0.01,0.1);
-		ImGui.inputDouble("radius",def.radius,0.01,0.1);
+		ImGui.inputDouble("radius",def.radius,0.1,1);
 		imTooltip("The shadow glow distance in pixels.");
-		ImGui.inputDouble("gain",def.gain,0.01,0.1);
+		ImGui.inputDouble("gain",def.gain,0.1,0.25);
 		imTooltip("The shadow color intensity.");
-		ImGui.inputDouble("quality",def.quality,0.01,0.1);
+		ImGui.inputDouble("quality",def.quality,0.5,1);
 		imTooltip("The sample count on each pixel as a tradeoff of speed/quality.");
 		ImGui.checkbox("smooth color",def.smoothColor);
 		imTooltip("Produce gradient shadow when enabled, otherwise creates hard shadow without smoothing.");

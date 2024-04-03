@@ -2,6 +2,7 @@ package cerastes.tools;
 
 import cerastes.ui.Anim;
 #if hlimgui
+using imgui.ImGui.ImGuiKeyStringExtender;
 import cerastes.fmt.CUIResource;
 import cerastes.fmt.AtlasResource.PackMode;
 import hl.UI;
@@ -603,15 +604,19 @@ class AtlasBuilder  extends  ImguiTool
 
 	function handleShortcuts()
 	{
-		if( !ImGui.isWindowFocused(  ImGuiFocusedFlags.RootAndChildWindows ) )
-			return;
-		if( Key.isDown( Key.CTRL ) && Key.isPressed( Key.S ) )
+		var io = ImGui.getIO();
+		if( ImGui.isWindowFocused( ImGuiFocusedFlags.RootAndChildWindows ) )
 		{
-			save();
-		}
-		if( Key.isDown( Key.DELETE) && selectedItemType == Frame && selectedFrame != null && selectedEntry != null )
-		{
-			selectedEntry.frames.remove( selectedFrame );
+			if( io.KeyCtrl )
+			{
+				if( ImGui.isKeyPressed( 'S'.imKey() ) )
+					save();
+			}
+
+			if( ImGui.isKeyPressed( ImGuiKey.Delete ) && selectedItemType == Frame && selectedFrame != null && selectedEntry != null )
+			{
+				selectedEntry.frames.remove( selectedFrame );
+			}
 		}
 	}
 

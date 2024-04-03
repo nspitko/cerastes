@@ -2,7 +2,7 @@
 package cerastes.tools;
 import cerastes.c2d.Vec2;
 #if ( hlimgui )
-import hxd.Key;
+using imgui.ImGui.ImGuiKeyStringExtender;
 import sys.io.File;
 import cerastes.data.Nodes.Link;
 import cerastes.file.CDParser;
@@ -477,10 +477,14 @@ class FlowEditor extends ImguiTool
 
 	function handleShortcuts()
 	{
-		if( ImGui.isWindowFocused(  ImGuiFocusedFlags.RootAndChildWindows ) )
+		var io = ImGui.getIO();
+		if( ImGui.isWindowFocused( ImGuiFocusedFlags.RootAndChildWindows ) )
 		{
-			if(  Key.isDown( Key.CTRL ) && Key.isPressed( Key.S )  )
-				save();
+			if( io.KeyCtrl )
+			{
+				if( ImGui.isKeyPressed( 'S'.imKey() ) )
+					save();
+			}
 		}
 	}
 

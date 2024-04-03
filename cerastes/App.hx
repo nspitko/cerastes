@@ -235,6 +235,9 @@ class App extends hxd.App {
 		Metrics.endFrame();
 		Metrics.begin();
 
+		var w = hxd.Window.getInstance();
+		s2d.scaleMode = Fixed( w.width, w.height, 1 );
+
 		#if hlimgui
 		if( Key.isPressed( Key.PAUSE_BREAK ) )
 		{

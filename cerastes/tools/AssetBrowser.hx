@@ -586,7 +586,7 @@ class AssetBrowser  extends  ImguiTool
 		#if multidriver
 		flags |= ImGuiWindowFlags.MenuBar;
 		#end
-		ImGui.begin("\uf07c Asset browser", isOpenRef, flags);
+		ImGui.begin("\uf07c Asset browser", #if multidriver null #else isOpenRef #end, flags);
 
 		#if multidriver
 		if( ImGui.beginMenuBar() )
@@ -638,10 +638,12 @@ class AssetBrowser  extends  ImguiTool
 
 		ImGui.end();
 
+		#if !multidriver
 		if( !isOpenRef.get() )
 		{
 			ImGuiToolManager.closeTool( this );
 		}
+		#end
 
 		Metrics.end();
 

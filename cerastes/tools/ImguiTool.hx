@@ -282,6 +282,8 @@ class ImGuiToolManager
 				v.PlatformRequestResize = true;
 			});
 
+
+
 		}
 
 
@@ -311,7 +313,7 @@ class ImGuiToolManager
 		}
 		#end
 
-
+		var ignoreResize = false;
 		ImGui.viewportSetPlatformCreateWindow( ( v: ImGuiViewport ) -> {
 			@:privateAccess
 			{
@@ -367,7 +369,8 @@ class ImGuiToolManager
 
 
 				w.addResizeEvent(() -> {
-					v.PlatformRequestResize = true;
+					if( !ignoreResize )
+						v.PlatformRequestResize = true;
 				});
 
 
@@ -428,8 +431,13 @@ class ImGuiToolManager
 		ImGui.viewportSetPlatformSetWindowSize( ( v: ImGuiViewport, size: ImVec2 ) -> {
 			if( v.PlatformHandle.width == size.x && v.PlatformHandle.height == size.y )
 				return;
-
+			ignoreResize = true;
 			v.PlatformHandle.resize( cast size.x, cast size.y );
+			// Hack
+			// Currently window will call resize TWICE, once immediately, and a second time after the window event comes in
+			// This is a problem for us since we triggered the resize, but imgui doesn't know that.
+			new Timer(0.2, () -> { ignoreResize = false; });
+
 		});
 
 		ImGui.viewportSetPlatformGetWindowSize( ( v: ImGuiViewport, size: ImGuiVec2Struct ) -> {
@@ -466,7 +474,7 @@ class ImGuiToolManager
 
 		ImGui.viewportSetPlatformSetWindowAlpha( ( v: ImGuiViewport, alpha: Single ) -> {
 			#if hlsdl
-			@:privateAccess v.PlatformHandle.window.opacity = 1-alpha;
+			@:privateAccess v.PlatformHandle.window.opacity = alpha;
 			#end
 		});
 
@@ -496,7 +504,7 @@ class ImGuiToolManager
 				w.setCurrent();
 				e.window = w;
 				e.resize(w.width, w.height);
-				e.clear(0x005533);
+				//e.clear(0x005533);
 
 
 				@:privateAccess cerastes.App.instance.s2d.window = w;

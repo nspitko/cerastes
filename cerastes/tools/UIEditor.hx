@@ -2,6 +2,7 @@
 package cerastes.tools;
 
 #if hlimgui
+using imgui.ImGui.ImGuiKeyStringExtender;
 import cerastes.tools.ImguiTools.ImGuiTools;
 import cerastes.tools.ImguiTools.IGTimelineState;
 import cerastes.c2d.Vec2;
@@ -12,7 +13,6 @@ import cerastes.ui.Timeline;
 import cerastes.macros.Metrics;
 import cerastes.ui.UIEntity;
 import cerastes.tools.ImguiTool.ImGuiPopupType;
-import hxd.Key;
 import hxd.res.Font;
 import hxd.res.BitmapFont;
 import h3d.Vector4;
@@ -857,9 +857,14 @@ class UIEditor extends ImguiTool
 
 	function handleShortcuts()
 	{
-		if( ImGui.isWindowFocused( ImGuiFocusedFlags.RootAndChildWindows ) && Key.isDown( Key.CTRL ) && Key.isPressed( Key.S ) )
+		var io = ImGui.getIO();
+		if( ImGui.isWindowFocused( ImGuiFocusedFlags.RootAndChildWindows ) )
 		{
-			save();
+			if( io.KeyCtrl )
+			{
+				if( ImGui.isKeyPressed( 'S'.imKey() ) )
+					save();
+			}
 		}
 	}
 
@@ -949,26 +954,23 @@ class UIEditor extends ImguiTool
 
 			ImGui.image(sceneRT, { x: viewportWidth * zoom, y: viewportHeight * zoom }, null, null, null, {x: 1, y: 1, z:1, w:1} );
 
+			// Lock mouse wheel when hovering image (for zoom)
+			if( ImGui.isItemHovered())
+				ImGui.setKeyOwner( ImGuiKey.MouseWheelY, 0 );
+
 			if( ImGui.isWindowHovered() )
 			{
 				var startPos: ImVec2 = ImGui.getCursorScreenPos();
 				var mousePos: ImVec2 = ImGui.getMousePos();
 
 				mouseScenePos = {x: ( mousePos.x - startPos.x) / zoom, y: ( mousePos.y - startPos.y ) / zoom };
-				// Should use imgui events here for consistency but GetIO isn't exposed to hl sooo...
-				if (Key.isPressed(Key.MOUSE_WHEEL_DOWN))
-				{
-					zoom--;
-					if( zoom <= 0 )
-						zoom = 1;
-				}
-				if (Key.isPressed(Key.MOUSE_WHEEL_UP))
-				{
-					zoom++;
-					if( zoom > 20 )
-						zoom = 20;
-				}
 
+				var io = ImGui.getIO();
+				if ( ImGui.isKeyPressed( ImGuiKey.MouseWheelY ) )
+				{
+					zoom += io.MouseWheel > 0 ? 1 : -1;
+					zoom = CMath.iclamp(zoom,1,20);
+				}
 
 			}
 			else
@@ -996,9 +998,10 @@ class UIEditor extends ImguiTool
 
 		processSceneMouse( delta );
 
-		if( !ImGui.getIO().WantCaptureKeyboard )
+		var io = ImGui.getIO();
+		if( !io.WantCaptureKeyboard )
 		{
-			if( Key.isPressed( Key.SPACE ) && selectedTimeline != null )
+			if( ImGui.isKeyPressed( ImGuiKey.Space ) && selectedTimeline != null )
 			{
 				if( timelineRunner.playing )
 					timelineRunner.pause();

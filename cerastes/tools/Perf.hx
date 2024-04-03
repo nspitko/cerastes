@@ -46,6 +46,8 @@ class Perf extends ImguiTool
 	override public function update( delta: Float )
 	{
 		Metrics.begin();
+		var isOpen = true;
+		var isOpenRef = hl.Ref.make(isOpen);
 		var stats = hl.Gc.stats();
 
 		fps.blit(0,fps,1,59);
@@ -65,7 +67,7 @@ class Perf extends ImguiTool
 
 		var widgetSize : ImVec2 = {x: 300, y:100};
 
-		ImGui.begin("\uf201 Performance");
+		ImGui.begin("\uf201 Performance", isOpenRef);
 
 		var precision = 1000;
 
@@ -101,6 +103,11 @@ class Perf extends ImguiTool
 		#end
 
 		ImGui.end();
+
+		if( !isOpenRef.get() )
+		{
+			ImGuiToolManager.closeTool( this );
+		}
 		Metrics.end();
 	}
 

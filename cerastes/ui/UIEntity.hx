@@ -9,10 +9,14 @@ import h2d.Object;
 import cerastes.Entity.EntityManager;
 import cerastes.macros.Callbacks.ClassKey;
 
+#if hlimgui
+import imgui.ImGui;
+#end
+
 class UIEntity extends h2d.Object implements Entity
 {
 	// Debug
-	final debugDrag = false;
+	var debugDrag = false;
 
 	// Statics
 	static var draggingEntity: UIEntity;
@@ -121,6 +125,15 @@ class UIEntity extends h2d.Object implements Entity
 	public static function getEditorIcon()
 	{
 		return "\uf07c";
+	}
+
+	// Fill this out to have custom info in the inspector for this entity
+	public function sceneInspector( o: UIEntity )
+	{
+		ImGui.text('LookupId: ${lookupId}');
+		ImGui.text('Tracked callbacks: ${trackedCallbacks.length}');
+
+		ImGui.checkbox("Debug Drag", debugDrag);
 	}
 	#end
 

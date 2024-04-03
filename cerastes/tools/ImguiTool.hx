@@ -94,6 +94,7 @@ class ImGuiToolManagerState
 {
 	public var openFiles: Array<String> = [];
 	public var previewScale: Int = 1;
+	public var openTools: Array<String> = [];
 }
 
 class ImGuiToolManager
@@ -232,6 +233,8 @@ class ImGuiToolManager
 		{
 			if( t.fileName != null )
 				s.openFiles.push( t.fileName );
+			else
+				s.openTools.push( Type.getClassName( Type.getClass( t ) ) );
 		}
 
 		s.previewScale = previewScale;
@@ -250,6 +253,9 @@ class ImGuiToolManager
 				{
 					openAssetEditor( f );
 				}
+
+				for( t in s.openTools )
+					showTool( t );
 			}
 			previewScale = s.previewScale > 0 ? s.previewScale : previewScale;
 		}
@@ -600,8 +606,6 @@ class ImGuiToolManager
 			restoreState();
 		});
 
-		//ImGuiToolManager.showTool("TileMapEditor");
-
 	}
 
 	public static function drawScene()
@@ -696,6 +700,9 @@ class ImGuiToolManager
 			if (ImGui.menuItem("Perf", "Alt+P"))
 				ImGuiToolManager.showTool("Perf");
 
+			if (ImGui.menuItem("Inspector", "Alt+I"))
+				ImGuiToolManager.showTool("SceneInspector");
+
 			if (ImGui.menuItem("UI Editor", "Alt+U"))
 				ImGuiToolManager.showTool("UIEditor");
 
@@ -744,7 +751,7 @@ class ImGuiToolManager
 
 
 		Metrics.begin("ImGui.showDemoWindow");
-		ImGui.showDemoWindow();
+		//ImGui.showDemoWindow();
 		if( styleWindowOpen )
 			ImGui.showStyleEditor();
 

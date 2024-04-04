@@ -410,6 +410,8 @@ class AtlasBuilder  extends  ImguiTool
 				continue;
 
 			var tile = entry.tile;
+			if( tile.width == 0 && tile.height == 0 && entry.tiles.length > 0 )
+				tile = entry.tiles[1];
 
 			ImGui.pushID('btn_${name}');
 

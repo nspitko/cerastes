@@ -142,7 +142,8 @@ class ImGuiToolManager
 
 	static var vec2: ImVec2S = {x:0, y:0};
 
-	static var mainWindow: hxd.Window;
+	public static var mainWindow: hxd.Window;
+	public static var hoveredWindow: hxd.Window;
 
 	static function set_enabled(v)
 	{
@@ -296,7 +297,15 @@ class ImGuiToolManager
 			@:privateAccess
 			{
 				var d = cerastes.App.instance.drawable;
-				w.addEventTarget( ( e: hxd.Event ) -> { d.onMultiWindowEvent( w, e, v ); } );
+				w.addEventTarget( ( e: hxd.Event ) -> {
+
+					if( e.kind == hxd.Event.EventKind.EMove )
+					{
+						hoveredWindow = w;
+					}
+
+					d.onMultiWindowEvent( w, e, v );
+				} );
 			}
 
 
@@ -390,8 +399,12 @@ class ImGuiToolManager
 						d.onMultiWindowEvent( w, e, v );
 						// Window events should NEVER propagate down; heaps isn't listening for them so we need to
 						// do this to prevent the OS chime from playing on key press.
-						e.propagate = false; }
-					);
+						e.propagate = false;
+
+						if( e.kind == hxd.Event.EventKind.EMove )
+							hoveredWindow = w;
+
+					});
 				}
 
 

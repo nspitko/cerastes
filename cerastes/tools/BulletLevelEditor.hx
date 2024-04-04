@@ -551,12 +551,14 @@ class BulletLevelEditor extends ImguiTool
 				}
 				if (ImGui.menuItem("Save As..."))
 				{
+					hxd.System.allowTimeout = false;
 					var newFile = UI.saveFile({
 						title:"Save As...",
 						filters:[
 						{name:"Bullet Levels", exts:["cbl"]}
 						]
 					});
+					hxd.System.allowTimeout = true;
 					if( newFile != null )
 					{
 

@@ -487,12 +487,14 @@ class AudioEditor extends ImguiTool
 
 	function saveAs()
 	{
+		hxd.System.allowTimeout = false;
 		var newFile = UI.saveFile({
 			title:"Save As...",
 			filters:[
 			{name:"Cerastes audio files", exts:["audio"]}
 			]
 		});
+		hxd.System.allowTimeout = true;
 		if( newFile != null )
 		{
 			fileName = Utils.toLocalFile( newFile );

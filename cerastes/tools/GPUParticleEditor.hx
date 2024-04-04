@@ -360,12 +360,14 @@ class GPUParticleEditor extends ImguiTool
 
 	function saveAs()
 	{
+		hxd.System.allowTimeout = false;
 		var newFile = UI.saveFile({
 			title:"Save As...",
 			filters:[
 			{name:"Cerastes particles", exts:["gparticle"]}
 			]
 		});
+		hxd.System.allowTimeout = true;
 		if( newFile != null )
 		{
 			sys.io.File.saveContent(Utils.fixWritePath(newFile,"gparticle"), cerastes.file.CDPrinter.print( particleDef ) );

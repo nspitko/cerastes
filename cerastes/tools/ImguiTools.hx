@@ -679,6 +679,7 @@ class ImGuiTools
 				path = '${fs.baseDir}${path}';
 			}
 
+			hxd.System.allowTimeout = false;
 			var openFile = UI.loadFile({
 				title:"Select texture",
 				fileName: path,
@@ -686,6 +687,7 @@ class ImGuiTools
 					{name:"Textures", exts:["png","jpg","bmp","tga"]}
 				]
 			});
+			hxd.System.allowTimeout = true;
 			if( openFile != null )
 			{
 				return Utils.toLocalFile( openFile );
@@ -745,6 +747,7 @@ class ImGuiTools
 				path = '${fs.baseDir}${path}';
 			}
 
+			hxd.System.allowTimeout = false;
 			var openFile = UI.loadFile({
 				title:"Select Material",
 				fileName: path,
@@ -752,6 +755,7 @@ class ImGuiTools
 					{name:"Material", exts:["material","mat"]}
 				]
 			});
+			hxd.System.allowTimeout = true;
 			if( openFile != null )
 			{
 				return Utils.toLocalFile( openFile );
@@ -803,6 +807,7 @@ class ImGuiTools
 				path = '${fs.baseDir}${path}';
 			}
 
+			hxd.System.allowTimeout = false;
 			var openFile = UI.loadFile({
 				title:"Select File",
 				fileName: path,
@@ -810,6 +815,7 @@ class ImGuiTools
 					{name:"Files", exts:["files",ext != null ? ext : "*"]}
 				]
 			});
+			hxd.System.allowTimeout = true;
 			if( openFile != null )
 			{
 				return Utils.toLocalFile( openFile );

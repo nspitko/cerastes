@@ -842,6 +842,7 @@ class FlowNode extends Node
 
 				if( ImGui.button("Select...") )
 				{
+					hxd.System.allowTimeout = false;
 					var file = UI.loadFile({
 						title:"Select file",
 						filters:[
@@ -849,6 +850,7 @@ class FlowNode extends Node
 						],
 						filterIndex: 0
 					});
+					hxd.System.allowTimeout = true;
 					if( file != null )
 						Reflect.setField( this, field, file );
 				}

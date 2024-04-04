@@ -275,6 +275,7 @@ class MaterialEditor extends ImguiTool
 	{
 		var fs: hxd.fs.LocalFileSystem = cast hxd.Res.loader.fs;
 
+		hxd.System.allowTimeout = false;
 		var newFile = UI.saveFile({
 			title:"Save As...",
 			fileName: '${fs.baseDir}mat/',
@@ -282,6 +283,7 @@ class MaterialEditor extends ImguiTool
 			{name:"Cerastes materials", exts:["material"]}
 			]
 		});
+		hxd.System.allowTimeout = true;
 		if( newFile != null )
 		{
 			sys.io.File.saveContent(Utils.fixWritePath(newFile,"material"), cerastes.file.CDPrinter.print( materialDef ) );

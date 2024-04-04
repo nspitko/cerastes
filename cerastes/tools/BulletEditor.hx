@@ -277,12 +277,14 @@ class BulletEditor extends ImguiTool
 				}
 				if (ImGui.menuItem("Save As..."))
 				{
+					hxd.System.allowTimeout = false;
 					var newFile = UI.saveFile({
 						title:"Save As...",
 						filters:[
 						{name:"Cannon ML Packages", exts:["cml"]}
 						]
 					});
+					hxd.System.allowTimeout = true;
 					if( newFile != null )
 					{
 

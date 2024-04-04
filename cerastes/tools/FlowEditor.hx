@@ -434,12 +434,14 @@ class FlowEditor extends ImguiTool
 
 	function saveAs()
 	{
+		hxd.System.allowTimeout = false;
 		var newFile = UI.saveFile({
 			title:"Save As...",
 			filters:[
 			{name:"Cerastes flow files", exts:["flow"]}
 			]
 		});
+		hxd.System.allowTimeout = true;
 		if( newFile != null )
 		{
 			fileName = Utils.toLocalFile( newFile );

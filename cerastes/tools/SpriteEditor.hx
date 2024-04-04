@@ -423,12 +423,14 @@ class SpriteEditor extends ImguiTool
 				}
 				if ( ImGui.menuItem("Save As...", ""))
 				{
+					hxd.System.allowTimeout = false;
 					var newFile = UI.saveFile({
 						title:"Save As...",
 						filters:[
 						{name:"Sprites", exts:["csd"]}
 						]
 					});
+					hxd.System.allowTimeout = true;
 					if( newFile != null )
 					{
 						fileName = Utils.toLocalFile( newFile );

@@ -565,12 +565,14 @@ class AtlasBuilder  extends  ImguiTool
 
 	function saveAs()
 	{
+		hxd.System.allowTimeout = false;
 		var newFile = UI.saveFile({
 			title:"Save As...",
 			filters:[
 			{name:"Cerastes atlas files", exts:["catlas"]}
 			]
 		});
+		hxd.System.allowTimeout = true;
 		if( newFile != null )
 		{
 			fileName = Utils.toLocalFile( newFile );
@@ -602,12 +604,14 @@ class AtlasBuilder  extends  ImguiTool
 	{
 		if( newFile == null )
 		{
+			hxd.System.allowTimeout = false;
 			newFile = UI.loadFile({
 				title:"Add Sprite...",
 				filters:[
 				{name:"Images", exts:["png"]}
 				]
 			});
+			hxd.System.allowTimeout = true;
 		}
 		if( newFile != null )
 		{
@@ -628,12 +632,14 @@ class AtlasBuilder  extends  ImguiTool
 	{
 		if( newFile == null )
 		{
+			hxd.System.allowTimeout = false;
 			newFile = UI.loadFile({
 				title:"Add Frame...",
 				filters:[
 				{name:"Images", exts:["png"]}
 				]
 			});
+			hxd.System.allowTimeout = true;
 		}
 		if( newFile != null )
 		{

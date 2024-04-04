@@ -1267,6 +1267,7 @@ class ImGuiToolManager
 
 				if( ImGui.button("Select...") )
 				{
+					hxd.System.allowTimeout = false;
 					var file = UI.loadFile({
 						title:"Select file",
 						filters:[
@@ -1274,6 +1275,7 @@ class ImGuiToolManager
 						],
 						filterIndex: 0
 					});
+					hxd.System.allowTimeout = true;
 					if( file != null )
 					{
 						fnSet( field, file );

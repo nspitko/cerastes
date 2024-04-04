@@ -824,12 +824,14 @@ class UIEditor extends ImguiTool
 
 	function saveAs()
 	{
+		hxd.System.allowTimeout = false;
 		var newFile = UI.saveFile({
 			title:"Save As...",
 			filters:[
 			{name:"Cerastes UI files", exts:["ui"]}
 			]
 		});
+		hxd.System.allowTimeout = true;
 		if( newFile != null )
 		{
 			fileName = Utils.toLocalFile( newFile );

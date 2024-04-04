@@ -463,12 +463,14 @@ class ModelEditor extends ImguiTool
 
 	function saveAs()
 	{
+		hxd.System.allowTimeout = false;
 		var newFile = UI.saveFile({
 			title:"Save As...",
 			filters:[
 			{name:"Cerastes models", exts:["model"]}
 			]
 		});
+		hxd.System.allowTimeout = true;
 		if( newFile != null )
 		{
 			sys.io.File.saveContent(Utils.fixWritePath(newFile,"model"), cerastes.file.CDPrinter.print( modelDef ) );

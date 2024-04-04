@@ -412,14 +412,29 @@ class ImGuiToolManager
 
 		ImGui.viewportSetPlatformDestroyWindow( ( v: ImGuiViewport ) -> {
 
-			@:privateAccess v.PlatformHandle.window.glctx = cast v.PlatformHandleRaw;
+			@:privateAccess
+			{
+				var w = v.PlatformHandle;
+				v.PlatformHandle.window.glctx = cast v.PlatformHandleRaw;
 
-			if( v.PlatformHandle != null )
-				v.PlatformHandle.close();
+				if( v.PlatformHandle != null )
+					v.PlatformHandle.close();
 
-			v.RendererUserData = null;
-			v.PlatformUserData = null;
-			v.PlatformHandle = null;
+				// !! HACK !!
+				// Add the window back to the list and pump events. This lets us
+				// catch the close-specific events SDL sends that will do bookkeeping
+				// on key release/etc.
+				hxd.Window.WINDOWS.push(w);
+				sdl.Sdl.processEvents(@:privateAccess hxd.Window.dispatchEvent);
+				hxd.Window.WINDOWS.remove(w);
+
+
+				v.RendererUserData = null;
+				v.PlatformUserData = null;
+				v.PlatformHandle = null;
+			}
+
+
 
 		});
 

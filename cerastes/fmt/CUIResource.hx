@@ -262,6 +262,7 @@ enum abstract CUITristateBool(Int) from Int to Int {
 	public var textAlign: h2d.Text.Align = h2d.Text.Align.Left;
 
 	public var maxWidth: Float = -1;
+	public var lineSpacing: Float = 0;
 }
 
 @:structInit class CUIAdvancedText extends CUIText {
@@ -794,6 +795,7 @@ class CUIResource extends Resource
 				o.textAlign = e.textAlign;
 				o.maxWidth = e.maxWidth;
 
+				o.lineSpacing = e.lineSpacing;
 				o.font = getFont( e.font, e );
 
 				if( e.text.charAt(0) == "#" )

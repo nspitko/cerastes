@@ -1960,6 +1960,7 @@ class UIEditor extends ImguiTool
 				wref( ImGui.checkbox( "Visible", _ ), def.visible );
 
 				ImGui.inputDouble("Alpha", def.alpha);
+
 				var out = IG.combo("Blend Mode", def.blendMode, BlendMode );
 				if( out != null )
 					def.blendMode = out;
@@ -2087,6 +2088,8 @@ class UIEditor extends ImguiTool
 					else
 						d.maxWidth = -1;
 				}
+
+				ImGui.inputDouble( "Line Spacing", d.lineSpacing, 0.5, 1, "%.2f" );
 
 			case "cerastes.ui.AdvancedText":
 

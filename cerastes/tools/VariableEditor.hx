@@ -110,8 +110,11 @@ class VariableEditor extends ImguiTool
 	{
 		Metrics.begin();
 
+		var isOpen = true;
+		var isOpenRef = hl.Ref.make(isOpen);
+
 		ImGui.setNextWindowSize( { x: 400, y: 250 }, ImGuiCond.FirstUseEver );
-		if( ImGui.begin("\uf328 Variables") )
+		if( ImGui.begin("\uf328 Variables", isOpenRef ) )
 		{
 			wref( ImGui.inputTextWithHint("##filter","Filter...",_ ), filter );
 

@@ -43,7 +43,7 @@ class ScanlinePass extends h3d.pass.ScreenFx<ScanlineShader> {
 	public function new() {
 		super(new ScanlineShader());
 
-		transitionTexture = hxd.Res.shd.transition1.toTexture();
+		//transitionTexture = hxd.Res.shd.transition1.toTexture();
 		transitionTexture.filter = Nearest;
 		transitionTexture.mipMap = None;
 		phase = 0;

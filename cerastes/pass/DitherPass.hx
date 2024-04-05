@@ -13,7 +13,7 @@ class DitherPass extends h3d.pass.ScreenFx<DitherShader> {
 	public function new() {
 		super(new DitherShader());
 
-		ditherTable = hxd.Res.shd.psx_dither.toTexture();
+		//ditherTable = hxd.Res.shd.psx_dither.toTexture();
 		ditherTable.filter = Nearest;
 		ditherTable.mipMap = None;
 		//ditherTable.wrap = Repeat;

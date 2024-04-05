@@ -142,10 +142,12 @@ class TileMapEditor extends ImguiTool
 		tileMapDefPreview = {
 			layers: [ {} ]
 		};
+		tileMapDef.layers.push({});
 
 
 		// TEST
 		//
+		/*
 		var ld: TileMapLayerDataDef = {};
 		var l: TileMapLayerDef = {
 			tileData: ld
@@ -162,13 +164,14 @@ class TileMapEditor extends ImguiTool
 		ld.setIdx(0,1,131);
 		ld.setIdx(0,2,131);
 		ld.setIdx(0,3,131);
+		*/
 
 		//tileMapDef.resize( 10, 10 );
 		tileMap = tileMapDef.create();
 		tileMapPreview = tileMapDefPreview.create();
 
 
-		selectLayer(l);
+		selectLayer(tileMapDef.layers[0]);
 
 
 		preview.addChild( tileMap );
@@ -356,25 +359,22 @@ class TileMapEditor extends ImguiTool
 		ImGui.begin('Preview##${windowID()}', null, ImGuiWindowFlags.NoMove | ImGuiWindowFlags.HorizontalScrollbar );
 		handleShortcuts();
 
-		if( ImGui.isWindowHovered() )
+		var io = ImGui.getIO();
+		if( ImGui.isWindowHovered() && io.KeyCtrl )
 		{
 			var startPos: ImVec2 = ImGui.getCursorScreenPos();
 			var mousePos: ImVec2 = ImGui.getMousePos();
+			ImGui.setKeyOwner( ImGuiKey.MouseWheelY, 0 );
 
 			mouseScenePos = {x: ( mousePos.x - startPos.x) / zoom, y: ( mousePos.y - startPos.y ) / zoom };
-			// Should use imgui events here for consistency but GetIO isn't exposed to hl sooo...
-			if (Key.isPressed(Key.MOUSE_WHEEL_DOWN))
+
+
+			if ( ImGui.isKeyPressed( ImGuiKey.MouseWheelY ) )
 			{
-				zoom--;
-				if( zoom <= 0 )
-					zoom = 1;
+				zoom += io.MouseWheel > 0 ? 1 : -1;
+				zoom = CMath.iclamp(zoom,1,20);
 			}
-			if (Key.isPressed(Key.MOUSE_WHEEL_UP))
-			{
-				zoom++;
-				if( zoom > 20 )
-					zoom = 20;
-			}
+
 		}
 		else
 		{

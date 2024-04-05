@@ -131,7 +131,7 @@ class ModelEditor extends ImguiTool
 		events.addScene(preview);
 
 		//openFile("mdl/kronii.model");
-		openFile("models/placeholder/vanguard_gltf.model");
+		//openFile("models/placeholder/vanguard_gltf.model");
 		//openFile("models/placeholder/vanguard.model");
 
 

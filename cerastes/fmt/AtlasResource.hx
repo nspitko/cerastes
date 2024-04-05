@@ -383,7 +383,10 @@ enum PackMode {
 			// Just update our in-memory texture
 			pixels.convert(hxd.PixelFormat.RGBA);
 			var t = Texture.fromPixels(pixels);
-			@:privateAccess tile.innerTex = t;
+			if( tile == null )
+				tile = Tile.fromTexture( t );
+			else
+				@:privateAccess tile.innerTex = t;
 		}
 
 

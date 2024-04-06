@@ -50,7 +50,7 @@ class TransitionFilter extends Filter  implements SelectableFilter
 	public function new( ?def: TransitionFilterDef  ) {
 		super();
 		smooth = false;
-		pass = new TransitionPass();
+		pass = new TransitionPass( Utils.resolveTexture( def.texture ) );
 
 		if( def != null )
 		{
@@ -80,10 +80,10 @@ class TransitionPass extends h3d.pass.ScreenFx<TransitionShader> {
 	var transitionTexture: h3d.mat.Texture;
 	public var phase: Float;
 
-	public function new() {
+	public function new( tex: h3d.mat.Texture) {
 		super(new TransitionShader());
 
-		//transitionTexture = hxd.Res.shd.transition1.toTexture();
+		transitionTexture = tex;
 		transitionTexture.filter = Nearest;
 		transitionTexture.mipMap = None;
 		phase = 0;

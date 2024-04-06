@@ -148,7 +148,7 @@ class UIEditor extends ImguiTool
 			rootDef = data.root;
 
 			timelines = data.timelines != null ? data.timelines : [];
-			CUIResource.recursiveUpgradeObjects( rootDef, data.version  );
+			CUIResource.recursiveUpgradeObjects( rootDef, data.version );
 			updateScene();
 		} catch(e)
 		{
@@ -192,7 +192,7 @@ class UIEditor extends ImguiTool
 	{
 		Metrics.begin();
 		cerastes.fmt.CUIResource.initializeEntities = initializeObjects;
-		cerastes.fmt.CUIResource.updateObject(o, e);
+		cerastes.fmt.CUIResource.updateObject(o, e, initializeObjects);
 		@:privateAccess e.onContentChanged();
 		cerastes.fmt.CUIResource.initializeEntities = true;
 		Metrics.end();
@@ -202,7 +202,7 @@ class UIEditor extends ImguiTool
 	{
 		Metrics.begin();
 		cerastes.fmt.CUIResource.initializeEntities = initializeObjects;
-		cerastes.fmt.CUIResource.recursiveUpdateObjects(o, e);
+		cerastes.fmt.CUIResource.recursiveUpdateObjects(o, e, initializeObjects);
 		@:privateAccess e.onContentChanged();
 		cerastes.fmt.CUIResource.initializeEntities = true;
 		Metrics.end();

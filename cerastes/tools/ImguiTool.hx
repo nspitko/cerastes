@@ -728,6 +728,9 @@ class ImGuiToolManager
 			if (ImGui.menuItem("Perf", "Alt+P"))
 				ImGuiToolManager.showTool("Perf");
 
+			if (ImGui.menuItem("Console", ""))
+				ImGuiToolManager.showTool("Console");
+
 			if (ImGui.menuItem("Inspector", "Alt+I"))
 				ImGuiToolManager.showTool("SceneInspector");
 
@@ -751,6 +754,9 @@ class ImGuiToolManager
 
 			if (ImGui.menuItem("Tile Map Editor"))
 				ImGuiToolManager.showTool("TileMapEditor");
+
+			if (ImGui.menuItem("Variable Editor"))
+				ImGuiToolManager.showTool("VariableEditor");
 
 
 			for( c in customTools )

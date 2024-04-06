@@ -51,14 +51,14 @@ class VariableEditor extends ImguiTool
 
 	static var saveSlot: Int = -1;
 
-	var runner: FlowRunner;
-	var defs: Array<InterpVariable>;
+	static var runner: FlowRunner;
+	static var defs: Array<InterpVariable>;
 
 	public override function getName() { return '\uf328 Variables'; }
 
-	var markdownConfig: MarkdownConfig = new MarkdownConfig();
+	static var markdownConfig: MarkdownConfig = new MarkdownConfig();
 
-	public function setup( r: FlowRunner, d: Array<InterpVariable> )
+	public static function setup( r: FlowRunner, d: Array<InterpVariable> )
 	{
 		runner = r;
 		defs = d;
@@ -70,7 +70,7 @@ class VariableEditor extends ImguiTool
 	}
 
 
-	function markdownImageCallback( data: MarkdownLinkCallbackData, ret: MarkdownImageData ): Void
+	static function markdownImageCallback( data: MarkdownLinkCallbackData, ret: MarkdownImageData ): Void
 	{
 /*
 		var text = data.text.toBytes(data.textLength).getString(0,data.textLength);
@@ -88,7 +88,7 @@ class VariableEditor extends ImguiTool
 		*/
 	}
 
-	function markdownLinkCallback( data: MarkdownLinkCallbackData ): Void
+	static function markdownLinkCallback( data: MarkdownLinkCallbackData ): Void
 	{
 		if( !data.isImage )
 		{
@@ -97,7 +97,7 @@ class VariableEditor extends ImguiTool
 		}
 	}
 
-	function markdownTooltipCallback( data: MarkdownTooltipCallbackData ): Void
+	static function markdownTooltipCallback( data: MarkdownTooltipCallbackData ): Void
 	{
 		if(  !data.isImage && data.linkLength > 0 )
 		{
@@ -148,9 +148,14 @@ class VariableEditor extends ImguiTool
 			variableList();
 			ImGui.endChild();
 
-
 		}
 		ImGui.end();
+
+		if( !isOpenRef.get() )
+		{
+			ImGuiToolManager.closeTool( this );
+		}
+
 		Metrics.end();
 	}
 

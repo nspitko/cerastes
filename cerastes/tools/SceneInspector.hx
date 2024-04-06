@@ -38,7 +38,10 @@ class SceneInspector extends ImguiTool
 	{
 		Metrics.begin();
 
-		ImGui.begin("\uf201 Scene Inspector", null, ImGuiWindowFlags.MenuBar);
+		var isOpen = true;
+		var isOpenRef = hl.Ref.make(isOpen);
+
+		ImGui.begin("\uf201 Scene Inspector", isOpen, ImGuiWindowFlags.MenuBar);
 		menuBar();
 
 		dockSpace();
@@ -48,6 +51,12 @@ class SceneInspector extends ImguiTool
 
 		inspectorColumn();
 		propertiesColumn();
+
+
+		if( !isOpenRef.get() )
+		{
+			ImGuiToolManager.closeTool( this );
+		}
 
 		Metrics.end();
 	}

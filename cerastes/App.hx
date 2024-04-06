@@ -188,10 +188,7 @@ class App extends hxd.App {
 		if( !noTools )
 			ImGuiToolManager.enabled = !ImGuiToolManager.enabled;
 
-
-		//ImGuiToolManager.showTool("Perf");
 		ImGuiToolManager.showTool("AssetBrowser");
-		ImGuiToolManager.showTool("Console");
 		#end
 	}
 

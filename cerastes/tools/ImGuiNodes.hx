@@ -12,6 +12,7 @@ import cerastes.tools.ImguiTools.ComboFilterState;
 import cerastes.tools.ImguiTools.IG;
 import imgui.NodeEditor;
 import imgui.ImGui;
+using imgui.ImGui.ImGuiKeyStringExtender;
 
 import imgui.ImGuiMacro.wref;
 
@@ -764,11 +765,12 @@ class ImGuiNodes
 			// Shortcuts
 			if( ImGui.isWindowFocused(  ImGuiFocusedFlags.RootAndChildWindows ) )
 			{
-				if( Key.isDown( Key.CTRL ) && Key.isPressed( Key.C )  )
+				var io = ImGui.getIO();
+				if( io.KeyCtrl && ImGui.isKeyPressed( 'C'.imKey() ) )
 					copy();
 				//if( Key.isDown( Key.CTRL ) && Key.isPressed( Key.X )  )
 				//	cut();
-				if( Key.isDown( Key.CTRL ) && Key.isPressed( Key.V )  )
+				if( io.KeyCtrl && ImGui.isKeyPressed( 'V'.imKey() ) )
 					paste();
 			}
 			NodeEditor.resume();

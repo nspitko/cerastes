@@ -939,8 +939,9 @@ class ImGuiNodes
 		{
 			var hints = [ for( k => v in registeredNodes ) k ];
 
+			if( ImGui.isWindowAppearing() )
+				ImGui.setKeyboardFocusHere();
 
-			ImGui.setKeyboardFocusHere();
 			var ret = IG.comboFilter("##nodeInput",hints, state) ;
 			if( ret != null )
 			{

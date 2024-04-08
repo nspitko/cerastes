@@ -2,7 +2,7 @@
 package cerastes.tools;
 
 #if hlimgui
-
+using imgui.ImGui.ImGuiKeyStringExtender;
 import haxe.rtti.Meta;
 import cerastes.c2d.TileEntity.TileEntityDef;
 import cerastes.fmt.TileMapResource.TileMapEntityDef;
@@ -138,7 +138,10 @@ class TileMapEditor extends ImguiTool
 		cursor = new h2d.Graphics();
 		cursorTileGroup = new TileGroup();
 
-		tileMapDef = {};
+		tileMapDef = {
+			width: 10,
+			height: 10
+		};
 		tileMapDefPreview = {
 			layers: [ {} ]
 		};
@@ -197,16 +200,25 @@ class TileMapEditor extends ImguiTool
 	{
 		fileName = f;
 
-		try
-		{
-			// ....
+		//try
+		//{
+			tileMapDef =  cerastes.file.CDParser.parse( hxd.Res.loader.load(f).entry.getText(), TileMapDef );
+			tileMapDef.unpack();
+			selectLayer(tileMapDef.layers[0]);
+
+			preview.removeChild( tileMap );
+			tileMap = tileMapDef.create();
+			preview.addChild(tileMap);
+			preview.removeChild(tileMapPreview);
+			preview.addChild(tileMapPreview);
+
 			updateScene();
-		} catch(e)
+		/*} catch(e)
 		{
 			Utils.warning('Failed to open ${f}: $e');
 			ImGuiToolManager.showPopup('Failed to load $f', 'Hit an exception: $e', ImGuiPopupType.Error);
 			// do nothing
-		}
+		}*/
 	}
 
 	function updateScene()
@@ -222,7 +234,7 @@ class TileMapEditor extends ImguiTool
 		for( l in tileMapDef.layers )
 		{
 			w = cast Math.max( w, l.tileData.tileWidth * l.tileData.width );
-			h = cast Math.max( w, l.tileData.tileHeight * l.tileData.height );
+			h = cast Math.max( h, l.tileData.tileHeight * l.tileData.height );
 		}
 
 		sceneRT.resize( w,h  );
@@ -248,7 +260,8 @@ class TileMapEditor extends ImguiTool
 		if( newFile != null )
 		{
 			fileName = Utils.toLocalFile( newFile );
-			//CUIResource.writeObject(rootDef, timelines, preview,newFile);
+			tileMapDef.pack();
+			sys.io.File.saveContent(Utils.fixWritePath(fileName,"ctmap"), cerastes.file.CDPrinter.print( tileMapDef ) );
 
 			cerastes.tools.AssetBrowser.needsReload = true;
 			lastSaved = Sys.time() * 1000;
@@ -264,7 +277,8 @@ class TileMapEditor extends ImguiTool
 			return;
 		}
 
-		//CUIResource.writeObject(rootDef,timelines,preview,fileName);
+		tileMapDef.pack();
+		sys.io.File.saveContent(Utils.fixWritePath(fileName,"ctmap"), cerastes.file.CDPrinter.print( tileMapDef ) );
 
 		lastSaved = Sys.time() * 1000;
 		ImGuiToolManager.showPopup("File saved",'Wrote ${fileName} successfully.', Info);
@@ -275,17 +289,27 @@ class TileMapEditor extends ImguiTool
 		if( ImGui.isWindowFocused( ImGuiFocusedFlags.RootAndChildWindows ) && !ImGui.getIO().WantCaptureKeyboard )
 
 		{
-			if( Key.isDown( Key.CTRL ) && Key.isPressed( Key.S ) )
-				save();
+			var io = ImGui.getIO();
+			if( ImGui.isWindowFocused( ImGuiFocusedFlags.RootAndChildWindows ) )
+			{
+				if( io.KeyCtrl )
+				{
+					if( ImGui.isKeyPressed( 'S'.imKey() ) )
+						save();
+				}
+			}
 
-			if( Key.isDown( Key.P ) )
-				paintMode = Normal;
-			if( Key.isDown( Key.F ) )
-				paintMode = Fill;
-			if( Key.isDown( Key.E ) )
-				paintMode = Entity;
-			if( Key.isDown( Key.S ) )
-				paintMode = Select;
+			if( !io.KeyCtrl )
+			{
+				if( ImGui.isKeyDown( 'P'.imKey() ) )
+					paintMode = Normal;
+				if( ImGui.isKeyDown( 'F'.imKey() ) )
+					paintMode = Fill;
+				if( ImGui.isKeyDown( 'E'.imKey() ) )
+					paintMode = Entity;
+				if( ImGui.isKeyDown( 'S'.imKey() ) )
+					paintMode = Select;
+			}
 		}
 
 
@@ -360,20 +384,27 @@ class TileMapEditor extends ImguiTool
 		handleShortcuts();
 
 		var io = ImGui.getIO();
-		if( ImGui.isWindowHovered() && io.KeyCtrl )
+		if( ImGui.isWindowHovered() )
 		{
 			var startPos: ImVec2 = ImGui.getCursorScreenPos();
 			var mousePos: ImVec2 = ImGui.getMousePos();
-			ImGui.setKeyOwner( ImGuiKey.MouseWheelY, 0 );
 
 			mouseScenePos = {x: ( mousePos.x - startPos.x) / zoom, y: ( mousePos.y - startPos.y ) / zoom };
 
 
-			if ( ImGui.isKeyPressed( ImGuiKey.MouseWheelY ) )
+			if( io.KeyCtrl )
 			{
-				zoom += io.MouseWheel > 0 ? 1 : -1;
-				zoom = CMath.iclamp(zoom,1,20);
+				ImGui.setKeyOwner( ImGuiKey.MouseWheelY, 0 );
+				if ( ImGui.isKeyPressed( ImGuiKey.MouseWheelY ) )
+				{
+					zoom += io.MouseWheel > 0 ? 1 : -1;
+					zoom = CMath.iclamp(zoom,1,20);
+				}
+
 			}
+
+
+
 
 		}
 		else

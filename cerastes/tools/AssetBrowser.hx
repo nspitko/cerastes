@@ -1,5 +1,6 @@
 package cerastes.tools;
 
+import cerastes.fmt.TileMapResource.TileMapDef;
 import cerastes.fmt.AtlasResource;
 import cerastes.c3d.Model.ModelDef;
 import cerastes.c3d.Material.MaterialDef;
@@ -71,6 +72,7 @@ class AssetBrowser  extends  ImguiTool
 		"Material" => true,
 		"Others" => false,
 		"Raw Model" => false,
+		"Tile Map" => true,
 	];
 
 	public static var needsReload = false;
@@ -295,6 +297,44 @@ class AssetBrowser  extends  ImguiTool
 				var bmp = new Bitmap( hxd.Res.tools.config.toTile(), asset.scene );
 				bmp.width = previewWidth;
 				bmp.height = previewHeight;
+
+				var t = new h2d.Text( cerastes.App.defaultFont, asset.scene);
+
+				t.text = Path.withoutDirectory( Path.withoutExtension(asset.file) );
+				t.textAlign = Center;
+				t.maxWidth = previewWidth - 8;
+				t.x = 4;
+				t.y = 4;
+				t.color = Vector4.fromColor( getTypeColor(asset.file) );
+				t.dropShadow = { dx:1, dy : 1, color : 0, alpha : 1 };
+
+			case "ctmap":
+				asset.scene = new h2d.Scene();
+
+				try
+				{
+					var tileMapDef =  cerastes.file.CDParser.parse( hxd.Res.loader.load(asset.file).entry.getText(), TileMapDef );
+					tileMapDef.unpack();
+					var obj = tileMapDef.create();
+					obj.rebuild();
+
+					var scale = previewWidth / (tileMapDef.width * tileMapDef.layers[0].tileData.tileWidth);
+					var yScale = previewHeight / (tileMapDef.height * tileMapDef.layers[0].tileData.tileHeight);
+					scale = CMath.fmin( scale, yScale );
+					obj.scale( scale );
+
+					var yHeight = ( tileMapDef.height * tileMapDef.layers[0].tileData.tileHeight ) * scale;
+
+
+					var offsetY = ( (previewHeight - yHeight  ) / 2 );
+					obj.y = offsetY;
+
+					asset.scene.addChild( obj );
+				}
+				catch( e )
+				{
+
+				}
 
 				var t = new h2d.Text( cerastes.App.defaultFont, asset.scene);
 
@@ -784,6 +824,7 @@ class AssetBrowser  extends  ImguiTool
 			case "audio": 0xFF880088;
 			case "png" | "bmp" | "gif": 0xFFffff88;
 			case "material" | "mat": 0xFFff8888;
+			case "ctmap": 0xFF66ff88;
 			default: 0xFFFFFFFF;
 		}
 	}
@@ -811,6 +852,7 @@ class AssetBrowser  extends  ImguiTool
 			case "fbx" | "glb" | "gltf": "Raw Model";
 			case "model": "Model";
 			case "audio": "Audio Cue Sheet";
+			case "ctmap": "Tile Map";
 			#if cannonml
 			case "cml": "Cannon Bullet File";
 			case "cbl": "Cannon Bullet Level";

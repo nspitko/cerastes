@@ -62,13 +62,12 @@ enum abstract TileMapTileFlags(Int) from Int to Int
 
 	public function pack()
 	{
-		var b = new hl.Bytes( data.length * 8 );
+		var b = haxe.io.Bytes.alloc( data.length * 4 );
 
 		for( i in 0 ... data.length )
-			b.setI32(i * 4, data[i]);
+			b.setInt32(i * 4, data[i]);
 
-
-		dataPacked = haxe.crypto.Base64.encode( b.toBytes( data.length ) );
+		dataPacked = haxe.crypto.Base64.encode( b );
 
 	}
 
@@ -76,12 +75,12 @@ enum abstract TileMapTileFlags(Int) from Int to Int
 	{
 		var decoded = haxe.crypto.Base64.decode( dataPacked );
 
-		var len: Int = cast decoded.length / 8;
+		var len: Int = cast decoded.length / 4;
 		data = new haxe.ds.Vector<Int>(len);
 
 		for( i in 0 ... len )
 		{
-			data[i] = decoded.getInt32( i * 8 );
+			data[i] = decoded.getInt32( i * 4 );
 		}
 	}
 
@@ -196,6 +195,23 @@ enum abstract TileMapTileFlags(Int) from Int to Int
 	{
 		for( l in layers )
 			l.clear();
+	}
+
+	// Run after loading a file; ensures null objects are created
+	public function unpack()
+	{
+		for( l in layers )
+		{
+			l.tileData.unpack();
+		}
+	}
+
+	public function pack()
+	{
+		for( l in layers )
+		{
+			l.tileData.pack();
+		}
 	}
 }
 

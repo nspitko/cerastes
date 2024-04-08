@@ -1189,6 +1189,9 @@ class ImGuiToolManager
 			case "model":
 				var t: ModelEditor = cast ImGuiToolManager.showTool("ModelEditor");
 				t.openFile( file );
+			case "ctmap":
+				var t: TileMapEditor = cast ImGuiToolManager.showTool("TileMapEditor");
+				t.openFile( file );
 			case "wav" | "ogg" | "mp3":
 				hxd.Res.load( file ).toSound().play();
 		}

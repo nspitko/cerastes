@@ -5,6 +5,8 @@ import cerastes.c2d.Vec2;
 import haxe.ds.ArraySort;
 import cerastes.flow.Flow.FlowComment;
 #if hlimgui
+import cerastes.tools.ImguiTool.ImGuiToolManager;
+import imgui.Markdown;
 import cerastes.data.Nodes;
 import cerastes.data.Nodes;
 import haxe.Constraints;
@@ -15,6 +17,12 @@ import imgui.ImGui;
 using imgui.ImGui.ImGuiKeyStringExtender;
 
 import imgui.ImGuiMacro.wref;
+
+@:structInit class ConnectionQueryResult
+{
+	public var node: Node;
+	public var pin: PinId;
+}
 
 @:structInit
 class TestNode extends Node
@@ -171,6 +179,35 @@ class ImGuiNodes
 		return null;
 	}
 
+
+
+	function queryConnections( pinId: PinId32 ) : Array<ConnectionQueryResult>
+	{
+		var out = [];
+		// Find the links
+		for( l in links )
+		{
+			var otherId = -1;
+			if( l.sourceId == pinId )
+				otherId = l.destId;
+			else if( l.destId == pinId )
+				otherId = l.sourceId;
+
+			if( otherId != -1 )
+			{
+
+				var otherNode = queryPin( otherId );
+				var r: ConnectionQueryResult = {
+					node: otherNode,
+					pin: otherId
+				};
+				out.push(r);
+			}
+		}
+
+		return out;
+	}
+
 	public function addNode(node: Node, x: Float, y: Float)
 	{
 		node.init(this);
@@ -266,6 +303,27 @@ class ImGuiNodes
 			default:
 				Utils.assert(false, 'Unknown node kind ${node.def.kind}');
 		}
+
+		if( ImGui.isItemHovered() )
+		{
+			var contents = node.onTooltip( this );
+			if( contents != null && contents.length > 0 )
+			{
+				var style = ImGui.getStyle();
+				NodeEditor.suspend();
+				var size = ImGui.calcTextSize( contents);
+				size.x += style.WindowPadding.x * 2;
+				size.y += style.WindowPadding.y * 2;
+				ImGui.setNextWindowSizeConstraints( size, { x: size.x * 2, y: size.y * 2 } );
+
+				ImGui.beginTooltip();
+				Markdown.text( contents, ImGuiToolManager.markdownConfig );
+				ImGui.endTooltip();
+
+				NodeEditor.resume();
+			}
+		}
+
 
 		if( !node.editorData.hasRendered )
 		{

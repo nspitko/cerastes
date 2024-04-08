@@ -25,6 +25,7 @@ import haxe.rtti.Meta;
 import haxe.macro.Expr;
 import cerastes.input.ControllerAccess;
 import imgui.ImGuiMacro.wref;
+import imgui.Markdown;
 
 @:keepSub
 class ImguiTool
@@ -144,6 +145,8 @@ class ImGuiToolManager
 
 	public static var mainWindow: hxd.Window;
 	public static var hoveredWindow: hxd.Window;
+
+	public static var markdownConfig: MarkdownConfig;
 
 	static function set_enabled(v)
 	{
@@ -271,6 +274,13 @@ class ImGuiToolManager
 	{
 		var io = ImGui.getIO();
 		io.ConfigFlags |= DockingEnable;
+
+		// Markdown setup
+		markdownConfig = new MarkdownConfig();
+		markdownConfig.heading1 = ImGuiToolManager.headingFont;
+		markdownConfig.imageCallback = markdownImageCallback;
+		markdownConfig.linkCallback = markdownLinkCallback;
+		markdownConfig.tooltipCallback = markdownTooltipCallback;
 
 		#if multidriver
 		io.ConfigFlags |= ViewportsEnable;
@@ -439,8 +449,10 @@ class ImGuiToolManager
 				// on key release/etc.
 				hxd.Window.WINDOWS.push(w);
 				sdl.Sdl.processEvents(@:privateAccess hxd.Window.dispatchEvent);
-				hxd.Window.WINDOWS.remove(w);
-
+				// Further hack: Delay removal in case the event pool is delayed a tick for whatever reason.
+				new Timer(0.5, () -> {
+					hxd.Window.WINDOWS.remove(w);
+				});
 
 				v.RendererUserData = null;
 				v.PlatformUserData = null;
@@ -1362,6 +1374,47 @@ class ImGuiToolManager
 		}
 
 		return changed;
+	}
+
+	static function markdownImageCallback( data: MarkdownLinkCallbackData, ret: MarkdownImageData ): Void
+	{
+
+		var text = data.text.toBytes(data.textLength).getString(0,data.textLength);
+		var link = data.link.toBytes(data.linkLength).getString(0,data.linkLength);
+
+		trace(data.link);
+		trace("STUB");
+
+		/*
+		var tex = hxd.Res.atlases.Sei_tex.toTexture();
+
+
+
+		ret.textureId = tex;
+		ret.uv0.copyFrom({x: 0, y: 0});
+		ret.uv1.copyFrom({x: 1, y: 1});
+		ret.size.copyFrom({x: tex.width, y: tex.height});
+		ret.isValid = true;
+		*/
+
+	}
+
+	static function markdownLinkCallback( data: MarkdownLinkCallbackData ): Void
+	{
+		if( !data.isImage )
+		{
+			var link = data.link.toBytes(data.linkLength).getString(0,data.linkLength);
+			Sys.command("start", ["",link]);
+		}
+	}
+
+	static function markdownTooltipCallback( data: MarkdownTooltipCallbackData ): Void
+	{
+		if(  !data.isImage && data.linkLength > 0 )
+		{
+			var link = data.link.toBytes(data.linkLength).getString(0,data.linkLength);
+			ImGui.setTooltip(link);
+		}
 	}
 }
 

@@ -1,5 +1,6 @@
 package cerastes.data;
 
+import cerastes.flow.Flow.ConditionNode;
 import hxd.clipper.Clipper.NodeType;
 import haxe.Constraints;
 #if hlimgui
@@ -105,6 +106,39 @@ enum abstract PinDataType(Int) from Int to Int {
 
 	}
 
+	function onTooltip( editor: ImGuiNodes )
+	{
+		var out ="";
+		for( p in def.pins )
+		{
+			if( p.kind != Input )
+				continue;
+
+			var pinId = pins[p.id];
+			var connections = editor.queryConnections( pinId );
+			var hasConditions = false;
+
+			for( c in connections )
+			{
+				if( Std.isOfType( c.node, ConditionNode ) )
+				{
+					var conditionNode: ConditionNode = cast c.node;
+					var port = c.node.getPortforPin( c.pin );
+					var condition = conditionNode.conditions[port-1];
+
+					if( out.length > 0 ) out += "\n";
+					if( !hasConditions ) out += "*Conditions*\n";
+
+					hasConditions = true;
+
+					out += '${condition != null ? condition : "(If No other conditions met)"}';
+				}
+			}
+		}
+
+		return out;
+	}
+
 	function get_label()
 	{
 		return def.name;
@@ -174,6 +208,16 @@ enum abstract PinDataType(Int) from Int to Int {
 				return pinId;
 		}
 
+		return -1;
+	}
+
+	function getPortforPin( p: PinId )
+	{
+		for( port => pin in pins )
+		{
+			if( pin == p )
+				return port;
+		}
 		return -1;
 	}
 

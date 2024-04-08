@@ -356,6 +356,16 @@ class FileNode extends FlowNode
 		}
 		return null;
 	}
+
+	override function onTooltip( editor: ImGuiNodes )
+	{
+		var out = super.onTooltip(editor);
+
+		if( out.length > 0 ) out += "\n";
+		out += '*File*\nPath: ${file}';
+
+		return out;
+	}
 	#end
 }
 
@@ -420,6 +430,16 @@ class SceneNode extends FlowNode
 
 		return super.getOptions(field);
 	}
+
+	override function onTooltip( editor: ImGuiNodes )
+	{
+		var out = super.onTooltip(editor);
+
+		if( out.length > 0 ) out += "\n";
+		out += '*Scene*\n${scene}';
+
+		return out;
+	}
 	#end
 
 }
@@ -467,6 +487,16 @@ class LabelNode extends FlowNode
 	{
 		return labelId;
 	}
+
+	override function onTooltip( editor: ImGuiNodes )
+	{
+		var out = super.onTooltip(editor);
+
+		if( out.length > 0 ) out += "\n";
+		out += '*Label*\nId: ${labelId}';
+
+		return out;
+	}
 	#end
 }
 
@@ -505,6 +535,16 @@ class JumpNode extends FlowNode
 	override function get_labelInfo()
 	{
 		return labelId;
+	}
+
+	override function onTooltip( editor: ImGuiNodes )
+	{
+		var out = super.onTooltip(editor);
+
+		if( out.length > 0 ) out += "\n";
+		out += '*Jump*\nTarget: ${labelId}';
+
+		return out;
 	}
 	#end
 }

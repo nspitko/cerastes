@@ -1340,7 +1340,7 @@ class UIEditor extends ImguiTool
 
 			if( ImGui.beginDragDropSource( srcFlags ) )
 			{
-				ImGui.setDragDropPayloadString("name", c.name );
+				ImGui.setDragDropPayloadObject("uiDef", c );
 
 				ImGui.beginTooltip();
 
@@ -1357,10 +1357,9 @@ class UIEditor extends ImguiTool
 			{
 				var targetFlags : ImGuiDragDropFlags = 0;
 
-				var payload = ImGui.acceptDragDropPayloadString("name");
-				if( payload != null )
+				var dropDef: CUIObject = cast ImGui.acceptDragDropPayloadObject("uiDef");
+				if( dropDef != null )
 				{
-					var dropDef = getDefByName( payload );
 					selectedDragDrop = dropDef;
 					ImGui.openPopup('${c.name}_uie_popup');
 				}
@@ -1466,7 +1465,9 @@ class UIEditor extends ImguiTool
 			{
 				if( c.children.length > 0)
 				{
+					ImGui.pushID( name );
 					populateChildren(c);
+					ImGui.popID();
 				}
 				ImGui.treePop();
 			}

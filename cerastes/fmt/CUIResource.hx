@@ -1092,7 +1092,7 @@ class CUIResource extends Resource
 	public static function getTile( file: String )
 	{
 		if( file == null || file == "")
-			return null;
+			return Utils.invalidTile();
 
 		if(file.charAt(0) == "#" )
 			return Tile.fromColor( Std.parseInt( '0x${file.substr(1)}' ) );
@@ -1128,17 +1128,17 @@ class CUIResource extends Resource
 			{
 				var res = hxd.Res.loader.loadCache( file, hxd.res.Image );
 				if( res == null || res.entry.isDirectory )
-					return null;
+					return Utils.invalidTile();
 
 				return res.toTile();
 			}
 			catch(e)
 			{
-				return null;
+				return Utils.invalidTile();
 			}
 		}
 
-		return null;
+		return Utils.invalidTile();
 
 	}
 

@@ -479,11 +479,12 @@ class Utils
 					{
 						for( lpy in py ... py + block )
 						{
-							access.setPixel(lpx, lpy, e ? 0xFF000000 : 0xFFFF00FF );
+							access.setPixel(lpx, lpy, e ? 0x000000FF : 0xFF00FFFF );
 						}
 					}
 				}
 			}
+			missingPixels.convert( RGBA );
 		}
 
 		return missingPixels;

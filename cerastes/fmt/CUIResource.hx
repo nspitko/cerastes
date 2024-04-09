@@ -1102,6 +1102,9 @@ class CUIResource extends Resource
 			var atlasName = file.substr( 0, atlasPos );
 			var tileName = file.substr(atlasPos + 1);
 
+			if( !hxd.Res.loader.exists( atlasName ) )
+				return Utils.invalidTile();
+
 			var res = hxd.Res.loader.loadCache(atlasName, AtlasResource );
 			if( res != null )
 			{

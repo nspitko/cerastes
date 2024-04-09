@@ -1,6 +1,8 @@
 package cerastes;
 
 
+import hxd.PixelFormat;
+import hxd.Pixels;
 import h2d.Tile;
 import cerastes.fmt.AtlasResource;
 import cerastes.fmt.AtlasResource.AtlasEntry;
@@ -445,13 +447,46 @@ class Utils
 	private static var missingTexture: Texture;
 	private static var missingTile: h2d.Tile;
 	private static var missingAtlas: AtlasEntry;
+	private static var missingPixels: Pixels;
 
 	public static function invalidTexture()
 	{
 		if( missingTexture == null )
-			missingTexture = Texture.fromColor(0xFF00FF);
+			missingTexture = Texture.fromPixels( invalidPixels() );
 
 		return missingTexture;
+	}
+
+	public static function invalidPixels()
+	{
+		if( missingPixels == null )
+		{
+			final size = 64;
+			final block = 16;
+			var e = false;
+
+			missingPixels = Pixels.alloc(size,size, PixelFormat.ARGB);
+			var access:hxd.Pixels.PixelsARGB = missingPixels;
+			for( y in 0 ... cast ( size / block ) )
+			{
+				e = !e;
+				for( x in 0 ... cast ( size / block ) )
+				{
+					var px = x * block;
+					var py = y * block;
+					e = !e;
+					for( lpx in px ... px + block )
+					{
+						for( lpy in py ... py + block )
+						{
+							access.setPixel(lpx, lpy, e ? 0xFF000000 : 0xFFFF00FF );
+						}
+					}
+				}
+			}
+		}
+
+		return missingPixels;
 	}
 
 	public static function invalidTile()

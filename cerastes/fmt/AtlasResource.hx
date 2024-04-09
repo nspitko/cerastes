@@ -362,9 +362,16 @@ enum PackMode {
 		{
 			for( frame in entry.frames )
 			{
-				var i = hxd.Res.loader.load( frame.file ).toImage();
-				var p = i.getPixels();
-				var size = i.getSize();
+				var p;
+				if( hxd.Res.loader.exists( frame.file ) )
+				{
+					var i = hxd.Res.loader.load( frame.file ).toImage();
+					p = i.getPixels();
+				}
+				else
+				{
+					p = Utils.invalidPixels();
+				}
 				pixels.blit(frame.pos.x, frame.pos.y, p, frame.offset.x, frame.offset.y, frame.size.x, frame.size.y );
 			}
 		}
@@ -426,10 +433,19 @@ enum PackMode {
 		for( frame in entry.frames )
 		{
 			resMutex.acquire();
-			var i = hxd.Res.loader.load( frame.file ).toImage();
+			var p;
+			if( hxd.Res.loader.exists(frame.file) )
+			{
+				var i = hxd.Res.loader.load( frame.file ).toImage();
+				p = i.getPixels();
+			}
+			else
+			{
+				p = Utils.invalidPixels();
+			}
 			resMutex.release();
 
-			var p = i.getPixels();
+
 
 			frame.size.x = p.width;
 			frame.size.y = p.height;

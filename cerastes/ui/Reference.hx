@@ -35,4 +35,13 @@ class Reference extends h2d.Object
 	{
 		return ref;
 	}
+
+	/**
+	 * Creates an instance of the reference target. This does NOT clone the reference!
+	 * This is used when we want to use a reference as a template.
+	 */
+	public function make( ?parent: Object )
+	{
+		return hxd.Res.loader.loadCache( fileName, CUIResource ).toObject( parent );
+	}
 }

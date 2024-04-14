@@ -22,6 +22,10 @@ import cerastes.tools.FlowDebugger;
 	public var runner: FlowRunner;
 
 	public function resume() { node.nextAll( runner ); }
+	public function nextPort(port: PortId) {
+		var pinId = node.pins[port];
+		node.next( runner, pinId );
+	}
 
 	public function new( node: T, runner: FlowRunner )
 	{

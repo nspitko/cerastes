@@ -451,13 +451,16 @@ class TimelineRunner implements Tickable
 					if( sound != null )
 					{
 						var channel = sound.play();
-						if( adjTime > 0.1)
+						if( channel != null )
 						{
-							channel.position = adjTime;
+							if( adjTime > 0.1)
+							{
+								channel.position = adjTime;
+							}
+							if( playingSounds == null )
+								playingSounds = [];
+							playingSounds.push(channel);
 						}
-						if( playingSounds == null )
-							playingSounds = [];
-						playingSounds.push(channel);
 					}
 
 				case SoundStop:

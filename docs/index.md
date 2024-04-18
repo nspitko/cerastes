@@ -8,8 +8,11 @@ Most of Cerastes uses ImGui. This allows tools to be rapidly produced, and since
 
 ## What tools are included?
 This is not a complete list.
+* [Asset Browser](asset_browser.md)
 * [Flow Editor](flow_editor.md)
 * [UI Editor](ui_editor.md)
+* [Atlas Builder](atlas_builder.md)
+* [Scene Inspector](inspector.md)
 
 ### Should I use this?
 No. Cerastes is not developed with external usage in mind, and I make braking changes regularly. You certainly *can* use it, but the optimal workflow is probably to immediately fork it and make it your own.

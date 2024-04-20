@@ -169,7 +169,8 @@ class AtlasBuilder  extends  ImguiTool
 		ImGui.setNextWindowDockId( dockspaceIdCenter, dockCond );
 		ImGui.begin('View##${windowID()}', null, ImGuiWindowFlags.NoMove | ImGuiWindowFlags.HorizontalScrollbar );
 
-		var vp = ImGui.viewportGetCurrentViewport();
+		//var pio = ImGui.getPlatformIO();
+		var vp = ImGui.contextGetCurrentViewport();
 		setWindow( vp.PlatformHandle );
 
 		handleShortcuts();

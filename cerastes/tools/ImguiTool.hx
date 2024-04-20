@@ -288,8 +288,11 @@ class ImGuiToolManager
 		io.BackendFlags |= ImGuiBackendFlags.RendererHasViewports;
 		io.BackendFlags |= ImGuiBackendFlags.HasMouseHoveredViewport;
 
+		var platformIO = ImGui.getPlatformIO();
+
 		mainWindow = hxd.Window.getInstance();
-		var v = ImGui.viewportSetMainViewport( mainWindow );
+
+		var v = platformIO.setMainViewport( mainWindow );
 		if( v != null )
 		{
 			var w= mainWindow;
@@ -336,8 +339,7 @@ class ImGuiToolManager
 
 		for( d in sdl.Sdl.getDisplays() )
 		{
-			trace(d);
-			ImGui.viewportAddMonitor( {
+			platformIO.addMonitor( {
 				x: d.right - d.left,
 				y: d.bottom - d.top
 			}, {
@@ -350,12 +352,12 @@ class ImGuiToolManager
 		// @todo: need to pass position in.
 		for( m in hxd.Window.getMonitors() )
 		{
-			ImGui.viewportAddMonitor( { x: m.width, y: m.height }, { x: 0, y: 0 } );
+			platformIO.addMonitor( { x: m.width, y: m.height }, { x: 0, y: 0 } );
 		}
 		#end
 
 		var ignoreResize = false;
-		ImGui.viewportSetPlatformCreateWindow( ( v: ImGuiViewport ) -> {
+		platformIO.Platform_CreateWindow = ( v: ImGuiViewport ) -> {
 			@:privateAccess
 			{
 				#if hldx
@@ -431,9 +433,9 @@ class ImGuiToolManager
 				mainWindow.setCurrent();
 
 			}
-		});
+		};
 
-		ImGui.viewportSetPlatformDestroyWindow( ( v: ImGuiViewport ) -> {
+		platformIO.Platform_DestroyWindow = ( v: ImGuiViewport ) -> {
 
 			@:privateAccess
 			{
@@ -461,25 +463,24 @@ class ImGuiToolManager
 
 
 
-		});
+		};
 
-		ImGui.viewportSetPlatformShowWindow( ( v: ImGuiViewport ) -> {
+		platformIO.Platform_ShowWindow = ( v: ImGuiViewport ) -> {
 			#if hlsdl
 			@:privateAccess v.PlatformHandle.window.visible = true;
 			#end
-		});
+		};
 
-		ImGui.viewportSetPlatformSetWindowPos( ( v: ImGuiViewport, size: ImVec2 ) -> {
+		platformIO.Platform_SetWindowPos = ( v: ImGuiViewport, size: ImVec2 ) -> {
 			#if hldx
 			var w: dx.Window = @:privateAccess v.PlatformHandle.window;
 			w.setPosition( cast size.x, cast size.y );
 			#elseif hlsdl
 			@:privateAccess v.PlatformHandle.window.setPosition( cast size.x, cast size.y );
 			#end
-		});
+		};
 
-		ImGui.viewportSetPlatformGetWindowPos( ( v: ImGuiViewport, pos: ImGuiVec2Struct ) -> {
-			// @todo
+		platformIO.Platform_GetWindowPos = ( v: ImGuiViewport, pos: ImGuiVec2Struct ) -> {
 			#if hlsdl
 			@:privateAccess
 			{
@@ -490,12 +491,13 @@ class ImGuiToolManager
 				pos.y = cast y;
 			}
 			#else
+			// @todo
 			pos.x = 0;
 			pos.y = 0;
 			#end
-		});
+		};
 
-		ImGui.viewportSetPlatformSetWindowSize( ( v: ImGuiViewport, size: ImVec2 ) -> {
+		platformIO.Platform_SetWindowSize = ( v: ImGuiViewport, size: ImVec2 ) -> {
 			if( v.PlatformHandle.width == size.x && v.PlatformHandle.height == size.y )
 				return;
 			ignoreResize = true;
@@ -505,9 +507,9 @@ class ImGuiToolManager
 			// This is a problem for us since we triggered the resize, but imgui doesn't know that.
 			new Timer(0.2, () -> { ignoreResize = false; });
 
-		});
+		};
 
-		ImGui.viewportSetPlatformGetWindowSize( ( v: ImGuiViewport, size: ImGuiVec2Struct ) -> {
+		platformIO.Platform_GetWindowSize = ( v: ImGuiViewport, size: ImGuiVec2Struct ) -> {
 
 			//var size: ImVec2 = {x: 0, y: 0};
 			var window: hxd.Window = v.PlatformHandle;
@@ -519,33 +521,34 @@ class ImGuiToolManager
 
 			}
 			//return size; // @todo
-		});
+		};
 
-		ImGui.viewportSetPlatformSetWindowFocus( ( v: ImGuiViewport ) -> {
+		platformIO.Platform_SetWindowFocus = ( v: ImGuiViewport ) -> {
 			// @todo
-			Utils.warning("STUB: PlatformSetWindowFocus");
-		});
+			trace("STUB: PlatformSetWindowFocus");
+		};
 
-		ImGui.viewportSetPlatformGetWindowFocus( ( v: ImGuiViewport ) -> {
+		platformIO.Platform_GetWindowFocus =  ( v: ImGuiViewport ) -> {
 			return v.PlatformHandle.isFocused;
-		});
+		};
 
-		ImGui.viewportSetPlatformGetWindowMinimized( ( v: ImGuiViewport ) -> {
-			return false; // @todo
-		});
+		platformIO.Platform_GetWindowMinimized = ( v: ImGuiViewport ) -> {
+			// @todo
+			return false;
+		};
 
-		ImGui.viewportSetPlatformSetWindowTitle( ( v: ImGuiViewport, title: hl.Bytes ) -> {
+		platformIO.Platform_SetWindowTitle = ( v: ImGuiViewport, title: hl.Bytes ) -> {
 			var str = @:privateAccess String.fromUTF8( title );
 			v.PlatformHandle.title = str;
-		});
+		};
 
-		ImGui.viewportSetPlatformSetWindowAlpha( ( v: ImGuiViewport, alpha: Single ) -> {
+		platformIO.Platform_SetWindowAlpha =  ( v: ImGuiViewport, alpha: Single ) -> {
 			#if hlsdl
 			@:privateAccess v.PlatformHandle.window.opacity = alpha;
 			#end
-		});
+		};
 
-		ImGui.viewportSetRendererRenderWindow( ( v: ImGuiViewport, arg: Dynamic ) -> {
+		platformIO.Renderer_RenderWindow = ( v: ImGuiViewport, arg: Dynamic ) -> {
 
 			if( !v.PlatformWindowCreated || v.PlatformHandle == null )
 				return;
@@ -599,9 +602,9 @@ class ImGuiToolManager
 
 			Metrics.end();
 
-		});
+		};
 
-		ImGui.viewportSetRendererSwapBuffers( ( v: ImGuiViewport, arg: Dynamic ) -> {
+		platformIO.Renderer_SwapBuffers = ( v: ImGuiViewport, arg: Dynamic ) -> {
 
 			Metrics.begin("ImGuiToolManager.Present");
 			var oldWin = hxd.Window.getInstance();
@@ -610,7 +613,7 @@ class ImGuiToolManager
 			@:privateAccess w.window.present();
 			oldWin.setCurrent();
 			Metrics.end();
-		});
+		};
 
 		#end
 

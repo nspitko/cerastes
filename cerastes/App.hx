@@ -220,6 +220,11 @@ class App extends hxd.App {
 
 	override function loadAssets( onReady: Void->Void )
 	{
+		#if hlimgui
+		// Gross hack: Force mainloop setup here incase we crash.
+		hxd.System.setLoop(mainLoop);
+		hxd.Key.initialize();
+		#end
 		onReady();
 	}
 

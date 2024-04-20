@@ -27,6 +27,11 @@ class Sound extends h2d.Object
 	public function play( )
 	{
 		handle = SoundManager.play( cue, channel == Music ? SoundManager.musicChannelGroup : SoundManager.sfxChannelGroup );
+		if( handle == null )
+		{
+			Utils.warning('Sound.play returned an invalid handle for cue ${cue}, missing file?');
+			return null;
+		}
 		handle.channel.volume = volume;
 		handle.channel.loop = loop;
 		return handle.channel;

@@ -208,42 +208,22 @@ class Scene
 		if( exiting )
 			return;
 
-        #if hlimgui
-        try
-        {
-        #end
 
-            Utils.info('Switch to scene: ${other}');
+        Utils.info('Switch to scene: ${other}');
 
-            exiting = true;
+        exiting = true;
 
-            other.preload();
+        other.preload();
 
-            fadeOut( () -> {
-                #if hlimgui
-                try
-                {
-                    #end
-                    exit();
-                    cerastes.App.currentScene = other;
-                    other.enter();
-                    other.fadeIn( () -> { other.transitionComplete(); } );
+        fadeOut( () -> {
 
-                    unload();
-                #if hlimgui
-                }  catch( e )
-                {
-                    Utils.error('Failed to switch scenes! ${e}');
-                }
-            #end
-            });
+                exit();
+                cerastes.App.currentScene = other;
+                other.enter();
+                other.fadeIn( () -> { other.transitionComplete(); } );
+                unload();
+        });
 
-        #if hlimgui
-        }  catch( e )
-        {
-            Utils.error('Failed to switch scenes! ${e}');
-        }
-        #end
     }
 
     public function fadeOut( onComplete: Void -> Void )

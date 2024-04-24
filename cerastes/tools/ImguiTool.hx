@@ -147,6 +147,8 @@ class ImGuiToolManager
 	public static var hoveredWindow: hxd.Window;
 
 	public static var markdownConfig: MarkdownConfig;
+	// Hilariously bad hack
+	public static var globalKeyboardTarget: h2d.Scene;
 
 	static function set_enabled(v)
 	{
@@ -408,6 +410,21 @@ class ImGuiToolManager
 				{
 					var d = cerastes.App.instance.drawable;
 					w.addEventTarget( ( e: hxd.Event ) -> {
+
+						if( globalKeyboardTarget != null )
+						{
+							switch( e.kind )
+							{
+								case EKeyDown | EKeyUp | ETextInput:
+									globalKeyboardTarget.events.emitEvent(e);
+									// We have to do this to support Key.IsDown.
+									// It's fine... *sweat*
+									hxd.Key.onEvent(e);
+									return;
+								default:
+
+							}
+						}
 						d.onMultiWindowEvent( w, e, v );
 						// Window events should NEVER propagate down; heaps isn't listening for them so we need to
 						// do this to prevent the OS chime from playing on key press.

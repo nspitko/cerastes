@@ -20,14 +20,23 @@ class Reference extends h2d.Object
 
 	public function load( file: String )
 	{
+
 		removeChildren();
 		fileName = file;
+		#if tools
+		var res = hxd.Res.loader.load( file );
+		ref = res.to(CUIResource).toObject(this);
+		res.watch(() -> {
+			@:privateAccess res.to(CUIResource).data = null;
+			reload();
+		});
+		#else
 		ref = hxd.Res.loader.loadCache( file, CUIResource ).toObject(this);
+		#end
 	}
 
 	public function reload()
 	{
-		removeChildren();
 		load(fileName);
 	}
 
@@ -42,6 +51,7 @@ class Reference extends h2d.Object
 	 */
 	public function make( ?parent: Object )
 	{
-		return hxd.Res.loader.loadCache( fileName, CUIResource ).toObject( parent );
+		var ref = hxd.Res.loader.loadCache( fileName, CUIResource ).toObject( parent );
+		return ref;
 	}
 }

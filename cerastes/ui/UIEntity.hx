@@ -78,6 +78,14 @@ class UIEntity extends h2d.Object implements Entity
 			draggingTarget = this;
 			return true;
 		}
+		else
+		{
+			if( debugDrag )
+			{
+				DebugDraw.bounds( dragBounds, 0x440000 );
+				DebugDraw.bounds( bounds, 0x004400 );
+			}
+		}
 
 		if( draggingTarget == this )
 			draggingTarget = null;

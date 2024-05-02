@@ -13,7 +13,6 @@ import imgui.ImGui;
 import hl.NativeArray;
 import cerastes.fmt.CUIResource;
 import haxe.EnumTools;
-import haxe.macro.Context;
 import h3d.Vector4;
 import h2d.col.Point;
 import h2d.Tile;

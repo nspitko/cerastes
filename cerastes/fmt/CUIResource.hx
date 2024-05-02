@@ -703,10 +703,6 @@ class CUIResource extends Resource
 					Utils.error('CUI: Cannot create unknown type ${entry.type}; ignoring!!');
 					obj = new h2d.Object();
 				}
-
-
-
-
 		}
 
 		obj.name = entry.name;

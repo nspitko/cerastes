@@ -1226,6 +1226,9 @@ class ImGuiToolManager
 				t.openFile( file );
 			case "wav" | "ogg" | "mp3":
 				hxd.Res.load( file ).toSound().play();
+
+			default:
+				Utils.warning('No file handler for ${ext}');
 		}
 	}
 

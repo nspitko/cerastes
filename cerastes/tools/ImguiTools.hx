@@ -626,6 +626,14 @@ class ImGuiTools
 			ImGui.endDragDropTarget();
 		}
 
+		if( tile?.length > 0 )
+		{
+			ImGui.sameLine();
+			var bits = tile.split("|");
+			if( ImGui.button("\uf3bf") )
+				ImGuiToolManager.openAssetEditor( bits[0] );
+		}
+
 		if( !changed )
 			return null;
 

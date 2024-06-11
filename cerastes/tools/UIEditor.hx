@@ -2519,6 +2519,12 @@ class UIEditor extends ImguiTool
 
 				var newFile = IG.textInput( "File", d.file );
 				imTooltip("Another cui file to include. References count as an object, so the included file's root will be a child of this reference object.");
+				if( d.file?.length > 0 )
+				{
+					ImGui.sameLine();
+					if( ImGui.button("\uf3bf") )
+						ImGuiToolManager.openAssetEditor( d.file );
+				}
 				if( newFile != null && hxd.Res.loader.exists( newFile ) )
 					d.file = newFile;
 

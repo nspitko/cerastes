@@ -29,7 +29,7 @@ class FPSPlayerController extends PlayerController
 		world.getScene().camera.setFovX(90,16/9);
 
 		#if hlsdl
-		sdl.Sdl.setRelativeMouseMode(true);
+		//sdl.Sdl.setRelativeMouseMode(true);
 		#end
 		#if hldx
 		@:privateAccess hxd.Window.getInstance().window.clipCursor(true);
@@ -83,25 +83,25 @@ class FPSPlayerController extends PlayerController
 		if( Key.isDown( Key.W ) )
 		{
 			isMoving = true;
-			dir = dir.multiply(1);
+			//dir *= 1;
 		}
 		else if( Key.isDown( Key.S ) )
 		{
 			isMoving = true;
-			dir = dir.multiply(-1);
+			dir *= -1;
 		}
 
 		if( Key.isDown( Key.D ) )
 		{
 			isMoving = true;
-			var side = dir.toVector4().cross(new Vector4(0,0,1)).toPoint();
-			dir = side.multiply(-1);
+			var side = dir.toVector4().cross(new Vector4(0,0,1)).toVector();
+			dir = side * -1;
 		}
 		else if( Key.isDown( Key.A ) )
 		{
 			isMoving = true;
-			var side = dir.toVector4().cross(new Vector4(0,0,1)).toPoint();
-			dir = side.multiply(1);
+			var side = dir.toVector4().cross(new Vector4(0,0,1)).toVector();
+			dir = side;
 		}
 
 		if( Key.isPressed( Key.SPACE ) )
@@ -111,7 +111,7 @@ class FPSPlayerController extends PlayerController
 
 		if( isMoving )
 		{
-			dir = dir.multiply(moveSpeed);
+			dir *= moveSpeed;
 			controller.setWalkDirection( new bullet.Native.Vector3(dir.x, dir.y, dir.z) );
 		}
 

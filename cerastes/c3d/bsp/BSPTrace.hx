@@ -1,13 +1,13 @@
 package cerastes.c3d.bsp;
-
+#if false
 import cerastes.c3d.q3bsp.Q3BSPFile.BSPTextureDef;
 import cerastes.c3d.q3bsp.Q3BSPFile.BSPBrushSideDef;
 import cerastes.c3d.q3bsp.Q3BSPFile.BSPFileDef;
-import cerastes.c3d.q3bsp.Q3BSPMap.BSPPatchDef;
+//import cerastes.c3d.q3bsp.Q3BSPMap.BSPPatchDef;
 import cerastes.c3d.q3bsp.Q3BSPFile.BSPBrushDef;
 import cerastes.c3d.q3bsp.Q3BSPFile.BSPLeafDef;
 import cerastes.c3d.q3bsp.Q3BSPFile.BSPPlaneDef;
-import h3d.Vector4;
+import h3d.Vector;
 
 
 // CM_trace.c
@@ -151,3 +151,4 @@ class BSPTrace
 
 
 }
+#end

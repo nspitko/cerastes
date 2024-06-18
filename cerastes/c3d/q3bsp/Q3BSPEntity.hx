@@ -12,6 +12,7 @@ class Q3BSPEntityData extends cerastes.c3d.Entity.EntityDataBase
 	public var bsp: BSPFileDef = null;
 }
 
+@:keepSub
 class Q3BSPEntity extends BaseEntity
 {
 	override function create( def: EntityData, w: World )

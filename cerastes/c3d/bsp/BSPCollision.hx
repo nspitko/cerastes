@@ -184,9 +184,9 @@ class BSPCollision
 
 		if( out != null )
 		{
-			var cd0 = normal1.cross(normal2).multiply( bsp.planes[ f0.planeNum ].dist );
-			var cd1 = normal2.cross(normal0).multiply( bsp.planes[ f1.planeNum ].dist );
-			var cd2 = normal0.cross(normal1).multiply( bsp.planes[ f2.planeNum ].dist );
+			var cd0 = normal1.cross(normal2) * ( bsp.planes[ f0.planeNum ].dist );
+			var cd1 = normal2.cross(normal0) * ( bsp.planes[ f1.planeNum ].dist );
+			var cd2 = normal0.cross(normal1) * ( bsp.planes[ f2.planeNum ].dist );
 
 			// @todo this could be more efficient probably?
 			var sum: Point = cd0.add(cd1.add(cd2));

@@ -15,7 +15,7 @@ import hxd.IndexBuffer;
 import h3d.scene.Object;
 import h3d.scene.MultiMaterial;
 import bullet.Body;
-import cerastes.c3d.QEntity;
+
 
 class QBrushPrim extends h3d.prim.Polygon
 {

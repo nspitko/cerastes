@@ -16,7 +16,7 @@ class MovingBrush extends Brush
 		var pos = new h3d.col.Point(x,y,z);
 		var dir = target.sub(pos);
 		dir.normalize();
-		var move = dir.multiply(speed);
+		var move = dir * speed;
 
 		setAbsOrigin( x + move.x, y+move.y, z+move.z );
 
@@ -199,7 +199,7 @@ class FuncDoor extends MovingBrush
 		var bounds = null;//brush.getBounds(); @todo
 		var dist = Math.abs( bounds.getSize().dot( dir ) ) + lip;
 
-		var offset = dir.multiply(dist);
+		var offset = dir * dist;
 
 		openPos = new Point( closedPos.x + offset.x, closedPos.y + offset.y, closedPos.z );
 

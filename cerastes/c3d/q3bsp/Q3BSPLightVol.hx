@@ -1,5 +1,6 @@
 package cerastes.c3d.q3bsp;
 
+import h3d.Vector;
 import h3d.Vector4;
 import h3d.Matrix;
 import h3d.col.Point;
@@ -141,15 +142,15 @@ class Q3BSPLightVol extends h3d.scene.fwd.Light
 */
 
 					var norm = new Vector4(0,0,1);
-					mat.initRotationAxis(new Vector4(0,1,0), angY);
+					mat.initRotationAxis(new Vector(0,1,0), angY);
 					norm.transform(mat);
 
-					mat.initRotationAxis(new Vector4(1,0,0), angX);
+					mat.initRotationAxis(new Vector(1,0,0), angX);
 					norm.transform(mat);
 
 
 
-					DebugDraw.line( pos, pos.add( norm.toPoint().multiply(32) ),0xFF0000,-1 );
+					DebugDraw.line( pos, pos.add( norm.toVector() * 32 ),0xFF0000,-1 );
 
 
 				}

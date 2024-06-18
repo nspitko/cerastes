@@ -1,5 +1,5 @@
 package cerastes.c3d.map;
-
+#if q3map
 
 class QCollision
 {
@@ -9,9 +9,10 @@ class QCollision
 
 		for( s in surfaceGatherer.surfaces )
 		{
-			var mesh = new bullet.Native.btTriangleMesh();
-			
+			var mesh = new bullet.Native.btTriangle();
+
 		}
 	}
 
 }
+#end

@@ -1,4 +1,4 @@
-package cerastes.c3d.q3bsp.shaders;
+package cerastes.c3d.bsp.shaders;
 
 
 class Q3Shader extends hxsl.Shader {

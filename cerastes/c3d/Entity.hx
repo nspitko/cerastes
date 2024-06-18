@@ -244,11 +244,11 @@ class BaseEntity extends Object implements cerastes.Entity
 	}
 
 	// ---------------------------------------------------------------------------------------------------------------
-	public function getBodyOrigin() : h3d.Vector4
+	public function getBodyOrigin() : h3d.Vector
 	{
 		if( #if !bullet true || #end !Utils.verify( body != null, "Tried to set body origin on entity without a body!" ) )
 		{
-			return new Vector4(x,y,z);
+			return new h3d.Vector(x,y,z);
 		}
 		#if bullet
 		return bodyOrigin;

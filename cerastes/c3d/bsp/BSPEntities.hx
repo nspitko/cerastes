@@ -1,7 +1,6 @@
 package cerastes.c3d.bsp;
-
+#if false
 import haxe.rtti.Meta;
-import cerastes.c3d.map.SerializedMap.EntityDef;
 import haxe.io.Bytes;
 import cerastes.c3d.q3bsp.Q3BSPFile.BSPEffectDef;
 import cerastes.c3d.q3bsp.Q3BSPFile.BSPFileDef;
@@ -17,14 +16,14 @@ class BSPEntities
 	var bsp: BSPFileDef;
 
 
-	var curEntity: EntityDef;
+	var curEntity: EnttiyDef;
 	var entities: Array<EntityDef> = [];
 
 	var buf: Bytes;
 
 	var cur = 0;
 
-	var world: BSPMap;
+	var world: BSPMq;
 
 	static var classMap: Map<String, Class<Dynamic>>;
 
@@ -170,3 +169,4 @@ class BSPEntities
 		}
 	}
 }
+#end

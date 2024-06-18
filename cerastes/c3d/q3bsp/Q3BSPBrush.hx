@@ -1,5 +1,6 @@
 package cerastes.c3d.q3bsp;
 
+import hxd.BufferFormat.BufferInput;
 import cerastes.macros.Metrics;
 import cerastes.c3d.q3bsp.Q3BSPFile.DLeaf_t;
 import h3d.mat.Data.Face;
@@ -31,14 +32,9 @@ class Q3BSPBrush extends BaseBrush
 	var vertexBuffer: Buffer = null;
 	var vertexIndices: h3d.Indexes = null;
 
-	var bufferCache : Map<Int,h3d.Buffer.BufferOffset>;
-	var prevNames : Array<String>;
-	var prevBuffers : h3d.Buffer.BufferOffset;
 
 	final stride : Int = 11;
 
-	var bufferNames = ["position","normal","uv","uvlm","color"];
-	var bufferPositions=[0,3,6,8,10];
 
 	var idxBuffer: Indexes;
 	var idxBytes: Bytes;
@@ -126,14 +122,14 @@ class Q3BSPBrush extends BaseBrush
 
 	function createBrush( def: EntityData )
 	{
-		if( Utils.assert(def.bsp != null, "Brush loaded without bsp info!") ) return;
+		if( !Utils.verify(def.bsp != null, "Brush loaded without bsp info!") ) return;
 		bsp = def.bsp;
 
 		var modelId = 0;
 		if( def.getProperty("classname") != "worldspawn")
 		{
 			var model = def.getProperty("model");
-			if( Utils.assert( model != null && model.substr(0,1) == "*", "Brush has missing/invalid model specification; brush will not function" ) ) return;
+			if( !Utils.verify( model != null && model.substr(0,1) == "*", "Brush has missing/invalid model specification; brush will not function" ) ) return;
 
 			modelId = Std.parseInt( model.substr(0,1) );
 		}
@@ -171,7 +167,7 @@ class Q3BSPBrush extends BaseBrush
 			}
 		}
 
-		visLeafs = new haxe.ds.Vector4(vl.length );
+		visLeafs = new haxe.ds.Vector(vl.length );
 		for( i in 0 ... visLeafs.length )
 		{
 			visLeafs[i] = vl[i];
@@ -218,7 +214,14 @@ class Q3BSPBrush extends BaseBrush
 		}
 
 		// Alloc
-		vertexBuffer = new Buffer(numVerts, stride);
+		vertexBuffer = new Buffer(numVerts, hxd.BufferFormat.make([
+			new BufferInput("position", DVec3),
+			new BufferInput("normal", DVec3),
+			new BufferInput("uv", DVec2),
+			new BufferInput("uvlm", DVec2),
+			new BufferInput("color", DBytes4),
+
+		]));
 		var vertexBytes = Bytes.alloc( bsp.vertices.length * stride * 4 );
 
 
@@ -299,67 +302,13 @@ class Q3BSPBrush extends BaseBrush
 
 		vertexBuffer.uploadBytes( vertexBytes, 0, CMath.floor( pos / stride / 4 ) );
 
-		for( i in 0...bufferNames.length )
-			addBuffer(bufferNames[i], vertexBuffer, bufferPositions[i]);
-
 	}
 
-	function addBuffer( name : String, buf, offset = 0 )
-	{
-		if( bufferCache == null )
-			bufferCache = new Map();
-		var id = hxsl.Globals.allocID(name);
-		var old = bufferCache.get(id);
-		if( old != null ) old.dispose();
-		bufferCache.set(id, new h3d.Buffer.BufferOffset(buf, offset));
-	}
 
 
 	function getBuffers( engine : h3d.Engine, ?offset: Int )
 	{
-		if( bufferCache == null )
-			bufferCache = new Map();
-		var names = @:privateAccess engine.driver.getShaderInputNames();
-		if( names.names == prevNames )
-		{
-			/*
-			var b = prevBuffers;
-			for( name in names.names )
-			{
-				var idx = bufferNames.indexOf(cast name);
-
-				Utils.assert(idx != -1,"Unmapped buffer name: " + name);
-				b.offset = offset * stride + bufferPositions[idx];
-
-				b = b.next;
-			}*/
-			return prevBuffers;
-		}
-		var buffers = null, prev = null;
-		for( name in names.names )
-		{
-			var id = hxsl.Globals.allocID(name);
-			var b = bufferCache.get(id);
-			if( b == null ) {
-				//b = allocBuffer(engine, name);
-				if( b == null ) throw "Buffer " + name + " is not available";
-				bufferCache.set(id, b);
-			}
-			//var idx = bufferNames.indexOf(cast name);
-			//Utils.assert(idx != -1,"Unmapped buffer name: " + name);
-			//b.offset = offset * stride + bufferPositions[idx];
-
-			b.next = null;
-
-			if( prev == null ) {
-				buffers = prev = b;
-			} else {
-				prev.next = b;
-				prev = b;
-			}
-		}
-		prevNames = names.names;
-		return prevBuffers = buffers;
+		return vertexBuffer;
 	}
 
 	inline function getMaterialId( shaderIdx: Int, lightmapIdx: Int )
@@ -444,7 +393,7 @@ class Q3BSPBrush extends BaseBrush
 
 
 			mat.name = shader.shader;
-			mat.mainPass.culling = Front;
+			//mat.mainPass.culling = Front;
 			//mat.mainPass.
 			materialMap.set(matId, mat);
 			//materialIdMap.set( )
@@ -454,13 +403,12 @@ class Q3BSPBrush extends BaseBrush
 	}
 
 	// @todo model specifies these, just need to import
-	override function getBoundsRec( b : Bounds )
+	override function addBoundsRec( b : h3d.col.Bounds, relativeTo : h3d.Matrix )
 	{
-		b = super.getBoundsRec(b);
 		var tmp = brushBounds.clone();
 		tmp.transform(absPos); // @todo checkme
 		b.add(tmp);
-		return b;
+		return super.addBoundsRec( b, relativeTo );
 	}
 
 	override function getMaterialByName( name : String ) : h3d.mat.Material
@@ -495,7 +443,7 @@ class Q3BSPBrush extends BaseBrush
 		v.z = -t;
 	}
 */
-	function findLeaf( cameraPosition: Vector ) : Int
+	function findLeaf( cameraPosition: h3d.Vector ) : Int
 	{
 		// Create a local camera vector and convert it to goofy ass quake coords.
 		//var localCamera = cameraPosition.clone();
@@ -702,44 +650,8 @@ class Q3BSPBrush extends BaseBrush
 		var bufs = getBuffers(ctx.engine);
 
 		//ctx.engine.renderIndexed(vertexBuffer,idxBuffer,0 );
-		ctx.engine.renderMultiBuffers(bufs,idxBuffer,0, CMath.floor( indices / 3 ) );
+		ctx.engine.renderIndexed(bufs,idxBuffer,0, CMath.floor( indices / 3 ) );
 
-		//idxBuffer.dispose();
-
-		//trace( ctx.engine.drawCalls - ds );
-
-		// DBG
-
-		/*
-		for( faceIdx in visibleFaces[textureIdx] )
-		//for( face in bsp.faces )
-		{
-			var face = bsp.surfaces[faceIdx];
-
-			if( face.surfaceType != MST_PLANAR && face.surfaceType != MST_TRIANGLE_SOUP)
-				continue;
-
-			var i=0;
-			var col = 0x00FF00;
-			while( i < face.numIndexes )
-			{
-				var vi1 = face.firstVertex  + bsp.meshVerts[i + face.firstIndex ];
-				var vi2 = face.firstVertex  + bsp.meshVerts[i + 1 + face.firstIndex ];
-				var vi3 = face.firstVertex  + bsp.meshVerts[i + 2 + face.firstIndex ];
-				var vtx1 = bsp.vertices[ vi1 ];
-				var vtx2 = bsp.vertices[ vi2 ];
-				var vtx3 = bsp.vertices[ vi3 ];
-
-				DebugDraw.line( new Point( vtx1.xyz[0], vtx1.xyz[1], vtx1.xyz[2] ), new Point( vtx2.xyz[0], vtx2.xyz[1], vtx2.xyz[2] ), col );
-				DebugDraw.line( new Point( vtx2.xyz[0], vtx2.xyz[1], vtx2.xyz[2] ), new Point( vtx3.xyz[0], vtx3.xyz[1], vtx3.xyz[2] ), col );
-				DebugDraw.line( new Point( vtx1.xyz[0], vtx1.xyz[1], vtx1.xyz[2] ), new Point( vtx3.xyz[0], vtx3.xyz[1], vtx3.xyz[2] ), col );
-
-
-				i+=3;
-
-			}
-		}
-*/
 
 	}
 

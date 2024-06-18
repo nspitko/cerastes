@@ -1,5 +1,6 @@
 package cerastes.c3d.entities;
 
+import h3d.Vector;
 import cerastes.macros.Metrics;
 import bullet.Constants.CollisionFlags;
 import cerastes.c3d.Entity.EntityData;
@@ -7,6 +8,8 @@ import cerastes.c3d.BulletWorld.BulletRayTestResult;
 import h3d.Vector4;
 import h3d.col.Point;
 import h3d.scene.Graphics;
+import cerastes.c2d.DebugDraw as Debug2D;
+import cerastes.c3d.DebugDraw as Debug3D;
 
 enum MoveType
 {
@@ -23,7 +26,7 @@ enum MoveType
 class KinematicActor extends Actor
 {
 
-	public var velocity: Vector = new Vector4(0,0,0);
+	public var velocity: Vector = new Vector(0,0,0);
 
 	// Defaults
 	var bodyRadius: Float = 8;
@@ -44,7 +47,7 @@ class KinematicActor extends Actor
 	var minWalkNormal = 0.7;
 
 
-	var moveDir = new Vector4(0,0,0);
+	var moveDir = new Vector(0,0,0);
 	var moveTime:Float = 1;
 
 	var touchingEntities: Array<Entity> = [];
@@ -121,8 +124,8 @@ class KinematicActor extends Actor
 
 		moveGroundTrace();
 
-		DebugDraw.text('OnGround=${groundPlane ? "true" : "false"}');
-		DebugDraw.text('Vel=${velocity.x}, ${velocity.y}, ${velocity.z}');
+		Debug2D.text('OnGround=${groundPlane ? "true" : "false"}');
+		Debug2D.text('Vel=${velocity.x}, ${velocity.y}, ${velocity.z}');
 
 		Metrics.end();
 
@@ -132,7 +135,7 @@ class KinematicActor extends Actor
 	{
 		moveFriction(delta);
 
-		var wishVel = moveDir.clone().normalized().multiply( moveSpeed );
+		var wishVel = moveDir.clone().normalized() * moveSpeed;
 		moveAccelerate( delta, moveDir, moveSpeed, moveSpeedAccel );
 
 		moveStepSlide(delta, false );
@@ -145,9 +148,9 @@ class KinematicActor extends Actor
 		var wishDir = moveDir.clone();
 
 
-		var wishVel = moveDir.clone().normalized().multiply( moveSpeed );
+		var wishVel = moveDir.clone().normalized() * moveSpeed;
 		var wishSpeed = wishDir.normalized();
-		wishSpeed = wishSpeed.multiply( delta );
+		wishSpeed = wishSpeed * delta;
 
 		moveAccelerate( delta, wishDir, wishSpeed.length(), moveSpeedAccelAir );
 
@@ -168,7 +171,7 @@ class KinematicActor extends Actor
 
 		moveFriction( delta );
 
-		var wishVel = moveDir.clone().normalized().multiply( moveSpeed );
+		var wishVel = moveDir.clone().normalized() * moveSpeed;
 
 
 		moveAccelerate( delta, moveDir, moveSpeed, moveSpeedAccel );
@@ -179,7 +182,7 @@ class KinematicActor extends Actor
 		velocity = moveClipVelocity(velocity, groundTrace.normal, overClip);
 
 		velocity.normalize();
-		velocity = velocity.multiply(vel);
+		velocity = velocity * vel;
 
 
 
@@ -204,7 +207,7 @@ class KinematicActor extends Actor
 		down.z -= stepSize;
 
 		var rc = world.physics.shapeTestV( cast body.shape, startOrigin, down, body.group, body.mask );
-		var up = new Vector4(0,0,1);
+		var up = new Vector(0,0,1);
 
 		// Never step up when you have velocity
 		if( velocity.z >0 && ( rc.fraction == 1 || rc.normal.dot( up ) < 0.7 ) )
@@ -262,7 +265,7 @@ class KinematicActor extends Actor
 		var primalVelocity = velocity.clone();
 		var planes = new haxe.ds.Vector<Vector>(5);
 
-		var endVelocity = new Vector4();
+		var endVelocity = new Vector();
 
 		if( gravity )
 		{
@@ -398,7 +401,7 @@ class KinematicActor extends Actor
 					var dir = planes[i].cross( planes[j] );
 					dir.normalize();
 					var d = dir.dot(velocity);
-					clipVelocity = dir.multiply( d );
+					clipVelocity = dir * d;
 
 					// See if there si a third plane the new move enters
 					for( k in 0 ... numPlanes )
@@ -503,7 +506,7 @@ class KinematicActor extends Actor
 		else
 			backoff /= overBounce;
 
-		var out = new Vector4(
+		var out = new Vector(
 			vin.x - ( normal.x * backoff ),
 			vin.y - ( normal.y * backoff ),
 			vin.z - ( normal.z * backoff )
@@ -519,9 +522,9 @@ class KinematicActor extends Actor
 		var currentSpeed = velocity.dot( wishDir );
 		var addSpeed = wishSpeed - currentSpeed;
 
-		DebugDraw.text('addSpeed=${addSpeed}');
-		DebugDraw.text('wishSpeed=${addSpeed}');
-		DebugDraw.text('accel=${addSpeed}');
+		Debug2D.text('addSpeed=${addSpeed}');
+		Debug2D.text('wishSpeed=${addSpeed}');
+		Debug2D.text('accel=${addSpeed}');
 
 		if( addSpeed <= 0 )
 			return;
@@ -531,13 +534,13 @@ class KinematicActor extends Actor
 		if( accelSpeed > addSpeed )
 			accelSpeed = addSpeed;
 
-		DebugDraw.text('accelSpeed=${accelSpeed}');
+		Debug2D.text('accelSpeed=${accelSpeed}');
 
 		velocity.x += accelSpeed * wishDir.x;
 		velocity.y += accelSpeed * wishDir.y;
 		velocity.z += accelSpeed * wishDir.z;
 
-		DebugDraw.text('outVel=${velocity.x}, ${velocity.y}, ${velocity.z}');
+		Debug2D.text('outVel=${velocity.x}, ${velocity.y}, ${velocity.z}');
 
 	}
 
@@ -550,11 +553,11 @@ class KinematicActor extends Actor
 
 		// Trace from our current pos to our target pos
 		// @todo: Consider aabb
-		DebugDraw.colorAdd = 0x0000FF;
+		Debug2D.colorAdd = 0x0000FF;
 		var rc = world.physics.shapeTestV( cast body.shape, origin, point, body.group, body.mask );
 		groundTrace = rc;
 
-		DebugDraw.colorAdd = 0;
+		Debug2D.colorAdd = 0;
 
 
 		// @todo: Consider trace may start inside solid

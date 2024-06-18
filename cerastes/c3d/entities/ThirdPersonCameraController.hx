@@ -1,5 +1,6 @@
 package cerastes.c3d.entities;
 
+import h3d.Vector;
 import cerastes.c3d.Vec3;
 import cerastes.macros.Metrics;
 import cerastes.c3d.Entity.EntityData;
@@ -31,7 +32,7 @@ class ThirdPersonPlayerController extends PlayerController
 		world.getScene().camera.setFovX(90,16/9);
 
 		#if hlsdl
-		sdl.Sdl.setRelativeMouseMode(true);
+		//sdl.Sdl.setRelativeMouseMode(true);
 		#end
 		#if hldx
 		@:privateAccess hxd.Window.getInstance().window.clipCursor(true);
@@ -89,25 +90,25 @@ class ThirdPersonPlayerController extends PlayerController
 		if( Key.isDown( Key.W ) )
 		{
 			isMoving = true;
-			dir = dir.multiply(1);
+			//dir = dir.multiply(1);
 		}
 		else if( Key.isDown( Key.S ) )
 		{
 			isMoving = true;
-			dir = dir.multiply(-1);
+			dir *= -1;
 		}
 
 		if( Key.isDown( Key.D ) )
 		{
 			isMoving = true;
-			var side = dir.toVector4().cross(new Vector4(0,0,1)).toPoint();
-			dir = side.multiply(-1);
+			var side = dir.toVector4().cross(new Vector4(0,0,1)).toVector();
+			dir = side * -1;
 		}
 		else if( Key.isDown( Key.A ) )
 		{
 			isMoving = true;
-			var side = dir.toVector4().cross(new Vector4(0,0,1)).toPoint();
-			dir = side.multiply(1);
+			var side = dir.toVector4().cross(new Vector4(0,0,1)).toVector();
+			dir = side;
 		}
 
 		if( Key.isPressed( Key.SPACE ) )
@@ -117,12 +118,12 @@ class ThirdPersonPlayerController extends PlayerController
 
 		if( isMoving )
 		{
-			dir = dir.multiply(moveSpeed);
+			dir *= moveSpeed;
 			//controller.setWalkDirection( new bullet.Native.Vector3(dir.x, dir.y, dir.z) );
 			//var pos = player.getAbsPos();
 			//dir = dir.add( pos.getPosition().toPoint() );
 			//player.setAbsOrigin( dir.x, dir.y, dir.z );
-			@privateAccess player.moveDir.load(dir.toVector4());
+			@privateAccess player.moveDir.load(dir);
 			//trace(dir);
 		}
 		else
@@ -140,13 +141,14 @@ class ThirdPersonPlayerController extends PlayerController
 
 		// update camera from new player position
 		var m: cerastes.c3d.Matrix = q.toMatrix();
-		m.setPosition( player.getTransform().getPosition() );
+		var pos = player.getTransform().getPosition();
+		m.setPosition( new Vector4( pos.x, pos.y, pos.z, 1 ) );
 
 		// Trace back to our target pos, find the closest point we can get before hitting a wall
 
 		var cameraOffset = cameraPos.clone();
 
-		var playerPos = new Vector4(player.x, player.y, player.z + cameraPos.z);
+		var playerPos = new Vector(player.x, player.y, player.z + cameraPos.z);
 
 		cameraOffset *= m;
 

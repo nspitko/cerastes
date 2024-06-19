@@ -541,19 +541,42 @@ class Q3BSPFile
 
 		file.models = new Vector(numEntries);
 
+		var mconv = new h3d.Matrix();
+		mconv.loadValues([
+			-1, 0,  0, 0,
+			0, 1, 0, 0,
+			0, 0,  1, 0,
+			0, 0, 0, 1
+		]);
+
+		var vconvmin = new h3d.Vector();
+		var vconvmax = new h3d.Vector();
+
 		for( i in 0 ... numEntries )
 		{
 			var pos = dirEntry.offset + i * entrySize;
+
+			vconvmin.set(
+				bytes.getFloat(pos),
+				bytes.getFloat(pos+4),
+				bytes.getFloat(pos+8)
+			);
+
+			vconvmax.set(
+				bytes.getFloat(pos+12),
+				bytes.getFloat(pos+16),
+				bytes.getFloat(pos+20)
+			);
+
+			vconvmin *= mconv;
+			vconvmax *= mconv;
+
 			var model: DModel_t = {
 				mins: Vector.fromData([
-					bytes.getFloat(pos),
-					bytes.getFloat(pos+4),
-					bytes.getFloat(pos+8)
+					vconvmax.x, vconvmin.y, vconvmin.z
 				]),
 				maxs: Vector.fromData([
-					bytes.getFloat(pos+12),
-					bytes.getFloat(pos+16),
-					bytes.getFloat(pos+20)
+					vconvmin.x, vconvmax.y, vconvmax.z
 				]),
 				firstSurface: bytes.getInt32(pos+24),
 				numSurfaces: bytes.getInt32(pos+28),

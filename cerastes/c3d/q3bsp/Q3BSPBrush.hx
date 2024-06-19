@@ -369,7 +369,7 @@ class Q3BSPBrush extends BaseBrush
 			mat.mainPass.addShader( lmShader );
 			mat.texture.filter = Nearest; // @todo: move this into a standard materialdef we load for map as a whole
 			mat.mainPass.isStatic = true;
-			mat.mainPass.enableLights = false;
+			//mat.mainPass.enableLights = false;
 			mat.castShadows = false;
 			//mat.receiveShadows = true;
 

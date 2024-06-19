@@ -50,15 +50,28 @@ class EntityDataBase #if hxbit implements hxbit.Serializable #end
 		return defaultVal;
 	}
 
-	public function getPropertyPoint(key: String, defaultVal: Point = null )
+	public function getPropertyPoint(key: String, defaultVal: Vec3 = null )
 	{
 		if( props.exists( key ) )
 		{
 			var bits = props[key].split(" ");
-			return new h3d.col.Point(
+
+			var mconv = new h3d.Matrix();
+			mconv.loadValues([
+				-1, 0,  0, 0,
+				0, 1, 0, 0,
+				0, 0,  1, 0,
+				0, 0, 0, 1
+			]);
+
+			var vconv = new h3d.Vector(
 				Std.parseFloat(bits[0]),
 				Std.parseFloat(bits[1]),
 				Std.parseFloat(bits[2])
+			);
+
+			return new Vec3(
+				vconv.x, vconv.y, vconv.z
 			);
 		}
 		return defaultVal;

@@ -103,7 +103,8 @@ class Q3LightVol extends hxsl.Shader {
 		}
 
 		function fragment() {
-			lightPixelColor.rgb += calcLighting(pixelTransformedPosition);
+			// Disabled for now.
+			//lightPixelColor.rgb += calcLighting(pixelTransformedPosition);
 		}
 
 	};

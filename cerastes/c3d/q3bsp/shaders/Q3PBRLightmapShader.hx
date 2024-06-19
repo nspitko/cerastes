@@ -24,33 +24,40 @@ class Q3PBRLightmapShader extends hxsl.Shader {
 			var uvlm : Vec2;
 		};
 
+		// ???
+		var lightPixelColor : Vec3;
 
 
 
-			function vertex()
-			{
-				calculatedLMUV = input.uvlm;
-			}
 
-			function fragment()
-			{
+		function vertex()
+		{
+			calculatedLMUV = input.uvlm;
+		}
 
-				var clm = texture.get( vec2( calculatedLMUV.x, calculatedLMUV.y ) ) ;
+		function fragment()
+		{
 
-				// q3a lightmaps only
-				//clm.rgb *= vec3(4.0477);
+			var clm = texture.get( vec2( calculatedLMUV.x, calculatedLMUV.y ) ) ;
 
-				// 20% overbright
-				clm.rgb *= vec3(2);
+			// q3a lightmaps only
+			//clm.rgb *= vec3(4.0477);
 
-				//if( killAlpha && c.a - killAlphaThreshold < 0 ) discard;
-				pixelColor.rgb *=clm.rgb;
-			}
+			// 20% overbright
+			clm.rgb *= vec3(2);
+
+			//if( killAlpha && c.a - killAlphaThreshold < 0 ) discard;
+
+			// Lightmaps are greyscale; but there's a weird bug where the r channel is getting
+			// polluted (maybe bad RGBA<->ARGB conversion?), so use G instead.
+			//pixelColor.rgb *= clm.g;
+			lightPixelColor.rgb += clm.g;
+		}
     };
 
-		public function new(?tex)
-		{
-			super();
-			this.texture = tex;
-		}
+	public function new(?tex)
+	{
+		super();
+		this.texture = tex;
+	}
 }

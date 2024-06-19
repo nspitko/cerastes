@@ -43,8 +43,8 @@ class Q3BSPEntities
 		}
 
 		// Global ents
-		//spawnEntityClass( Q3BSPLightVol, { bsp: bsp } );
-		w.addChild( new Q3BSPLightVol({ bsp: bsp }) );
+		world.createEntityClass( Q3BSPLightVol, { bsp: bsp } );
+		//w.addChild( new Q3BSPLightVol({ bsp: bsp }) );
 
 		entities = null;
 		bsp = null;

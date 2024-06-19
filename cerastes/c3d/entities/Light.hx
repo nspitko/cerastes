@@ -1,5 +1,8 @@
 package cerastes.c3d.entities;
 
+#if hlimgui
+import imgui.ImGui;
+#end
 import cerastes.c3d.Entity.EntityData;
 import bullet.Point;
 import h3d.pass.Blur;
@@ -12,12 +15,17 @@ class Light extends Entity
 {
 	var light: h3d.scene.Light;
 
+	#if hlimgui
+	public static var debugLights = true;
+	#end
+
 	override function create( def: EntityData, qworld: World )
 	{
 		super.create(def, qworld);
+		// Don't actually create hardware lights for these
 
-		createLight(def);
-
+		//createLight(def);
+/*
 		if( light != null )
 		{
 			var color = def.getProperty("_color");
@@ -29,10 +37,22 @@ class Light extends Entity
 			}
 
 		}
-
+*/
 		// debug
-		DebugDraw.sphere(new Point(x,y,z),15,0xFF0000,-1);
 
+
+	}
+
+	public override function tick( delta: Float )
+	{
+		if( Light.debugLights )
+			debugDrawLight();
+	}
+
+
+	function debugDrawLight()
+	{
+		DebugDraw.sphere(new Point(x,y,z),15,0xFF0000);
 	}
 
 	public function createLight(def: EntityData)
@@ -150,7 +170,6 @@ class PointLight extends Light
 		// DEBUG
 		l.visible = false;
 
-		DebugDraw.sphere(new Point(x,y,z),15,0x00FF00,-1);
 
 
 	}

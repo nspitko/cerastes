@@ -243,9 +243,9 @@ class App extends hxd.App {
 			ImGuiToolManager.enabled = !ImGuiToolManager.enabled;
 		}
 
-		if(!ImGuiToolManager.enabled)
+		if(ImGuiToolManager.enabled)
 		{
-			// Allow showing tiny popups
+			// Start here so we can create windows in other update loops
 			Metrics.begin("ImGui.newFrame");
 			ImGui.newFrame();
 			drawable.update(dt);
@@ -313,12 +313,8 @@ class App extends hxd.App {
 			//currentScene.s2d.scaleMode = ScaleMode.LetterBox(Math.floor( viewportWidth / viewportScale ), Math.floor( viewportHeight / viewportScale ),false,Center,Center);
 
 			Metrics.begin("ImGuiDrawable.update");
-			drawable.update(dt);
-			Metrics.end();
-
-			ImGui.newFrame();
-
 			ImGuiToolManager.update(dt);
+			Metrics.end();
 
 
 		}

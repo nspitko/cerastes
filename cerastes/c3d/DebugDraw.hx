@@ -204,7 +204,7 @@ class DebugDraw
 		addLine( source, target, color, duration, thickness );
 	}
 
-	public static function box( position: Point, size: Point, color: Int = 0xFFFFFF, duration: Float = 0, alpha: Float = 1, thickness: Float = 1 )
+	public static function box( position: Vec3, size: Vec3, color: Int = 0xFFFFFF, duration: Float = 0, alpha: Float = 1, thickness: Float = 1 )
 	{
 		polygon(cube, position, size, color, duration, alpha, thickness );
 	}

@@ -458,9 +458,9 @@ class Q3BSPBrush extends BaseBrush
 			var node = bsp.nodes[index];
 			var plane = bsp.planes[node.planeNum];
 
-			var planeVec = new Vector4(plane.normal[0], plane.normal[1], plane.normal[2]);
+			var planeVec = new h3d.Vector(plane.normal[0], plane.normal[1], plane.normal[2]);
 			//swizzle(planeVec)
-			var distance = planeVec.dot3( cameraPosition ) - plane.dist;
+			var distance = planeVec.dot( cameraPosition ) - plane.dist;
 
 			if( distance >= 0 )
 				index = node.children[0];

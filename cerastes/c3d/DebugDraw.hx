@@ -149,6 +149,8 @@ class DebugDraw
 			ti.rendered = true;
 			to.text = ti.text;
 			to.setPosition( ti.position.x, ti.position.y );
+			to.color.setColor( ti.color );
+			to.color.w = ti.alpha;
 		}
 		if( state.textLines.length > state.t.numChildren )
 		{
@@ -158,6 +160,8 @@ class DebugDraw
 				var ti = state.textLines[i];
 				nt.text = ti.text;
 				nt.setPosition( ti.position.x, ti.position.y );
+				nt.color.setColor(ti.color);
+				nt.color.w = ti.alpha;
 			}
 		}
 	}

@@ -70,6 +70,8 @@ class EntityDataBase #if hxbit implements hxbit.Serializable #end
 				Std.parseFloat(bits[2])
 			);
 
+			vconv.transform(mconv);
+
 			return new Vec3(
 				vconv.x, vconv.y, vconv.z
 			);

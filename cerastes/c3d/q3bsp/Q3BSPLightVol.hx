@@ -138,37 +138,35 @@ class Q3BSPLightVol extends Entity
 					// Correct for z flip
 					var lx = nx - x - 1;
 
-					var idx = lx + y * nx + z * ( nx * ny );
+					var idx = lx + ( y * nx ) + ( z * ( nx * ny ) );
 
 					var v = bsp.lightMapVols[idx];
-					var col = CMath.floor( scale * v.ambient[0] ) << 16 | CMath.floor( scale *v.ambient[1] ) << 8 | CMath.floor( scale * v.ambient[2] );
-					var cold =  CMath.floor( scale * v.directional[0] ) << 16 | CMath.floor( scale *v.directional[1] ) << 8 | CMath.floor( scale * v.directional[0] );
+					var col = Std.int( scale * v.ambient[0] ) << 16 | Std.int( scale *v.ambient[1] ) << 8 | Std.int( scale * v.ambient[2] );
+					var cold = Std.int( scale * v.directional[0] ) << 16 | Std.int( scale *v.directional[1] ) << 8 | Std.int( scale * v.directional[0] );
 
-					var pos = new Point( (x ) * 64 + bsp.models[0].mins[0], (y) * 64 + bsp.models[0].mins[1], (  z ) * 128 + bsp.models[0].mins[2] );
-					DebugDraw.box( pos, new Point(10,10,10), col );
+					var pos = new Vec3( (x ) * 64 + bsp.models[0].mins[0], (y) * 64 + bsp.models[0].mins[1], (  z ) * 128 + bsp.models[0].mins[2] );
+					DebugDraw.box( pos, new Vec3(10,10,10), col );
 
 					var mat = new Matrix();
-					var phi = ( 270 - ( v.dir[0] / 255 ) * 360 ) * 0.0174533;
-					var theta = ( ( v.dir[1] / 255 ) * 360 ) * 0.0174533;
-
-					var q = new Quat();
-					q.initDirection(new Vector(0,1,0));
-
+					mat.identity();
+					var phi = ( 90- ( v.dir[0] / 255 ) * 360 ) * Math.PI / 180; //* 0.0174533;
+					var theta = ( ( -v.dir[1] / 255 ) * 360 ) * Math.PI / 180;
 
 					var norm = new Vector(1,0,0);
 
+					mat.identity();
+					mat.rotate(0, phi, theta);
+					//mat.rotateAxis(new Vector(0,0,1), theta );
+					//mat.rotateAxis(new Vector(0,1,0), phi);
 
-
-					mat.initRotationAxis(new Vector(0,0,1), theta );
-					norm.transform(mat);
-
-					mat.initRotationAxis(new Vector(1,0,0), phi);
 					norm.transform(mat);
 
 					//norm = getDirectionFromPitchYaw(v.dir[0], v.dir[1]);
 
 					if( cold != col )
-						DebugDraw.line( pos, pos.add( norm.toVector() * 32 ), cold);
+						DebugDraw.line( pos, pos + norm.toVector() * 32, cold);
+
+					DebugDraw.text('phi:${Math.floor(( v.dir[0] / 255 ) * 360) )}\ntheta:${Math.floor(( v.dir[1] / 255 ) * 360) )}', pos, 0x00FF00);
 
 
 				}
@@ -232,9 +230,48 @@ class Q3BSPLightVol extends Entity
 			imScale = Math.floor( 400 / CMath.imax(nx, ny) );
 
 		ImGui.text("Ambient");
-		ImGui.image(texAmbient,{ x: nx * imScale, y: ny * imScale }, {x: 0, y: imSlice * sliceSize}, {x: 1, y: sliceSize * (imSlice+1)}, new ImVec4(1,1,1,1), new ImVec4(1,1,1,1));
+		ImGui.image(texAmbient,{ x: nx * imScale, y: ny * imScale }, {x: 1, y: imSlice * sliceSize}, {x: 0, y: sliceSize * (imSlice+1)}, new ImVec4(1,1,1,1), new ImVec4(1,1,1,1));
 		ImGui.text("Directional");
-		ImGui.image(texDirectional,{ x: nx * imScale, y: ny * imScale }, {x: 0, y: imSlice * sliceSize}, {x: 1, y: sliceSize * (imSlice+1)}, new ImVec4(1,1,1,1), new ImVec4(1,1,1,1));
+		var pos = ImGui.getCursorPos();
+		ImGui.image(texDirectional,{ x: nx * imScale, y: ny * imScale }, {x: 1, y: imSlice * sliceSize}, {x: 0, y: sliceSize * (imSlice+1)}, new ImVec4(1,1,1,1), new ImVec4(1,1,1,1));
+
+		pos += ({x: 2, y: 2}:ImVec2S);
+
+		// Draw directional numbers
+
+		var nx = CMath.floor(bsp.models[0].maxs[0] / 64) - CMath.ceil(bsp.models[0].mins[0] / 64) + 1;
+		var ny = CMath.floor(bsp.models[0].maxs[1] / 64) - CMath.ceil(bsp.models[0].mins[1] / 64) + 1;
+		var nz = CMath.floor(bsp.models[0].maxs[2] / 128) - CMath.ceil(bsp.models[0].mins[2] / 128) + 1;
+		var z = imSlice;
+
+		ImGui.pushStyleColor(ImGuiCol.Text, {x: 1, y: 0, z: 0, w: 1});
+
+		for( y in 0 ... ny )
+		{
+			//var y = ny - fy - 1;
+			for( x in 0 ... nx )
+			{
+				var scale = 2;
+
+				// Correct for z flip
+				var lx = nx - x - 1;
+
+				var idx = lx + ( y * nx ) + ( z * ( nx * ny ) );
+				var v = bsp.lightMapVols[idx];
+				var phi = Math.floor( ( v.dir[0] / 255 ) * 360 );
+				var theta = Math.floor( ( v.dir[1] / 255 ) * 360 );
+
+				var lp: ImVec2S = {x: x * imScale, y: y * imScale };
+
+				ImGui.setCursorPos( pos + lp );
+				ImGui.text('p: $phi\nt:$theta');
+
+			}
+		}
+
+		ImGui.popStyleColor();
+
+
 
 		if( debugLightVolumes )
 			debugDrawVolLights();

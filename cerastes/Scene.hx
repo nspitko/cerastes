@@ -78,7 +78,7 @@ class Scene
             enableEvents();
         }
 
-        GlobalConsole.instance.currentScene = this;
+        GlobalConsole.currentScene = this;
 
         s2d.defaultSmooth = false;
 

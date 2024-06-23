@@ -31,8 +31,9 @@ class ThirdPersonPlayerController extends PlayerController
 		super.onCreated( def );
 		world.getScene().camera.setFovX(90,16/9);
 
-		#if hlsdl
-		//sdl.Sdl.setRelativeMouseMode(true);
+		#if (hlsdl && !hlimgui)
+		// @todo: ImGuiToolManager should manage this.
+		sdl.Sdl.setRelativeMouseMode(true);
 		#end
 		#if hldx
 		@:privateAccess hxd.Window.getInstance().window.clipCursor(true);
@@ -42,22 +43,10 @@ class ThirdPersonPlayerController extends PlayerController
 	public override function initialize( p: Player)
 	{
 		super.initialize(p);
-
-		//controller = new bullet.Native.KinematicCharacterController(cast @:privateAccess p.body.inst, cast @:privateAccess p.body.shape, 32, new bullet.Native.Vector3(0,0,1) );
-
-		// @todo
-		//controller.setFallSpeed(9.8 * QWorld.METERS_TO_QU );
-		//controller.setGravity( new bullet.Native.Vector3(0,0, -9.8 * QWorld.METERS_TO_QU) );
-		//controller.warp( new bullet.Native.Vector3( p.x, p.y, p.z ) );
-		//controller.setUseGhostSweepTest(false);
-
-		//controller.setJumpSpeed( 225 );
-		//@:privateAccess world.physics.inst.addAction( controller );
 	}
 
 	public override function tick( d: Float )
 	{
-		//controller.playerStep( @:privateAccess world.physics.inst, d );
 		// @todo non-shit version
 		var pos = player.body.position;
 		var cam = world.getScene().camera;
@@ -113,13 +102,13 @@ class ThirdPersonPlayerController extends PlayerController
 
 		if( Key.isPressed( Key.SPACE ) )
 		{
-			//controller.jump();
+			player.jump();
 		}
 
 		if( isMoving )
 		{
 			dir *= moveSpeed;
-			//controller.setWalkDirection( new bullet.Native.Vector3(dir.x, dir.y, dir.z) );
+
 			//var pos = player.getAbsPos();
 			//dir = dir.add( pos.getPosition().toPoint() );
 			//player.setAbsOrigin( dir.x, dir.y, dir.z );
@@ -128,10 +117,6 @@ class ThirdPersonPlayerController extends PlayerController
 		}
 		else
 			@privateAccess player.moveDir.set(0,0,0);
-
-
-		//else
-			//controller.setWalkDirection( new bullet.Native.Vector3(0,0,0) );
 
 		//player.body.setTransform( pos );
 

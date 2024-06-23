@@ -26,11 +26,20 @@ enum MoveType
 class KinematicActor extends Actor
 {
 
+	// External API
+	public var onGround(get, null): Bool;
+
+
+	/// getters/setters
+	function get_onGround() { return groundEntity != null; }
+
+	///
+
 	public var velocity: Vector = new Vector(0,0,0);
 
 	// Defaults
-	var bodyRadius: Float = 8;
-	var bodyHeight: Float = 32;
+	var bodyRadius: Float = 16;
+	var bodyHeight: Float = 48;
 
 	var moveType: MoveType = GROUND;
 
@@ -39,7 +48,7 @@ class KinematicActor extends Actor
 	var walking: Bool = false;
 	var groundTrace: BulletRayTestResult = null;
 
-	var moveSpeed = 2;
+	var moveSpeed = 900;
 	var moveSpeedAccel: Float = 10;
 	var moveSpeedAccelAir: Float = 1;
 	var moveSpeedAccelFlight: Float = 8;
@@ -48,7 +57,6 @@ class KinematicActor extends Actor
 
 
 	var moveDir = new Vector(0,0,0);
-	var moveTime:Float = 1;
 
 	var touchingEntities: Array<Entity> = [];
 
@@ -92,7 +100,6 @@ class KinematicActor extends Actor
 		Metrics.begin("updateMovement");
 		// zero out impact speed
 		impactSpeed = 0;
-		moveTime = 1;
 
 		var origin = getBodyOrigin();
 
@@ -135,8 +142,8 @@ class KinematicActor extends Actor
 	{
 		moveFriction(delta);
 
-		var wishVel = moveDir.clone().normalized() * moveSpeed;
-		moveAccelerate( delta, moveDir, moveSpeed, moveSpeedAccel );
+		var wishSpeed = moveDir.clone().normalized() * moveSpeed;
+		moveAccelerate( delta, moveDir, wishSpeed.length(), moveSpeedAccel );
 
 		moveStepSlide(delta, false );
 	}
@@ -171,10 +178,10 @@ class KinematicActor extends Actor
 
 		moveFriction( delta );
 
-		var wishVel = moveDir.clone().normalized() * moveSpeed;
+		var wishVel = moveDir.normalized() * moveSpeed;
 
 
-		moveAccelerate( delta, moveDir, moveSpeed, moveSpeedAccel );
+		moveAccelerate( delta, moveDir.normalized(), wishVel.length(), moveSpeedAccel );
 
 		var vel = velocity.length();
 
@@ -280,6 +287,8 @@ class KinematicActor extends Actor
 			}
 		}
 
+		var moveDelta = delta;
+
 		var numPlanes = 0;
 		if( groundPlane )
 		{
@@ -301,7 +310,8 @@ class KinematicActor extends Actor
 			if( velocity.x == 0 && velocity.y == 0 && velocity.z == 0.0 )
 				return true;
 
-			var end = CMath.vectorMA( getBodyOrigin(), moveTime, velocity );
+			var end = CMath.vectorMA( getBodyOrigin(), moveDelta, velocity );
+			trace('length=${velocity.length()}, delta=${moveDelta}');
 			var rc = world.physics.shapeTestV( cast body.shape, getBodyOrigin(), end, body.group, body.mask );
 			//if( rc.fraction > 0 && rc.fraction < 1)
 			//	trace('z change=${z - end.z}; frac=${rc.fraction}');
@@ -319,6 +329,7 @@ class KinematicActor extends Actor
 			{
 				//trace('SetAbs: moveSlide frac>0 ${z} -> ${rc.position.z }');
 				var newPos = CMath.vectorFrac( getBodyOrigin(), end, rc.fraction );
+				//trace('dist=${getBodyOrigin().distance(end)}, frac=${rc.fraction}');
 				setBodyOrigin( newPos.x, newPos.y, newPos.z  );
 				if( z < -45 )
 					trace("???");
@@ -330,7 +341,7 @@ class KinematicActor extends Actor
 
 			addTouchingEnt( cast rc.body.object );
 
-			moveTime -= moveTime * rc.fraction;
+			moveDelta -= moveDelta * rc.fraction;
 
 			if( numPlanes >= maxClipPlanes )
 			{
@@ -433,6 +444,7 @@ class KinematicActor extends Actor
 
 
 
+
 		return bumpCount == 0;
 	}
 
@@ -523,8 +535,8 @@ class KinematicActor extends Actor
 		var addSpeed = wishSpeed - currentSpeed;
 
 		Debug2D.text('addSpeed=${addSpeed}');
-		Debug2D.text('wishSpeed=${addSpeed}');
-		Debug2D.text('accel=${addSpeed}');
+		Debug2D.text('wishSpeed=${wishSpeed}');
+		Debug2D.text('accel=${accel}');
 
 		if( addSpeed <= 0 )
 			return;
@@ -540,7 +552,7 @@ class KinematicActor extends Actor
 		velocity.y += accelSpeed * wishDir.y;
 		velocity.z += accelSpeed * wishDir.z;
 
-		Debug2D.text('outVel=${velocity.x}, ${velocity.y}, ${velocity.z}');
+		Debug2D.text('outVel=${velocity.x}, ${velocity.y}, ${velocity.z}, len=${velocity.length}');
 
 	}
 

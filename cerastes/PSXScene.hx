@@ -50,7 +50,7 @@ class PSXScene extends cerastes.Scene
 		super.enter();
 		@:privateAccess EntityManager.instance = new EntityManager();
 
-		GlobalConsole.instance.currentScene = this;
+		GlobalConsole.currentScene = this;
 	}
 
 

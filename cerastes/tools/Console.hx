@@ -96,7 +96,7 @@ class Console extends ImguiTool
 		{
 			case ImGuiInputTextFlags.CallbackCompletion:
 
-				var gc = GlobalConsole.instance.console;
+				var gc = GlobalConsole.console;
 				var str = @:privateAccess String.fromUTF8(data.buf);
 
                 // Locate beginning of current word
@@ -199,7 +199,7 @@ class Console extends ImguiTool
 	function runCommand( c: String )
 	{
 		history.push(c);
-		var gc = GlobalConsole.instance.console;
+		var gc = GlobalConsole.console;
 		gc.runCommand( c );
 	}
 

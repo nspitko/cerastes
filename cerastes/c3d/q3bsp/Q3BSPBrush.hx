@@ -364,29 +364,51 @@ class Q3BSPBrush extends BaseBrush
 
 
 
-			var lmShader = new cerastes.c3d.q3bsp.shaders.Q3PBRLightmapShader();
-			//mat.mainPass.removeShader( mat.textureShader );
-			mat.mainPass.addShader( lmShader );
-			mat.texture.filter = Nearest; // @todo: move this into a standard materialdef we load for map as a whole
-			mat.mainPass.isStatic = true;
-			//mat.mainPass.enableLights = false;
-			mat.castShadows = false;
-			//mat.receiveShadows = true;
-
-			// @todo: need more context upstream to derive this
-			var texFile = '${bsp.fileName.substr(0, bsp.fileName.length - 4)}/lm_${ StringTools.lpad(""+surface.lightMapIndex,"0",4) }.tga';
-
-			var lmTex: Texture;
-			try
+			// @todo: Create a shader cache for these.
+			if( surface.lightMapIndex >= 0 )
 			{
-				lmTex = hxd.Res.loader.load( texFile ).toTexture();
+				var lmShader = new cerastes.c3d.q3bsp.shaders.Q3PBRLightmapShader();
+				//mat.mainPass.removeShader( mat.textureShader );
+				mat.mainPass.addShader( lmShader );
+				mat.texture.filter = Nearest; // @todo: move this into a standard materialdef we load for map as a whole
+				mat.mainPass.isStatic = true;
+				//mat.mainPass.enableLights = false;
+				mat.castShadows = false;
+				//mat.receiveShadows = true;
+
+				// @todo: need more context upstream to derive this
+				var texFile = '${bsp.fileName.substr(0, bsp.fileName.length - 4)}/lm_${ StringTools.lpad(""+surface.lightMapIndex,"0",4) }.tga';
+
+				var lmTex: Texture;
+				try
+				{
+					lmTex = hxd.Res.loader.load( texFile ).toTexture();
+				}
+				catch(e)
+				{
+					Utils.error('Failed to load lightmap ${texFile}: $e');
+					lmTex = Utils.invalidTexture();
+				}
+				lmShader.texture = lmTex;
+				lmShader.texture.filter;
 			}
-			catch(e)
+			else
 			{
-				Utils.error('Failed to load lightmap ${texFile}: $e');
-				lmTex = Utils.invalidTexture();
+				switch( surface.lightMapIndex )
+				{
+					case -1:
+						Utils.info("STUB: Vertex lit surface");
+					case -2:
+						Utils.info("STUB: Sky/portal surface");
+					case -3:
+						Utils.info('STUB: Mirror/reflective surface');
+					default:
+						Utils.info('STUB: Surface type ${surface.lightMapIndex}');
+
+
+				}
+
 			}
-			lmShader.texture = lmTex;
 
 			//shader.lightMapTexture = lmTex;
 

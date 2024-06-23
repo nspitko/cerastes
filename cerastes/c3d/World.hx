@@ -103,7 +103,7 @@ class BaseWorld extends Object
 		super( parent );
 		#if bullet
 		physics = new BulletWorld(this);
-		physics.setGravity(0,0,-9.8 * METERS_TO_WORLD);
+		physics.setGravity(0,0,-gravity);
 		#end
 
 		entityManager = new EntityManager();

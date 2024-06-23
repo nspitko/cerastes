@@ -987,6 +987,16 @@ class Q3BSPFile
 
 		var dirEntry = file.header.dirEntries[16];
 
+		if( dirEntry.length == 0 )
+		{
+			file.visData = {
+				numVectors: 0,
+				sizeVectors: 0,
+				vectors: null
+			};
+			return;
+		}
+
 		var pos = dirEntry.offset;
 
 		var numVectors = bytes.getInt32(pos);

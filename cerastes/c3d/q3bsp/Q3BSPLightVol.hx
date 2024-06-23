@@ -1,5 +1,6 @@
 package cerastes.c3d.q3bsp;
 
+import cerastes.ui.Console.GlobalConsole;
 import h3d.Quat;
 import cerastes.c3d.entities.Light;
 import h3d.Vector;
@@ -22,6 +23,9 @@ import imgui.ImGui;
 
 class Q3BSPLightVol extends Entity
 {
+	// convars
+	@:noCompletion static var _ = GlobalConsole.registerConvar("lightvol_debug", false, null, "Turn on light volume debugging");
+
 	var bsp: BSPFileDef;
 
 	var texAmbient: Texture;
@@ -30,7 +34,7 @@ class Q3BSPLightVol extends Entity
 
 	var volShader: cerastes.c3d.q3bsp.shaders.Q3LightVol;
 
-	var debugLightVolumes: Bool = true;
+	static var debugLightVolumes: Bool = true;
 
 
 	public override function onCreated( def: EntityData )
@@ -212,6 +216,10 @@ class Q3BSPLightVol extends Entity
 	var imScale: Int = -1;
 	public override function imguiUpdate()
 	{
+		var enabled: Bool = GlobalConsole.convar("lightvol_debug");
+		if( !enabled )
+			return;
+
 		ImGui.begin("Light Debugger");
 
 		var nx = CMath.floor(bsp.models[0].maxs[0] / 64) - CMath.ceil(bsp.models[0].mins[0] / 64) + 1;
@@ -234,6 +242,21 @@ class Q3BSPLightVol extends Entity
 		ImGui.text("Directional");
 		var pos = ImGui.getCursorPos();
 		ImGui.image(texDirectional,{ x: nx * imScale, y: ny * imScale }, {x: 1, y: imSlice * sliceSize}, {x: 0, y: sliceSize * (imSlice+1)}, new ImVec4(1,1,1,1), new ImVec4(1,1,1,1));
+
+		// HACK FOR NOW, DO NOT CHECK IN
+		if( hxd.Res.loader.exists("maps/simple/lm_0000.tga"))
+		{
+			var tex = hxd.Res.loader.load( "maps/simple/lm_0000.tga" ).toTexture();
+			tex.filter = Linear;
+			ImGui.text("Lightmap");
+			var sc = tex.width / tex.height;
+			ImGui.image(tex,{ x: nx * imScale, y: nx * imScale * sc }, {x: 0, y: 0}, {x: 1, y: 1}, new ImVec4(1,1,1,1), new ImVec4(1,1,1,1));
+
+
+		}
+
+
+
 
 		pos += ({x: 2, y: 2}:ImVec2S);
 

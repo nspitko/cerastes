@@ -15,9 +15,7 @@ class Light extends Entity
 {
 	var light: h3d.scene.Light;
 
-	#if hlimgui
-	public static var debugLights = true;
-	#end
+	public static var debugLights = false;
 
 	override function create( def: EntityData, qworld: World )
 	{
@@ -26,7 +24,7 @@ class Light extends Entity
 
 		//createLight(def);
 /*
-		if( light != null )
+		if( light != null )`
 		{
 			var color = def.getProperty("_color");
 			if( color != null )

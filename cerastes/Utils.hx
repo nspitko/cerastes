@@ -239,7 +239,7 @@ class Utils
 		}
 		#if debug
 		#if client
-		//GlobalConsole.instance.console.externalLog("Warning: " + msg, 0xFFFF00);
+		//GlobalConsole.console.externalLog("Warning: " + msg, 0xFFFF00);
 		#end
 		#end
 	}
@@ -269,7 +269,7 @@ class Utils
 			#end
 		}
 		#if client
-		GlobalConsole.instance.console.externalLog("Error: " + msg, 0xFF0000);
+		GlobalConsole.console.externalLog("Error: " + msg, 0xFF0000);
 		#end
 
 	}
@@ -310,8 +310,8 @@ class Utils
 		#end
 		#if client
 		#if debug
-		if( GlobalConsole.instance != null &&  GlobalConsole.instance.console != null )
-			GlobalConsole.instance.console.externalLog(msg, 0xFFFFFF);
+		if( GlobalConsole != null &&  GlobalConsole.console != null )
+			GlobalConsole.console.externalLog(msg, 0xFFFFFF);
 		#end
 		#end
 	}

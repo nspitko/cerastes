@@ -43,7 +43,7 @@ class PlayerStart extends Entity
 @:structInit
 class PlayerSubclassData extends EntitySubclassData
 {
-	public var speed: Float = 100;
+	public var speed: Float = 900;
 }
 
 
@@ -95,8 +95,10 @@ class Player extends KinematicActor
 		super.sync(ctx);
 
 		//world.getScene().camera.mcam.setPosition( body.position.toVector4().add(eyePos) );
+	}
 
-		//world.getScene().camera.mcam
+	public function jump()
+	{
 	}
 
 

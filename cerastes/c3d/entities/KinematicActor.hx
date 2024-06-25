@@ -331,8 +331,6 @@ class KinematicActor extends Actor
 				var newPos = CMath.vectorFrac( getBodyOrigin(), end, rc.fraction );
 				//trace('dist=${getBodyOrigin().distance(end)}, frac=${rc.fraction}');
 				setBodyOrigin( newPos.x, newPos.y, newPos.z  );
-				if( z < -45 )
-					trace("???");
 
 			}
 

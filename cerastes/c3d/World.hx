@@ -83,6 +83,7 @@ class BaseWorld extends Object
 	#end
 
 	public var gravity: Float = 9.8 * METERS_TO_WORLD;
+	public var entityGravity: Float = 800;
 
 	public var entityManager: EntityManager;
 

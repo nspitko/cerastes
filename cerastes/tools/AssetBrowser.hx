@@ -626,6 +626,13 @@ class AssetBrowser  extends  ImguiTool
 		#if multidriver
 		flags |= ImGuiWindowFlags.MenuBar;
 		#end
+
+		if( forceFocus )
+		{
+			forceFocus = false;
+			ImGui.setNextWindowFocus();
+		}
+
 		ImGui.begin("\uf07c Asset browser", #if multidriver null #else isOpenRef #end, flags);
 
 		#if multidriver

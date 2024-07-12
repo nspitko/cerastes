@@ -35,7 +35,16 @@ class ImguiTool
 	public var fileName: String = null;
 	public var window: hxd.Window = null;
 
-	public function update( delta: Float ) {}
+	public function update( delta: Float )
+	{
+		#if multidriver
+		if( forceFocus )
+		{
+		}
+
+		#end
+
+	}
 	public function render( e: h3d.Engine)	{}
 
 	public function destroy() {}
@@ -145,6 +154,7 @@ class ImGuiToolManager
 
 	public static var mainWindow: hxd.Window;
 	public static var hoveredWindow: hxd.Window;
+	public static var activeWindow: hxd.Window;
 
 	public static var markdownConfig: MarkdownConfig;
 	// Hilariously bad hack
@@ -212,7 +222,11 @@ class ImGuiToolManager
 			for( t in tools )
 			{
 				if( Std.isOfType( t, type ) )
+				{
+					// This tool can't be multi instanced and we already have one, just focus it.
+					t.forceFocus = true;
 					return t;
+				}
 			}
 		}
 
@@ -271,6 +285,29 @@ class ImGuiToolManager
 		}
 	}
 
+	static function onWindowGainedFocus( w: hxd.Window )
+	{
+		var oldWin = activeWindow;
+		activeWindow = w;
+
+		if( oldWin == null )
+			return;
+
+		var oldMouseMode = oldWin.mouseMode;
+		// If we changed mouse modes, re-set the new window's mode. This looks like a no-op
+		// but is required since it sets global state. ¯\_(ツ)_/¯
+		if( activeWindow.mouseMode != oldMouseMode )
+		{
+			// set_mouseMode has a no-op check. Bypass that in a dumb way...
+			var newMouseMode = activeWindow.mouseMode;
+			activeWindow.mouseMode = oldMouseMode;
+			// Set the new one
+			activeWindow.mouseMode = newMouseMode;
+		}
+
+
+	}
+
 
 	public static function init()
 	{
@@ -317,6 +354,11 @@ class ImGuiToolManager
 					if( e.kind == hxd.Event.EventKind.EMove )
 					{
 						hoveredWindow = w;
+					}
+
+					if( e.kind == hxd.Event.EventKind.EFocus )
+					{
+						onWindowGainedFocus(w);
 					}
 
 					d.onMultiWindowEvent( w, e, v );
@@ -432,6 +474,11 @@ class ImGuiToolManager
 
 						if( e.kind == hxd.Event.EventKind.EMove )
 							hoveredWindow = w;
+
+						if( e.kind == hxd.Event.EventKind.EFocus )
+						{
+							onWindowGainedFocus(w);
+						}
 
 					});
 				}
@@ -887,6 +934,16 @@ class ImGuiToolManager
 			if( previewEvents.scenes.length == 0 )
 				previewEvents.addScene( s2d );
 		}
+		#end
+
+		#if multidriver
+
+		// F10 force focuses the asset window
+		if( hxd.Key.isPressed( hxd.Key.F10 ) )
+		{
+			showTool("AssetBrowser");
+		}
+
 		#end
 
 

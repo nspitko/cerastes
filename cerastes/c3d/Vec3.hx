@@ -1,6 +1,7 @@
 package cerastes.c3d;
 
 import cerastes.c3d.Matrix;
+using hxd.Math;
 
 @:structInit
 class CVec3
@@ -39,6 +40,28 @@ class CVec3
 		this.x = x;
 		this.y = y;
 		this.z = z;
+	}
+
+	public inline function lengthSq() {
+		return x * x + y * y + z * z;
+	}
+
+	public inline function length() {
+		return lengthSq().sqrt();
+	}
+
+	public inline function normalize() {
+		var k = lengthSq();
+		if( k < hxd.Math.EPSILON2 ) k = 0 else k = k.invSqrt();
+		x *= k;
+		y *= k;
+		z *= k;
+	}
+
+	public inline function normalized() {
+		var k = lengthSq();
+		if( k < CMath.EPSILON2 ) k = 0 else k = k.invSqrt();
+		return new Vec3(x * k, y * k, z * k);
 	}
 
 }
@@ -164,4 +187,23 @@ abstract Vec3(CVec3) {
 	{
 		return new h3d.col.Point(this.x, this.y, this.z);
 	}
+
+	#if bullet
+	// --------------------------------------------------------------------------------------------------
+	// Bullet point
+	@:from
+	static inline public function fromBulletPoint(v: bullet.Point ):Vec3
+	{
+		return new Vec3(v.x, v.y, v.z);
+	}
+
+	/*
+	@:to
+	public inline function toHeapsPoint():h3d.col.Point
+	{
+		return new h3d.col.Point(this.x, this.y, this.z);
+	}*/
+
+	#end
+
 }

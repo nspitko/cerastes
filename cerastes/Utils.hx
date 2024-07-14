@@ -587,6 +587,17 @@ class Utils
 		return false;
 	}
 
+	public static function isValidMaterial( file: String ): Bool
+	{
+		if( file == null || file == "")
+			return false;
+
+		if( hxd.Res.loader.exists( file ) )
+			return true;
+
+		return false;
+	}
+
 	public static function getCoreCount()
 	{
 		return 15; // Hack

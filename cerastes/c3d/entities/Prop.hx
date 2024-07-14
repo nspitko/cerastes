@@ -92,7 +92,7 @@ class PropTest extends Entity
 
 		body = new BulletBody( new bullet.Native.SphereShape(radius), 50, RigidBody );
 		body.object = this;
-		body.addTo(world.physics, NPC, MASK_NPC);
+		body.addTo(world.physics, PROP, MASK_ALL);
 		//world.physics.addBody( body, NPC, MASK_NPC );
 	}
 

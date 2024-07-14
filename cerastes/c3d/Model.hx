@@ -123,6 +123,7 @@ class ModelDef
 			else
 			{
 				var prim = @:privateAccess library.makePrimitive(m);
+				prim.addTangents();
 
 				if( m.skin != null )
 				{

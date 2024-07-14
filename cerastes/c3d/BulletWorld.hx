@@ -1,5 +1,6 @@
 package cerastes.c3d;
 
+import cerastes.ui.Console.GlobalConsole;
 import cerastes.macros.Metrics;
 import h3d.Vector;
 import h3d.Vector;
@@ -49,6 +50,9 @@ class BulletRayTestResult
 
 
 class BulletWorld {
+
+	// convars
+	@:keep @:noCompletion static var _ = GlobalConsole.registerConvar("trace_draw", false, null, "Draw debug visualizations for all traces (This may be noisy)");
 
 	var config : Native.DefaultCollisionConfiguration;
 	var dispatch : Native.Dispatcher;
@@ -127,7 +131,7 @@ class BulletWorld {
 			fraction: result.m_closestHitFraction
 		};
 
-		if( true )
+		if( true == GlobalConsole.convar("trace_draw") )
 		{
 			var col = result.hasHit() ? 0x00FF00 : 0xFF0000;
 			DebugDraw.lineV( new Vector( from.x(), from.y(), from.z() ), ret.position, col );
@@ -169,7 +173,9 @@ class BulletWorld {
 
 			var col = r.hit ? 0x00FF00 : 0xFF0000;
 			var pos = CMath.vectorFrac( from, to, r.fraction );
-			DebugDraw.box( pos.toPoint(), new Point( amax.x() - amin.x(), amax.y() - amin.y(), amax.z() - amin.z()), col );
+
+			if( true == GlobalConsole.convar("trace_draw") )
+				DebugDraw.box( pos.toPoint(), new Point( amax.x() - amin.x(), amax.y() - amin.y(), amax.z() - amin.z()), col );
 		}
 
 		return r;

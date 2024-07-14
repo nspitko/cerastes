@@ -155,9 +155,17 @@ class AssetBrowser  extends  ImguiTool
 
 			case "material":
 				asset.scene3d = new h3d.scene.Scene();
+				asset.alwaysUpdate = true;
 
-				var def =  cerastes.file.CDParser.parse( hxd.Res.loader.load( asset.file ).entry.getText(), MaterialDef );
-				cerastes.tools.MaterialEditor.buildMaterialPreview( asset.scene3d, def );
+				try
+				{
+					var def =  cerastes.file.CDParser.parse( hxd.Res.loader.load( asset.file ).entry.getText(), MaterialDef );
+					cerastes.tools.MaterialEditor.buildMaterialPreview( asset.scene3d, def );
+				}
+				catch(e)
+				{
+					//..
+				}
 
 				asset.texture = new Texture(previewWidth,previewHeight, [Target] );
 

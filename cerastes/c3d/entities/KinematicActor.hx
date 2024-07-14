@@ -586,8 +586,6 @@ class KinematicActor extends Actor
 		// Check if being thrown off the ground
 		if( velocity.z > 0 && velocity.dot( rc.normal ) > 10 )
 		{
-			trace("kickoff");
-
 			animJump();
 
 			groundEntity = null;
@@ -599,8 +597,6 @@ class KinematicActor extends Actor
 		// Slopes too steep are not ground
 		if( rc.normal.z < minWalkNormal )
 		{
-			trace("Steep");
-
 			groundEntity = null;
 			groundPlane = false;
 			walking = false;
@@ -613,7 +609,6 @@ class KinematicActor extends Actor
 
 		if( groundEntity == null )
 		{
-			trace("Landed");
 			moveCrashLand();
 		}
 
@@ -626,8 +621,6 @@ class KinematicActor extends Actor
 		// Did we just start falling?
 		if( groundEntity != null )
 		{
-			trace("startFall");
-
 			animFall();
 		}
 

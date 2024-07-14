@@ -41,8 +41,6 @@ class PlayerController extends Controller
 	{
 		currX += e.relX;
 		currY += e.relY;
-
-		trace(currX);
 	}
 
 	public override function tick(delta: Float)
@@ -64,6 +62,9 @@ class PlayerController extends Controller
 		dir.z = 0;
 		dir.normalize();
 
+		var fDir = new Vec3(0,0,0);
+		var sDir = new Vec3(0,0,0);
+
 		//DebugDraw.drawAxisM(player.getTransform());
 
 		//DebugDraw.text('Player = ${player.getTransform().toString()}');
@@ -73,26 +74,28 @@ class PlayerController extends Controller
 		if( Key.isDown( Key.W ) )
 		{
 			isMoving = true;
-			//dir = dir.multiply(1);
+			fDir = dir;
 		}
 		else if( Key.isDown( Key.S ) )
 		{
 			isMoving = true;
-			dir *= -1;
+			fDir = dir * -1;
 		}
 
 		if( Key.isDown( Key.D ) )
 		{
 			isMoving = true;
 			var side = dir.toVector4().cross(new Vector4(0,0,1)).toVector();
-			dir = side * -1;
+			sDir = side * -1;
 		}
 		else if( Key.isDown( Key.A ) )
 		{
 			isMoving = true;
 			var side = dir.toVector4().cross(new Vector4(0,0,1)).toVector();
-			dir = side;
+			sDir = side;
 		}
+
+		dir = ( fDir + sDir ).normalized();
 
 		if( Key.isPressed( Key.SPACE ) && player.onGround )
 		{

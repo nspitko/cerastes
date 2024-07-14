@@ -104,6 +104,9 @@ class ModelEditor extends ImguiTool
 	//
 	var renderModel: Bool = true;
 	var renderBones: Bool = false;
+	var renderGrid: Bool = true;
+
+	var gridGraphics: Graphics;
 
 	public override function getName() { return "\uf183 Model Editor"; }
 
@@ -171,11 +174,13 @@ class ModelEditor extends ImguiTool
 		//Create an environment map texture
 		var envMap = new h3d.mat.Texture(512, 512, [Cube]);
 
+		#if pbr
+
 		inline function set(face:Int, res:hxd.res.Image) {
 			var pix = res.getPixels();
 			envMap.uploadPixels(pix, 0, face);
 		}
-		#if pbr
+
 		//Set the faces for the environment cube map
 		set(0, hxd.Res.tex.front);
 		set(1, hxd.Res.tex.back);
@@ -213,6 +218,7 @@ class ModelEditor extends ImguiTool
 		var modelObject = def.toObject(scene);
 		// Draw axis
 		var g = new h3d.scene.Graphics( scene );
+		g.name = "grid";
 
 		var lineSize = 1;
 
@@ -275,6 +281,7 @@ class ModelEditor extends ImguiTool
 		{
 			var modelResource = hxd.Res.loader.loadCache( modelDef.file, Model );
 			modelLibrary = modelResource.toHmd();
+			onModelChanged();
 		}
 
 		previewGraphics = new Graphics(preview);
@@ -722,7 +729,11 @@ class ModelEditor extends ImguiTool
 		var size = ImGui.getWindowSize();
 		var style = ImGui.getStyle();
 
+		#if !multidriver
 		var startPos: ImVec2 = ImGui.getCursorScreenPos();
+		#else
+		var startPos: ImVec2 = ImGui.getCursorPos();
+		#end
 		//var windowPos: ImVec2 = ImGui.getWindowPos();
 
 		ImGui.pushStyleColor( ImGuiCol.Button, 0 );
@@ -738,14 +749,23 @@ class ModelEditor extends ImguiTool
 		ImGui.checkbox("Model", renderModel);
 		ImGui.sameLine();
 		ImGui.checkbox("Bones", renderBones);
+		ImGui.sameLine();
+		if( ImGui.checkbox("Grid", renderGrid) )
+		{
+			var g = preview.getObjectByName("grid");
+			g.visible = renderGrid;
+		}
+
 
 		ImGui.imageButton(sceneRT, texSize, null, null, 0 );
 
+		ImGuiToolManager.updatePreviewEvents( startPos, texSize, events );
+
 		ImGui.popStyleColor();
 		ImGui.popStyleColor();
 		ImGui.popStyleColor();
 
-		ImGuiToolManager.updatePreviewEvents( startPos, texSize, events );
+
 		#if imguizmo
 		ImGuizmo.setRect(startPos.x, startPos.y, size.x, size.x);
 		#end
@@ -831,6 +851,46 @@ class ModelEditor extends ImguiTool
 
 		ImGui.end();
 
+	}
+
+	function onModelChanged()
+	{
+		var changed = false;
+		if( modelLibrary != null )
+		{
+			for( idx in 0 ... modelLibrary.header.materials.length )
+			{
+				var mat = modelLibrary.header.materials[idx];
+				var defMat = modelDef.materialMap[mat.name];
+				if( defMat != null )
+					continue;
+
+				var name = mat.name;
+				if( mat.name.length == 0 )
+					continue;
+
+				// Try to find a material
+				var m = 'materials/${name}.material';
+				if( Utils.isValidMaterial(m) )
+				{
+					modelDef.materialMap[mat.name] = m;
+					changed = true;
+					continue;
+				}
+
+				var t = 'textures/${name}.png';
+				if( Utils.isValidTexture(t) )
+				{
+					// @todo: We should auto-detect normal maps here too...
+					modelDef.materialMap[mat.name] = t;
+					changed = true;
+					continue;
+				}
+			}
+		}
+
+		if( changed )
+			rebuildPreview();
 	}
 
 	function copyMatrix( src: Matrix, dest: hl.NativeArray<Single>, start: Int = 0 )

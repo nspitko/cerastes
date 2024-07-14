@@ -53,6 +53,21 @@ class Player extends KinematicActor
 
 	var eyePos: Vec3;
 
+	override function createBody( def: EntityData )
+	{
+		// Same as KinematicActor, but player masks.
+		var shape = new bullet.Native.BoxShape(new bullet.Native.Vector3( bodyRadius,bodyRadius,bodyHeight/2 ));
+		bodyOffset.set(0, 0, bodyHeight / 2);
+		body = new BulletBody( shape, 50, RigidBody );
+		world.physics.addBody( body, PLAYER, MASK_PLAYER );
+		body.slamRotation = false;
+		body.slamPosition = false;
+
+		var rb : bullet.Native.RigidBody = cast @:privateAccess body.inst;
+		body.collisionFlags |= CollisionFlags.CF_KINEMATIC_OBJECT;
+		body.object = this;
+	}
+
 	public override function onCreated(  def: EntityData )
 	{
 		super.onCreated( def );

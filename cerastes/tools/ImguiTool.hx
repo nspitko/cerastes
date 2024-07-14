@@ -1,5 +1,7 @@
 
 package cerastes.tools;
+import hxd.DropFileEvent;
+import hxd.impl.MouseMode;
 import h3d.impl.GlDriver;
 import h3d.impl.DirectXDriver;
 #if hlimgui
@@ -33,7 +35,19 @@ class ImguiTool
 	public var toolId: Int = 0;
 	public var forceFocus: Bool = false;
 	public var fileName: String = null;
-	public var window: hxd.Window = null;
+	public var window(default, set): hxd.Window = null;
+
+	function set_window(v: hxd.Window )
+	{
+		if( window == v )
+			return v;
+
+		onWindowChanged(v);
+		window = v;
+		return v;
+	}
+
+	var dragOffer: DropFileEvent = null;
 
 	public function update( delta: Float )
 	{
@@ -41,7 +55,6 @@ class ImguiTool
 		if( forceFocus )
 		{
 		}
-
 		#end
 
 	}
@@ -58,20 +71,22 @@ class ImguiTool
 
 	public function openFile( file: String ) {};
 
-	public function setWindow( w: hxd.Window )
+	function onWindowChanged( w: hxd.Window )
 	{
-		if( window != w )
+		if( window != null )
 		{
-			onWindowChanged(w);
-			window = w;
-
+			window.removeDragAndDropTarget( onFileDrop );
 		}
+		if( w != null )
+			w.addDragAndDropTarget( onFileDrop );
 	}
 
-	function onWindowChanged( newWindow: hxd.Window )
+	function onFileDrop( event : DropFileEvent )
 	{
-
+		dragOffer = event;
 	}
+
+
 }
 
 enum ImGuiPopupType
@@ -159,6 +174,8 @@ class ImGuiToolManager
 	public static var markdownConfig: MarkdownConfig;
 	// Hilariously bad hack
 	public static var globalKeyboardTarget: h2d.Scene;
+
+	static var oldMouseMode: MouseMode;
 
 	static function set_enabled(v)
 	{
@@ -669,7 +686,6 @@ class ImGuiToolManager
 		};
 
 		platformIO.Renderer_SwapBuffers = ( v: ImGuiViewport, arg: Dynamic ) -> {
-
 			Metrics.begin("ImGuiToolManager.Present");
 			var oldWin = hxd.Window.getInstance();
 			var w = v.PlatformHandle;
@@ -941,7 +957,18 @@ class ImGuiToolManager
 		// F10 force focuses the asset window
 		if( hxd.Key.isPressed( hxd.Key.F10 ) )
 		{
-			showTool("AssetBrowser");
+			if( activeWindow == mainWindow )
+			{
+				if( mainWindow.mouseMode != Absolute )
+				{
+					oldMouseMode = mainWindow.mouseMode;
+					mainWindow.mouseMode = Absolute;
+				}
+				else
+				{
+					mainWindow.mouseMode = oldMouseMode;
+				}
+			}
 		}
 
 		#end
@@ -1129,21 +1156,23 @@ class ImGuiToolManager
 		if( !hovered )
 			return false;
 
-
 		var style = ImGui.getStyle();
 
-		var mouseX = Window.getInstance().mouseX;
-		var mouseY = Window.getInstance().mouseY;
+		var mouseX = activeWindow.mouseX;
+		var mouseY = activeWindow.mouseY;
 
 
 		var scaleX = Engine.getCurrent().width / size.x;
 		var scaleY = Engine.getCurrent().height / size.y;
 
+		// Redundant?? Should be covered by isItemHovered.
+		/*
 		if( mouseX < startPos.x || mouseY < startPos.y )
 			return false;
 
 		if( mouseX > startPos.x + size.x || mouseY > startPos.y + size.y )
 			return false;
+		*/
 
 		var mouseScenePos = {x: mouseX - startPos.x, y: mouseY - startPos.y };
 
@@ -1182,15 +1211,12 @@ class ImGuiToolManager
 			event.kind = ERelease;
 			event.button = 1;
 		}
-		if( Key.isPressed( Key.MOUSE_WHEEL_DOWN ) )
+
+		var wheel: Int = cast ImGui.getIO().MouseWheel;
+		if( wheel != 0)
 		{
 			event.kind = EWheel;
-			event.wheelDelta = 1;
-		}
-		else if( Key.isPressed( Key.MOUSE_WHEEL_UP ) )
-		{
-			event.kind = EWheel;
-			event.wheelDelta = -1;
+			event.wheelDelta = wheel;
 		}
 
 

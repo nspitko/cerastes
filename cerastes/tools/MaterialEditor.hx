@@ -112,7 +112,9 @@ class MaterialEditor extends ImguiTool
 		bg.scale(10);
 		//Make sure it is always rendered
 		bg.material.mainPass.culling = Front;
+		#if pbr
 		bg.material.mainPass.setPassName("overlay");
+		#end
 
 		//Create an environment map texture
 		var envMap = new h3d.mat.Texture(512, 512, [Cube]);
@@ -134,7 +136,7 @@ class MaterialEditor extends ImguiTool
 		var env = new h3d.scene.pbr.Environment(envMap);
 		env.compute();
 
-		var renderer = cast(preview.renderer, h3d.scene.pbr.Renderer);
+		var renderer = cast(scene.renderer, h3d.scene.pbr.Renderer);
 		renderer.env = env;
 
 
@@ -148,7 +150,7 @@ class MaterialEditor extends ImguiTool
 
 		//var cubeShader = bg.material.mainPass.addShader(new h3d.shader.pbr.CubeLod(env.env));
 		#if pbr
-		var light = new h3d.scene.pbr.PointLight(preview);
+		var light = new h3d.scene.pbr.PointLight(scene);
 
 		light.range = 100;
 		light.power = 8;
@@ -178,8 +180,22 @@ class MaterialEditor extends ImguiTool
 		previewMesh.material = materialDef.toMaterial();
 	}
 
+	function onTextureChanged()
+	{
+		if( materialDef.albedo == null )
+			return;
+
+		var extp = materialDef.albedo.lastIndexOf('.');
+		var normalTex = '${materialDef.albedo.substr(0,extp)}_normal${materialDef.albedo.substr(extp)}';
+		if( Utils.isValidTexture(normalTex) )
+			materialDef.normal = normalTex;
+
+	}
+
 	override public function update( delta: Float )
 	{
+
+		super.update(delta);
 
 		var isOpen = true;
 		var isOpenRef = hl.Ref.make(isOpen);
@@ -191,6 +207,8 @@ class MaterialEditor extends ImguiTool
 		}
 		ImGui.setNextWindowSize({x: windowWidth * 0.9, y: windowHeight * 0.9}, ImGuiCond.Once);
 		ImGui.begin('\uf1de Material Editor - ${ fileName != null ? fileName : "Untitled" }###${windowID()}', isOpenRef, ImGuiWindowFlags.NoDocking | ImGuiWindowFlags.MenuBar);
+
+		window = ImGui.contextGetCurrentViewport().PlatformHandle;
 
 		menuBar();
 
@@ -214,7 +232,19 @@ class MaterialEditor extends ImguiTool
 
 		var ret = IG.inputTexture("Albedo", materialDef.albedo);
 		if( ret != null )
+		{
 			materialDef.albedo = ret == "" ? null : ret;
+			onTextureChanged();
+		}
+		if( ImGui.isItemHovered() && dragOffer != null )
+		{
+			var f = Utils.toLocalFile( dragOffer.file.file );
+			if( Utils.isValidTexture( f ) )
+			{
+				materialDef.albedo = f;
+				onTextureChanged();
+			}
+		}
 
 		ret = IG.inputTexture("Normal", materialDef.normal);
 		if( ret != null )
@@ -260,6 +290,8 @@ class MaterialEditor extends ImguiTool
 			ImGuiToolManager.closeTool( this );
 		}
 
+		dragOffer = null;
+
 	}
 
 
@@ -290,7 +322,8 @@ class MaterialEditor extends ImguiTool
 
 			fileName = Utils.toLocalFile( newFile );
 
-			cerastes.tools.AssetBrowser.needsReload = true;
+			new Timer(0.25, ()->{ cerastes.tools.AssetBrowser.needsReload = true; });
+
 			ImGuiToolManager.showPopup("File saved",'Wrote ${fileName} successfully.', Info);
 		}
 	}

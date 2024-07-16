@@ -54,7 +54,8 @@ class Q3LightVol extends hxsl.Shader {
 			var volSpace = vec3( ( position.x - volOffset.x ) / 64, ( position.y - volOffset.y ) / 64, ( position.z - volOffset.z ) / 128 );
 
 			var zPos = volSpace.z;
-			var zIdx = floor(zPos);
+			// Always prefer the light above us
+			var zIdx = ceil(zPos);
 
 			volSpace /= volSize;
 
@@ -99,12 +100,13 @@ class Q3LightVol extends hxsl.Shader {
 		}
 
 		function vertex() {
-			//lightColor.rgb += calcLighting(transformedPosition);
+			lightColor.rgb += calcLighting(transformedPosition);
 		}
 
 		function fragment() {
 			// Disabled for now.
-			//lightPixelColor.rgb += calcLighting(pixelTransformedPosition);
+			lightPixelColor.rgb += calcLighting(pixelTransformedPosition);
+
 		}
 
 	};

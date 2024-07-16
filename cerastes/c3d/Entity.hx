@@ -1,5 +1,7 @@
 package cerastes.c3d;
 
+import cerastes.Entity.EntityDef;
+import cerastes.Entity.DataEntity;
 import cerastes.c3d.Vec3;
 import h3d.Vector4;
 import h3d.col.Point;
@@ -25,9 +27,9 @@ class EntitySubclassData
 
 
 @:structInit
-class EntityDataBase #if hxbit implements hxbit.Serializable #end
+class EntityDataBase
 {
-	@:s public var props: Map<String, String> = [];
+	public var props: Map<String, String> = [];
 
 	public function getProperty( key: String, defaultVal: String = null )
 	{
@@ -107,8 +109,6 @@ class BaseEntity extends Object implements cerastes.Entity
 	public var bodyOffset = new Vec3(0,0,0);
 	#end
 
-	//@:noCompletion var subclassData: EntitySubclassData;
-
 	public function get_world() : cerastes.c3d.World
 	{
 		return world;
@@ -124,7 +124,7 @@ class BaseEntity extends Object implements cerastes.Entity
 
 	// ---------------------------------------------------------------------------------------------------------------
 	// Action stubs. These are designed to be overriden by leaves
-	function onCreated( def: EntityData ) { }
+	function onCreated( data: EntityData ) { }
 	function onInput( source: Entity, port: String ) {}
 
 	// ---------------------------------------------------------------------------------------------------------------

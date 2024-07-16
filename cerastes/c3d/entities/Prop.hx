@@ -68,11 +68,9 @@ class PropTest extends Entity
 {
 	static var l: PointLight;
 
-	var bsp: BSPFileDef;
 	override function onCreated( def: EntityData )
 	{
 		super.onCreated( def );
-		bsp = def.bsp;
 
 
 		// physics test
@@ -85,6 +83,9 @@ class PropTest extends Entity
 		var tex = Utils.invalidTexture();
 		var mat = h3d.mat.Material.create(tex);
 		var mesh = new h3d.scene.Mesh(sp, mat, this );
+
+		// @todo there's a better way to do this surely....
+		mat.mainPass.addShader( cerastes.c3d.q3bsp.Q3BSPEntities.lightShader.volShader );
 
 		mat.shadows = false;
 		mat.mainPass.enableLights = true;
@@ -116,40 +117,6 @@ class PropTest extends Entity
 			if( Key.isDown( Key.Q ) )
 				setAbsOrigin( x , y , z - speed );
 		}
-
-		if( false )
-		{
-
-			var wx = bsp.models[0].maxs[0] - bsp.models[0].mins[0];
-			var wy = bsp.models[0].maxs[1] - bsp.models[0].mins[1];
-			var wz = bsp.models[0].maxs[2] - bsp.models[0].mins[2];
-
-			var nx = CMath.floor(bsp.models[0].maxs[0] / 64) - CMath.ceil(bsp.models[0].mins[0] / 64) + 1;
-			var ny = CMath.floor(bsp.models[0].maxs[1] / 64) - CMath.ceil(bsp.models[0].mins[1] / 64) + 1;
-			var nz = CMath.floor(bsp.models[0].maxs[2] / 128) - CMath.ceil(bsp.models[0].mins[2] / 128) + 1;
-
-			var volSize = new Point( nx, ny, nz );
-			var volScale = new Point( 64, 64, 128 );
-			var volOffset = new Point( bsp.models[0].mins[0], bsp.models[0].mins[1], bsp.models[0].mins[2] );
-			var position = new Point(x,y,z);
-
-			var volSpace = new Point( ( position.x - volOffset.x ) / 64, ( position.y - volOffset.y ) / 64, ( position.z - volOffset.z ) / 128 );
-
-			var zPos = volSpace.z;
-			var zIdx = Math.floor(zPos);
-
-			volSpace = CMath.pointDivide( volSpace,  volSize);
-
-			var ly = volSpace.y / volSize.z;
-			ly += ( 1 / volSize.z ) * zIdx;
-
-			var idx = CMath.floor( volSpace.x * nx ) + Math.floor( ly * nx * ny);
-
-			//DebugDraw.box( out, 20, 0xFF0000 );
-		}
-
-
-
 
 	}
 

@@ -547,6 +547,8 @@ class ModelEditor extends ImguiTool
 
 	}
 
+	var libCache = new haxe.ds.Map<String, hxd.fmt.hmd.Library>();
+
 
 	function modelOutline()
 	{
@@ -593,8 +595,16 @@ class ModelEditor extends ImguiTool
 				{
 					//try
 					{
-						var res = hxd.Res.loader.loadCache( l, Model );
-						var lib = res.toHmd();
+						var lib = libCache.get(l);
+						if( lib == null )
+						{
+							var res = hxd.Res.loader.loadCache( l, Model );
+							libCache.set(l, res.toHmd());
+							lib = libCache.get(l);
+						}
+
+						if( lib == null )
+							continue;
 
 						for( a in lib.header.animations )
 						{

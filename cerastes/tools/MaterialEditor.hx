@@ -114,7 +114,6 @@ class MaterialEditor extends ImguiTool
 		bg.material.mainPass.culling = Front;
 		#if pbr
 		bg.material.mainPass.setPassName("overlay");
-		#end
 
 		//Create an environment map texture
 		var envMap = new h3d.mat.Texture(512, 512, [Cube]);
@@ -123,7 +122,7 @@ class MaterialEditor extends ImguiTool
 			var pix = res.getPixels();
 			envMap.uploadPixels(pix, 0, face);
 		}
-		#if pbr
+
 		//Set the faces for the environment cube map
 		set(0, hxd.Res.tex.front);
 		set(1, hxd.Res.tex.back);

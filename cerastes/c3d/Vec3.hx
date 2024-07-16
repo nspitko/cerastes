@@ -197,12 +197,11 @@ abstract Vec3(CVec3) {
 		return new Vec3(v.x, v.y, v.z);
 	}
 
-	/*
 	@:to
-	public inline function toHeapsPoint():h3d.col.Point
+	public inline function toBulletPoint():bullet.Native.Vector3
 	{
-		return new h3d.col.Point(this.x, this.y, this.z);
-	}*/
+		return new bullet.Native.Vector3(this.x, this.y, this.z);
+	}
 
 	#end
 

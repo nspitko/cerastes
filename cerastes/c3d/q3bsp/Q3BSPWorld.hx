@@ -1,5 +1,6 @@
 package cerastes.c3d.q3bsp;
 
+import cerastes.Entity.EntityDef;
 import haxe.rtti.Meta;
 import cerastes.c3d.Entity.EntityData;
 import h3d.scene.Object;
@@ -10,41 +11,34 @@ abstract class Q3BSPWorld extends BaseWorld
 {
 	static var classMap: Map<String, Class<Dynamic>>;
 
-	public override function createEntityClass( cls: Class<Dynamic>, def: EntityData ) : Entity
+	public override function createEntityClass( cls: Class<Dynamic>, data: EntityData, ?parent: h3d.scene.Object ) : Entity
 	{
 		var entity: Entity = Type.createInstance(cls,[]);
-		@:privateAccess entity.create(def, cast this);
-		addChild(entity);
+		@:privateAccess entity.create(data, cast this);
+		if( parent != null )
+			parent.addChild(entity);
+		else
+			addChild(entity);
 
 		return entity;
 	}
 
-	public override function createEntity( def: EntityData )
+	public override function createEntity( data: EntityData, ?parent: h3d.scene.Object )
 	{
 		ensureClassMap();
 
-		var className = def.getProperty("classname");
+		var className = data.getProperty("classname");
 		if( className == null )
 		{
 			Utils.warning('Entity def missing classname!!!');
 			return null;
 		}
 
-
-		trace('found entity ${className}');
-
-
 		var cls: Class<Dynamic> = classMap.get( className );
 
 		if( cls != null )
 		{
-			var entity: Entity = Type.createInstance(cls,[]);
-			@:privateAccess entity.create(def, cast this);
-			addChild(entity);
-
-
-
-			return entity;
+			return createEntityClass(cls, data, parent);
 		}
 
 		Utils.warning('Could not find class def for ${className}');

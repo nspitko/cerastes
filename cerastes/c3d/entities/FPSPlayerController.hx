@@ -28,9 +28,13 @@ class FPSPlayerController extends PlayerController
 	{
 		super.tick(d);
 
+		rotationY =  CMath.fclamp(rotationY, -85 * CMath.DEG_RAD, 85 * CMath.DEG_RAD) ;
+
 		var cam = world.getScene().camera;
 
+		var quat: Quat;
 		player.qRot.initRotation(0,rotationY, -rotationX);
+		@:privateAccess player.posChanged = true;
 
 		// update camera from new player position
 		var m = player.getTransform() ;

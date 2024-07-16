@@ -15,11 +15,11 @@ class Q3BSPEntityData extends cerastes.c3d.Entity.EntityDataBase
 @:keepSub
 class Q3BSPEntity extends BaseEntity
 {
-	override function create( def: EntityData, w: World )
+	override function create( data: EntityData, w: World )
 	{
-		super.create(def, w);
+		super.create(data, w);
 
-		var origin = def.getPropertyPoint('origin');
+		var origin = data.getPropertyPoint('origin');
 		if( origin != null )
 		{
 			setAbsOrigin(

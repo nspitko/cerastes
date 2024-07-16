@@ -87,13 +87,13 @@ class BaseWorld extends Object
 
 	public var entityManager: EntityManager;
 
-	public function createEntity( def: EntityData ) : Entity
+	public function createEntity( data: EntityData, ?parent: h3d.scene.Object ) : Entity
 	{
 		//
 		return null;
 	}
 
-	public function createEntityClass( cls: Class<Dynamic>, def: EntityData ) : Entity
+	public function createEntityClass( cls: Class<Dynamic>, data: EntityData, ?parent: h3d.scene.Object ) : Entity
 	{
 		//
 		return null;

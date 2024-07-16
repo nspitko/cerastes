@@ -14,7 +14,8 @@ import hxd.Key;
 @:access( cerastes.c3d.entities.Player )
 class ThirdPersonPlayerController extends PlayerController
 {
-	var cameraPos: Vec3 = new Vec3(-128,0,60);
+	var heightOffset: Vec3 = new Vec3(0,0,60);
+	var distanceOffset: Float = 128;
 
 	public override function onCreated( def:  EntityData )
 	{
@@ -39,7 +40,24 @@ class ThirdPersonPlayerController extends PlayerController
 	{
 		super.tick(d);
 
+		rotationY =  CMath.fclamp(rotationY, -85 * CMath.DEG_RAD, 85 * CMath.DEG_RAD) ;
+
 		var cam = world.getScene().camera;
+
+		var quat: Quat;
+		player.qRot.initRotation(0,rotationY, -rotationX);
+		@:privateAccess player.posChanged = true;
+
+		// update camera from new player position
+		var m = player.getTransform().clone();
+		m.setPosition( m.getPosition().add( heightOffset + ( m.front() * -distanceOffset ) ) );
+
+
+
+		cam.setTransform(m);
+
+		return;
+/*
 
 		var q = new Quat();
 		q.initRotation(rotationY,0, -rotationX);
@@ -68,7 +86,7 @@ class ThirdPersonPlayerController extends PlayerController
 
 		cam.pos.set( cameraOffset.x, cameraOffset.y, cameraOffset.z );
 		cam.target.set( player.x, player.y, player.z + player.eyePos.z );
-
+*/
 	}
 
 }

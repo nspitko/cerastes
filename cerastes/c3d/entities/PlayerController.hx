@@ -51,14 +51,7 @@ class PlayerController extends Controller
 		rotationX += relX;
 		rotationY += relY;
 
-		var q = new Quat();
-
-		//player.qRot.initRotation(rotationY,0, -rotationX);
-		player.qRot.initRotation(0,0, -rotationX);
-		q.initRotation(rotationY,0, -rotationX);
-
-
-		var dir = q.getDirection().toPoint();
+		var dir = player.getTransform().getDirection().toPoint();// q.getDirection().toPoint();
 		dir.z = 0;
 		dir.normalize();
 

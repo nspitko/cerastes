@@ -198,3 +198,35 @@ abstract Vec2(CVec2) from CVec2 to CVec2 {
 	*/
 	#end
 }
+
+@:structInit
+class CVec2i
+{
+	public var x:Int;
+	public var y:Int;
+
+	public inline function new(x:Int = 0, y:Int = 0)
+	{
+		this.x = x;
+		this.y = y;
+	}
+
+	public inline function clone() : Vec2i
+	{
+		return new Vec2i( x, y );
+	}
+
+	public inline function set( x: Int, y: Int )
+	{
+		this.x = x;
+		this.y = y;
+	}
+}
+
+@:forward
+abstract Vec2i(CVec2i) from CVec2i to CVec2i {
+	public inline function new(x:Int, y:Int)
+	{
+		this = new CVec2i(x, y);
+	}
+}

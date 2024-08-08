@@ -248,7 +248,7 @@ class UIEditor extends ImguiTool
 
 			if( ImGui.beginPopup("uie_additem") )
 			{
-				var types = ["h2d.Object", "h2d.Text", "h2d.Bitmap", "h2d.Anim", "h2d.Flow", "h2d.Mask", "h2d.Interactive", "h2d.ScaleGrid", "cerastes.ui.Button", "cerastes.ui.AdvancedText", "cerastes.ui.Reference", "cerastes.ui.Sound", "cerastes.ui.Anim"];
+				var types = ["h2d.Object", "h2d.Text", "h2d.TextInput", "h2d.Bitmap", "h2d.Anim", "h2d.Flow", "h2d.Mask", "h2d.Interactive", "h2d.ScaleGrid", "cerastes.ui.Button", "cerastes.ui.AdvancedText", "cerastes.ui.Reference", "cerastes.ui.Sound", "cerastes.ui.Anim"];
 
 				for( t in types )
 				{
@@ -2119,6 +2119,15 @@ class UIEditor extends ImguiTool
 
 					ImGui.endDragDropTarget();
 				}
+			case "h2d.TextInput":
+				var d: CUITextInput = cast def;
+
+				ImGui.checkbox( "Can Edit", d.canEdit );
+				ImGui.inputInt( "Input Width", d.inputWidth );
+				ImGui.inputInt( "Input Height", d.inputHeight );
+				ImGui.checkbox( "Multiline", d.multiline );
+
+
 
 			case "h2d.Bitmap":
 				var d: CUIBitmap = cast def;
@@ -2696,6 +2705,15 @@ class UIEditor extends ImguiTool
 
 			case "cerastes.ui.AdvancedText":
 				var def: CUIAdvancedText = {
+					type: type,
+					name: getAutoName(type),
+					children: []
+				};
+
+				parent.children.push(def);
+
+			case "h2d.TextInput":
+				var def: CUITextInput = {
 					type: type,
 					name: getAutoName(type),
 					children: []

@@ -271,6 +271,13 @@ enum abstract CUITristateBool(Int) from Int to Int {
 	public var boldFont: String = null;
 }
 
+@:structInit class CUITextInput extends CUIText {
+	public var inputWidth: Int = -1; // -1 == null
+	public var inputHeight: Int = -1; // -1 == null
+	public var canEdit: Bool = true;
+
+	public var multiline: Bool = false;
+}
 
 @:structInit class CUIBitmap extends CUIDrawable {
 	public var tile: String = "#FF00FF";
@@ -637,6 +644,10 @@ class CUIResource extends Resource
 				var d : CUIText = cast entry;
 				obj = new h2d.Text( getFont( d.font, d ) );
 
+			case "h2d.TextInput":
+				var d: CUITextInput = cast entry;
+				obj = new h2d.TextInput( getFont( d.font, d ) );
+
 			case "h2d.Bitmap":
 				obj = new Bitmap( );
 
@@ -800,6 +811,17 @@ class CUIResource extends Resource
 					o.text = e.text;
 
 
+			case "h2d.TextInput":
+				var o = cast(obj, h2d.TextInput);
+				var e: CUITextInput = cast entry;
+
+				o.canEdit = e.canEdit;
+				if( e.inputWidth != -1 )
+					o.inputWidth = e.inputWidth;
+				if( e.inputHeight != -1 )
+					o.inputHeight = e.inputHeight;
+
+				o.multiline = e.multiline;
 
 
 			case "cerastes.ui.AdvancedText":

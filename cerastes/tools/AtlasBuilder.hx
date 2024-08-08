@@ -112,19 +112,10 @@ class AtlasBuilder  extends  ImguiTool
 
 	}
 
-	override function onWindowChanged( w: hxd.Window )
+	override function onFileDrop( event : DropFileEvent )
 	{
-		if( window != null )
-		{
-			window.removeDragAndDropTarget( onFileDrop );
-		}
-		if( w != null )
-			w.addDragAndDropTarget( onFileDrop );
-	}
+		super.onFileDrop(event);
 
-
-	function onFileDrop( event : DropFileEvent )
-	{
 		if( isInspectorHovered && selectedEntry != null )
 		{
 			for( f in event.files )
@@ -169,9 +160,7 @@ class AtlasBuilder  extends  ImguiTool
 		ImGui.setNextWindowDockId( dockspaceIdCenter, dockCond );
 		ImGui.begin('View##${windowID()}', null, ImGuiWindowFlags.NoMove | ImGuiWindowFlags.HorizontalScrollbar );
 
-		//var pio = ImGui.getPlatformIO();
-		var vp = ImGui.contextGetCurrentViewport();
-		setWindow( vp.PlatformHandle );
+		window = ImGui.contextGetCurrentViewport().PlatformHandle;
 
 		handleShortcuts();
 

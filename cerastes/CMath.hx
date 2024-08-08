@@ -143,7 +143,7 @@ import haxe.macro.Expr;
 	 /**
 	  * Math.PI.
 	  */
-	 inline public static var PI = 3.141592653589793;
+	 inline public static var PI = 3.14159265358979323;
 
 	 /**
 	  * 2 * Math.PI.
@@ -164,6 +164,10 @@ import haxe.macro.Expr;
 	  * The square root of 2.
 	  */
 	 inline public static var SQRT2 = 1.414213562373095;
+
+	 // Haxe scale epsilons
+	 public static inline var EPSILON = 1e-10;
+	 public static inline var EPSILON2 = 1e-20;
 
 	 /**
 	  * Converts deg to radians.

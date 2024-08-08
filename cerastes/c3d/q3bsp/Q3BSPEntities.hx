@@ -29,6 +29,9 @@ class Q3BSPEntities
 
 	static var classMap: Map<String, Class<Dynamic>>;
 
+	// @todo: Should this really be here?
+	public static var lightShader: Q3BSPLightVol = null;
+
 	public static function spawnEntities( b: BSPFileDef, w: World )
 	{
 		bsp = b;
@@ -37,13 +40,15 @@ class Q3BSPEntities
 
 		parse();
 
+		// Global ents
+		lightShader = cast world.createEntityClass( Q3BSPLightVol, { bsp: bsp } );
+
 		for( e in entities )
 		{
 			world.createEntity(e);
 		}
 
-		// Global ents
-		world.createEntityClass( Q3BSPLightVol, { bsp: bsp } );
+
 		//w.addChild( new Q3BSPLightVol({ bsp: bsp }) );
 
 		entities = null;

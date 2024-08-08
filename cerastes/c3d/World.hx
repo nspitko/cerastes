@@ -83,16 +83,17 @@ class BaseWorld extends Object
 	#end
 
 	public var gravity: Float = 9.8 * METERS_TO_WORLD;
+	public var entityGravity: Float = 800;
 
 	public var entityManager: EntityManager;
 
-	public function createEntity( def: EntityData ) : Entity
+	public function createEntity( data: EntityData, ?parent: h3d.scene.Object ) : Entity
 	{
 		//
 		return null;
 	}
 
-	public function createEntityClass( cls: Class<Dynamic>, def: EntityData ) : Entity
+	public function createEntityClass( cls: Class<Dynamic>, data: EntityData, ?parent: h3d.scene.Object ) : Entity
 	{
 		//
 		return null;

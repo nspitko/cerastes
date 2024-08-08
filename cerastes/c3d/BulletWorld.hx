@@ -1,5 +1,6 @@
 package cerastes.c3d;
 
+import cerastes.ui.Console.GlobalConsole;
 import cerastes.macros.Metrics;
 import h3d.Vector;
 import h3d.Vector;
@@ -13,12 +14,13 @@ enum abstract BulletCollisionFilterGroup(Int) from Int to Int
 	public var PLAYER		= (1 << 2 );
 	public var PROP			= (1 << 3 );
 	public var TRIGGER		= (1 << 4 );
+	public var BULLET		= (1 << 5 );
 }
 
 enum abstract BulletCollisionFilterMask(Int) from Int to Int
 {
 	public var MASK_ALL						= 0xFFFF;
-	public var MASK_WORLD					= NPC | PLAYER | PROP; // I'm the world, I collide with things that are not the world
+	public var MASK_WORLD					= NPC | PLAYER | PROP | BULLET; // I'm the world, I collide with things that are not the world
 	public var MASK_PLAYER					= WORLD | NPC | PROP | TRIGGER;
 	public var MASK_NPC						= WORLD | PLAYER | TRIGGER; // NPCs ignore props for pathings reasons that may exist some day
 	public var MASK_TRIGGER					= PLAYER | NPC | PROP; // triggers look for point entities only
@@ -49,6 +51,9 @@ class BulletRayTestResult
 
 
 class BulletWorld {
+
+	// convars
+	@:keep @:noCompletion static var _ = GlobalConsole.registerConvar("trace_draw", false, null, "Draw debug visualizations for all traces (This may be noisy)");
 
 	var config : Native.DefaultCollisionConfiguration;
 	var dispatch : Native.Dispatcher;
@@ -127,7 +132,7 @@ class BulletWorld {
 			fraction: result.m_closestHitFraction
 		};
 
-		if( true )
+		if( true == GlobalConsole.convar("trace_draw") )
 		{
 			var col = result.hasHit() ? 0x00FF00 : 0xFF0000;
 			DebugDraw.lineV( new Vector( from.x(), from.y(), from.z() ), ret.position, col );
@@ -169,7 +174,9 @@ class BulletWorld {
 
 			var col = r.hit ? 0x00FF00 : 0xFF0000;
 			var pos = CMath.vectorFrac( from, to, r.fraction );
-			DebugDraw.box( pos.toPoint(), new Point( amax.x() - amin.x(), amax.y() - amin.y(), amax.z() - amin.z()), col );
+
+			if( true == GlobalConsole.convar("trace_draw") )
+				DebugDraw.box( pos.toPoint(), new Point( amax.x() - amin.x(), amax.y() - amin.y(), amax.z() - amin.z()), col );
 		}
 
 		return r;

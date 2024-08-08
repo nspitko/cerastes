@@ -32,7 +32,7 @@ class Q3BSPLightVol extends Entity
 	var texDirectional: Texture;
 	var texDirection: Texture;
 
-	var volShader: cerastes.c3d.q3bsp.shaders.Q3LightVol;
+	public var volShader: cerastes.c3d.q3bsp.shaders.Q3LightVol;
 
 	static var debugLightVolumes: Bool = true;
 
@@ -137,7 +137,7 @@ class Q3BSPLightVol extends Entity
 				//var y = ny - fy - 1;
 				for( x in 0 ... nx )
 				{
-					var scale = 2;
+				var scale = 2;
 
 					// Correct for z flip
 					var lx = nx - x - 1;

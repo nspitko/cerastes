@@ -134,6 +134,8 @@ class AssetBrowser  extends  ImguiTool
 
 				p.scene.scaleMode = Stretch(previewWidth, previewHeight);
 				p.texture = new Texture(previewWidth,previewHeight, [Target] );
+				if( p.scene3d != null )
+					p.texture.depthBuffer = new Texture(previewWidth, previewHeight, [Target], Depth16 );
 			}
 			else
 			{
@@ -146,52 +148,35 @@ class AssetBrowser  extends  ImguiTool
 	function loadAsset(asset: AssetBrowserPreviewItem)
 	{
 		var ext = Path.extension( asset.file );
+		var drawText = true;
+		asset.scene = new h2d.Scene();
 		switch(ext)
 		{
 			case "png" | "bmp" | "gif" | "jpg":
-				asset.scene = new h2d.Scene();
 				asset.texture = hxd.Res.load( asset.file ).toTexture();
 				asset.dirty = false;
 
+
 			case "material":
 				asset.scene3d = new h3d.scene.Scene();
+				//asset.alwaysUpdate = true;
 
-				var def =  cerastes.file.CDParser.parse( hxd.Res.loader.load( asset.file ).entry.getText(), MaterialDef );
-				cerastes.tools.MaterialEditor.buildMaterialPreview( asset.scene3d, def );
+				try
+				{
+					var def =  cerastes.file.CDParser.parse( hxd.Res.loader.load( asset.file ).entry.getText(), MaterialDef );
+					var mesh = cerastes.tools.MaterialEditor.buildMaterialPreview( asset.scene3d, def );
+				}
+				catch(e)
+				{
+				}
 
-				asset.texture = new Texture(previewWidth,previewHeight, [Target] );
-
-
-				// Label
-				var t = new h2d.Text( cerastes.App.defaultFont, asset.scene);
-
-				t.text = Path.withoutDirectory( Path.withoutExtension(asset.file) );
-				t.textAlign = Center;
-				t.maxWidth = previewWidth - 8;
-				t.x = 4;
-				t.y = 4;
-				t.color = Vector4.fromColor( getTypeColor(asset.file) );
-				t.dropShadow = { dx:1, dy : 1, color : 0, alpha : 1 };
+				cast( asset.scene3d.lightSystem, h3d.scene.fwd.LightSystem).ambientLight.set(1,1,1);
 
 			case "model":
 				asset.scene3d = new h3d.scene.Scene();
 
 				var def =  cerastes.file.CDParser.parse( hxd.Res.loader.load( asset.file ).entry.getText(), ModelDef );
 				cerastes.tools.ModelEditor.buildModelPreview( asset.scene3d, def );
-
-				asset.texture = new Texture(previewWidth,previewHeight, [Target] );
-
-
-				// Label
-				var t = new h2d.Text( cerastes.App.defaultFont, asset.scene);
-
-				t.text = Path.withoutDirectory( Path.withoutExtension(asset.file) );
-				t.textAlign = Center;
-				t.maxWidth = previewWidth - 8;
-				t.x = 4;
-				t.y = 4;
-				t.color = Vector4.fromColor( getTypeColor(asset.file) );
-				t.dropShadow = { dx:1, dy : 1, color : 0, alpha : 1 };
 
 			case "fnt":
 				asset.scene = new h2d.Scene();
@@ -216,6 +201,7 @@ class AssetBrowser  extends  ImguiTool
 					var name = end.substr(0,end.length - 4);
 
 
+					drawText = false;
 					var t = new Text(res.toFont(), asset.scene );
 
 					t.maxWidth = previewWidth - 8;
@@ -281,15 +267,6 @@ class AssetBrowser  extends  ImguiTool
 					asset.dirty = true;
 				});
 
-				var t = new h2d.Text( cerastes.App.defaultFont, asset.scene);
-
-				t.text = Path.withoutDirectory( Path.withoutExtension(asset.file) );
-				t.textAlign = Center;
-				t.maxWidth = previewWidth - 8;
-				t.x = 4;
-				t.y = 4;
-				t.color = Vector4.fromColor( getTypeColor(asset.file) );
-				t.dropShadow = { dx:1, dy : 1, color : 0, alpha : 1 };
 
 
 			case "bdef" | "audio":
@@ -298,15 +275,6 @@ class AssetBrowser  extends  ImguiTool
 				bmp.width = previewWidth;
 				bmp.height = previewHeight;
 
-				var t = new h2d.Text( cerastes.App.defaultFont, asset.scene);
-
-				t.text = Path.withoutDirectory( Path.withoutExtension(asset.file) );
-				t.textAlign = Center;
-				t.maxWidth = previewWidth - 8;
-				t.x = 4;
-				t.y = 4;
-				t.color = Vector4.fromColor( getTypeColor(asset.file) );
-				t.dropShadow = { dx:1, dy : 1, color : 0, alpha : 1 };
 
 			case "ctmap":
 				asset.scene = new h2d.Scene();
@@ -335,17 +303,6 @@ class AssetBrowser  extends  ImguiTool
 				{
 
 				}
-
-				var t = new h2d.Text( cerastes.App.defaultFont, asset.scene);
-
-				t.text = Path.withoutDirectory( Path.withoutExtension(asset.file) );
-				t.textAlign = Center;
-				t.maxWidth = previewWidth - 8;
-				t.x = 4;
-				t.y = 4;
-				t.color = Vector4.fromColor( getTypeColor(asset.file) );
-				t.dropShadow = { dx:1, dy : 1, color : 0, alpha : 1 };
-
 			case "ui":
 				asset.scene = new h2d.Scene();
 
@@ -371,15 +328,6 @@ class AssetBrowser  extends  ImguiTool
 
 				cerastes.fmt.CUIResource.initializeEntities = true;
 
-				var t = new h2d.Text( cerastes.App.defaultFont, asset.scene);
-
-				t.text = Path.withoutDirectory( Path.withoutExtension(asset.file) );
-				t.textAlign = Center;
-				t.maxWidth = previewWidth - 8;
-				t.x = 4;
-				t.y = 4;
-				t.color = Vector4.fromColor( getTypeColor(asset.file) );
-				t.dropShadow = { dx:1, dy : 1, color : 0, alpha : 1 };
 			#if spritemeta
 			case "csd":
 				asset.scene = new h2d.Scene();
@@ -400,15 +348,6 @@ class AssetBrowser  extends  ImguiTool
 				obj.x = previewWidth / 2 - center.x;
 				obj.y = previewHeight / 2 - center.y;
 
-				var t = new h2d.Text( cerastes.App.defaultFont, asset.scene);
-
-				t.text = Path.withoutDirectory( Path.withoutExtension(asset.file) );
-				t.textAlign = Center;
-				t.maxWidth = previewWidth - 8;
-				t.x = 4;
-				t.y = 4;
-				t.color = Vector4.fromColor( getTypeColor(asset.file) );
-				t.dropShadow = { dx:1, dy : 1, color : 0, alpha : 1 };
 			#end
 			case "atlas":
 				asset.scene = new h2d.Scene();
@@ -432,15 +371,6 @@ class AssetBrowser  extends  ImguiTool
 						break;
 				}
 
-				var t = new h2d.Text( cerastes.App.defaultFont, asset.scene);
-
-				t.text = Path.withoutDirectory( Path.withoutExtension(asset.file) );
-				t.textAlign = Center;
-				t.maxWidth = previewWidth - 8;
-				t.x = 4;
-				t.y = 4;
-				t.color = Vector4.fromColor( getTypeColor(asset.file) );
-				t.dropShadow = { dx:1, dy : 1, color : 0, alpha : 1 };
 
 			case "catlas":
 				asset.scene = new h2d.Scene();
@@ -464,15 +394,6 @@ class AssetBrowser  extends  ImguiTool
 						break;
 				}
 
-				var t = new h2d.Text( cerastes.App.defaultFont, asset.scene);
-
-				t.text = Path.withoutDirectory( Path.withoutExtension(asset.file) );
-				t.textAlign = Center;
-				t.maxWidth = previewWidth - 8;
-				t.x = 4;
-				t.y = 4;
-				t.color = Vector4.fromColor( getTypeColor(asset.file) );
-				t.dropShadow = { dx:1, dy : 1, color : 0, alpha : 1 };
 
 			case "fbx" | "glb" | "gltf":
 				try
@@ -488,30 +409,10 @@ class AssetBrowser  extends  ImguiTool
 
 				}
 
-				var t = new h2d.Text( cerastes.App.defaultFont, asset.scene);
-
-				t.text = Path.withoutDirectory( Path.withoutExtension(asset.file) );
-				t.textAlign = Center;
-				t.maxWidth = previewWidth - 8;
-				t.x = 4;
-				t.y = 4;
-				t.color = Vector4.fromColor( getTypeColor(asset.file) );
-				t.dropShadow = { dx:1, dy : 1, color : 0, alpha : 1 };
-
 			case "wav" | "mp3" | "ogg":
 
 				asset.scene = new h2d.Scene();
 				var g = new Graphics(asset.scene);
-				var t = new h2d.Text( cerastes.App.defaultFont, asset.scene);
-				t.dropShadow = { dx:1, dy : 1, color : 0, alpha : 1 };
-
-				t.text = Path.withoutDirectory( Path.withoutExtension(asset.file) );
-				t.textAlign = Center;
-				t.maxWidth = previewWidth - 8;
-				t.x = 4;
-				t.y = 4;
-				t.color = Vector4.fromColor( getTypeColor(asset.file) );
-
 
 
 				sys.thread.Thread.create(() -> {
@@ -580,18 +481,20 @@ class AssetBrowser  extends  ImguiTool
 				bmp.width = previewWidth;
 				bmp.height = previewHeight;
 
-				var t = new h2d.Text( cerastes.App.defaultFont, asset.scene);
-				t.dropShadow = { dx:1, dy : 1, color : 0, alpha : 1 };
-
-				t.text = Path.withoutDirectory( Path.withoutExtension(asset.file) );
-				t.textAlign = Center;
-				t.maxWidth = previewWidth - 8;
-				t.x = 4;
-				t.y = 4;
-				t.color = Vector4.fromColor( getTypeColor(asset.file) );
-
 
 		}
+
+		// Label
+		var t = new h2d.Text( cerastes.App.defaultFont, asset.scene);
+
+		t.text = Path.withoutDirectory( Path.withoutExtension(asset.file) );
+		t.textAlign = Center;
+		t.maxWidth = previewWidth - 8;
+		t.x = 4;
+		t.y = 4;
+		t.color = Vector4.fromColor( getTypeColor(asset.file) );
+		t.dropShadow = { dx:1, dy : 1, color : 0, alpha : 1 };
+
 
 
 
@@ -626,6 +529,13 @@ class AssetBrowser  extends  ImguiTool
 		#if multidriver
 		flags |= ImGuiWindowFlags.MenuBar;
 		#end
+
+		if( forceFocus )
+		{
+			forceFocus = false;
+			ImGui.setNextWindowFocus();
+		}
+
 		ImGui.begin("\uf07c Asset browser", #if multidriver null #else isOpenRef #end, flags);
 
 		#if multidriver
@@ -867,6 +777,7 @@ class AssetBrowser  extends  ImguiTool
 	override public function render( e: h3d.Engine)
 	{
 		Metrics.begin();
+
 		for( file => target in previews )
 		{
 			if( !target.dirty && !target.alwaysUpdate )
@@ -874,14 +785,14 @@ class AssetBrowser  extends  ImguiTool
 
 			try
 			{
-				target.texture.clear( 0 );
+				//target.texture.clear( 0xFFFFFFFF );
 
 				e.pushTarget( target.texture );
 				e.clear(0,1);
-				if( target.scene != null )
-					target.scene.render(e);
 				if( target.scene3d != null )
 					target.scene3d.render(e);
+				if( target.scene != null )
+					target.scene.render(e);
 				e.popTarget();
 			}
 			catch(e )

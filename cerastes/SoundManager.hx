@@ -154,15 +154,34 @@ class SoundManager
 		var cue = cues.get(cueName );
 
 		// Try to resolve a file of the same name
-		var path = 'audio/${cueName}.ogg';
-		if( cue == null && hxd.Res.loader.exists(path) )
+
+		if( cue == null )
 		{
-			cue = {
-				clips: [
-					 path
-				]
-			};
+			var path = 'audio/${cueName}.ogg';
+			if( !hxd.Res.loader.exists(path) )
+			{
+				path = 'audio/${cueName}.mp3';
+				if( !hxd.Res.loader.exists(path) )
+				{
+					path = 'audio/${cueName}.wav';
+				}
+
+			}
+
+
+			if( hxd.Res.loader.exists(path) )
+			{
+				cue = {
+					clips: [
+							path
+					]
+				};
+			}
 		}
+
+
+
+
 
 		if( !Utils.verify( cue != null, 'Tried to play unknown cue ${cueName}') )
 			return null;

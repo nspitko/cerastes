@@ -48,7 +48,7 @@ class KinematicActor extends Actor
 	var walking: Bool = false;
 	var groundTrace: BulletRayTestResult = null;
 
-	var moveSpeed = 900;
+	var moveSpeed = 320;
 	var moveSpeedAccel: Float = 10;
 	var moveSpeedAccelAir: Float = 1;
 	var moveSpeedAccelFlight: Float = 8;
@@ -277,7 +277,7 @@ class KinematicActor extends Actor
 		if( gravity )
 		{
 			endVelocity = velocity.clone();
-			endVelocity.z -= world.gravity * delta;
+			endVelocity.z -= world.entityGravity * delta;
 			velocity.z = ( velocity.z + endVelocity.z ) * 0.5;
 			primalVelocity.z = endVelocity.z;
 
@@ -311,7 +311,7 @@ class KinematicActor extends Actor
 				return true;
 
 			var end = CMath.vectorMA( getBodyOrigin(), moveDelta, velocity );
-			trace('length=${velocity.length()}, delta=${moveDelta}');
+			//trace('length=${velocity.length()}, delta=${moveDelta}');
 			var rc = world.physics.shapeTestV( cast body.shape, getBodyOrigin(), end, body.group, body.mask );
 			//if( rc.fraction > 0 && rc.fraction < 1)
 			//	trace('z change=${z - end.z}; frac=${rc.fraction}');
@@ -586,8 +586,6 @@ class KinematicActor extends Actor
 		// Check if being thrown off the ground
 		if( velocity.z > 0 && velocity.dot( rc.normal ) > 10 )
 		{
-			trace("kickoff");
-
 			animJump();
 
 			groundEntity = null;
@@ -599,8 +597,6 @@ class KinematicActor extends Actor
 		// Slopes too steep are not ground
 		if( rc.normal.z < minWalkNormal )
 		{
-			trace("Steep");
-
 			groundEntity = null;
 			groundPlane = false;
 			walking = false;
@@ -613,7 +609,6 @@ class KinematicActor extends Actor
 
 		if( groundEntity == null )
 		{
-			trace("Landed");
 			moveCrashLand();
 		}
 
@@ -626,8 +621,6 @@ class KinematicActor extends Actor
 		// Did we just start falling?
 		if( groundEntity != null )
 		{
-			trace("startFall");
-
 			animFall();
 		}
 

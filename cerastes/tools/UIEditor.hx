@@ -2535,15 +2535,48 @@ class UIEditor extends ImguiTool
 						ImGuiToolManager.openAssetEditor( d.file );
 				}
 				if( newFile != null && hxd.Res.loader.exists( newFile ) )
+				{
 					d.file = newFile;
+					d.def = null;
+				}
 
 				if( ImGui.beginDragDropTarget() )
 				{
 					var payload = ImGui.acceptDragDropPayloadString("asset_name");
 					if( payload != null && hxd.Res.loader.exists( payload ) )
+					{
 						d.file = payload;
+						d.def = null;
+					}
 
 					ImGui.endDragDropTarget();
+				}
+
+
+				// Fields for the thing we're referencing
+
+				if( d.file != null && obj.numChildren == 1 )
+				{
+					// figure out what our child is
+					var child = obj.getChildAt(0);
+					var cui = Std.downcast( child, UIEntity );
+					if( cui != null )
+					{
+						var cls = Type.getClass( cui );
+						var clsName = Type.getClassName( cls );
+
+						if (!ImGui.collapsingHeader('Ref: $clsName', ImGuiTreeNodeFlags.DefaultOpen ))
+							return;
+
+						if( d.def == null )
+						{
+							d.def = cast createDef( clsName );
+						}
+
+						var fn = Reflect.field(cls, "getInspector");
+						fn( d.def );
+
+					}
 				}
 
 			case "cerastes.ui.Sound":
@@ -2678,10 +2711,8 @@ class UIEditor extends ImguiTool
 		}
 	}
 
-	function addItem(type: String)
+	function createDef( type:String ) : CUIObject
 	{
-		var parent = selectedInspectorTree != null ? selectedInspectorTree : rootDef;
-		// Populate enough values to allow object creation
 		switch( type )
 		{
 			case "h2d.Object":
@@ -2692,7 +2723,7 @@ class UIEditor extends ImguiTool
 					children: []
 				};
 
-				parent.children.push(def);
+				return def;
 
 			case "h2d.Text":
 				var def: CUIText = {
@@ -2700,8 +2731,7 @@ class UIEditor extends ImguiTool
 					name: getAutoName(type),
 					children: []
 				};
-
-				parent.children.push(def);
+				return def;
 
 			case "cerastes.ui.AdvancedText":
 				var def: CUIAdvancedText = {
@@ -2710,7 +2740,7 @@ class UIEditor extends ImguiTool
 					children: []
 				};
 
-				parent.children.push(def);
+				return def;
 
 			case "h2d.TextInput":
 				var def: CUITextInput = {
@@ -2719,7 +2749,7 @@ class UIEditor extends ImguiTool
 					children: []
 				};
 
-				parent.children.push(def);
+				return def;
 
 			case "h2d.Bitmap":
 				var def: CUIBitmap = {
@@ -2728,7 +2758,8 @@ class UIEditor extends ImguiTool
 					children: []
 				};
 
-				parent.children.push(def);
+				return def;
+
 			case "h2d.Anim":
 				var def: CUIAnim = {
 					type: type,
@@ -2736,7 +2767,7 @@ class UIEditor extends ImguiTool
 					children: []
 				};
 
-				parent.children.push(def);
+				return def;
 
 			case "cerastes.ui.Anim":
 				var def: CUICAnim = {
@@ -2745,7 +2776,7 @@ class UIEditor extends ImguiTool
 					children: []
 				};
 
-				parent.children.push(def);
+				return def;
 
 
 			case "h2d.Flow":
@@ -2755,7 +2786,7 @@ class UIEditor extends ImguiTool
 					children: []
 				};
 
-				parent.children.push(def);
+				return def;
 
 			case "h2d.ScaleGrid":
 				var def: CUIScaleGrid = {
@@ -2764,7 +2795,7 @@ class UIEditor extends ImguiTool
 					children: []
 				};
 
-				parent.children.push(def);
+				return def;
 
 			case "h2d.Mask":
 				var def: CUIMask = {
@@ -2773,7 +2804,7 @@ class UIEditor extends ImguiTool
 					children: []
 				};
 
-				parent.children.push(def);
+				return def;
 
 			case "h2d.Interactive":
 				var def: CUIInteractive = {
@@ -2782,7 +2813,7 @@ class UIEditor extends ImguiTool
 					children: []
 				};
 
-				parent.children.push(def);
+				return def;
 
 			case "cerastes.ui.Button":
 				var def: CUIButton = {
@@ -2791,7 +2822,7 @@ class UIEditor extends ImguiTool
 					children: []
 				};
 
-				parent.children.push(def);
+				return def;
 
 			case "cerastes.ui.BitmapButton":
 				var def: CUIBButton = {
@@ -2800,7 +2831,7 @@ class UIEditor extends ImguiTool
 					children: []
 				};
 
-				parent.children.push(def);
+				return def;
 
 			case "cerastes.ui.TextButton":
 					var def: CUITButton = {
@@ -2809,7 +2840,7 @@ class UIEditor extends ImguiTool
 						children: []
 					};
 
-					parent.children.push(def);
+					return def;
 
 			case "cerastes.ui.Reference":
 				var def: CUIReference = {
@@ -2818,7 +2849,7 @@ class UIEditor extends ImguiTool
 					children: []
 				};
 
-				parent.children.push(def);
+				return def;
 
 			case "cerastes.ui.Sound":
 				var def: CUISound = {
@@ -2827,7 +2858,7 @@ class UIEditor extends ImguiTool
 					children: []
 				};
 
-				parent.children.push(def);
+				return def;
 
 			default:
 				var cl = Type.resolveClass(type);
@@ -2839,18 +2870,22 @@ class UIEditor extends ImguiTool
 					def.children = [];
 					def.name = getAutoName(type);
 
-					parent.children.push(def);
+					return def;
 				}
 				else
 				{
 					Utils.warning('UIEntity ${type} is missing getDef!!');
 				}
+			}
 
+			return {};
+	}
 
-		}
+	function addItem(type: String)
+	{
+		var parent = selectedInspectorTree != null ? selectedInspectorTree : rootDef;
 
-
-
+		parent.children.push(createDef(type));
 
 
 		updateScene();

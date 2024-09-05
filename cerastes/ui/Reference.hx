@@ -9,23 +9,26 @@ class Reference extends h2d.Object
 
 	var fileName: String;
 	var ref: h2d.Object;
+	var def: CUIObject;
 
-	public function new( ?fileName: String, ?parent: Object )
+	public function new( ?fileName: String, ?def: CUIObject, ?parent: Object )
 	{
 		super(parent);
+		this.def = def;
 
 		if( fileName != null )
-			load( fileName );
+			load( fileName, def );
 	}
 
-	public function load( file: String )
+	public function load( file: String, def: CUIObject = null )
 	{
 
 		removeChildren();
 		fileName = file;
 		#if tools
 		var res = hxd.Res.loader.load( file );
-		ref = res.to(CUIResource).toObject(this);
+
+		ref = res.to(CUIResource).toObject(this, false, def);
 		res.watch(() -> {
 			@:privateAccess res.to(CUIResource).data = null;
 			reload();
@@ -37,7 +40,7 @@ class Reference extends h2d.Object
 
 	public function reload()
 	{
-		load(fileName);
+		load(fileName, def);
 	}
 
 	public function get()

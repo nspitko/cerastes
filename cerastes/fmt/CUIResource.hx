@@ -240,6 +240,7 @@ enum abstract CUITristateBool(Int) from Int to Int {
 
 @:structInit class CUIReference extends CUIObject {
 	public var file: String = null;
+	public var def: CUIObject = null;
 }
 
 @:structInit class CUIInteractive extends CUIDrawable {
@@ -495,21 +496,27 @@ class CUIResource extends Resource
 		return null;
 	}
 
-	public function toObject(?parent: h2d.Object = null, isPreview: Bool = false)
+	public function toObject(?parent: h2d.Object = null, isPreview: Bool = false, ?defOverride: CUIObject )
 	{
 
 		var data = getData();
+		var root = data.root;
+		if( defOverride != null )
+		{
+			defOverride.children = data.root.children;
+			root = defOverride;
+		}
 		Utils.assert( data.version <= version, "CUI generated with newer version than this parser supports" );
 		Utils.assert( data.version >= minVersion, "CUI version newer than parser understands; parsing will probably fail!" );
 		if( data.version < version )
 			Utils.warning( '${entry.name} was generated using a different code version. Open and save to upgrade.' );
 
 		#if debug
-		recursiveUpgradeObjects( data.root, data.version );
+		recursiveUpgradeObjects( root, data.version );
 		#end
 
 
-		return defToObject( data.root, parent, isPreview );
+		return defToObject( root, parent, isPreview );
 	}
 
 	public function defToObject(def: CUIObject, ?parent: h2d.Object, isPreview: Bool = false )
@@ -685,7 +692,7 @@ class CUIResource extends Resource
 
 			case "cerastes.ui.Reference":
 				var d : CUIReference = cast entry;
-				obj = new cerastes.ui.Reference( d.file );
+				obj = new cerastes.ui.Reference( d.file, d.def );
 
 			case "cerastes.ui.Sound":
 				//var d: CUISound = cast entry;
@@ -1074,7 +1081,7 @@ class CUIResource extends Resource
 				var e: CUIReference = cast entry;
 
 				if( e.file != null && hxd.Res.loader.exists( e.file ) )
-					o.load( e.file );
+					o.load( e.file, e.def );
 
 			case "cerastes.ui.Sound":
 				var o = cast(obj, cerastes.ui.Sound);

@@ -99,6 +99,30 @@ enum abstract TargetType(Int) {
 	public var targetHandle: Dynamic = null;
 }
 
+enum VariableType
+{
+	Float;
+	Bool;
+}
+
+@:structInit class TimelineVariable
+{
+	public var name: String = "";
+	public var type: VariableType = Float;
+	public var val: Dynamic = null;
+
+	public static function convertString(type: VariableType, v: String ): Dynamic
+	{
+		switch( type )
+		{
+			case Float:
+				return Std.parseFloat( v );
+			case Bool:
+				return v == "1" || Std.string(v).toLowerCase() == "true";
+		}
+	}
+}
+
 @:structInit class Timeline
 {
 	@serializeType("cerastes.timeline.TimelineOperation")
@@ -106,6 +130,8 @@ enum abstract TargetType(Int) {
 
 	public var frames: Int = 100;
 	public var frameRate: Int = 10;
+	@serializeType("cerastes.timeline.TimelineVariable")
+	public var variables: Array<TimelineVariable> = [];
 
 	public var name: String = "Unnamed Timeline";
 
@@ -157,6 +183,8 @@ class TimelineRunner implements Tickable
 	public var loop: Bool = false;
 	public var removeOnComplete = false;
 
+	var variables: haxe.ds.Map<String, Float> = [];
+
 	inline function frameToTime( frame: Int ): Float { return frame / timeline.frameRate; }
 	inline function timeToFrame( time: Float ): Int { return Math.floor( time * timeline.frameRate ); }
 
@@ -178,6 +206,20 @@ class TimelineRunner implements Tickable
 		// Sort ops
 		timeline.operations.sort((a, b) -> { return a.frame - b.frame; });
 		ensureState();
+
+		if( timeline.variables != null )
+		{
+			for( v in timeline.variables )
+			{
+				variables.set(v.name, v.val );
+			}
+		}
+	}
+
+	public function setVariable(name: String, val: Dynamic )
+	{
+		Utils.assert( variables.exists(name), 'Setting variable ${name} in timeline ${timeline.name}, but it does not use it.' );
+		variables.set(name, val);
 	}
 
 	public function play()
@@ -196,6 +238,19 @@ class TimelineRunner implements Tickable
 		tick(0.000001);
 	}
 
+	function readValue( v: Dynamic )
+	{
+		if( Std.string(v).charAt(0) == "$" )
+		{
+			var name = cast (v, String).substr(1);
+			if( Utils.verify( variables.exists(name) ) )
+				return variables.get( name );
+
+			return 0;
+		}
+		return v;
+	}
+
 	function ensureState()
 	{
 		if( timeline.operations.length != timelineState.length )
@@ -208,7 +263,7 @@ class TimelineRunner implements Tickable
 				var target = ui.getObjectByName(op.target);
 
 				if( op.hasInitialValue )
-					state.startValue = op.initialValue != null ? op.initialValue : 0;
+					state.startValue = op.initialValue != null ? readValue( op.initialValue ) : 0;
 				//else
 				//	state.startValue = Reflect.getProperty( target, op.key );
 
@@ -420,7 +475,7 @@ class TimelineRunner implements Tickable
 					if( op.key == null )
 						continue;
 
-					Reflect.setProperty(target, op.key, op.value);
+					Reflect.setProperty(target, op.key, readValue( op.value ) );
 					changed = true;
 
 				case AnimPlay:
@@ -439,7 +494,7 @@ class TimelineRunner implements Tickable
 				case AnimSetFrame:
 					var anim = Std.downcast(target, h2d.Anim );
 					if( anim != null )
-						anim.currentFrame = op.value;
+						anim.currentFrame = readValue( op.value );
 
 				case SoundPlay:
 					// HACK: A hack to work around the earlier tick(0) hack causing audio to play
@@ -488,7 +543,7 @@ class TimelineRunner implements Tickable
 
 					if( lastFrame )
 					{
-						Reflect.setProperty(target, op.key, op.value);
+						Reflect.setProperty(target, op.key, readValue( op.value ));
 						changed = true;
 					}
 					else
@@ -517,7 +572,7 @@ class TimelineRunner implements Tickable
 						}
 
 						var f = tweenFunc( adjTime / duration );
-						var v = ( f * ( op.value - state.startValue ) ) + state.startValue;
+						var v = ( f * ( readValue( op.value ) - state.startValue ) ) + state.startValue;
 
 						if( op.intSnap )
 							v = Math.round(v);

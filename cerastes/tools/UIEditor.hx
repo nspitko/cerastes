@@ -1580,21 +1580,43 @@ class UIEditor extends ImguiTool
 		}
 
 		ImGui.inputInt( "Frames", selectedTimeline.frames );
-		if( ImGui.isItemHovered() )
-		{
-			ImGui.beginTooltip();
-			ImGui.textWrapped("Total Number of frames. You can change this number at any time, the timeline will not rescale, so it's usually best to leave it high and reduce it when you're done.");
-			ImGui.endTooltip();
-		}
+		imTooltip("Total Number of frames. You can change this number at any time, the timeline will not rescale, so it's usually best to leave it high and reduce it when you're done.");
 
 		ImGui.inputInt( "Frame rate", selectedTimeline.frameRate );
-		if( ImGui.isItemHovered() )
-		{
-			ImGui.beginTooltip();
-			ImGui.textWrapped("Number of timeline to run per game frame. 10 is usually fine. Note this does NOT affect how smooth animations are, just how often we update the timeline.");
-			ImGui.endTooltip();
-		}
+		imTooltip("Number of timeline to run per game frame. 10 is usually fine. Note this does NOT affect how smooth animations are, just how often we update the timeline.");
 
+		var flags = ImGuiTreeNodeFlags.DefaultOpen;
+		if( ImGui.collapsingHeader("Variables", flags) )
+		{
+			if( selectedTimeline.variables != null )
+			{
+				for( i in 0 ... selectedTimeline.variables.length )
+				{
+					ImGui.pushID('var${i}');
+					var v = selectedTimeline.variables[i];
+					wref( ImGui.inputText("Name", _), v.name);
+					IG.combo("Type", v.type, cerastes.ui.Timeline.VariableType );
+					var strVal = Std.string(v.val);
+					if( ImGui.inputText("Default", strVal) )
+					{
+						v.val = TimelineVariable.convertString( v.type, strVal );
+					}
+					ImGui.popID();
+				}
+			}
+			if( ImGui.button("Add"))
+			{
+				if( selectedTimeline.variables == null )
+					selectedTimeline.variables = [];
+
+				selectedTimeline.variables.push({
+					val: "",
+					type: Float,
+					name: "variable"
+				});
+			}
+
+		}
 	}
 
 	function populateOp( o: TimelineOperation )
@@ -1669,7 +1691,21 @@ class UIEditor extends ImguiTool
 			{
 				mType = CUIObject.getMetaForField(o.key, "cd_type", Type.getClass( td ) );
 
-				if( mType == "Float" )
+				var isVar: Bool = false;
+				if( Std.string(o.value).charAt(0) == "$")
+				{
+					var t: String = o.value;
+					if( ImGui.inputText( o.key, t ) )
+						o.value = t;
+
+					if( o.value.charAt(0) != '$')
+						o.value = 0;
+
+					if( mType != "Bool")
+						canTween = true;
+					isVar = true;
+				}
+				else if( mType == "Float" )
 				{
 					var v: Float = o.value;
 					if( ImGui.inputDouble( o.key, v, 0.1, 1, "%.4f") )
@@ -1694,6 +1730,15 @@ class UIEditor extends ImguiTool
 				else
 				{
 					trace( mType );
+				}
+
+				if( !isVar )
+				{
+					ImGui.sameLine();
+					if( ImGui.button("\uf6e8"))
+					{
+						o.value = "$";
+					}
 				}
 
 			}
@@ -1777,7 +1822,21 @@ class UIEditor extends ImguiTool
 					if( o.initialValue == null )
 						o.initialValue = 0;
 
-					if( mType == "Float" )
+					var isVar = false;
+
+					if( Std.string(o.initialValue).charAt(0) == "$")
+					{
+						var v: String = cast o.initialValue;
+						if( ImGui.inputText( o.key, v ) )
+						{
+							o.initialValue = v;
+							if( o.initialValue.charAt(0) != '$')
+								o.initialValue = 0;
+						}
+
+						isVar = true;
+					}
+					else if( mType == "Float" )
 					{
 						var v: Float = o.initialValue;
 						if( ImGui.inputDouble( o.key, v, 0.1, 1, "%.4f") )
@@ -1799,6 +1858,15 @@ class UIEditor extends ImguiTool
 						if( ImGui.checkbox( o.key, v ) )
 							o.initialValue = v;
 					}
+					if( !isVar )
+					{
+						ImGui.sameLine();
+						if( ImGui.button("\uf6e8"))
+						{
+							o.initialValue = "$";
+						}
+					}
+
 					ImGui.popID();
 				}
 				else

@@ -57,4 +57,13 @@ class Reference extends h2d.Object
 		var ref = hxd.Res.loader.loadCache( fileName, CUIResource ).toObject( parent );
 		return ref;
 	}
+
+	public override function addChild( s : Object ) : Void {
+		// If we have the special _children field, add it there, else do the usual
+		var cr = getObjectByName("_children");
+		if( cr != null )
+			cr.addChild(s);
+		else
+			super.addChild(s);
+	}
 }

@@ -8,10 +8,6 @@ using haxe.macro.Tools;
 @:native("ReplicatorProxy")
 class Replicator
 {
-	public static function create( id: Int ) : Replicated
-	{
-		trace("STUB");
-		return null;
-	}
+	extern public static function create( id: Int ) : Replicated;
 }
 

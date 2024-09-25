@@ -8,7 +8,7 @@ import hl.UI16;
 import haxe.io.Bytes;
 
 
-@:keep @:autoBuild(cerastes.net.Macros.ProxyGenerator.build())
+@:keepSub @:autoBuild(cerastes.net.Macros.ProxyGenerator.build())
 interface Replicated
 {
 	@:noCompletion public var _repl_netid : UI16;
@@ -23,6 +23,8 @@ interface Replicated
 	@:noCompletion public function _repl_unserialize(buffer: Bytes, pos: Int, ?full: Bool = false) : Int;
 	@:noCompletion public function _repl_serialize(buffer: Bytes, pos: Int, ?full: Bool = false) : Int;
 	@:noCompletion public function _repl_clsid() : Int;
+	@:noCompletion public function _repl_reset() : Void;
+
 
 	// RPC
 	#if server

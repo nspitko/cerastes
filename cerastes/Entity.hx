@@ -172,11 +172,14 @@ class BaseEntity #if network implements Replicated #end implements Entity
 		EntityManager.instance.register(this);
 	}
 
-
-	// Called after first-time replication is complete (ie, after constructor and first full sync )
-	public function replicated( )
+	public function clientSpawn()
 	{
 		info("Replicated a " + this);
+	}
+
+	public function clientUpdate()
+	{
+
 	}
 
 	#end

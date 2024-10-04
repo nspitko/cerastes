@@ -72,6 +72,18 @@ class ProxyGenerator
 			if( !found )
 				continue;
 
+			// Create a client side var
+
+			#if client
+			append.push({
+				name: '_${field.name}',
+				access: field.access,
+				kind: field.kind,
+				pos: field.pos,
+				meta: field.meta,
+			});
+			#end
+
 			var dirtyVar = '_repl_dirty${Math.floor( idx / 8 )}';
 
 			var dirtyIdx = idx % 8;

@@ -25,6 +25,13 @@ interface Replicated
 	@:noCompletion public function _repl_clsid() : Int;
 	@:noCompletion public function _repl_reset() : Void;
 
+	#if client
+	// Called when the entity is created on the client (Previously: replicated())
+	public function clientSpawn(): Void;
+	// Called when the entity gets an update from the server. This is ONLY sent when the server sends
+	// us new data about an entity! If nothing changes we will not get this call.
+	public function clientUpdate(): Void;
+	#end
 
 	// RPC
 	#if server

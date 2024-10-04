@@ -76,12 +76,12 @@ class EntityManager
 	{
 		entities.push(t);
 	}
-
+#if network
 	public function registerReplicated( t : Replicated )
 	{
 		replicatedEntities.push(t);
 	}
-
+#end
 	public function find( id: String )
 	{
 		for( e in entities )

@@ -1,5 +1,6 @@
 package cerastes;
 
+import cerastes.fmt.CUIResource;
 import h2d.Scene.ScaleMode;
 import h2d.Bitmap;
 import h3d.mat.Texture;
@@ -264,6 +265,25 @@ class Scene
 	public function transitionComplete()
     {
         onSceneReady();
+    }
+
+
+
+}
+
+class UIScene extends Scene
+{
+    var ui: h2d.Object;
+
+	function initUI(file: String )
+    {
+        ui = hxd.Res.loader.load(file).to(CUIResource).toObject();
+        s2d.addChild( ui );
+    }
+
+    function initError( e: String )
+    {
+        Utils.error('UI Init errror: $e');
     }
 
 

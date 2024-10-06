@@ -57,7 +57,12 @@ class Reference extends h2d.Object
 	 */
 	public function make( ?parent: Object )
 	{
-		var ref = hxd.Res.loader.loadCache( fileName, CUIResource ).toObject( parent );
+		var ref = hxd.Res.loader.loadCache( fileName, CUIResource ).toObject( );
+		var uie = Std.downcast( ref, UIEntity );
+		if( uie != null )
+			uie.initialize( ref );
+		if( parent != null )
+			parent.addChild( ref );
 		return ref;
 	}
 

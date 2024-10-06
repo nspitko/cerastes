@@ -7,6 +7,7 @@ class Node {
     public var y:Float;
     public var neighbors:Array<Node>;
     public var f:Float; // f-score for A* algorithm
+    public var userData: Dynamic; // Link back to owner
 
     static var nextId = 0;
     public function new(x:Float, y:Float) {

@@ -106,6 +106,25 @@ class UIEntityBuilder
 			});
 		}
 
+		if( !hasField("initialize", fields ) )
+		{
+			var initialize:Function = {
+				expr: macro {
+					cerastes.macros.UIPopulator.populateObjects();
+					super.initialize(root);
+				},
+				args:[{name:'root', type: macro: h2d.Object}]
+			};
+
+			fields.push({
+				name: "initialize",
+				access: [APublic, AOverride],
+				kind: FieldType.FFun( initialize ),
+				pos: Context.currentPos(),
+				meta: [{ name:":keep", pos: Context.currentPos() }],
+			});
+		}
+
 		return fields;
 
 	}

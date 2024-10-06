@@ -33,6 +33,7 @@ class UIPopulator
 
 			for ( field in fields )
 			{
+				var optional = field.meta.has(":optional");
 				if( field.meta.has(":obj") )
 				{
 					var fname = field.name; // string
@@ -40,14 +41,19 @@ class UIPopulator
 					var cname = Context.getLocalClass().get().name;
 
 					exprs.push(macro this.$fname = Std.downcast( root.getObjectByName( cerastes.macros.UIPopulator.camelToSnake( $v{fname} ) ), $p{ftype} ) );
-					exprs.push(macro {
-						if( this.$fname == null )
-						{
-							initError("missing expected sub-object " + cerastes.macros.UIPopulator.camelToSnake( $v{fname} ) + "(" + $v{field.type.toString()} + ")");
-							return;
-						}
-					});
+					if( !optional )
+					{
+						exprs.push(macro {
+							if( this.$fname == null )
+							{
+								initError("missing expected sub-object " + cerastes.macros.UIPopulator.camelToSnake( $v{fname} ) + "(" + $v{field.type.toString()} + ")");
+								return;
+							}
+						});
+					}
+
 				}
+
 
 
 			}

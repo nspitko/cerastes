@@ -2643,6 +2643,7 @@ class UIEditor extends ImguiTool
 
 						var fn = Reflect.field(cls, "getInspector");
 						fn( d.def );
+						d.def.children = null;
 
 					}
 				}

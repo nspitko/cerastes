@@ -163,14 +163,13 @@ class BaseEntity #if network implements Replicated #end implements Entity
 		return true;
 	}
 
-	#if network
-	//@:noCompletion public var _repl_netid : UI16 = -1;
-
-
 	public function new(  )
 	{
 		EntityManager.instance.register(this);
 	}
+
+	#if network
+	//@:noCompletion public var _repl_netid : UI16 = -1;
 
 	public function clientSpawn()
 	{

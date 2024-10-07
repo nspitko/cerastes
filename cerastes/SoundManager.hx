@@ -204,7 +204,7 @@ class SoundManager
 
 	static var musicSnd: Sound;
 	static var currentMusicFile: String;
-	static var musicVol: Float = 0.5;
+	public static var musicVol: Float = 0.5;
 	public static function playMusicFile( file: String )
 	{
 		if( file == currentMusicFile )

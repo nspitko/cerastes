@@ -210,7 +210,7 @@ class Scene
 			return;
 
 
-        Utils.info('Switch to scene: ${other}');
+        Utils.info('Switch to scene: ${ Type.getClassName( Type.getClass( other ) )}');
 
         exiting = true;
 

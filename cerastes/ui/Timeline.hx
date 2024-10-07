@@ -606,7 +606,9 @@ class TimelineRunner implements Tickable
 			{
 				switch( op.targetType )
 				{
-					case Object:
+					default: // @TODO: Fix JS
+
+					//case Object:
 						switch( op.key )
 						{
 							case "x" | "y" | "scaleX" | "scaleY" | "rotation":
@@ -632,7 +634,7 @@ class TimelineRunner implements Tickable
 								@:privateAccess target.updateContent();
 							default:
 						}
-					default:
+					//default:
 				}
 			}
 

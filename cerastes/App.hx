@@ -128,7 +128,8 @@ class App extends hxd.App {
 		cerastes.c2d.DebugDraw.init();
 		cerastes.c3d.DebugDraw.init();
 
-		cerastes.EntityBuilder.init( ["data/entities.def"] );
+		// Do this in preload???
+		//cerastes.EntityBuilder.init( ["data/entities.def"] );
 
 
 		/*

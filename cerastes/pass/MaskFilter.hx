@@ -3,11 +3,11 @@ package cerastes.pass;
 import h2d.RenderContext;
 import h3d.mat.Texture;
 import h2d.Bitmap;
-import cerastes.tools.ImguiTools.ImGuiTools;
 import h2d.filter.Mask;
 import h2d.filter.Filter;
 
 #if hlimgui
+import cerastes.tools.ImguiTools.ImGuiTools;
 import imgui.ImGui;
 import cerastes.tools.ImguiTools.IG;
 import cerastes.macros.MacroUtils.imTooltip;

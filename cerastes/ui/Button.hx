@@ -91,7 +91,7 @@ class Button extends h2d.Flow implements IButton
 {
 	public var text(get, set): String;
 
-	public var bitmapMode: BitmapMode = ButtonTile;
+	public var bitmapMode(default, set): BitmapMode = ButtonTile;
 	public var font(default, set): String;
 	public var buttonType: ButtonType;
 	public var orientation(default, set): Orientation = None;
@@ -222,6 +222,15 @@ class Button extends h2d.Flow implements IButton
 			return null;
 
 		return elText.text;
+	}
+
+	function set_bitmapMode(v)
+	{
+		bitmapMode = v;
+		updateTiles();
+
+
+		return v;
 	}
 
 

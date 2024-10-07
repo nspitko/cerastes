@@ -1675,7 +1675,7 @@ class UIEditor extends ImguiTool
 				for( f in fields )
 				{
 					var fv = Reflect.field(td,f);
-					if( fv is Int || fv is Float || fv is Bool )
+					if( fv is Int || fv is Float || fv is Bool || fv is String )
 					{
 						if( ImGui.selectable(f, f == o.key) )
 						{
@@ -1696,12 +1696,12 @@ class UIEditor extends ImguiTool
 				{
 					var t: String = o.value;
 					if( ImGui.inputText( o.key, t ) )
-						o.value = t;
+						o.value = '☄☄TILE☄☄$t';
 
 					if( o.value.charAt(0) != '$')
 						o.value = 0;
 
-					if( mType != "Bool")
+					if( mType != "Bool" && mType != "String")
 						canTween = true;
 					isVar = true;
 				}
@@ -1725,6 +1725,12 @@ class UIEditor extends ImguiTool
 				{
 					var v: Bool = o.value;
 					if( ImGui.checkbox( o.key, v ) )
+						o.value = v;
+				}
+				else if( mType == "String" )
+				{
+					var v: String = o.value;
+					if( ImGui.inputText( o.key, v ) )
 						o.value = v;
 				}
 				else

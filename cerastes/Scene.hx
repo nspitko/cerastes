@@ -98,7 +98,7 @@ class Scene
 
         if(  viewportScale > 1 )
         {
-            s2d.filter = new h2d.filter.Nothing();
+            //s2d.filter = new h2d.filter.Nothing();
         }
 
 	    s2d.scaleMode = ScaleMode.Stretch(Math.floor( viewportWidth / viewportScale ), Math.floor( viewportHeight / viewportScale ));

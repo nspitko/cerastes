@@ -19,6 +19,7 @@ class AdvancedText extends h2d.Text
 	public var characters(default, set): Int = -1; // -1 -> All, else limit to a specific number
 	public var ellipsis: Bool = false;
 	public var maxLines(default, set): Int = 0;
+	public var textLength( get, never ): Int;
 
 	public var boldFont(default, set) : h2d.Font;
 	var boldGlyphs : h2d.TileGroup;
@@ -415,6 +416,37 @@ class AdvancedText extends h2d.Text
 		calcSizeHeight = y + lineHeight;
 		calcDone = true;
 		if ( rebuild ) needsRebuild = false;
+	}
+
+	public function get_textLength()
+	{
+		var l = 0;
+		var c = 0;
+		var tl = text.length;
+
+		var inColor = false;
+
+		while( c < tl )
+		{
+			var o = text.charCodeAt(c++);
+			if( o == "☃".code )
+			{
+				if( !inColor )
+				{
+					c += 6;
+					inColor = true;
+				}
+				else
+				{
+					inColor = false;
+				}
+				continue;
+			}
+			if( o == "🥐".code || o == "☄".code || o == "☃".code )
+				continue;
+			l++;
+		}
+		return l;
 	}
 
 

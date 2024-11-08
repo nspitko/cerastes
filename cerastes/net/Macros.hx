@@ -34,6 +34,9 @@ class ProxyGenerator
 
 		var isRootClass = Context.getLocalClass().get().superClass == null;
 
+		if( Context.getLocalClass().get().isInterface )
+			return fields;
+
 		append = handleRPC( fields );
 
 		var p = new Printer();
@@ -68,6 +71,18 @@ class ProxyGenerator
 			}
 			if( !found )
 				continue;
+
+			// Create a client side var
+
+			#if client
+			append.push({
+				name: '_${field.name}',
+				access: field.access,
+				kind: field.kind,
+				pos: field.pos,
+				meta: field.meta,
+			});
+			#end
 
 			var dirtyVar = '_repl_dirty${Math.floor( idx / 8 )}';
 
@@ -574,7 +589,7 @@ class ProxyGenerator
 				var queueFunc:Function = {
 					expr: macro {
 
-						var args = new haxe.ds.Vector4( $v{nArgs} );
+						var args = new haxe.ds.Vector( $v{nArgs} );
 						$b{argSetters};
 
 						var rpc: cerastes.net.Types.RPCCall = {
@@ -628,7 +643,7 @@ class ProxyGenerator
 				//trace( p.printExpr( serializeFunc.expr ));
 
 				append.push({
-					name: $i{"_rpcSerialize_"+field.name},
+					name: "_rpcSerialize_"+field.name,
 					access: [Access.APublic],
 					kind: FieldType.FFun(serializeFunc),
 					pos: Context.currentPos(),
@@ -687,7 +702,7 @@ class ProxyGenerator
 				//trace( p.printExpr( unserializeFunc.expr ));
 
 				append.push({
-					name: $i{"_rpcUnserialize_"+field.name},
+					name: "_rpcUnserialize_"+field.name,
 					access: [Access.APublic],
 					kind: FieldType.FFun(unserializeFunc),
 					pos: Context.currentPos(),
@@ -776,7 +791,7 @@ class ProxyGenerator
 				//trace( p.printExpr( unserializeFunc.expr ));
 
 				append.push({
-					name: $i{"_rpcSerializeResponse_"+field.name},
+					name: "_rpcSerializeResponse_"+field.name,
 					access: [Access.APublic],
 					kind: FieldType.FFun(serializeResponseFunc),
 					pos: Context.currentPos(),
@@ -1136,12 +1151,16 @@ class ReplicatorBuilder
 
 			for( moduleType in moduleTypes )
 			{
+
 				switch( moduleType )
 				{
 					case ModuleType.TClassDecl( clType ) :
 					{
 
 						var classType : haxe.macro.Type.ClassType = clType.get();
+						if( classType.isInterface )
+							continue;
+
 						// All replicated classes must have replication IDs, which are mapped
 						// into a generated switch which handles client replication instantiation
 						if( classType.meta.has("clsid") )
@@ -1167,6 +1186,8 @@ class ReplicatorBuilder
 								name: cls
 							};
 							caseMap.set(clsid,macro { c = new $typePath(); } );
+
+							//trace('Replicator: Adding ${clsid} -> ${path.join(".")}.$cls');
 
 						}
 					}
@@ -1207,15 +1228,15 @@ class ReplicatorBuilder
 				pos: pos
 			};
 
-			types.push({
+			var tdef: haxe.macro.Expr.TypeDefinition = {
 				pos : pos,
 				name : "ReplicatorProxy",
-				pack : ["cerastes","net"],
+				pack : [],
 				kind : TDClass(),
 				fields : (macro class {
-
-					public static function create( id: Int ) : Replicated {
-						var c: Replicated = null;
+					@:keep
+					public static function create( id: Int ) : cerastes.net.Replicated {
+						var c: cerastes.net.Replicated = null;
 
 						${switchExpr};
 
@@ -1223,12 +1244,12 @@ class ReplicatorBuilder
 					}
 
 				}).fields//.concat(globalFields),
-			});
+			};
 
-			//var p = new Printer();
-			//trace( p.printTypeDefinition(types[0]) );
+			var p = new Printer();
+			//trace( p.printTypeDefinition(tdef) );
 
-			Context.defineModule("cerastes.net.ReplicatorProxy", types);
+			Context.defineType(tdef);
 
 		});
 		#end

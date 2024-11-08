@@ -1,5 +1,7 @@
 package cerastes.ui;
 
+import h3d.Vector4;
+import h3d.Vector;
 import hxd.snd.Channel;
 import h2d.Object;
 import tweenxcore.Tools.Easing;
@@ -238,11 +240,12 @@ class TimelineRunner implements Tickable
 		tick(0.000001);
 	}
 
-	function readValue( v: Dynamic )
+	function readValue( v: Dynamic ) : Dynamic
 	{
-		if( Std.string(v).charAt(0) == "$" )
+		var str = Std.string(v);
+		if( str.charAt(0) == "$" )
 		{
-			var name = cast (v, String).substr(1);
+			var name = str.substr(1);
 			if( Utils.verify( variables.exists(name) ) )
 				return variables.get( name );
 
@@ -475,7 +478,19 @@ class TimelineRunner implements Tickable
 					if( op.key == null )
 						continue;
 
-					Reflect.setProperty(target, op.key, readValue( op.value ) );
+					switch(op.key)
+					{
+						case "color":
+							var c = Vector4.fromColor(readValue( op.value ));
+							Reflect.setProperty(target, op.key, c );
+						case "contentTile":
+							var c = Utils.getTile( readValue( op.value ) );
+							Reflect.setProperty(target, op.key, c );
+						default:
+							Reflect.setProperty(target, op.key, readValue( op.value ) );
+					}
+
+
 					changed = true;
 
 				case AnimPlay:
@@ -591,7 +606,9 @@ class TimelineRunner implements Tickable
 			{
 				switch( op.targetType )
 				{
-					case Object:
+					default: // @TODO: Fix JS
+
+					//case Object:
 						switch( op.key )
 						{
 							case "x" | "y" | "scaleX" | "scaleY" | "rotation":
@@ -609,9 +626,15 @@ class TimelineRunner implements Tickable
 								// onContentChanged();
 								if( @:privateAccess target.parentContainer != null )
 									@:privateAccess target.parentContainer.contentChanged(target);
+
+							case "contentTile":
+								var target: h2d.ScaleGrid = cast state.targetHandle;
+								@:privateAccess target.tile = target.contentTile;
+								@:privateAccess target.clear();
+								@:privateAccess target.updateContent();
 							default:
 						}
-					default:
+					//default:
 				}
 			}
 

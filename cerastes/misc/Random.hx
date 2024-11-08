@@ -34,6 +34,7 @@ class Random
 		return get() / 0x7ffffffe;
 	}
 
+	// inclusive
 	public function getUpTo(max: Int): Int {
 		return get() % (max + 1);
 	}

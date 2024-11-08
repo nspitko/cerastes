@@ -6,6 +6,8 @@ import imgui.ImGui.ImVec2;
 import cerastes.c3d.Vec3;
 import cerastes.c3d.Vec4;
 
+using hxd.Math;
+
 @:structInit
 class CVec2
 {
@@ -39,6 +41,29 @@ class CVec2
 	{
 		this.x = x;
 		this.y = y;
+	}
+
+	public inline function lengthSq() {
+		return x * x + y * y;
+	}
+
+	public inline function length() {
+		return lengthSq().sqrt();
+	}
+
+	public inline function normalized() {
+		var k = lengthSq();
+		if( k < CMath.EPSILON2 ) k = 0 else k = k.invSqrt();
+		return new Vec2(x * k, y * k);
+	}
+
+	public inline function normalize() {
+		var k = lengthSq();
+		if( k < CMath.EPSILON2 ) k = 0 else k = k.invSqrt();
+
+		x = x * k;
+		y = y * k;
+		return this;
 	}
 
 }

@@ -50,6 +50,8 @@ class GlobalConsole
 
 	static function set_currentScene(v : cerastes.Scene)
 	{
+		if( console == null )
+			return v;
 
 		console.remove();
 		v.s2d.addChild( console );

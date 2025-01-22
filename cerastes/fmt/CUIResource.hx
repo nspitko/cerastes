@@ -581,7 +581,7 @@ class CUIResource extends Resource
 
 	public function recursiveCreateObjects( entry: CUIObject, parent: Object, root: Object, isPreview: Bool = false )
 	{
-		var e = createObject(entry);
+		var e = createObject(entry, isPreview);
 		parent.addChild(e);
 
 		if( entry.children != null )
@@ -636,7 +636,7 @@ class CUIResource extends Resource
 
 	}
 
-	static function createObject( entry: CUIObject ) : h2d.Object
+	static function createObject( entry: CUIObject, isPreview = false ) : h2d.Object
 	{
 		var obj: Object = null;
 
@@ -692,7 +692,7 @@ class CUIResource extends Resource
 
 			case "cerastes.ui.Reference":
 				var d : CUIReference = cast entry;
-				obj = new cerastes.ui.Reference( d.file, d.def );
+				obj = new cerastes.ui.Reference( d.file, d.def, isPreview );
 
 			case "cerastes.ui.Sound":
 				//var d: CUISound = cast entry;

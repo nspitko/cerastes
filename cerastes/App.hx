@@ -68,7 +68,7 @@ class App extends hxd.App {
 	public static var instance: App;
 	public static var defaultFont: h2d.Font;
 
-	#if network
+	#if ( network && client )
 	public static var client: client.ClientConnection;
 	#end
 
@@ -128,7 +128,8 @@ class App extends hxd.App {
 		cerastes.c2d.DebugDraw.init();
 		cerastes.c3d.DebugDraw.init();
 
-		cerastes.EntityBuilder.init( ["data/entities.def"] );
+		// Do this in preload???
+		//cerastes.EntityBuilder.init( ["data/entities.def"] );
 
 
 		/*
@@ -166,7 +167,7 @@ class App extends hxd.App {
 		engine.backgroundColor = 0x0;
 		onResize();
 
-		#if network
+		#if ( network && client )
 		client = new client.ClientConnection("127.0.0.1", 9000);
 		client.connect();
 		#end
@@ -254,7 +255,7 @@ class App extends hxd.App {
 		#end
 
 		// limits update cycle to 10ms, then yields to render loop. May need tuning.
-		#if network
+		#if ( network && client )
 		Metrics.begin("Network::Client.updateTimeout");
 		client.updateTimeout(0.010);
 		Metrics.end();
@@ -272,7 +273,7 @@ class App extends hxd.App {
 		BulletManager.tick(dt);
 		#end
 		// Sync sends outbount crap
-		#if network
+		#if ( network && client )
 		Metrics.begin("Network::Client.sync");
 		client.sync();
 		Metrics.end();

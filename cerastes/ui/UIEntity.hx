@@ -141,7 +141,7 @@ class UIEntity extends h2d.Object implements Entity
 		ImGui.text('LookupId: ${lookupId}');
 		ImGui.text('Tracked callbacks: ${trackedCallbacks.length}');
 
-		ImGui.checkbox("Debug Drag", debugDrag);
+		//ImGui.checkbox("Debug Drag", debugDrag);
 	}
 	#end
 

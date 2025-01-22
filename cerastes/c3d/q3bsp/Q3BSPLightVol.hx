@@ -170,7 +170,7 @@ class Q3BSPLightVol extends Entity
 					if( cold != col )
 						DebugDraw.line( pos, pos + norm.toVector() * 32, cold);
 
-					DebugDraw.text('phi:${Math.floor(( v.dir[0] / 255 ) * 360) )}\ntheta:${Math.floor(( v.dir[1] / 255 ) * 360) )}', pos, 0x00FF00);
+					DebugDraw.text('phi:${Math.floor(( v.dir[0] / 255 ) * 360) }\ntheta:${Math.floor(( v.dir[1] / 255 ) * 360) }', pos, 0x00FF00);
 
 
 				}

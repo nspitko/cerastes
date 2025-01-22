@@ -506,6 +506,11 @@ import haxe.macro.Expr;
 		 return 1 / Math.sqrt(x);
 	 }
 
+	// This looks dumb but it's free and makes it easier to square constants without copy pasting
+	public static inline function sqr( f : Float ) {
+		return f * f;
+	}
+
 	 /**
 	  * Compares x and y using an absolute tolerance of eps.
 	  */

@@ -38,6 +38,9 @@ class EntityManager
 	public static var instance(default, null):EntityManager = new EntityManager();
 
 	public var entities = new Array<Entity>();
+	#if network
+	public var replicatedEntities = new Array<Replicated>();
+	#end
 
 	static var lastId = 0;
 
@@ -73,7 +76,12 @@ class EntityManager
 	{
 		entities.push(t);
 	}
-
+#if network
+	public function registerReplicated( t : Replicated )
+	{
+		replicatedEntities.push(t);
+	}
+#end
 	public function find( id: String )
 	{
 		for( e in entities )
@@ -155,32 +163,22 @@ class BaseEntity #if network implements Replicated #end implements Entity
 		return true;
 	}
 
-	#if network
-	//@:noCompletion public var _repl_netid : UI16 = -1;
-
-
-	#if server
-	public function new()
-	{
-		EntityManager.instance.register(this);
-		_repl_netid = EntityManager.getId();
-	}
-	#end
-
-	#if client
 	public function new(  )
 	{
 		EntityManager.instance.register(this);
 	}
-	#end
 
+	#if network
+	//@:noCompletion public var _repl_netid : UI16 = -1;
 
-
-
-	// Called after first-time replication is complete (ie, after constructor and first full sync )
-	public function replicated( )
+	public function clientSpawn()
 	{
 		info("Replicated a " + this);
+	}
+
+	public function clientUpdate()
+	{
+
 	}
 
 	#end
@@ -206,10 +204,6 @@ class BaseEntity #if network implements Replicated #end implements Entity
 
 	public function toString(): String
 	{
-		#if network
-		return '${Type.getClassName(Type.getClass(this))}-${StringTools.hex( _repl_netid )}';
-		#else
 		return '${Type.getClassName(Type.getClass(this))}';
-		#end
 	}
 }

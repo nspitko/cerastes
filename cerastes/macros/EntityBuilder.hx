@@ -19,15 +19,21 @@ using haxe.macro.Tools;
 
 #end
 
+@:structInit class EntityTypeInfoRuntime
+{
+	public var clsName: String;
+	public var clsDefName: String;
+}
+
 
 
 class EntityBuilder
 {
-	public static macro function getDefaultDataTypes():haxe.macro.Expr.ExprOf<Map<String, String>> {
-		var d: Map<String, String> = [ ];
+	public static macro function getDefaultDataTypes():haxe.macro.Expr.ExprOf<Map<String, {clsName: String, defName: String }>> {
+		var d: Map<String, {clsName: String, defName: String }> = [ ];
 		for( e in classEntries )
 		{
-			d.set(e.dataTypeName, e.defName);
+			d.set(e.name, {clsName: e.dataTypeName, defName: e.defName } );
 		}
 
 		return macro $v{d};
@@ -151,6 +157,13 @@ class EntityBuilder
 			});
 
 			classFields.push({
+				name : "classMap",
+				pos : pos,
+				kind : FVar( macro: Map<String, String>, macro [] ),
+				access : [APublic, AStatic],
+			});
+
+			classFields.push({
 				name : "loadedEntities",
 				pos : pos,
 				kind : FVar( macro: Int, macro 0 ),
@@ -171,11 +184,12 @@ class EntityBuilder
 				kind: FFun({
 					expr: macro {
 
-						var base: Map<String,String> = cerastes.macros.EntityBuilder.getDefaultDataTypes();
+						var base: Map<String,{clsName: String, defName: String }> = cerastes.macros.EntityBuilder.getDefaultDataTypes();
 
 						for( k => v in base )
 						{
-							defMap.set( k, Type.createInstance( Type.resolveClass(v), [] ) );
+							defMap.set( k, Type.createInstance( Type.resolveClass(v.defName), [] ) );
+							classMap.set(k, v.clsName );
 							loadedEntities++;
 						}
 
@@ -221,6 +235,7 @@ class EntityBuilder
 									cerastes.Utils.warning('File $file overrides entity ${k}. This is generally not good practice as include order is now load bearing. Consider making a new entity instead.');
 
 								defMap.set( k, v );
+								classMap.set( k, v.type );
 								loadedEntities++;
 							}
 						}

@@ -71,6 +71,12 @@ enum abstract TileMapTileFlags(Int) from Int to Int
 
 	}
 
+	public function ensureUnpacked()
+	{
+		if( data == null )
+			unpack();
+	}
+
 	public function unpack()
 	{
 		var decoded = haxe.crypto.Base64.decode( dataPacked );
@@ -242,6 +248,8 @@ class TileMap extends h2d.Object
 			if( l.tileData.tileSheet == null || l.tileData.tileSheet.length == 0 )
 				continue;
 
+			l.tileData.ensureUnpacked();
+
 			var tg = new TileGroup( Utils.getTile( l.tileData.tileSheet ), this );
 
 			for( x in 0 ... def.width )
@@ -291,6 +299,12 @@ class TileMap extends h2d.Object
 
 			for( e in l.entities )
 			{
+				var t: cerastes.c2d.TileEntity = cast EntityBuilder.create( e.type );
+				t.initialize( this );
+				t.x = e.x;
+				t.y = e.y;
+
+				/*
 				var cls = Type.resolveClass( e.type );
 				// @TODO REALLY BAD HACK PLEASE FIND A BETTER WAY TO DO THIS THANKS
 				var defCls = Type.resolveClass('${e.type}Def');
@@ -309,6 +323,7 @@ class TileMap extends h2d.Object
 					n.y = e.y;
 
 				}
+				*/
 			}
 		}
 	}

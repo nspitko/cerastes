@@ -19,12 +19,6 @@ using haxe.macro.Tools;
 
 #end
 
-@:structInit class EntityTypeInfoRuntime
-{
-	public var clsName: String;
-	public var clsDefName: String;
-}
-
 
 
 class EntityBuilder
@@ -33,7 +27,7 @@ class EntityBuilder
 		var d: Map<String, {clsName: String, defName: String }> = [ ];
 		for( e in classEntries )
 		{
-			d.set(e.name, {clsName: e.dataTypeName, defName: e.defName } );
+			d.set(e.dataTypeName, {clsName: e.name, defName: e.defName } );
 		}
 
 		return macro $v{d};
@@ -101,11 +95,9 @@ class EntityBuilder
 
 			classFields.push((macro class {
 
-					public static function create( datatype: String ) : cerastes.Entity {
+					public static function create( def: cerastes.Entity.EntityDef ) : cerastes.Entity {
 						var c: cerastes.Entity = null;
-
-						var def = defMap.get( datatype );
-						if( !cerastes.Utils.verify( def != null, '$datatype is not a valid entity data type' ) )
+						if( !cerastes.Utils.verify( def != null, '${def} is not a valid entity data object' ) )
 							return null;
 
 						var type = def.type;
@@ -157,13 +149,6 @@ class EntityBuilder
 			});
 
 			classFields.push({
-				name : "classMap",
-				pos : pos,
-				kind : FVar( macro: Map<String, String>, macro [] ),
-				access : [APublic, AStatic],
-			});
-
-			classFields.push({
 				name : "loadedEntities",
 				pos : pos,
 				kind : FVar( macro: Int, macro 0 ),
@@ -188,8 +173,9 @@ class EntityBuilder
 
 						for( k => v in base )
 						{
-							defMap.set( k, Type.createInstance( Type.resolveClass(v.defName), [] ) );
-							classMap.set(k, v.clsName );
+							var def = Type.createInstance( Type.resolveClass(v.defName), [] );
+							defMap.set( k, def );
+							def.type = v.clsName;
 							loadedEntities++;
 						}
 
@@ -235,7 +221,6 @@ class EntityBuilder
 									cerastes.Utils.warning('File $file overrides entity ${k}. This is generally not good practice as include order is now load bearing. Consider making a new entity instead.');
 
 								defMap.set( k, v );
-								classMap.set( k, v.type );
 								loadedEntities++;
 							}
 						}
@@ -284,6 +269,7 @@ class EntityBuilder
 			name: classType.name
 		};
 
+
 		// :AyameDespair:
 		var module = classType.module.split('.');
 		if( module[module.length-1] != classType.name )
@@ -294,7 +280,7 @@ class EntityBuilder
 
 		classEntries.push({
 			name: Context.getLocalClass().toString(),
-			defName: Context.getType( defClass.toString() ).toString(),
+			defName:  Context.resolveType(ftype, Context.currentPos()).toString(),
 			typePath: clsTypePath,
 			dataTypeName: dataTypeName,
 			builder: macro {
@@ -304,8 +290,6 @@ class EntityBuilder
 				}
 			}
 		});
-
-
 
 		var getDef:Function = {
 			expr: macro {

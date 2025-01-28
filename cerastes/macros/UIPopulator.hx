@@ -54,6 +54,27 @@ class UIPopulator
 
 				}
 
+				if( field.meta.has(":objRef") )
+				{
+					var fname = field.name; // string
+					var ftype = field.type.getClass().pack.concat([field.type.getClass().name]);
+					var cname = Context.getLocalClass().get().name;
+
+					exprs.push(macro var __ref = Std.downcast( root.getObjectByName( cerastes.macros.UIPopulator.camelToSnake( $v{fname} ) ), cerastes.ui.Reference ) );
+					exprs.push(macro if( __ref != null ) this.$fname = Std.downcast( __ref.get(), $p{ftype} ) );
+					if( !optional )
+					{
+						exprs.push(macro {
+							if( this.$fname == null )
+							{
+								initError("missing expected sub-object " + cerastes.macros.UIPopulator.camelToSnake( $v{fname} ) + "(" + $v{field.type.toString()} + ")");
+								return;
+							}
+						});
+					}
+
+				}
+
 
 
 			}

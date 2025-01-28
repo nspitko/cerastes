@@ -96,7 +96,7 @@ enum abstract CUITristateBool(Int) from Int to Int {
 	@noSerialize public var handle: h2d.Object = null;
 	@noSerialize public var parent: CUIObject = null;
 
-	public function clone( fnRename: (String) -> String )
+	public function clone( fnRename: (String) -> String = null)
 	{
 		var cls = Type.getClass(this);
 		var inst = Type.createEmptyInstance(cls);
@@ -118,13 +118,17 @@ enum abstract CUITristateBool(Int) from Int to Int {
 			}
 		}
 
-		inst.name = fnRename( inst.name );
+		if( fnRename != null )
+			inst.name = fnRename( inst.name );
 		inst.children = [];
 		inst.handle = null; // fixup
 		// Now clone children
-		for( c in children )
+		if( children != null )
 		{
-			inst.children.push( c.clone( fnRename ) );
+			for( c in children )
+			{
+				inst.children.push( c.clone( fnRename ) );
+			}
 		}
 		return inst;
 	}
@@ -692,7 +696,7 @@ class CUIResource extends Resource
 
 			case "cerastes.ui.Reference":
 				var d : CUIReference = cast entry;
-				obj = new cerastes.ui.Reference( d.file, d.def, isPreview );
+				obj = new cerastes.ui.Reference( d.file, d.def != null ? d.def.clone() : null, isPreview );
 
 			case "cerastes.ui.Sound":
 				//var d: CUISound = cast entry;
@@ -1081,7 +1085,7 @@ class CUIResource extends Resource
 				var e: CUIReference = cast entry;
 
 				if( e.file != null && hxd.Res.loader.exists( e.file ) )
-					o.load( e.file, e.def );
+					o.load( e.file, e.def != null ? e.def.clone() : null );
 
 			case "cerastes.ui.Sound":
 				var o = cast(obj, cerastes.ui.Sound);

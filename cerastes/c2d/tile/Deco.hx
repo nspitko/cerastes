@@ -21,7 +21,5 @@ class Deco extends TileEntity
 		var entry = Utils.getAtlasEntry( getDef().anim );
 
 		anim = new cerastes.ui.Anim( entry != null ? entry : Utils.invalidAtlas(), this );
-
-		new Bitmap( Tile.fromColor(0xFF00FF,16,16,1), this );
 	}
 }

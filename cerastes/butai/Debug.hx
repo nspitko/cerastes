@@ -30,7 +30,7 @@ class Debug
 
 	public static function registerWithDebugServer()
 	{
-		#if hl
+		#if (hl && butai)
 		try
 		{
 			debugSocket = new Socket();

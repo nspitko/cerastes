@@ -44,7 +44,7 @@ class CData
 							f.meta.push({ name:"cd_type", params: [ macro $v{ t.toString() } ], pos: Context.currentPos() });
 
 
-						if( !hasDefault )
+						if( !hasDefault && expr != null )
 						{
 							switch( expr.expr )
 							{

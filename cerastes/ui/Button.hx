@@ -464,10 +464,19 @@ class Button extends h2d.Flow implements IButton
 		}
 
 		// If we aren't specifying min dimensions and have no text, infer from our base tile
-		if(  minWidth == null && minHeight == null && elText == null && backgroundTile != null )
+		if(  minWidth == null && minHeight == null )
 		{
-			minWidth = Math.floor( backgroundTile.width );
-			minHeight = Math.floor( backgroundTile.height );
+			if( elText == null && backgroundTile != null )
+			{
+				minWidth = Math.floor( backgroundTile.width );
+				minHeight = Math.floor( backgroundTile.height );
+			}
+			else if( elText != null )
+			{
+				minWidth = Math.floor( elText.textWidth );
+				minHeight = Math.floor( elText.textHeight );
+			}
+
 		}
 
 		if( background != null )

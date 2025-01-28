@@ -1,5 +1,6 @@
 package cerastes.fmt;
 
+import cerastes.Entity.EntityDef;
 import h2d.TileGroup;
 import cerastes.flow.Flow.FlowContext;
 import cerastes.flow.Flow.FlowRunner;
@@ -245,12 +246,13 @@ class TileMap extends h2d.Object
 
 		for( l in def.layers )
 		{
+			var layerObj = new h2d.Object(this);
 			if( l.tileData.tileSheet == null || l.tileData.tileSheet.length == 0 )
 				continue;
 
 			l.tileData.ensureUnpacked();
 
-			var tg = new TileGroup( Utils.getTile( l.tileData.tileSheet ), this );
+			var tg = new TileGroup( Utils.getTile( l.tileData.tileSheet ), layerObj );
 
 			for( x in 0 ... def.width )
 			{
@@ -299,10 +301,17 @@ class TileMap extends h2d.Object
 
 			for( e in l.entities )
 			{
-				var t: cerastes.c2d.TileEntity = cast EntityBuilder.create( e.type );
-				t.initialize( this );
-				t.x = e.x;
-				t.y = e.y;
+				var t: cerastes.c2d.TileEntity = cast EntityBuilder.create( createDef(e) );
+				if( Utils.verify( t != null, 'Unknown/invalid map entity ${e.type}' ) )
+				{
+					t.initialize( this );
+					t.x = e.x;
+					t.y = e.y;
+
+					layerObj.addChild(t);
+
+
+				}
 
 				/*
 				var cls = Type.resolveClass( e.type );
@@ -326,6 +335,19 @@ class TileMap extends h2d.Object
 				*/
 			}
 		}
+	}
+
+	function createDef( tmDef: TileMapEntityDef ): EntityDef
+	{
+		var ref = EntityBuilder.defMap[tmDef.type];
+		var inst = Type.createEmptyInstance( Type.getClass( ref ) );
+		for( k => v in tmDef.properties )
+			Reflect.setField( inst,k, v );
+
+		inst.type = ref.type;
+
+		return inst;
+
 	}
 }
 

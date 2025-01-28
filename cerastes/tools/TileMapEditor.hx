@@ -524,7 +524,7 @@ class TileMapEditor extends ImguiTool
 					if( selectedLayer == l )
 						flags |= ImGuiTreeNodeFlags.Selected;
 
-					var name = selectedLayer.name.length > 0 ? selectedLayer.name : 'Layer ${i}';
+					var name = l.name != null && l.name.length > 0 ? l.name : 'Layer ${i}';
 					if( ImGui.treeNodeEx( name, flags ) )
 					{
 						ImGui.treePop();
@@ -606,17 +606,20 @@ class TileMapEditor extends ImguiTool
 		if( selectedLayer.name == null)
 			selectedLayer.name = "";
 
-		ImGui.inputText("Name",selectedLayer.name);
+		wref( ImGui.inputText("Name", _), selectedLayer.name );
+
 
 		switch( paintMode )
 		{
 			case Select:
+				ImGui.pushID("EntityEditor");
 				if( selectedEntity != null )
 				{
 					ImGui.text( selectedEntity.type );
 
 					// @todo DON"T DO THIS
-					var cls = Type.resolveClass( '${selectedEntity.type}Def' );
+					var clsInst = EntityBuilder.defMap[selectedEntity.type];
+					var cls = Type.getClass( clsInst );
 					if( Utils.verify( cls != null, 'Unknown TileMapEntity def type ${selectedEntity.type}Def'))
 					{
 						var meta: haxe.DynamicAccess<Dynamic> = Meta.getFields( cls );
@@ -658,6 +661,7 @@ class TileMapEditor extends ImguiTool
 				{
 					ImGui.text("No entity selected");
 				}
+				ImGui.popID();
 
 			case Fill | Normal:
 				var newTexture = IG.inputTexture( "Tile Sheet", selectedLayer.tileData.tileSheet, "sheets" );

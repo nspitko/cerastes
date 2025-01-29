@@ -1120,7 +1120,7 @@ class CUIResource extends Resource
 
 	public static function getTile( file: String )
 	{
-		if( file == null || file == "")
+		if( file == null || file == ""  )
 			return Utils.invalidTile();
 
 		if(file.charAt(0) == "#" )
@@ -1149,6 +1149,9 @@ class CUIResource extends Resource
 			var atlasPos = file.indexOf(".atlas") + 6;
 			var atlasName = file.substr( 0, atlasPos );
 			var tileName = file.substr(atlasPos + 1);
+
+			if( !hxd.Res.loader.exists(atlasName ) )
+				return Utils.invalidTile();
 
 			var res = hxd.Res.loader.loadCache(atlasName, hxd.res.Atlas );
 			if( res != null )

@@ -433,11 +433,15 @@ class ImGuiToolManager
 				#elseif hlsdl
 
 				var mainWindow = hxd.Window.inst;
-				var w = new hxd.Window("ImGui Viewport", 100,100,false);
-				w.displayMode = Borderless;
+				var flags = sdl.Window.SDL_WINDOW_BORDERLESS;
+				var w = new hxd.Window("ImGui Viewport", cast v.WorkSize_x, cast  v.WorkSize_y, false, flags);
+
+				
 				var e = h3d.Engine.getCurrent();
 				// Disable vsync on these windows; else we end up waiting for vblank for every individual window.
-				w.vsync = false;
+				// Not a problem on linux I guess
+				if( Sys.systemName() != "Linux" )
+					w.vsync = false;
 
 				@:privateAccess
 				{

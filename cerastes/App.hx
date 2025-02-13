@@ -354,6 +354,8 @@ class App extends hxd.App {
 		s2d.render(e);
 		Metrics.end();
 
+		@:privateAccess ImGuiToolManager.mainWindow.window.present();
+
 		var io = ImGui.getIO();
 		if ((io.ConfigFlags & ImGuiConfigFlags.ViewportsEnable) != 0 )
 		{

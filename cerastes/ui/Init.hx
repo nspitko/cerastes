@@ -239,6 +239,93 @@ class Init
 			}
 		});
 
+		no.Spoon.bend('hxd.Window', function (fields, cls) {
+			if( cls == null || cls.name != "Window" )
+				return;
+			fields.patch(macro class {
+				function new(title:String, width:Int, height:Int, fixed:Bool = false, sdlFlags: Int = 0, createCtx: Bool = true ) {
+					this.windowWidth = width;
+					this.windowHeight = height;
+					eventTargets = new List();
+					resizeEvents = new List();
+					dropTargets = new List();
+					#if hlsdl
+					sdlFlags |= if (!fixed) sdl.Window.SDL_WINDOW_SHOWN | sdl.Window.SDL_WINDOW_RESIZABLE else sdl.Window.SDL_WINDOW_SHOWN;
+					#if heaps_vulkan
+					if( USE_VULKAN ) sdlFlags |= sdl.Window.SDL_WINDOW_VULKAN;
+					#end
+					window = new sdl.Window(title, width, height, sdl.Window.SDL_WINDOWPOS_CENTERED, sdl.Window.SDL_WINDOWPOS_CENTERED, sdlFlags);//, createCtx);
+					this.windowWidth = window.width;
+					this.windowHeight = window.height;
+					#elseif hldx
+					final dxFlags = if (!fixed) dx.Window.RESIZABLE else 0;
+					window = new dx.Window(title, width, height, dx.Window.CW_USEDEFAULT, dx.Window.CW_USEDEFAULT, dxFlags);
+					#end
+					WINDOWS.push(this);
+					#if multidriver
+					id = window.id;
+					#end
+				}
+			}, OnlyExisting);
+		  });
+
+/*
+		  no.Spoon.bend('sdl.Window', function (fields, cls) {
+			if( cls == null || cls.name != "Window" )
+				return;
+
+			fields.patch( macro class {
+				public var destroyCtx = true;
+
+				public function new( title : String, width : Int, height : Int, x : Int = sdl.Window.SDL_WINDOWPOS_CENTERED, y : Int = sdl.Window.SDL_WINDOWPOS_CENTERED, sdlFlags : Int = sdl.Window.SDL_WINDOW_SHOWN | sdl.Window.SDL_WINDOW_RESIZABLE, createCtx:Bool = true ) {
+					while( true ) {
+						this.win = winCreateEx(x, y, width, height, sdlFlags);
+						if( win == null ) throw "Failed to create window";
+						
+						if( createCtx && glctx == null )
+						{
+							trace("Create new CTX");
+							glctx = winGetGLContext(win);
+							if( glctx == null || !GL.init() || !testGL() ) {
+								destroy();
+								if( Sdl.onGlContextRetry() ) continue;
+								Sdl.onGlContextError();
+							}
+						}
+						else 
+							this.destroyCtx = false;
+						break;
+					}
+					this.title = title;
+					windows.push(this);
+					vsync = true;
+				}
+
+				public function destroy() {
+					
+					try winDestroy(win, this.destroyCtx ? glctx : null) catch( e : Dynamic ) {};
+					win = null;
+					glctx = null;
+					windows.remove(this);
+				}
+			}, All);
+		});
+
+*/
+		#if multidriver
+		no.Spoon.bend('h3d.impl.GlDriver', function (fields, cls) {
+			if( cls == null || cls.name != "GlDriver" )
+				return;
+
+			fields.patch( macro class {
+
+				override function present() {
+					// We'll do it ourselves.
+				}
+			}, All);
+		});
+		#end
+
 
 	}
 }

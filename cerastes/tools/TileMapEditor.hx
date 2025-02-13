@@ -502,11 +502,11 @@ class TileMapEditor extends ImguiTool
 		//ImGui.popFont();
 		if( ImGui.beginChildFrame( ImGui.getID( "frame1" ), {x: -1, y: 100 * ImGuiToolManager.scaleFactor} ) )
 		{
-			if( ImGui.beginTable("table",3 ) )
+			if( ImGui.beginTable("table", 3, ImGuiTableFlags.SizingStretchProp ) )
 			{
 				var style = ImGui.getStyle();
 				var cbw = ImGuiToolManager.defaultFontSize;
-
+				
 				ImGui.tableSetupColumn("Name", ImGuiTableColumnFlags.WidthStretch, 100 * ImGuiToolManager.scaleFactor - cbw);
                 ImGui.tableSetupColumn("Hidden", ImGuiTableColumnFlags.None, cbw );
                 ImGui.tableSetupColumn("Locked", ImGuiTableColumnFlags.None, cbw );

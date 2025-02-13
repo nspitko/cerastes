@@ -235,6 +235,10 @@ class App extends hxd.App {
 		Metrics.endFrame();
 		Metrics.begin();
 
+		// No idea why this is needed but it fixes a crash in wayland
+		if( dt == 0)
+			dt = 0.0000000001;
+
 		var w = hxd.Window.getInstance();
 		s2d.scaleMode = Fixed( w.width, w.height, 1 );
 
@@ -353,6 +357,8 @@ class App extends hxd.App {
 		Metrics.begin("s2d.render");
 		s2d.render(e);
 		Metrics.end();
+
+		@:privateAccess ImGuiToolManager.mainWindow.window.present();
 
 		var io = ImGui.getIO();
 		if ((io.ConfigFlags & ImGuiConfigFlags.ViewportsEnable) != 0 )

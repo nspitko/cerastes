@@ -96,43 +96,6 @@ enum abstract CUITristateBool(Int) from Int to Int {
 	@noSerialize public var handle: h2d.Object = null;
 	@noSerialize public var parent: CUIObject = null;
 
-	public function clone( fnRename: (String) -> String = null)
-	{
-		var cls = Type.getClass(this);
-		var inst = Type.createEmptyInstance(cls);
-		var fields = Type.getInstanceFields(cls);
-		for (field in fields)
-		{
-			if( field == "children" || field.length == 0) // Fixes a bug in HL when inheriting interfaces
-			{
-				continue;
-			}
-			else
-			{
-				// generic copy
-				var val:Dynamic = Reflect.field(this,field);
-				if ( !Reflect.isFunction(val) )
-				{
-					Reflect.setField(inst,field,val);
-				}
-			}
-		}
-
-		if( fnRename != null )
-			inst.name = fnRename( inst.name );
-		inst.children = [];
-		inst.handle = null; // fixup
-		// Now clone children
-		if( children != null )
-		{
-			for( c in children )
-			{
-				inst.children.push( c.clone( fnRename ) );
-			}
-		}
-		return inst;
-	}
-
 	public static function getMetaForField( f: String, m: String, cls: Class<Dynamic> ) : Any
 	{
 		var meta: haxe.DynamicAccess<Dynamic> = null;
@@ -223,6 +186,48 @@ enum abstract CUITristateBool(Int) from Int to Int {
 		return p;
 	}
 	#end
+
+
+	public function clone( fnRename: (String) -> String = null)
+	{
+		var cls = Type.getClass(this);
+		var inst = Type.createEmptyInstance(cls);
+		var fields = Type.getInstanceFields(cls);
+		for (field in fields)
+		{
+			if( field == "children" || field.length == 0) // Fixes a bug in HL when inheriting interfaces
+			{
+				continue;
+			}
+			else
+			{
+				// generic copy
+				var val:Dynamic = Reflect.field(this,field);
+				if ( !Reflect.isFunction(val) )
+				{
+					Reflect.setField(inst,field,val);
+				}
+			}
+		}
+		
+#if hlimgui
+		if( fnRename != null )
+			inst.name = fnRename( inst.name );
+		inst.handle = null; // fixup
+#end
+		
+inst.children = [];
+
+		// Now clone children
+		if( children != null )
+		{
+			for( c in children )
+			{
+				inst.children.push( c.clone( fnRename ) );
+			}
+		}
+		return inst;
+	}
 
 }
 

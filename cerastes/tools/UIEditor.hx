@@ -38,7 +38,6 @@ import imgui.ImGuiDrawable.ImGuiDrawableBuffers;
 import imgui.ImGui;
 import cerastes.tools.ImguiTools.IG;
 import imgui.ImGuiMacro.wref;
-import imgui.NeoSequencer;
 import cerastes.macros.MacroUtils.imTooltip;
 
 enum UIEInspectorMode
@@ -344,7 +343,6 @@ class UIEditor extends ImguiTool
 						timelineRunner.playing = true;
 						inspectorMode = Timeline;
 						selectedTimelineOperation = null;
-						NeoSequencer.clearSelection();
 					}
 
 					if( ImGui.isItemClicked( ImGuiMouseButton.Right ) )
@@ -628,163 +626,6 @@ class UIEditor extends ImguiTool
 
 	var frame: Int = 0;
 
-	function timelineOld()
-	{
-		ImGui.setNextWindowDockId( dockspaceIdBottom, dockCond );
-		if( ImGui.begin('Timeline##${windowID()}', null, ImGuiWindowFlags.NoMove) )
-		{
-			handleShortcuts();
-
-
-			var lastFrame = frame;
-			var popupIdRC = 'timeline_rc${windowID()}';
-			var popupIdKeyframeContext = 'timeline_kf_context##${windowID()}';
-			var drawList = ImGui.getWindowDrawList();
-			var style = NeoSequencer.getStyle();
-
-			var isPopupOpen = ImGui.isPopupOpen( popupIdRC ) || ImGui.isPopupOpen( popupIdKeyframeContext );
-
-
-			if( selectedTimeline != null )
-			{
-				if( timelinePlay )
-					frame = timelineRunner.frame;
-
-
-				//var frame: Int = 0;
-				var startFrame: Int = 0;
-	//			var endFrame: Int = 100;
-
-				var region = ImGui.getWindowContentRegionMax();
-
-				var size: ImVec2S = {x: 0, y: 0};
-
-				var flags = ImGuiNeoSequencerFlags.AlwaysShowHeader | ImGuiNeoSequencerFlags.AllowLengthChanging;
-				if( !isPopupOpen )
-					flags |= ImGuiNeoSequencerFlags.EnableSelection | ImGuiNeoSequencerFlags.Selection_EnableDragging;
-
-
-				var groups= new Map<String, Array<TimelineOperation>>();
-				for( o in selectedTimeline.operations )
-				{
-					var key = '${o.target}';
-					if( !groups.exists( key ) )
-						groups.set(key,[]);
-
-					groups[key].push(o);
-				}
-
-				var keyFramesToDelete: Array<TimelineOperation> =[];
-
-				if( NeoSequencer.begin('NeoTimeline##${windowID()}', frame, startFrame, selectedTimeline.frames, size, flags) )
-				{
-					if( inspectorMode != Timeline )
-					{
-						NeoSequencer.clearSelection();
-					}
-
-					var idx: Int = 0;
-					for(k => v in groups )
-					{
-						if( NeoSequencer.beginTimeline(k) )
-						{
-							for( o in v )
-							{
-								idx++;
-
-								ImGui.pushID('kf_${idx}');
-
-								NeoSequencer.keyframe( o.frame );
-								if( NeoSequencer.isKeyframeSelected() )
-								{
-									inspectorMode = Timeline;
-									selectedTimelineOperation = o;
-								}
-
-								if( NeoSequencer.isKeyframeRightClicked() )
-								{
-									ImGui.openPopup("timeline_kf_context");
-									keyframeContext = o;
-								}
-
-								if( ImGui.beginPopup("timeline_kf_context") )
-								{
-									if( ImGui.menuItem( 'Delete') )
-									{
-										selectedTimeline.operations.remove(keyframeContext);
-									}
-									if( ImGui.menuItem( 'Clone') )
-									{
-										var c = keyframeContext.clone();
-										c.frame++;
-										selectedTimeline.operations.push(c);
-									}
-
-									ImGui.endPopup();
-								}
-
-								ImGui.popID();
-
-
-
-
-							}
-
-							NeoSequencer.endTimeline();
-						}
-
-					}
-
-
-
-
-					NeoSequencer.end();
-				}
-
-				if( false && ImGui.isItemClicked( ImGuiMouseButton.Right ) && !isPopupOpen )
-				{
-					ImGui.openPopup( popupIdRC );
-				}
-
-				if( ImGui.beginPopup( popupIdRC ) )
-				{
-					if( selectedTimeline != null && ImGui.menuItem( '\uf084 Add keyframe here') )
-					{
-						var t: TimelineOperation = {};
-						t.target = "";
-						t.frame = frame >= selectedTimeline.frames ? selectedTimeline.frames - 1 : frame;
-						selectedTimeline.operations.push(t);
-						selectedTimelineOperation = t;
-						inspectorMode = Timeline;
-
-						if( timelineRunner != null )
-							@:privateAccess timelineRunner.ensureState();
-					}
-					ImGui.endPopup();
-				}
-
-
-
-			}
-			else
-			{
-				ImGui.text("No timeline selected...");
-			}
-
-			if( lastFrame != frame && !timelinePlay )
-			{
-				if( lastFrame > frame )
-				{
-					updateDefRecursive( rootDef.handle,rootDef );
-				}
-				@:privateAccess timelineRunner.ui = rootDef.handle;
-				timelineRunner.setFrame(frame);
-			}
-			lastFrame = frame;
-		}
-		ImGui.end();
-	}
-
 	function editorColumn()
 	{
 		//ImGui.beginChild("uie_editor",{x: 300 * scaleFactor, y: viewportHeight}, false, ImGuiWindowFlags.AlwaysAutoResize);
@@ -957,7 +798,10 @@ class UIEditor extends ImguiTool
 			ImGui.image(sceneRT, { x: viewportWidth * zoom, y: viewportHeight * zoom }, null, null, null, {x: 1, y: 1, z:1, w:1} );
 
 			// Lock mouse wheel when hovering image (for zoom)
-			if( ImGui.isItemHovered())
+			// @todo: This crashes under linux
+			// hl: /home/spitko/work/titan/haxe_modules/hlimgui/extension/lib/imgui/imgui.cpp:9382: void ImGui::SetKeyOwner(ImGuiKey, ImGuiID, ImGuiInputFlags): Assertion `IsNamedKeyOrModKey(key) && (owner_id != ((ImGuiID)0) || (flags & (ImGuiInputFlags_LockThisFrame | ImGuiInputFlags_LockUntilRelease)))' failed.
+		
+			if( ImGui.isItemHovered() && Sys.systemName() != "Linux" )
 				ImGui.setKeyOwner( ImGuiKey.MouseWheelY, 0 );
 
 			if( ImGui.isWindowHovered() )

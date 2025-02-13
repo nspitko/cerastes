@@ -434,14 +434,19 @@ class ImGuiToolManager
 
 				var mainWindow = hxd.Window.inst;
 				var flags = sdl.Window.SDL_WINDOW_BORDERLESS;
-				var w = new hxd.Window("ImGui Viewport", cast v.WorkSize_x, cast  v.WorkSize_y, false, flags);
+				var w = new hxd.Window("ImGui Viewport", 100, 100, false, flags);
 
-				
+
 				var e = h3d.Engine.getCurrent();
 				// Disable vsync on these windows; else we end up waiting for vblank for every individual window.
 				// Not a problem on linux I guess
 				if( Sys.systemName() != "Linux" )
 					w.vsync = false;
+
+				// SDL_WINDOW_BORDERLESS doesn't work right on windows, but
+				// Borderless DisplayMode is broken in linux. Neat!
+				if( Sys.systemName() == "Windows" )
+					w.displayMode = Borderless;
 
 				@:privateAccess
 				{

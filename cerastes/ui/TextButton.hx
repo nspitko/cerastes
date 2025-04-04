@@ -1,5 +1,6 @@
 package cerastes.ui;
 
+import cerastes.ui.Button.IButton;
 import h3d.Vector4;
 import h2d.Bitmap;
 import cerastes.ui.Button.Orientation;
@@ -34,8 +35,6 @@ class TextButton extends h2d.Flow implements IButton
 	public var hidden(default, set): Bool = false;
 
 	var state(default,set): ButtonState = Default;
-
-	var text: cerastes.ui.AdvancedText;
 
 	function set_hidden(v)
 	{
@@ -120,7 +119,7 @@ class TextButton extends h2d.Flow implements IButton
 		return v;
 	}
 
-	function setTint( color: Vector )
+	function setTint( color: Vector4 )
 	{
 		if( color.r == 1 && color.g == 1 && color.b == 1 && color.a == 1)
 		{

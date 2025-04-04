@@ -800,7 +800,7 @@ class UIEditor extends ImguiTool
 			// Lock mouse wheel when hovering image (for zoom)
 			// @todo: This crashes under linux
 			// hl: /home/spitko/work/titan/haxe_modules/hlimgui/extension/lib/imgui/imgui.cpp:9382: void ImGui::SetKeyOwner(ImGuiKey, ImGuiID, ImGuiInputFlags): Assertion `IsNamedKeyOrModKey(key) && (owner_id != ((ImGuiID)0) || (flags & (ImGuiInputFlags_LockThisFrame | ImGuiInputFlags_LockUntilRelease)))' failed.
-		
+
 			if( ImGui.isItemHovered() && Sys.systemName() != "Linux" )
 				ImGui.setKeyOwner( ImGuiKey.MouseWheelY, 0 );
 
@@ -2616,7 +2616,7 @@ class UIEditor extends ImguiTool
 			case "h2d.ScaleGrid": return "\uf00a";
 			case "cerastes.ui.Button": return "\uf04d";
 			case "cerastes.ui.BitmapButton": return "\uf04d";
-			case "cerastes.ui.TextButton": return "\uf04d";
+			//case "cerastes.ui.TextButton": return "\uf04d";
 			case "cerastes.ui.AdvancedText": return "\uf033";
 			case "cerastes.ui.Reference": return "\uf07c";
 			case "cerastes.ui.Sound": return "\uf001";

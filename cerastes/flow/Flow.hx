@@ -680,8 +680,7 @@ class FlowNode extends Node
 				// Check conditions, if any
 				if( link.conditions != null )
 				{
-					var hash = '${runner.file}-${link.sourceId}-${link.destId}';
-					var seen = FlowState.seen.indexOf( hash ) != -1;
+					var seen = FlowState.seen.indexOf( key( runner ) ) != -1;
 					runner.context.interp.variables.set("once", !seen);
 					var valid = true;
 					for( condition in link.conditions )
@@ -710,7 +709,7 @@ class FlowNode extends Node
 						continue;
 				}
 				var target = runner.lookupNodeByPin( link.destId );
-				FlowState.seen.push( '${runner.file}-${link.sourceId}-${link.destId}' );
+				FlowState.seen.push( key( runner ) );
 
 				#if hlimgui
 				FlowDebugger.addHistory(runner, this, target, pin);

@@ -209,7 +209,7 @@ class App extends hxd.App {
 		#end
 
 		#if hlimgui
-		cerastes.tools.ImGuiToolManager.saveState();
+		ImGuiToolManager.saveState();
 		#end
 
 

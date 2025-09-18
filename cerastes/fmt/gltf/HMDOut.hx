@@ -1,5 +1,7 @@
 package cerastes.fmt.gltf;
 
+#if gltf
+
 import hxd.BufferFormat.BufferInput;
 import h3d.Quat;
 import h3d.Vector4;
@@ -701,3 +703,5 @@ class HMDOut {
 		return out.toHMD();
 	}
 }
+
+#end

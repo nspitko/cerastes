@@ -1,5 +1,6 @@
 
 package cerastes.tools;
+import sdl.Sdl;
 import hxd.DropFileEvent;
 import hxd.impl.MouseMode;
 import h3d.impl.GlDriver;
@@ -185,7 +186,8 @@ class ImGuiToolManager
 			#if !multidriver
 
 			#if hlsdl
-			sdl.Sdl.setRelativeMouseMode(false);
+			var window: sdl.Window = cast @:privateAccess hxd.Window.getInstance().window;
+			window.setRelativeMouseMode(false);
 			#end
 			#if hldx
 			@:privateAccess hxd.Window.getInstance().window.clipCursor(false);
@@ -566,7 +568,9 @@ class ImGuiToolManager
 			var w: dx.Window = @:privateAccess v.PlatformHandle.window;
 			w.setPosition( cast size.x, cast size.y );
 			#elseif hlsdl
-			@:privateAccess v.PlatformHandle.window.setPosition( cast size.x, cast size.y );
+			var r = @:privateAccess v.PlatformHandle.window.setPosition( cast size.x, cast size.y );
+			if( !r )
+				trace(Sdl.getError() );
 			#end
 		};
 

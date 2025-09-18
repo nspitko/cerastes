@@ -250,7 +250,7 @@ class Init
 					resizeEvents = new List();
 					dropTargets = new List();
 					#if hlsdl
-					sdlFlags |= if (!fixed) sdl.Window.SDL_WINDOW_SHOWN | sdl.Window.SDL_WINDOW_RESIZABLE else sdl.Window.SDL_WINDOW_SHOWN;
+					sdlFlags |= if (!fixed) sdl.Window.SDL_WINDOW_RESIZABLE else 0;
 					#if heaps_vulkan
 					if( USE_VULKAN ) sdlFlags |= sdl.Window.SDL_WINDOW_VULKAN;
 					#end

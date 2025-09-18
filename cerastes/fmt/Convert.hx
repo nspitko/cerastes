@@ -1,5 +1,5 @@
 package cerastes.fmt;
-
+#if gltf
 @:keep
 class ConvertGLTF2HMD extends hxd.fs.Convert
 {
@@ -43,3 +43,4 @@ class ConvertGLTF2HMD extends hxd.fs.Convert
 	static var gltfConv = hxd.fs.Convert.register(new ConvertGLTF2HMD(false));
 
 }
+#end

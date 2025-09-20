@@ -167,7 +167,7 @@ class ImGuiTools
 			height: Engine.getCurrent().height,
 		}
 	}
-
+/*
 	public static function posInput<T:{ x:Float, y:Float }>(label:String, target:T, format:String = "%.3f", flags:ImGuiInputTextFlags = 0) {
 		var vv = arrSingle2;
 		vv[0] = target.x;
@@ -221,7 +221,7 @@ class ImGuiTools
 		target.y = vv[1];
 		target.z = vv[2];
 	}
-
+*/
 	public static function sliderDouble(label : String, v : Single, v_min : Single, v_max : Single, format : String = "%.3f", flags : ImGuiSliderFlags = 0):Float {
 		arrSingle1[0] = v;
 		ImGui.sliderFloat(label, arrSingle1, v_min, v_max, format, flags);

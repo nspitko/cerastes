@@ -46,7 +46,8 @@ class SaveLoad
 
 	function saveFolder()
 	{
-		#if sys
+
+		#if ( sys && windows )
 		var flags = cerastes.Native.CSIDL.CSIDL_LOCAL_APPDATA | cerastes.Native.CSIDL.CSIDL_FLAG_CREATE;
 		Utils.info(cerastes.Native.getFolderPath( flags ));
 		return Path.join( [ cerastes.Native.getFolderPath( flags ) ,'cerastes', 'saves']);

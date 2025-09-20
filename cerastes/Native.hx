@@ -87,10 +87,13 @@ private typedef HWND = hl.Abstract<"dx_window">;
 @:hlNative("cerastes")
 class Native
 {
+#if windows
 	static function get_folder_path( cisdl: Int ) : hl.Bytes {return null;}
 	public static inline function getFolderPath( cisdl: CSIDL ) : String {
 		return @:privateAccess String.fromUTF8( get_folder_path( cisdl ) );
 	}
 
 	public static function getDpiForWindow( hwnd: HWND ) : Int { return 0; };
+
+#end
 }

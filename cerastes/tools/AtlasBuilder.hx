@@ -557,6 +557,16 @@ class AtlasBuilder  extends  ImguiTool
 
 	function saveAs()
 	{
+		#if sdldialogs
+		sdl.Sdl.showSaveFileDialog((files) ->{
+			if( files.length == 0 || files[0] == null )
+				return;
+			var newFile = files[0];
+
+			fileName = Utils.toLocalFile( newFile );
+			save();
+		});
+		#else 
 		hxd.System.allowTimeout = false;
 		var newFile = UI.saveFile({
 			title:"Save As...",
@@ -568,12 +578,10 @@ class AtlasBuilder  extends  ImguiTool
 		if( newFile != null )
 		{
 			fileName = Utils.toLocalFile( newFile );
-
 			save();
-
-
 			cerastes.tools.AssetBrowser.needsReload = true;
 		}
+		#end
 	}
 
 	function save()
@@ -590,6 +598,7 @@ class AtlasBuilder  extends  ImguiTool
 		#else
 		ImGuiToolManager.showPopup("Save failure",'Not build with binpacker!', Error);
 		#end
+		cerastes.tools.AssetBrowser.needsReload = true;
 	}
 
 	function addSprite(newFile: String = null)

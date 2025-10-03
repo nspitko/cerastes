@@ -436,7 +436,7 @@ class Utils
 			path = Path.withExtension( Path.withoutExtension( path ), enforceExtension );
 		}
 
-		return sys.FileSystem.fullPath( path );
+		return Path.join( [ Sys.getCwd(), path ] );
 
 		#else
 		Utils.warning("Trying to fix write path on non-sys target???");

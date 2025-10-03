@@ -666,12 +666,23 @@ class UIEditor extends ImguiTool
 	function saveAs()
 	{
 		hxd.System.allowTimeout = false;
+		#if sdldialogs
+		sdl.Sdl.showSaveFileDialog((files) ->{
+			if( files.length == 0 || files[0] == null )
+				return;
+			var newFile = files[0];
+
+			fileName = Utils.toLocalFile( newFile );
+			save();
+		});
+		#else 
 		var newFile = UI.saveFile({
 			title:"Save As...",
 			filters:[
 			{name:"Cerastes UI files", exts:["ui"]}
 			]
 		});
+
 		hxd.System.allowTimeout = true;
 		if( newFile != null )
 		{
@@ -682,6 +693,8 @@ class UIEditor extends ImguiTool
 			lastSaved = Sys.time() * 1000;
 			ImGuiToolManager.showPopup("File saved",'Wrote ${fileName} successfully.', Info);
 		}
+		#end
+
 	}
 
 	function save()
@@ -696,6 +709,7 @@ class UIEditor extends ImguiTool
 
 		lastSaved = Sys.time() * 1000;
 		ImGuiToolManager.showPopup("File saved",'Wrote ${fileName} successfully.', Info);
+		cerastes.tools.AssetBrowser.needsReload = true;
 	}
 
 	function handleShortcuts()

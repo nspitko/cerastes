@@ -186,8 +186,7 @@ class ImGuiToolManager
 			#if !multidriver
 
 			#if hlsdl
-			var window: sdl.Window = cast @:privateAccess hxd.Window.getInstance().window;
-			window.setRelativeMouseMode(false);
+			sdl.Sdl.setRelativeMouseMode(false);
 			#end
 			#if hldx
 			@:privateAccess hxd.Window.getInstance().window.clipCursor(false);
@@ -568,9 +567,7 @@ class ImGuiToolManager
 			var w: dx.Window = @:privateAccess v.PlatformHandle.window;
 			w.setPosition( cast size.x, cast size.y );
 			#elseif hlsdl
-			var r = @:privateAccess v.PlatformHandle.window.setPosition( cast size.x, cast size.y );
-			if( !r )
-				trace(Sdl.getError() );
+			@:privateAccess v.PlatformHandle.window.setPosition( cast size.x, cast size.y );
 			#end
 		};
 

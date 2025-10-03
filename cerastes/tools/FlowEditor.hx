@@ -434,6 +434,17 @@ class FlowEditor extends ImguiTool
 
 	function saveAs()
 	{
+		#if sdldialogs
+		sdl.Sdl.showSaveFileDialog((files) ->{
+			if( files.length == 0 || files[0] == null )
+				return;
+			var newFile = files[0];
+
+			fileName = Utils.toLocalFile( newFile );
+
+			save();
+		});
+		#else 
 		hxd.System.allowTimeout = false;
 		var newFile = UI.saveFile({
 			title:"Save As...",
@@ -455,6 +466,7 @@ class FlowEditor extends ImguiTool
 
 			cerastes.tools.AssetBrowser.needsReload = true;
 		}
+		#end
 	}
 
 	function save()
@@ -475,6 +487,7 @@ class FlowEditor extends ImguiTool
 		sys.io.File.saveContent( file, CDPrinter.print( obj ) );
 
 		ImGuiToolManager.showPopup("File saved",'Wrote ${file} successfully.', Info);
+		cerastes.tools.AssetBrowser.needsReload = true;
 	}
 
 	function handleShortcuts()

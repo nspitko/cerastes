@@ -777,4 +777,16 @@ class Utils
 
 		return result;
 	}
+
+	public static function formatNumber(n:Float, decimals:Int = 2)
+	{
+		var n = round2(n, decimals);
+    	var s = '$n';
+
+		var out = ~/(\d)(?=(\d{3})+$)/g.replace(s, "$1,");
+		if( decimals > 0 )
+			out += "." + StringTools.lpad("", "0", decimals);
+
+		return out;
+	}
 }

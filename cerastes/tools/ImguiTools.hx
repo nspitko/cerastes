@@ -456,7 +456,8 @@ class ImGuiTools
 			ImGui.dummy( {x: state.width, y: scrubHeadHeight } );
 			if( ( ImGui.getIO().KeyCtrl || ImGui.isItemHovered() ) )
 			{
-				ImGui.setKeyOwner( ImGuiKey.MouseWheelY, 0 );
+				// @todo investigate later: Access violation
+				//ImGui.setKeyOwner( ImGuiKey.MouseWheelY, 0 );
 				var wheel: Int = cast ImGui.getIO().MouseWheel;
 				if( wheel != 0)
 				{

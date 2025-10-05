@@ -470,6 +470,9 @@ class TimelineRunner implements Tickable
 
 			var target = state.targetHandle;
 
+			if( !Utils.verify(target != null, "Timeline op handle invalid" ) )
+				continue;
+
 			var changed: Bool = false;
 
 			switch( op.type )

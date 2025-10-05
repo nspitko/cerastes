@@ -109,7 +109,10 @@ class LocalizationManager
 				addToContext(context, loc);
 
 				#if hlimgui
+				// @todo: These windows grab focus on KDE/xwayland, super annoying! Fix this after LD.
+				#if windows 
 				ImGuiToolManager.showPopup('Live Reload','Successfully reloaded ${res.name}.', ImGuiPopupType.Info);
+				#end
 				#end
 			}
 			catch( e )

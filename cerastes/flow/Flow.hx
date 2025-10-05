@@ -1105,7 +1105,7 @@ class FlowRunner implements cerastes.Tickable
 
 	// Whether or not we have a node in queue
 	public var busy( get, never ): Bool;
-	function get_busy() { return stack.first() != null; }
+	function get_busy() { return stack.first() != null || ( child != null && child.busy ); }
 
 	/**
 	 * OnExit is called when a flow reaches it's exit node.
@@ -1114,6 +1114,13 @@ class FlowRunner implements cerastes.Tickable
 	 */
 	@:callback
 	public function onExit(): Bool;
+
+	/**
+	 * onFinish is called when we finish all of our queued ndoes
+	 * @return Bool
+	 */
+	@:callback
+	public function onFinish(): Bool;
 
 	/**
 	 * Called when a new runner is created. This lets us hook our own interp state and functions in
@@ -1223,6 +1230,7 @@ class FlowRunner implements cerastes.Tickable
 			lastNodeId = n.id;
 			n.process( this );
 		}
+		onFinish();
 	}
 
 	public function queue( node: FlowNode )

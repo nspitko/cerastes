@@ -238,7 +238,7 @@ class Init
 					ctx.popRenderZone();
 			}
 		});
-
+#if hlsdl
 		no.Spoon.bend('hxd.Window', function (fields, cls) {
 			if( cls == null || cls.name != "Window" )
 				return;
@@ -268,7 +268,7 @@ class Init
 				}
 			}, OnlyExisting);
 		  });
-
+#end
 /*
 		  no.Spoon.bend('sdl.Window', function (fields, cls) {
 			if( cls == null || cls.name != "Window" )

@@ -1,11 +1,11 @@
 
 package cerastes.tools;
+#if hlimgui
 import sdl.Sdl;
 import hxd.DropFileEvent;
 import hxd.impl.MouseMode;
 import h3d.impl.GlDriver;
 import h3d.impl.DirectXDriver;
-#if hlimgui
 import hl.UI;
 import haxe.io.Path;
 import cerastes.file.CDPrinter;
@@ -423,7 +423,7 @@ class ImGuiToolManager
 			@:privateAccess
 			{
 				#if hldx
-				var w = new hxd.Window("ImGui Viewport", 100,100,false);
+				var w = new hxd.Window("ImGui Viewport", Math.ceil(v.Size.x), Math.ceil(v.Size.y), false);
 				var e = new h3d.Engine();
 				e.window = w;
 				var d3dDriver = new DirectXDriver();
@@ -435,7 +435,8 @@ class ImGuiToolManager
 
 				var mainWindow = hxd.Window.inst;
 				var flags = sdl.Window.SDL_WINDOW_BORDERLESS;
-				var w = new hxd.Window("ImGui Viewport", 100, 100, false, flags);
+				
+				var w = new hxd.Window("ImGui Viewport", Math.ceil(v.Size.x), Math.ceil(v.Size.y), false, flags);
 
 
 				var e = h3d.Engine.getCurrent();
@@ -522,6 +523,8 @@ class ImGuiToolManager
 				v.PlatformHandle = w;
 
 				mainWindow.setCurrent();
+
+				sdl.Sdl.textInput(true);
 
 			}
 		};
@@ -1028,9 +1031,11 @@ class ImGuiToolManager
 
 			ImGui.popTextWrapPos();
 
+			ImGui.end();
+
 		}
 
-		ImGui.end();
+
 
 
 

@@ -908,8 +908,8 @@ class ImGuiTools
 			}
 
 			ImGui.endPopup();
-			ImGui.popStyleVar(1);
 		}
+		ImGui.popStyleVar(1);
 
 		return clicked > 0;
 

@@ -14,6 +14,9 @@ enum abstract OperationType(Int) from Int to Int {
 	var ExpoIn = 101;
 	var ExpoOut = 102;
 	var ExpoInOut = 103;
+	var BounceIn = 104;
+	var BounceOut = 105;
+	var BounceInOut = 106;
 
 	// Events
 	var AnimPlay = 200;
@@ -32,6 +35,9 @@ enum abstract OperationType(Int) from Int to Int {
 			case ExpoIn: "Exponential In";
 			case ExpoOut: "Exponential Out";
 			case ExpoInOut: "Exponential In/Out";
+			case BounceIn: "Bounce In";
+			case BounceOut: "Bounce Out";
+			case BounceInOut: "Bounce In/Out";
 			//
 			case AnimPlay: "Play";
 			case AnimPause: "Pause";
@@ -543,7 +549,7 @@ class TimelineRunner implements Tickable
 
 
 
-				case Linear | ExpoIn | ExpoOut | ExpoInOut:
+				case Linear | ExpoIn | ExpoOut | ExpoInOut | BounceIn | BounceOut | BounceInOut:
 					if( op.key == null )
 						continue;
 
@@ -586,6 +592,9 @@ class TimelineRunner implements Tickable
 							case ExpoIn: Easing.expoIn;
 							case ExpoOut: Easing.expoOut;
 							case ExpoInOut: Easing.expoInOut;
+							case BounceIn: Easing.bounceIn;
+							case BounceOut: Easing.bounceOut;
+							case BounceInOut: Easing.bounceInOut;
 							default: Easing.linear; // Fallback
 						}
 

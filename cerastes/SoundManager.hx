@@ -217,8 +217,11 @@ class SoundManager
 			musicSnd.stop();
 		}
 
-		musicSnd = hxd.Res.loader.load(file).toSound();
-		musicSnd.play(true, musicVol);
+		if( file != null )
+		{
+			musicSnd = hxd.Res.loader.load(file).toSound();
+			musicSnd.play(true, musicVol);
+		}
 
 	}
 

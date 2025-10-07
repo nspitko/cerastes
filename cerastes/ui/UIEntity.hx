@@ -214,6 +214,8 @@ class UIEntity extends h2d.Object implements Entity
 		if( draggingTarget != null )
 			draggingTarget.onDrop( this );
 
+		draggingTarget = null;
+
 		x = dragStartX;
 		y = dragStartY;
 

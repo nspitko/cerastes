@@ -540,7 +540,7 @@ class Utils
 				return invalidTexture();
 
 			var res = hxd.Res.loader.loadCache( file, hxd.res.Image );
-			if( res == null )
+			if( res == null || res.entry.isDirectory )
 				return invalidTexture();
 
 			return res.toTexture();

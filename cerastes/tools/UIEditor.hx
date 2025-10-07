@@ -1656,6 +1656,10 @@ class UIEditor extends ImguiTool
 				if( ImGui.selectable( OperationType.ExpoIn.toString(), 		o.type == ExpoIn ) )	o.type = ExpoIn;
 				if( ImGui.selectable( OperationType.ExpoOut.toString(), 	o.type == ExpoOut ) )	o.type = ExpoOut;
 				if( ImGui.selectable( OperationType.ExpoInOut.toString(), 	o.type == ExpoInOut ) )	o.type = ExpoInOut;
+				
+				if( ImGui.selectable( OperationType.BounceIn.toString(), 	o.type == BounceIn ) )		o.type = BounceIn;
+				if( ImGui.selectable( OperationType.BounceOut.toString(), 	o.type == BounceOut ) )		o.type = BounceOut;
+				if( ImGui.selectable( OperationType.BounceInOut.toString(), o.type == BounceInOut ) )	o.type = BounceInOut;
 
 				ImGui.endCombo();
 			}

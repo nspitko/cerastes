@@ -25,5 +25,7 @@ class StrictInterp extends Interp
 			error( EUnknownVariable( name ) );
 
 		variables.set(name, v);
+
+		return v;
 	}
 }

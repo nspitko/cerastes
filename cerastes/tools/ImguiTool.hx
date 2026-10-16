@@ -524,7 +524,7 @@ class ImGuiToolManager
 
 				mainWindow.setCurrent();
 
-				sdl.Sdl.textInput(true);
+				//sdl.Sdl.textInput(true);
 
 			}
 		};

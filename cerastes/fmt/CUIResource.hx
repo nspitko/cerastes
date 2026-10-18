@@ -1,5 +1,6 @@
 package cerastes.fmt;
 
+import hxd.res.DefaultFont;
 import cerastes.ui.Reference;
 import h3d.Engine;
 import cerastes.fmt.AtlasResource.AtlasFrame;
@@ -1110,6 +1111,8 @@ class CUIResource extends Resource
 
 	public static function getFont( file: String, e: { sdfSize: Int, sdfAlpha: Float, sdfSmoothing: Float } )
 	{
+		if( !hxd.Res.loader.exists( file ) )
+			return DefaultFont.get();
 		// Font shenanigans
 		var isSDF = StringTools.endsWith( file, ".msdf.fnt" );
 

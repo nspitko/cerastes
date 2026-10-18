@@ -81,6 +81,11 @@ class AdvancedText extends h2d.Text
 		var r = ~/☃[A-z0-9]{6}(.*)☃/gm;
 		text = r.replace(text,"$1");
 
+		var r = ~/★[A-z0-9]{6}(.*)★/gm;
+		text = r.replace(text,"$1");
+
+		trace(text);
+
 		return text;
 	}
 
@@ -111,6 +116,7 @@ class AdvancedText extends h2d.Text
 
 		var inSnowman = false;
 		var isBold = false;
+		var inStar = false;
 		var skipChars = 0;
 
 		//while( i < text.length )
@@ -131,11 +137,26 @@ class AdvancedText extends h2d.Text
 					skipChars = 1;
 				}
 			}
+			if( cc == '★'.code )
+			{
+				if( !inStar )
+				{
+					inStar = true;
+					skipChars = 7;
+				}
+				else
+				{
+					inStar = false;
+					skipChars = 1;
+				}
+			}
 
 			if( cc == '☄'.code && boldGlyphs != null )
 			{
 				isBold = !isBold;
+				skipChars = 1;
 			}
+
 
 			if( skipChars > 0 )
 			{
@@ -253,6 +274,7 @@ class AdvancedText extends h2d.Text
 		var t = splitRawText( text, 0, 0, lines);
 
 		var boldLine = false;
+		var invertColors = false;
 
 		if( boldGlyphs != null)
 			bdl = boldFont.lineHeight + lineSpacing;
@@ -297,6 +319,8 @@ class AdvancedText extends h2d.Text
 		}
 
 		var colorOverride :Vector4 = null;
+		var backgroundColor :Vector4 = null;
+		var bgColor :Vector4 = null;
 		var mode = None;
 
 		var i: Int = 0;
@@ -336,59 +360,86 @@ class AdvancedText extends h2d.Text
 
 				prevChar = -1;
 			} else {
+
+				if( cc == "☃".code )
+				{
+					if( colorOverride == null )
+					{
+						var color = t.substr(i+1,6);
+						i+= 6;
+						colorOverride = Vector4.fromColor( Std.parseInt('0x${color}') );
+					}
+					else
+						colorOverride = null;
+
+					i++;
+					continue;
+				}
+				if( cc == "★".code )
+				{
+					if( backgroundColor == null )
+					{
+						var color = t.substr(i+1,6);
+						i+= 6;
+						backgroundColor = Vector4.fromColor( Std.parseInt('0x${color}') );
+					}
+					else
+						backgroundColor = null;
+
+					i++;
+					continue;
+				}
+				else if ( cc == "☄".code && boldGlyphs != null )
+				{
+					boldLine = true;
+					hasBold = true;
+					isBold = !isBold;
+					curFont = isBold ? boldFont : font;
+					curGlyphs = isBold ? boldGlyphs : glyphs;
+
+					i++;
+					continue;
+				}
+				else if( cc == "🥐".code )
+				{
+					if( mode == None )
+					{
+						rebuildEveryFrame = true;
+						mode = Sine;
+					}
+					else
+						mode = None;
+
+					// @todo support multiple effects
+					i++;
+					continue;
+				}
+
 				if( e != null )
 				{
-					if( c == "☃" )
-					{
-						if( colorOverride == null )
-						{
-							var color = t.substr(i+1,6);
-							i+= 6;
-							colorOverride = Vector4.fromColor( Std.parseInt('0x${color}') );
-						}
-						else
-							colorOverride = null;
-
-						i++;
-						continue;
-					}
-					else if ( c == "☄" && boldGlyphs != null )
-					{
-						boldLine = true;
-						hasBold = true;
-						isBold = !isBold;
-						curFont = isBold ? boldFont : font;
-						curGlyphs = isBold ? boldGlyphs : glyphs;
-
-						i++;
-						continue;
-					}
-					else if( c == "🥐" )
-					{
-						if( mode == None )
-						{
-							rebuildEveryFrame = true;
-							mode = Sine;
-						}
-						else
-							mode = None;
-
-						// @todo support multiple effects
-						i++;
-						continue;
-					}
-
 					if( rebuild )
 					{
 						var finalY = y;
 						if( mode == Sine )
 							finalY += Math.sin(time * 10 + x/5) * 2;
 
+						if( backgroundColor != null )
+						{
+							var eb = curFont.getChar('█'.code);
+							if( eb != null )
+							{
+								curGlyphs.addColor(x + offs, finalY, backgroundColor.x, backgroundColor.y, backgroundColor.z, 1.0, eb.t);
+							}
+						}
+						
+						
+
 						if( colorOverride != null )
 							curGlyphs.addColor(x + offs, finalY, colorOverride.x, colorOverride.y, colorOverride.z, 1.0, e.t);
 						else
 							curGlyphs.addColor(x + offs, finalY, desiredColor.x, desiredColor.y, desiredColor.z, 1.0, e.t);
 							//curGlyphs.add(x + offs, finalY, e.t);
+
 					}
 					if( y == 0 && e.t.dy < yMin ) yMin = e.t.dy;
 					x += esize + letterSpacing;
@@ -425,6 +476,7 @@ class AdvancedText extends h2d.Text
 		var tl = text.length;
 
 		var inColor = false;
+		var inBGColor = false;
 
 		while( c < tl )
 		{
@@ -442,7 +494,20 @@ class AdvancedText extends h2d.Text
 				}
 				continue;
 			}
-			if( o == "🥐".code || o == "☄".code || o == "☃".code )
+			if( o == "★".code )
+			{
+				if( !inBGColor )
+				{
+					c += 6;
+					inBGColor = true;
+				}
+				else
+				{
+					inBGColor = false;
+				}
+				continue;
+			}
+			if( o == "🥐".code || o == "☄".code || o == "☃".code || o == "★".code )
 				continue;
 			l++;
 		}

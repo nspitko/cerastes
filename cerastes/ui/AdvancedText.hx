@@ -182,20 +182,74 @@ class AdvancedText extends h2d.Text
 				var k = i + 1, max = text.length;
 				var prevChar = prevChar;
 				var breakFound = false;
+
+				// More LD sins....
+				var size = x + esize + letterSpacing;
+				var k = i + 1, max = text.length;
+				var prevCharLocal = prevChar;
+				var skipCharsLocal = 0;
+				var inSnowWhile = inSnowman;
+				var inStarWhile = inStar;
+				var boldWhile = isBold;
+				var breakFound = false;
+
 				while( size <= maxWidth && k < max )
 				{
 					var cc = text.charCodeAt(k++);
+					
+					if( cc == '☃'.code )
+					{
+						if( !inSnowWhile ) 
+						{ 
+							inSnowWhile = true; 
+							skipCharsLocal = 7; 
+						}
+						else 
+						{ 
+							inSnowWhile = false; 
+							skipCharsLocal = 1; 
+						}
+					}
+					else if( cc == '★'.code )
+					{
+						if( !inStarWhile ) 
+						{
+							inStarWhile = true; 
+							skipCharsLocal = 7; 
+						}
+						else 
+						{ 
+							inStarWhile = false;
+							skipCharsLocal = 1; 
+						}
+					}
+					else if( cc == '☄'.code )
+					{
+						boldWhile = !boldWhile;
+						skipCharsLocal = 1;
+					}
+					
+					if( skipCharsLocal > 0 )
+					{
+						skipCharsLocal--;
+						continue;
+					}
+					
 					if( lineBreak && (curFont.charset.isSpace(cc) || cc == '\n'.code ) )
 					{
 						breakFound = true;
 						break;
 					}
 
-					var e = curFont.getChar(cc);
-					size += e.width + letterSpacing + e.getKerningOffset(prevChar);
-					prevChar = cc;
+					var curFontM = boldWhile ? boldFont : font;
+					var e = curFontM.getChar(cc);
+					
+					size += e.width + letterSpacing + e.getKerningOffset(prevCharLocal);
+					prevCharLocal = cc;
+					
 					var nc = text.charCodeAt(k+1);
-					if( curFont.charset.isBreakChar(cc) && (nc == null || !curFont.charset.isComplementChar(nc)) ) break;
+					if( curFontM.charset.isBreakChar(cc) && (nc == null || !curFontM.charset.isComplementChar(nc)) ) 
+						break;
 				}
 				if( lineBreak && (size > maxWidth || (!breakFound && size + afterData > maxWidth)) )
 				{

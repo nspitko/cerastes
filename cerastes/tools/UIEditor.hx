@@ -659,8 +659,9 @@ class UIEditor extends ImguiTool
 			}
 
 			//ImGui.endChild();
+			ImGui.end();
 		}
-		ImGui.end();
+		
 	}
 
 	function saveAs()

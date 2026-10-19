@@ -382,11 +382,13 @@ class SceneNode extends FlowNode
 {
 	@editor("Scene","ComboString")
 	public var scene: String;
+	@editor("Only if new","Bool")
+	public var onlyIfNew: Bool = true;
 
 
 	public override function process( runner: FlowRunner )
 	{
-		var scene: cerastes.Scene = cerastes.App.currentScene.switchToNewScene( scene, true );
+		var scene: cerastes.Scene = cerastes.App.currentScene.switchToNewScene( scene, onlyIfNew );
 		if( scene == null )
 		{
 			nextAll(runner);
